@@ -1,0 +1,187 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "global_object.h"
+
+#include <optional>
+#include <utility>
+
+#include "class.h"
+#include "field.h"
+#include "method.h"
+#include "mock_jni_env.h"
+#include "return.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include "field_ref.h"
+#include "jni_dep.h"
+#include "jni_test.h"
+#include "jvm_ref.h"
+#include "method_ref.h"
+#include "params.h"
+
+namespace {
+
+using jni::Class;
+using jni::Field;
+using jni::GlobalObject;
+using jni::Method;
+using jni::Params;
+using jni::test::AsGlobal;
+using jni::test::JniTest;
+using testing::_;
+using testing::InSequence;
+using testing::Return;
+using testing::StrEq;
+
+TEST_F(JniTest, GlobalObject_CallsNewAndDeleteOnNewObject) {
+  static constexpr Class kClass{"com/google/CallsNewAndDeleteOnNewObject"};
+  const jobject local_jobject{reinterpret_cast<jobject>(0XBBBBBB)};
+
+  EXPECT_CALL(*env_, NewObjectV).WillOnce(Return(local_jobject));
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(local_jobject)));
+
+  GlobalObject<kClass> global_object{};
+
+  EXPECT_NE(jobject{global_object}, nullptr);
+}
+
+TEST_F(JniTest, GlobalObject_CallsOnlyDeleteOnWrapCtor) {
+  static constexpr Class kClass{"com/google/CallsOnlyDeleteOnWrapCtor"};
+  const jobject global_jobject_from_user{reinterpret_cast<jobject>(0XAAAAAA)};
+
+  EXPECT_CALL(*env_, DeleteGlobalRef(global_jobject_from_user));
+
+  GlobalObject<kClass> global_object{global_jobject_from_user};
+
+  EXPECT_NE(jobject{global_object}, nullptr);
+}
+
+TEST_F(JniTest, GlobalObject_CallsDeleteOnceAfterAMoveConstruction) {
+  static constexpr Class kClass{
+      "com/google/CallsDeleteOnceAfterAMoveConstruction"};
+  const jobject global_jobject_from_user{reinterpret_cast<jobject>(0XAAAAAA)};
+
+  EXPECT_CALL(*env_, DeleteGlobalRef(global_jobject_from_user));
+
+  GlobalObject<kClass> global_object_1{global_jobject_from_user};
+  EXPECT_NE(jobject{global_object_1}, nullptr);
+  GlobalObject<kClass> global_object_2{std::move(global_object_1)};
+  EXPECT_NE(jobject{global_object_2}, nullptr);
+}
+
+TEST_F(JniTest, GlobalObject_FunctionsProperlyInSTLContainer) {
+  static constexpr Class kClass{
+      "com/google/CallsDeleteOnceAfterAMoveConstruction"};
+  const jobject global_jobject_from_user1{reinterpret_cast<jobject>(0XAAAAAA)};
+  const jobject global_jobject_from_user2{reinterpret_cast<jobject>(0XBBBBBB)};
+
+  EXPECT_CALL(*env_, DeleteGlobalRef(global_jobject_from_user1));
+  EXPECT_CALL(*env_, DeleteGlobalRef(global_jobject_from_user2));
+  GlobalObject<kClass> global_object_1{global_jobject_from_user1};
+  GlobalObject<kClass> global_object_2{global_jobject_from_user2};
+  std::tuple t{std::move(global_object_1), std::move(global_object_2)};
+}
+
+TEST_F(JniTest, GlobalObject_ValuesWorkAfterMoveConstructor) {
+  static constexpr Class kClass{
+      "com/google/ValuesWorkAfterMoveConstructor",
+      Method{"Foo", jni::Return<jint>{}, Params<jint>{}},
+      Field{"BarField", jint{}}};
+  const jobject global_jobject_from_user{reinterpret_cast<jobject>(0XAAAAAA)};
+
+  EXPECT_CALL(*env_, CallIntMethodV).Times(3);
+  EXPECT_CALL(*env_, SetIntField).Times(4);
+
+  GlobalObject<kClass> global_object_1{global_jobject_from_user};
+  global_object_1("Foo", 1);
+  global_object_1("Foo", 2);
+  global_object_1["BarField"].Set(1);
+
+  GlobalObject<kClass> global_object_2{std::move(global_object_1)};
+  global_object_2("Foo", 3);
+  global_object_2["BarField"].Set(2);
+  global_object_2["BarField"].Set(3);
+  global_object_2["BarField"].Set(4);
+
+  GlobalObject<kClass> global_object_3{global_jobject_from_user};
+}
+
+TEST_F(JniTest, GlobalObject_ObjectReturnsInstanceMethods) {
+  static constexpr Class java_class_under_test{
+      "com/google/ObjectReturnsInstanceMethods",
+      Method{"Foo", jni::Return<jint>{}, Params<jint>{}},
+      Method{"Baz", jni::Return<void>{}, Params<jfloat>{}},
+      Method{"AMethodWithAReallyLongNameThatWouldPossiblyBeHardForTemplates"
+             "ToHandle",
+             jni::Return<jdouble>{},
+             Params<jint, jfloat, jint, jfloat, jdouble>{}}};
+
+  const jmethodID ctor_method{reinterpret_cast<jmethodID>(0XCCCCCC)};
+  const jmethodID jmethod{reinterpret_cast<jmethodID>(0XDDDDDD)};
+  const jobject local_jobject{reinterpret_cast<jobject>(0XEEEEEE)};
+
+  InSequence seq;
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("()V")))
+      .WillOnce(Return(ctor_method));
+  EXPECT_CALL(*env_, NewObjectV(_, ctor_method, _))
+      .WillOnce(Return(local_jobject));
+
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("(I)I")))
+      .WillOnce(Return(jmethod));
+  EXPECT_CALL(*env_, CallIntMethodV(_, _, _));
+
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Baz"), StrEq("(F)V")))
+      .WillOnce(Return(jmethod));
+  EXPECT_CALL(*env_, CallVoidMethodV(_, _, _));
+
+  EXPECT_CALL(*env_,
+              GetMethodID(_,
+                          StrEq("AMethodWithAReallyLongNameThatWouldPossiblyBeH"
+                                "ardForTemplatesToHandle"),
+                          StrEq("(IFIFD)D")));
+  EXPECT_CALL(*env_, CallDoubleMethodV(_, _, _));
+
+  auto dynamic_object = GlobalObject<java_class_under_test>();
+  dynamic_object("Foo", 1);
+  dynamic_object("Baz", 2.f);
+  dynamic_object(
+      "AMethodWithAReallyLongNameThatWouldPossiblyBeHardForTemplatesToHandle",
+      int{}, float{}, int{}, float{}, double{});
+}
+
+TEST_F(JniTest, GlobalObject_ReleasesGlobalsForAlternateConstructors) {
+  static constexpr Class java_class_under_test{
+      "ReleasesGlobalsForAlternateConstructors", jni::Constructor<int>{}};
+  GlobalObject<java_class_under_test> g1{1};
+  GlobalObject<java_class_under_test> g2{2};
+  GlobalObject<java_class_under_test> g3{3};
+  EXPECT_CALL(*env_, DeleteGlobalRef(_)).Times(3);
+}
+
+/*
+ * TODO(b/174272629): This ought to compile but MethodRef strictly declares
+ * types (i.e. RefBaseTag) which cannot bind to an rvalue).
+TEST_F(JniTest, LocalObject_SupportsPassingAnRValue) {
+  static constexpr Class kTestClass1{"TestClass1"};
+  static constexpr Class kTestClass2{
+      "TestClass2", Method{"Foo", jni::Return{}, jni::Params{kTestClass1}}};
+
+  GlobalObject<kTestClass1> a{};
+  GlobalObject<kTestClass2> b{};
+  b("Foo", std::move(a));
+}
+*/
+
+}  // namespace
