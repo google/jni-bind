@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_LOCAL_OBJECT_H
 #define JNI_BIND_LOCAL_OBJECT_H
 
+#include <type_traits>
+
 #include "class.h"
 #include "jvm.h"
 #include "jvm_ref.h"
@@ -53,7 +55,22 @@ class LocalObject<class_v_, class_loader_v_, jvm_v_, NoDangerousMoveCtor>
 
   LocalObject(jobject object) : ObjectRefT(object) {}
 
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v,
+            typename DangerousMoveConstructorTag>
+  LocalObject(LocalObject<class_v, class_loader_v, jvm_v,
+                          DangerousMoveConstructorTag>&& rhs)
+      : ObjectRefT(rhs.Release()) {
+    static_assert(
+        std::string_view(class_v.name_) == std::string_view(class_v_.name_),
+        "You are attempting to initialise a LocalObject from another class "
+        "type");
+  }
+
  protected:
+  // TODO(b/174256299): The rationale below no longer makes sense. Preventing
+  // this being used cross thread or being moved is impossible. Callers will
+  // need to read the documentation to know globals are needed for threading.
+  //
   // In order to prevent accidental moving of a LocalObject outside of a JNI
   // function's scope, LocalObject cannot be moved.  If this were permitted, an
   // object could be moved by accident (say into a datastructure), stored, and
@@ -63,7 +80,8 @@ class LocalObject<class_v_, class_loader_v_, jvm_v_, NoDangerousMoveCtor>
   // that you may introduce unseen failures and should probably just use a
   // GlobalObject.  E.g. If you accidentally moved this into a datastructure
   // with multi-threading, you would guarantee undefined behaviour.
-  LocalObject(LocalObject&& rhs) = default;
+  //
+  // LocalObject(LocalObject&& rhs) = default;
 
   template <const auto&, const auto&, const auto&, typename, typename, size_t,
             typename...>

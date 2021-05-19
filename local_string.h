@@ -36,7 +36,9 @@ class LocalString : public StringRefBase<LocalString> {
  public:
   friend class StringRefBase<LocalString>;
 
-  LocalString(jstring java_string) : StringRefBase<LocalString>(java_string) {}
+  LocalString(jobject java_string_as_object)
+      : StringRefBase<LocalString>(
+            static_cast<jstring>(java_string_as_object)) {}
 
   LocalString(std::string_view str)
       : LocalString(JniHelper::NewLocalString(str.data())) {}

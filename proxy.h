@@ -54,7 +54,7 @@ struct IsConvertibleKey {
       std::is_base_of_v<std::decay_t<Query>, std::decay_t<T>>;
 };
 
-template <typename TUndecayed, const auto& class_v, const auto& class_loader_v>
+template <typename TUndecayed>
 struct ProxyHelper {
   using T = std::decay_t<TUndecayed>;
 
@@ -91,31 +91,30 @@ struct ProxyHelper {
                                                           IsConvertibleKey<T>>;
 
   using Proxy_t = Proxy<CDecl>;
-  using AsReturn_t = typename Proxy_t::AsReturn;
+
+  template <typename Overload>
+  using AsReturn_t = typename Proxy_t::template AsReturn<Overload>;
+
   using AsArg_t = typename Proxy_t::AsArg;
   using AsDecl_t = typename Proxy_t::AsDecl;
 };
 
 // See jni::Proxy.
-template <typename T, const auto& class_v = kNoClassSpecified,
-          const auto& class_loader_v = kDefaultClassLoader>
-using Proxy_t = typename ProxyHelper<T, class_v, class_loader_v>::Proxy_t;
+template <typename T>
+using Proxy_t = typename ProxyHelper<T>::Proxy_t;
 
-template <typename T, const auto& class_v = kNoClassSpecified,
-          const auto& class_loader_v = kDefaultClassLoader>
-using CDecl_t = typename ProxyHelper<T, class_v, class_loader_v>::CDecl;
+template <typename T>
+using CDecl_t = typename ProxyHelper<T>::CDecl;
 
-template <typename T, const auto& class_v = kNoClassSpecified,
-          const auto& class_loader_v = kDefaultClassLoader>
-using Return_t = typename ProxyHelper<T, class_v, class_loader_v>::AsReturn_t;
+template <typename T, typename OverloadSelection>
+using Return_t =
+    typename ProxyHelper<T>::template AsReturn_t<OverloadSelection>;
 
-template <typename T, const auto& class_v = kNoClassSpecified,
-          const auto& class_loader_v = kDefaultClassLoader>
-using Arg_t = typename ProxyHelper<T, class_v, class_loader_v>::AsArg_t;
+template <typename T>
+using Arg_t = typename ProxyHelper<T>::AsArg_t;
 
-template <typename T, const auto& class_v = kNoClassSpecified,
-          const auto& class_loader_v = kDefaultClassLoader>
-using AsDecl_t = typename ProxyHelper<T, class_v, class_loader_v>::AsDecl_t;
+template <typename T>
+using AsDecl_t = typename ProxyHelper<T>::AsDecl_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 // MetaFunction Helpers.

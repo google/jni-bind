@@ -23,6 +23,7 @@
 
 #include "class.h"
 #include "class_loader.h"
+#include "jvm.h"
 #include "local_string.h"
 #include "metaprogramming/contains.h"
 #include "object.h"
@@ -31,6 +32,10 @@
 #include "jni_dep.h"
 
 namespace jni {
+
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_,
+          typename DangerousMoveConstructorTag>
+class LocalObject;
 
 // Everything you are permitted to declare at method prototypes.
 // Note, if the size can reasonably differ, the jtype is enforced by virtue of
@@ -43,7 +48,9 @@ template <typename CDecl_>
 struct ProxyBase {
   using CDecl = CDecl_;
 
+  template <typename>
   using AsReturn = CDecl;
+
   using AsArg = std::tuple<CDecl_>;
   using AsDecl = std::tuple<CDecl_>;
 
@@ -139,6 +146,9 @@ struct Proxy<JString,
     : public ProxyBase<JString> {
   using AsArg = std::tuple<std::string, jstring, const char*, std::string_view>;
 
+  template <typename Return>
+  using AsReturn = LocalString;
+
   template <typename>
   static LocalString ProxyAsReturn(jobject obj) {
     return {reinterpret_cast<jstring>(obj)};
@@ -156,26 +166,43 @@ struct Proxy<JString,
   }
 };
 
+struct NoDangerousMoveCtor;
+
 template <typename JObject>
 struct Proxy<JObject,
              typename std::enable_if_t<std::is_same_v<JObject, jobject>>>
     : public ProxyBase<jobject> {
   using AsDecl = std::tuple<Object>;
   using AsArg = std::tuple<jobject, RefBaseTag<jobject>>;
-  using AsReturn = std::tuple<jobject, RefBaseTag<jobject>>;
 
-  static jobject ProxyAsArg(RefBase<jobject>& obj) { return jobject{obj}; };
+  template <typename OverloadT>
+  struct Helper {
+    // It's illegal to initialise this type with a sub-object of another,
+    // however, we can construct types with enough validation to guarantee
+    // correctness.
+    static constexpr Class kClass{OverloadT::GetReturn().return_raw_.name_};
+
+    // TODO(b/174272629): Class loaders should also be enforced.
+    using type = LocalObject<kClass, kDefaultClassLoader, kDefaultJvm,
+                             NoDangerousMoveCtor>;
+  };
+
+  template <typename Overload>
+  using AsReturn = typename Helper<Overload>::type;
+
   static jobject ProxyAsArg(jobject obj) { return obj; };
 
+  // Applies for both local and global.
   template <typename T>
-  static jobject ProxyAsArg(T&& t) {
+  static jobject ProxyAsArg(T& t) {
     return jobject{t};
   };
 
+  // Applies for both local and global.
   template <typename T>
-  static auto ProxyAsReturn(jobject obj) {
-    return RefBaseTag<jobject>(obj);
-  }
+  static jobject ProxyAsArg(T&& t) {
+    return t.Release();
+  };
 };
 
 }  // namespace jni

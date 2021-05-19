@@ -170,10 +170,7 @@ TEST_F(JniTest, GlobalObject_ReleasesGlobalsForAlternateConstructors) {
   EXPECT_CALL(*env_, DeleteGlobalRef(_)).Times(3);
 }
 
-/*
- * TODO(b/174272629): This ought to compile but MethodRef strictly declares
- * types (i.e. RefBaseTag) which cannot bind to an rvalue).
-TEST_F(JniTest, LocalObject_SupportsPassingAnRValue) {
+TEST_F(JniTest, GlobalObject_SupportsPassingAPrvalue) {
   static constexpr Class kTestClass1{"TestClass1"};
   static constexpr Class kTestClass2{
       "TestClass2", Method{"Foo", jni::Return{}, jni::Params{kTestClass1}}};
@@ -182,6 +179,5 @@ TEST_F(JniTest, LocalObject_SupportsPassingAnRValue) {
   GlobalObject<kTestClass2> b{};
   b("Foo", std::move(a));
 }
-*/
 
 }  // namespace

@@ -85,12 +85,21 @@ class ObjectRef
   // Invoked through CRTP from InvocableMap.
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
-    static_assert(
-        MethodSelection_t<class_loader_v_, class_v_, false,
-                          I>::template ArgSetViable<std::decay_t<Args>...>(),
-        "JNI Error: Invalid argument set.");
-    return MethodRefT_t<class_loader_v_, class_v_, I>::Invoke(
-        GetJClass(), *RefBase::object_ref_, std::forward<Args>(args)...);
+    using MethodSelectionForTs =
+        MethodSelection_t<class_loader_v_, class_v_, false, I>;
+    using OverloadForTs =
+        typename MethodSelectionForTs::template FindOverload<Args...>;
+    using PermutationForTs =
+        typename MethodSelectionForTs::template FindPermutation<Args...>;
+
+    static_assert(MethodSelectionForTs::template ArgSetViable<Args...>(),
+                  "JNI Error: Invalid argument set.");
+
+    return PermutationRef<MethodSelectionForTs, OverloadForTs,
+                          PermutationForTs>::Invoke(GetJClass(),
+                                                    *RefBase::object_ref_,
+                                                    std::forward<Args>(
+                                                        args)...);
   }
 
   // Invoked through CRTP from QueryableMap.

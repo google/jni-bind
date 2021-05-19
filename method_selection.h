@@ -58,6 +58,7 @@ struct MethodSelection {
   static constexpr bool kIsConstructor = is_constructor;
 
   static constexpr const auto& GetClass() { return class_v_; }
+  static constexpr const auto& GetClassLoader() { return class_loader_v_; }
 
   static constexpr const auto& GetMethod() {
     if constexpr (is_constructor) {
@@ -100,7 +101,8 @@ struct MethodSelection {
 
   template <typename... Ts>
   static constexpr bool ArgSetViable() {
-    return Helper<std::make_index_sequence<NumOverloads()>, Ts...>::val;
+    return Helper<std::make_index_sequence<NumOverloads()>,
+                  std::decay_t<Ts>...>::val;
   }
 
   // The method and permutation overload that is viable for a set of args, or
@@ -108,14 +110,28 @@ struct MethodSelection {
   template <typename... Ts>
   static constexpr std::pair<size_t, size_t> IdxPair() {
     return Helper<std::make_index_sequence<NumOverloads()>,
-                  Ts...>::overload_permutation_idx_if_valid;
+                  std::decay_t<Ts>...>::overload_permutation_idx_if_valid;
   }
+
+  template <typename... Ts>
+  using FindOverload = Overload<MethodSelection, IdxPair<Ts...>().first>;
+
+  template <typename... Ts>
+  using FindPermutation = Overload<MethodSelection, IdxPair<Ts...>().second>;
 };
 
 template <const auto& class_loader_v_, const auto& class_v_,
           bool is_constructor, size_t method_idx>
 using MethodSelection_t =
     MethodSelection<class_loader_v_, class_v_, is_constructor, method_idx>;
+
+template <typename MethodSelection, typename... Args>
+using FindOverload_t =
+    typename MethodSelection ::template FindOverload<Args...>;
+
+template <typename MethodSelection, typename... Args>
+using FindPermutation_t =
+    typename MethodSelection ::template FindPermuation<Args...>;
 
 template <typename MethodSelectionT, size_t overload_idx>
 struct Overload {
@@ -127,6 +143,22 @@ struct Overload {
           .params_;
     }
   }
+
+  static constexpr const auto& GetReturn() {
+    if constexpr (MethodSelectionT::kIsConstructor) {
+      return Return<void>{};
+    } else {
+      return std::get<overload_idx>(MethodSelectionT::GetMethod().invocations_)
+          .return_;
+    }
+  }
+
+  using CDecl = CDecl_t<ReturnRaw_t<std::decay_t<decltype(GetReturn())>>>;
+
+  using ProxyForReturn =
+      Proxy_t<ReturnRaw_t<std::decay_t<decltype(GetReturn())>>>;
+
+  using ReturnProxied = Return_t<CDecl, Overload>;
 
   // Proxy every parameter argument as an argument that can be shown in a
   // function prototype.

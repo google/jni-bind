@@ -190,4 +190,45 @@ TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnLvalue) {
   b("Foo", a);
 }
 
+TEST_F(JniTest, LocalObject_SupportsReturningAString) {
+  static constexpr Class kTestClass1{
+      "TestClass1", Method{"Foo", jni::Return<jstring>{}, jni::Params{}}};
+
+  LocalObject<kTestClass1> a{};
+  a("Foo");
+}
+
+jobject ReturnOutputOfMethod() {
+  static constexpr Class kClass1{"Class1"};
+  static constexpr Class kClass2{
+      "Class2", Method{"Foo", jni::Return{kClass1}, Params<>{}}};
+
+  return LocalObject<kClass2>{}("Foo").Release();
+}
+
+TEST_F(JniTest, LocalObject_CompilesWhenReturnReleasing) {
+  ReturnOutputOfMethod();
+}
+
+TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnPrvalue) {
+  static constexpr Class kTestClass1{"TestClass1"};
+
+  static constexpr Class kTestClass2{
+      "TestClass2", Method{"Foo", jni::Return{}, jni::Params{kTestClass1}}};
+
+  LocalObject<kTestClass1> a{};
+  LocalObject<kTestClass2> b{};
+  b("Foo", std::move(a));
+}
+
+TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnXvalue) {
+  static constexpr Class kTestClass1{"TestClass1"};
+
+  static constexpr Class kTestClass2{
+      "TestClass2", Method{"Foo", jni::Return{}, jni::Params{kTestClass1}}};
+
+  LocalObject<kTestClass2> b{};
+  b("Foo", LocalObject<kTestClass1>{});
+}
+
 }  // namespace

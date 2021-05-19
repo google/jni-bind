@@ -20,6 +20,7 @@
 #include "local_object.h"
 #include "local_string.h"
 #include "method.h"
+#include "method_selection.h"
 #include "mock_jni_env.h"
 #include "params.h"
 #include <gmock/gmock.h>
@@ -34,13 +35,31 @@ using jni::Class;
 using jni::Invocation;
 using jni::kDefaultClassLoader;
 using jni::Method;
-using jni::MethodRefT_t;
+using jni::MethodSelection_t;
+using jni::Overload;
 using jni::Params;
+using jni::Permutation;
+using jni::PermutationRef;
 using jni::test::JniTest;
 using testing::_;
 using testing::Eq;
 using testing::InSequence;
 using testing::StrEq;
+
+template <const auto& class_loader_v, const auto& class_v, size_t I>
+struct FirstOverloadFirstPermutation {
+  using IthMethodSelection =
+      MethodSelection_t<class_loader_v, class_v, false, I>;
+  using FirstOverload = Overload<IthMethodSelection, 0>;
+  using FirstPermutation = Permutation<IthMethodSelection, FirstOverload, 0>;
+
+  using type =
+      PermutationRef<IthMethodSelection, FirstOverload, FirstPermutation>;
+};
+
+template <const auto& class_loader_v, const auto& class_v, size_t I>
+using MethodRefT_t =
+    typename FirstOverloadFirstPermutation<class_loader_v, class_v, I>::type;
 
 TEST_F(JniTest, MethodRef_DoesntStaticCrossTalkWithTagUse) {
   static constexpr Method m{"FooV", jni::Return<void>{}, Params{jint{}}};
@@ -143,7 +162,7 @@ TEST_F(JniTest, MethodRef_ReturnsObjects) {
   EXPECT_CALL(*env_, NewObjectV).WillOnce(testing::Return(local_jobject));
 
   jni::GlobalObject<kClass> global_object{};
-  jni::LocalObject<kClass> new_obj{global_object("Foo", 5)};
+  jni::LocalObject<c1> new_obj{global_object("Foo", 5)};
 }
 
 TEST_F(JniTest, MethodRef_PassesObjects) {

@@ -73,10 +73,14 @@ class ClassLoaderRef : public ObjectRef<kDefaultJvm, kJavaLangClassLoader,
 
     if constexpr (ParentLoaderForClass<class_loader_v_, class_v>() !=
                   kDefaultClassLoader) {
+      // Prevent the object (which is a runtime instance of a class) from
+      // falling out of scope so it is not released.
+      LocalObject loaded_class = (*this)("loadClass", class_v.name_);
+
       // TODO(b/174287131): This is inefficient and will requery these IDs every
       // time an object with a non-standard classloader is built.
-      jclass test_class{static_cast<jclass>(
-          static_cast<jobject>((*this)("loadClass", class_v.name_)))};
+      jclass test_class{
+          static_cast<jclass>(static_cast<jobject>(loaded_class))};
       jclass test_class_global =
           static_cast<jclass>(JniEnv::GetEnv()->NewGlobalRef(test_class));
 

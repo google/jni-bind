@@ -61,14 +61,24 @@ class GlobalObject : public ObjectRefBuilder_t<
   // created a global reference and thus should delete it.
   GlobalObject(jobject object) : ObjectRefT(object) {}
 
-  GlobalObject(LocalObject<class_v_, class_loader_v_, jvm_v_,
-                           DangerousMoveCtor>&& local_object)
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v,
+            typename DangerousMoveConstructorTag>
+  GlobalObject(LocalObject<class_v, class_loader_v, jvm_v, DangerousMoveCtor>&&
+                   local_object)
       : ObjectRefT(
-            JniHelper::PromoteLocalToGlobalObject(local_object.Release())) {}
+            JniHelper::PromoteLocalToGlobalObject(local_object.Release())) {
+    static_assert(
+        std::string_view(class_v.name_) == std::string_view(class_v_.name_),
+        "You are attempting to initialise a LocalObject from another class "
+        "type");
+  }
 
+  // TODO(b/174256299, b/174272629): Remove this and force callers to explicitly
+  // declare even void constructors.
   explicit GlobalObject()
-      : GlobalObject(LocalObject<class_v_, class_loader_v_, jvm_v_,
-                                 DangerousMoveCtor>{}) {}
+      : GlobalObject(JniHelper::PromoteLocalToGlobalObject(
+            LocalObject<class_v_, class_loader_v_, jvm_v_, DangerousMoveCtor>{}
+                .Release())) {}
 
   GlobalObject(const GlobalObject&) = delete;
   GlobalObject(GlobalObject&& rhs) = default;
@@ -97,6 +107,12 @@ class GlobalObject : public ObjectRefBuilder_t<
     JniHelper::DeleteGlobalObject(object_ref);
   }
 };
+
+template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v,
+          typename DangerousMoveConstructorTag>
+GlobalObject(
+    LocalObject<class_v, class_loader_v, jvm_v, DangerousMoveConstructorTag>&&)
+    -> GlobalObject<class_v, class_loader_v, jvm_v>;
 
 }  // namespace jni
 
