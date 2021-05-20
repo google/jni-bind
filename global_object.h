@@ -38,29 +38,6 @@ class GlobalObject : public ObjectRefBuilder_t<
 
   using ObjectRefT::ObjectRefT;
 
-  // TODO(b/174256299):  This API is impossible to reason about.  For both local
-  // and global objects, the object is blindly wrapped and released.  If a
-  // caller wraps a jobject input into a function, wrapping the jobject will
-  // have no effect (irrespective of whether the reference is released, as for
-  // no apparent reason input parameters can be released infinite times,
-  // although locally created objects cannot).
-  //
-  // If a jobject is wrapped with a global however, a commeasurate number of New
-  // and Release calls *must* be made.  The result is that the following
-  // sequence is valid for Local, but not for Global:
-  //
-  // void SomeJniFunct(jobject) {[Local|Global]Object obj {jobject};}
-  //
-  // For LocalObject this will Release with no effect, but for Global it will
-  // attempt to delete the jobject as it falls out of scope which will fail as
-  // the jobject is not a GlobalRef.
-  //
-  // This should probably always wrap the incoming object by creating a
-  // NewGlobalRef as if the incoming object was local it won't matter if it
-  // falls out of scope, and if it isn't the caller must have intentionally
-  // created a global reference and thus should delete it.
-  GlobalObject(jobject object) : ObjectRefT(object) {}
-
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&& local_object)
       : ObjectRefT(
