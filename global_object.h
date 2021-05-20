@@ -61,10 +61,8 @@ class GlobalObject : public ObjectRefBuilder_t<
   // created a global reference and thus should delete it.
   GlobalObject(jobject object) : ObjectRefT(object) {}
 
-  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v,
-            typename DangerousMoveConstructorTag>
-  GlobalObject(LocalObject<class_v, class_loader_v, jvm_v, DangerousMoveCtor>&&
-                   local_object)
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&& local_object)
       : ObjectRefT(
             JniHelper::PromoteLocalToGlobalObject(local_object.Release())) {
     static_assert(
@@ -77,8 +75,7 @@ class GlobalObject : public ObjectRefBuilder_t<
   // declare even void constructors.
   explicit GlobalObject()
       : GlobalObject(JniHelper::PromoteLocalToGlobalObject(
-            LocalObject<class_v_, class_loader_v_, jvm_v_, DangerousMoveCtor>{}
-                .Release())) {}
+            LocalObject<class_v_, class_loader_v_, jvm_v_>{}.Release())) {}
 
   GlobalObject(const GlobalObject&) = delete;
   GlobalObject(GlobalObject&& rhs) = default;
@@ -108,10 +105,8 @@ class GlobalObject : public ObjectRefBuilder_t<
   }
 };
 
-template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v,
-          typename DangerousMoveConstructorTag>
-GlobalObject(
-    LocalObject<class_v, class_loader_v, jvm_v, DangerousMoveConstructorTag>&&)
+template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&&)
     -> GlobalObject<class_v, class_loader_v, jvm_v>;
 
 }  // namespace jni

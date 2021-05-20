@@ -159,7 +159,7 @@ TEST_F(JniTestForClassLoaders,
   TearDown();
 }
 
-TEST_F(JniTestForClassLoaders, ClassLoaderRefTest_ConstructsFromRefBaseTag) {
+TEST_F(JniTestForClassLoaders, ClassLoaderRefTest_ConstructsFromRValue) {
   static constexpr Class kTestClass2{"TestClass2"};
   static constexpr Class kTestClass1{
       "TestClass1", Method{"Foo", Return{kTestClass2}, Params{}}};

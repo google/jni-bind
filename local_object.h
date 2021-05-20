@@ -29,36 +29,24 @@
 
 namespace jni {
 
-struct DangerousMoveCtor;
-struct NoDangerousMoveCtor;
-
-// (b/174256299):  Moving locals (and promoting them to globals) should be
-// handled in a more idiomatic and understandable way, and then the "dangerous
-// move" tag can be removed.
+// Represents a "Local" JNI reference of a class.  This object is *not* thread
+// safe, but can be promoted to a GlobalObject which *is* thread safe.
 template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm,
-          typename DangerousMoveConstructorTag = NoDangerousMoveCtor>
-class LocalObject;
-
-template <typename... Params, const Class<Params...>& class_v_,
-          const auto& class_loader_v_, const auto& jvm_v_>
-class LocalObject<class_v_, class_loader_v_, jvm_v_, NoDangerousMoveCtor>
-    : public ObjectRefBuilder_t<
-          jvm_v_, class_v_, class_loader_v_,
-          LocalObject<class_v_, class_loader_v_, jvm_v_, NoDangerousMoveCtor>> {
+          const auto& jvm_v_ = kDefaultJvm>
+class LocalObject : public ObjectRefBuilder_t<
+                        jvm_v_, class_v_, class_loader_v_,
+                        LocalObject<class_v_, class_loader_v_, jvm_v_>> {
  public:
-  using ObjectRefT = ObjectRefBuilder_t<
-      jvm_v_, class_v_, class_loader_v_,
-      LocalObject<class_v_, class_loader_v_, jvm_v_, NoDangerousMoveCtor>>;
+  using ObjectRefT =
+      ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_,
+                         LocalObject<class_v_, class_loader_v_, jvm_v_>>;
   using ObjectRefT::ObjectRefT;
 
   LocalObject(jobject object) : ObjectRefT(object) {}
 
-  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v,
-            typename DangerousMoveConstructorTag>
-  LocalObject(LocalObject<class_v, class_loader_v, jvm_v,
-                          DangerousMoveConstructorTag>&& rhs)
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  LocalObject(LocalObject<class_v, class_loader_v, jvm_v>&& rhs)
       : ObjectRefT(rhs.Release()) {
     static_assert(
         std::string_view(class_v.name_) == std::string_view(class_v_.name_),
@@ -108,32 +96,9 @@ class LocalObject<class_v_, class_loader_v_, jvm_v_, NoDangerousMoveCtor>
   }
 };
 
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_,
-          typename DangerousMoveConstructorTag>
-LocalObject(LocalObject<class_v_, class_loader_v_, jvm_v_,
-                        DangerousMoveConstructorTag>&&)
-    -> LocalObject<class_v_, class_loader_v_, jvm_v_,
-                   DangerousMoveConstructorTag>;
-
-// See move constructor comment above. You almost certainly do not want to use
-// this unless you need bleeding edge performance combined with STL containers.
-//
-// For example, if you needed to pack local objects into std::array, this would
-// permit that.
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-class LocalObject<class_v_, class_loader_v_, jvm_v_, DangerousMoveCtor>
-    : public LocalObject<class_v_, class_loader_v_, jvm_v_,
-                         NoDangerousMoveCtor> {
- public:
-  using LocalObjectT =
-      LocalObject<class_v_, class_loader_v_, jvm_v_, NoDangerousMoveCtor>;
-
-  explicit LocalObject() : LocalObjectT() {}
-  LocalObject(jobject object) : LocalObjectT(object) {}
-
-  // See class comment and base class move ctor comment.
-  LocalObject(LocalObject&& rhs) = default;
-};
+LocalObject(LocalObject<class_v_, class_loader_v_, jvm_v_>&&)
+    -> LocalObject<class_v_, class_loader_v_, jvm_v_>;
 
 }  // namespace jni
 

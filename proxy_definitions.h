@@ -33,8 +33,7 @@
 
 namespace jni {
 
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_,
-          typename DangerousMoveConstructorTag>
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class LocalObject;
 
 // Everything you are permitted to declare at method prototypes.
@@ -166,8 +165,6 @@ struct Proxy<JString,
   }
 };
 
-struct NoDangerousMoveCtor;
-
 template <typename JObject>
 struct Proxy<JObject,
              typename std::enable_if_t<std::is_same_v<JObject, jobject>>>
@@ -183,8 +180,7 @@ struct Proxy<JObject,
     static constexpr Class kClass{OverloadT::GetReturn().return_raw_.name_};
 
     // TODO(b/174272629): Class loaders should also be enforced.
-    using type = LocalObject<kClass, kDefaultClassLoader, kDefaultJvm,
-                             NoDangerousMoveCtor>;
+    using type = LocalObject<kClass, kDefaultClassLoader, kDefaultJvm>;
   };
 
   template <typename Overload>

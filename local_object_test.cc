@@ -35,7 +35,6 @@
 namespace {
 
 using jni::Class;
-using jni::DangerousMoveCtor;
 using jni::Field;
 using jni::kDefaultClassLoader;
 using jni::kDefaultJvm;
@@ -120,13 +119,13 @@ TEST_F(JniTest, LocalObject_CallsDeleteOnceAfterAMoveConstruction) {
   EXPECT_CALL(*env_, NewLocalRef).Times(0);
   EXPECT_CALL(*env_, DeleteLocalRef(local_jobject_from_user)).Times(1);
 
-  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm, DangerousMoveCtor>
-      local_object_1{local_jobject_from_user};
+  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_1{
+      local_jobject_from_user};
 
   EXPECT_NE(jobject{local_object_1}, nullptr);
 
-  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm, DangerousMoveCtor>
-      local_object_2{std::move(local_object_1)};
+  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_2{
+      std::move(local_object_1)};
 
   EXPECT_NE(jobject{local_object_2}, nullptr);
 }
@@ -139,10 +138,10 @@ TEST_F(JniTest, LocalObject_FunctionsProperlyInSTLContainer) {
   EXPECT_CALL(*env_, NewLocalRef).Times(0);
   EXPECT_CALL(*env_, DeleteLocalRef(local_jobject_from_user)).Times(2);
 
-  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm, DangerousMoveCtor>
-      local_object_1{local_jobject_from_user};
-  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm, DangerousMoveCtor>
-      local_object_2{local_jobject_from_user};
+  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_1{
+      local_jobject_from_user};
+  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_2{
+      local_jobject_from_user};
   std::tuple t{std::move(local_object_1), std::move(local_object_2)};
 }
 
@@ -156,14 +155,14 @@ TEST_F(JniTest, LocalObject_ValuesWorkAfterMoveConstructor) {
   EXPECT_CALL(*env_, CallIntMethodV).Times(3);
   EXPECT_CALL(*env_, SetIntField).Times(4);
 
-  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm, DangerousMoveCtor>
-      local_object_1{local_jobject_from_user};
+  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_1{
+      local_jobject_from_user};
   local_object_1("Foo", 1);
   local_object_1("Foo", 2);
   local_object_1["BarField"].Set(1);
 
-  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm, DangerousMoveCtor>
-      local_object_2{std::move(local_object_1)};
+  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_2{
+      std::move(local_object_1)};
   local_object_2("Foo", 3);
   local_object_2["BarField"].Set(2);
   local_object_2["BarField"].Set(3);
