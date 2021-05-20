@@ -48,19 +48,6 @@ TEST_F(JniTest, JniHelper_CallsReleaseClass) {
   JniHelper::ReleaseClass(clazz);
 }
 
-TEST_F(JniTest, JniHelper_CallsGetMethod) {
-  InSequence seq;
-  static constexpr Method m1{"Foo", Return<void>{}, Params{}};
-  static constexpr Method m2{"Bar", Return<jint>{}, Params<jint, jfloat>{}};
-
-  static const jclass clazz{reinterpret_cast<jclass>(0XAAAAA)};
-  EXPECT_CALL(*env_, GetMethodID(clazz, StrEq("Foo"), StrEq("()V")));
-  EXPECT_CALL(*env_, GetMethodID(clazz, StrEq("Bar"), StrEq("(IF)I")));
-
-  JniHelper::GetMethodID(clazz, m1.name_, m1.Signature().c_str());
-  JniHelper::GetMethodID(clazz, m2.name_, m2.Signature().c_str());
-}
-
 TEST_F(JniTest, JniHelper_CallsNewObjectV) {
   static const jclass clazz{reinterpret_cast<jclass>(0XAAAAA)};
   static const jmethodID method{reinterpret_cast<jmethodID>(0XBBBBB)};

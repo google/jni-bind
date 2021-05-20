@@ -221,7 +221,6 @@ class ConstructorValidator
   // Objects can still be wrapped.  This could happen if a classloaded object
   // is built in Java and then passed through to JNI.
   ConstructorValidator(jobject obj) : Base(obj) {}
-
   ConstructorValidator(RefBaseTag<jobject>&& rhs) : Base(std::move(rhs)) {}
 
  protected:

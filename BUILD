@@ -373,7 +373,9 @@ cc_library(
 
 cc_test(
     name = "method_ref_test",
-    srcs = ["method_ref_test.cc"],
+    srcs = [
+        "method_ref_test.cc",
+    ],
     deps = [
         ":class",
         ":jni_dep",
@@ -501,6 +503,26 @@ cc_library(
         "//metaprogramming:optional_wrap",
         "//metaprogramming:queryable_map",
         "//metaprogramming:tuple_manipulation",
+    ],
+)
+
+cc_test(
+    name = "overload_ref_test",
+    srcs = ["overload_ref_test.cc"],
+    deps = [
+        ":class",
+        ":jni_dep",
+        ":jni_test",
+        ":method",
+        ":method_ref",
+        ":method_selection",
+        ":mock_jni_env",
+        ":object_ref",
+        ":params",
+        ":return",
+        ":string_ref",
+        "//jni_helper",
+        "@googletest//:gtest_main",
     ],
 )
 

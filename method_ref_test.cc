@@ -32,7 +32,6 @@
 namespace {
 
 using jni::Class;
-using jni::Invocation;
 using jni::kDefaultClassLoader;
 using jni::Method;
 using jni::MethodSelection_t;
@@ -220,46 +219,6 @@ TEST_F(JniTest, MethodRef_SupportsStrings) {
   obj1("Foo", "This is a method.");
   obj1("Bar", "This is a method.", "It takes strings");
   obj1("Baz");
-}
-
-// TODO(b/175083373):  Overloads currently default to the 0th method for regular
-// functions.  This simply tests that the syntax is not breaking compilation.
-TEST_F(JniTest, MethodRef_OverloadsCompile1) {
-  static constexpr Method m{
-      "FooV",
-      Invocation{jni::Return<void>{}, Params{jint{}}},
-  };
-
-  static constexpr Class kSomeClass{"someClass", m};
-  const jclass clazz{reinterpret_cast<jclass>(0XAAAAA)};
-  const jobject object{reinterpret_cast<jobject>(0XBBBBBB)};
-
-  MethodRefT_t<kDefaultClassLoader, kSomeClass, 0>::Invoke(clazz, object, 123);
-}
-
-TEST_F(JniTest, MethodRef_OverloadsCompile2) {
-  static constexpr Method m{"FooV",
-                            Invocation{jni::Return<void>{}, Params{jint{}}},
-                            Invocation{jni::Return<void>{}, Params{jfloat{}}}};
-
-  static constexpr Class kSomeClass{"someClass", m};
-  const jclass clazz{reinterpret_cast<jclass>(0XAAAAA)};
-  const jobject object{reinterpret_cast<jobject>(0XBBBBBB)};
-
-  MethodRefT_t<kDefaultClassLoader, kSomeClass, 0>::Invoke(clazz, object, 123);
-}
-
-TEST_F(JniTest, MethodRef_OverloadsCompile3) {
-  static constexpr Method m{
-      "FooV", Invocation{jni::Return<void>{}, Params{jint{}}},
-      Invocation{jni::Return<void>{}, Params{jfloat{}}},
-      Invocation{jni::Return<void>{}, Params{jint{}, jfloat{}}}};
-
-  static constexpr Class kSomeClass{"someClass", m};
-  const jclass clazz{reinterpret_cast<jclass>(0XAAAAA)};
-  const jobject object{reinterpret_cast<jobject>(0XBBBBBB)};
-
-  MethodRefT_t<kDefaultClassLoader, kSomeClass, 0>::Invoke(clazz, object, 123);
 }
 
 }  // namespace

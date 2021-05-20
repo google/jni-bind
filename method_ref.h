@@ -53,8 +53,11 @@ static inline auto& GetDefaultLoadedMethodList() {
 template <typename Method, typename Overload>
 struct OverloadRef {
   static const char* GetMethodSignature() {
-    static std::string method_signature = Method::GetMethod().Signature();
-    return method_signature.c_str();
+    static std::string overload_signature =
+        (Overload::GetParams().GetSignature() +
+         Overload::GetReturn().GetSignature());
+
+    return overload_signature.c_str();
   }
 
   static jmethodID GetMethodID(jclass clazz) {

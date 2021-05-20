@@ -51,13 +51,6 @@ struct Method<std::tuple<Returns...>, std::tuple<Params_...>>
   const char* name_;
   const std::tuple<Invocation<Returns, Params_>...> invocations_;
 
-  // TODO(b/175083373): Add full support for overload sets.
-  constexpr auto& Params() const { return std::get<0>(invocations_).params_; }
-  constexpr auto& Return() const { return std::get<0>(invocations_).return_; }
-
-  using ReturnT = decltype(std::get<0>(invocations_).return_);
-  using ParamsT = decltype(std::get<0>(invocations_).params_);
-
   template <typename ReturnT_, typename ParamsT_,
             std::enable_if_t<std::is_base_of_v<ParamsBase, ParamsT_>, int> = 0>
   constexpr Method(const char* name, ReturnT_ return_type, ParamsT_ params)
@@ -66,12 +59,6 @@ struct Method<std::tuple<Returns...>, std::tuple<Params_...>>
   constexpr Method(const char* name,
                    Invocation<Returns, Params_>... invocations)
       : name_(name), invocations_(invocations...) {}
-
-  std::string Signature() const {
-    std::string return_val = Params().GetSignature() + Return().GetSignature();
-
-    return return_val;
-  }
 };
 
 // CTAD for Non-overloaded form.
@@ -93,13 +80,6 @@ constexpr bool operator==(const Method<ReturnT1, ParamsT1>& lhs,
                           const Method<ReturnT2, ParamsT2>& rhs) {
   return std::string_view(lhs.name_) == std::string_view(rhs.name_);
 }
-
-//==============================================================================
-template <typename T>
-using ReturnT_t = typename T::ReturnT;
-
-template <typename T>
-using ParamsT_t = typename T::ParamsT;
 
 }  // namespace jni
 
