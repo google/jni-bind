@@ -19,19 +19,6 @@ cc_library(
     ],
 )
 
-cc_test(
-    name = "class_test",
-    srcs = ["class_test.cc"],
-    deps = [
-        ":class",
-        ":jni_dep",
-        ":jni_test",
-        ":mock_jni_env",
-        ":object_ref",
-        "@googletest//:gtest_main",
-    ],
-)
-
 cc_library(
     name = "class_ref",
     hdrs = ["class_ref.h"],
@@ -48,17 +35,16 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "default_class_loader",
-    hdrs = ["default_class_loader.h"],
-)
-
-cc_library(
-    name = "supported_class_set",
-    hdrs = ["supported_class_set.h"],
+cc_test(
+    name = "class_test",
+    srcs = ["class_test.cc"],
     deps = [
         ":class",
-        "//metaprogramming:all_unique",
+        ":jni_dep",
+        ":jni_test",
+        ":mock_jni_env",
+        ":object_ref",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -137,11 +123,6 @@ cc_test(
 )
 
 cc_library(
-    name = "object",
-    hdrs = ["object.h"],
-)
-
-cc_library(
     name = "constructor",
     hdrs = ["constructor.h"],
     deps = [
@@ -169,6 +150,11 @@ cc_test(
 )
 
 cc_library(
+    name = "default_class_loader",
+    hdrs = ["default_class_loader.h"],
+)
+
+cc_library(
     name = "field",
     hdrs = ["field.h"],
     deps = [
@@ -177,6 +163,57 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "field_ref",
+    hdrs = ["field_ref.h"],
+    deps = [
+        ":class_ref",
+        ":field",
+        ":jni_dep",
+        "//jni_helper",
+        "//jni_helper:field_value_getter",
+        "//metaprogramming:double_locked_value",
+        "//metaprogramming:optional_wrap",
+        "//metaprogramming:queryable_map",
+    ],
+)
+
+cc_test(
+    name = "field_ref_test",
+    srcs = ["field_ref_test.cc"],
+    deps = [
+        ":class",
+        ":field",
+        ":field_ref",
+        ":jni_dep",
+        ":jni_test",
+        ":mock_jni_env",
+        ":object_ref",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "global_object_test",
+    srcs = ["global_object_test.cc"],
+    deps = [
+        ":class",
+        ":field",
+        ":field_ref",
+        ":jni_dep",
+        ":jni_test",
+        ":jvm_ref",
+        ":method",
+        ":method_ref",
+        ":mock_jni_env",
+        ":object_ref",
+        ":params",
+        ":return",
+        "@googletest//:gtest_main",
+    ],
+)
+
+# Intentionally placed at root because of issues in Bazel.
 cc_library(
     name = "jni_dep",
     srcs = [
@@ -187,6 +224,22 @@ cc_library(
     includes = [
         "external/local_jdk/include",
         "external/local_jdk/include/linux",
+    ],
+)
+
+cc_library(
+    name = "jni_test",
+    testonly = 1,
+    hdrs = ["jni_test.h"],
+    tags = ["nozapfhahn"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":jni_dep",
+        ":jvm",
+        ":jvm_ref",
+        ":mock_jni_env",
+        ":mock_jvm",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -266,65 +319,6 @@ cc_test(
     ],
 )
 
-cc_library(
-    name = "field_ref",
-    hdrs = ["field_ref.h"],
-    deps = [
-        ":class_ref",
-        ":field",
-        ":jni_dep",
-        "//jni_helper",
-        "//jni_helper:field_value_getter",
-        "//metaprogramming:double_locked_value",
-        "//metaprogramming:optional_wrap",
-        "//metaprogramming:queryable_map",
-    ],
-)
-
-cc_test(
-    name = "field_ref_test",
-    srcs = ["field_ref_test.cc"],
-    deps = [
-        ":class",
-        ":field",
-        ":field_ref",
-        ":jni_dep",
-        ":jni_test",
-        ":mock_jni_env",
-        ":object_ref",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "object_ref",
-    hdrs = [
-        "global_object.h",
-        "local_object.h",
-        "object_ref.h",
-    ],
-    deps = [
-        ":class",
-        ":class_loader",
-        ":class_ref",
-        ":constructor",
-        ":field_ref",
-        ":jni_dep",
-        ":jni_type_proxy",
-        ":jvm",
-        ":jvm_ref",
-        ":method_ref",
-        ":method_selection",
-        ":ref_base",
-        "//jni_helper",
-        "//jni_helper:jni_env",
-        "//metaprogramming:invocable_map",
-        "//metaprogramming:optional_wrap",
-        "//metaprogramming:queryable_map",
-        "//metaprogramming:tuple_manipulation",
-    ],
-)
-
 cc_test(
     name = "local_object_test",
     srcs = ["local_object_test.cc"],
@@ -346,40 +340,10 @@ cc_test(
     ],
 )
 
-cc_test(
-    name = "global_object_test",
-    srcs = ["global_object_test.cc"],
-    deps = [
-        ":class",
-        ":field",
-        ":field_ref",
-        ":jni_dep",
-        ":jni_test",
-        ":jvm_ref",
-        ":method",
-        ":method_ref",
-        ":mock_jni_env",
-        ":object_ref",
-        ":params",
-        ":return",
-        "@googletest//:gtest_main",
-    ],
-)
-
 cc_library(
-    name = "jni_test",
-    testonly = 1,
-    hdrs = ["jni_test.h"],
-    tags = ["nozapfhahn"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":jni_dep",
-        ":jvm",
-        ":jvm_ref",
-        ":mock_jni_env",
-        ":mock_jvm",
-        "@googletest//:gtest_main",
-    ],
+    name = "method",
+    hdrs = ["method.h"],
+    deps = [":params"],
 )
 
 cc_library(
@@ -429,9 +393,7 @@ cc_test(
 
 cc_library(
     name = "method_selection",
-    hdrs = [
-        "method_selection.h",
-    ],
+    hdrs = ["method_selection.h"],
     deps = [
         ":default_class_loader",
         ":proxy",
@@ -459,67 +421,6 @@ cc_test(
         ":supported_class_set",
         "@googletest//:gtest_main",
     ],
-)
-
-cc_library(
-    name = "params",
-    hdrs = ["params.h"],
-    deps = [
-        ":object",
-        ":signature",
-        "//jni_helper:jni_typename_to_string",
-    ],
-)
-
-cc_test(
-    name = "params_test",
-    srcs = ["params_test.cc"],
-    deps = [
-        ":class",
-        ":jni_type_proxy",
-        ":mock_jni_env",
-        ":object_ref",
-        ":params",
-        ":string",
-        ":string_ref",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "return",
-    hdrs = ["return.h"],
-    deps = [
-        ":signature",
-    ],
-)
-
-cc_library(
-    name = "signature",
-    hdrs = ["signature.h"],
-    deps = [
-        ":object",
-        "//jni_helper:jni_typename_to_string",
-    ],
-)
-
-cc_test(
-    name = "signature_test",
-    srcs = ["signature_test.cc"],
-    deps = [
-        ":class",
-        ":mock_jni_env",
-        ":object_ref",
-        ":params",
-        ":signature",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "method",
-    hdrs = ["method.h"],
-    deps = [":params"],
 )
 
 cc_library(
@@ -570,54 +471,59 @@ cc_test(
 )
 
 cc_library(
-    name = "ref_base",
-    hdrs = ["ref_base.h"],
+    name = "object",
+    hdrs = ["object.h"],
+)
+
+cc_library(
+    name = "object_ref",
+    hdrs = [
+        "global_object.h",
+        "local_object.h",
+        "object_ref.h",
+    ],
     deps = [
         ":class",
         ":class_loader",
-        ":default_class_loader",
-        "//jni_helper:jni_env",
-    ],
-)
-
-cc_library(
-    name = "string",
-    hdrs = ["string.h"],
-    deps = [
-        ":class",
-        ":jni_dep",
-        ":ref_base",
-        "//jni_helper",
-        "//jni_helper:jni_env",
-    ],
-)
-
-cc_library(
-    name = "string_ref",
-    hdrs = [
-        "global_string.h",
-        "local_string.h",
-    ],
-    deps = [
+        ":class_ref",
+        ":constructor",
+        ":field_ref",
         ":jni_dep",
         ":jni_type_proxy",
+        ":jvm",
+        ":jvm_ref",
+        ":method_ref",
+        ":method_selection",
         ":ref_base",
-        ":string",
         "//jni_helper",
+        "//jni_helper:jni_env",
+        "//metaprogramming:invocable_map",
+        "//metaprogramming:optional_wrap",
+        "//metaprogramming:queryable_map",
+        "//metaprogramming:tuple_manipulation",
+    ],
+)
+
+cc_library(
+    name = "params",
+    hdrs = ["params.h"],
+    deps = [
+        ":object",
+        ":signature",
+        "//jni_helper:jni_typename_to_string",
     ],
 )
 
 cc_test(
-    name = "string_ref_test",
-    srcs = ["string_ref_test.cc"],
+    name = "params_test",
+    srcs = ["params_test.cc"],
     deps = [
         ":class",
-        ":jni_dep",
-        ":jni_test",
-        ":method",
+        ":jni_type_proxy",
         ":mock_jni_env",
         ":object_ref",
         ":params",
+        ":string",
         ":string_ref",
         "@googletest//:gtest_main",
     ],
@@ -671,5 +577,98 @@ cc_test(
         ":supported_class_set",
         "//metaprogramming:concatenate",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "ref_base",
+    hdrs = ["ref_base.h"],
+    deps = [
+        ":class",
+        ":class_loader",
+        ":default_class_loader",
+        "//jni_helper:jni_env",
+    ],
+)
+
+cc_library(
+    name = "return",
+    hdrs = ["return.h"],
+    deps = [
+        ":signature",
+    ],
+)
+
+cc_library(
+    name = "signature",
+    hdrs = ["signature.h"],
+    deps = [
+        ":object",
+        "//jni_helper:jni_typename_to_string",
+    ],
+)
+
+cc_test(
+    name = "signature_test",
+    srcs = ["signature_test.cc"],
+    deps = [
+        ":class",
+        ":mock_jni_env",
+        ":object_ref",
+        ":params",
+        ":signature",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "string",
+    hdrs = ["string.h"],
+    deps = [
+        ":class",
+        ":jni_dep",
+        ":ref_base",
+        "//jni_helper",
+        "//jni_helper:jni_env",
+    ],
+)
+
+cc_library(
+    name = "string_ref",
+    hdrs = [
+        "global_string.h",
+        "local_string.h",
+    ],
+    deps = [
+        ":jni_dep",
+        ":jni_type_proxy",
+        ":ref_base",
+        ":string",
+        "//jni_helper",
+    ],
+)
+
+cc_test(
+    name = "string_ref_test",
+    srcs = ["string_ref_test.cc"],
+    deps = [
+        ":class",
+        ":jni_dep",
+        ":jni_test",
+        ":method",
+        ":mock_jni_env",
+        ":object_ref",
+        ":params",
+        ":string_ref",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "supported_class_set",
+    hdrs = ["supported_class_set.h"],
+    deps = [
+        ":class",
+        "//metaprogramming:all_unique",
     ],
 )
