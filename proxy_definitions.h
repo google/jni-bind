@@ -57,11 +57,6 @@ struct ProxyBase {
   static auto ProxyAsArg(T&& t) {
     return std::forward<T>(t);
   }
-
-  template <typename T>
-  static auto ProxyAsReturn(T&& t) {
-    return std::forward<T>(t);
-  }
 };
 
 // Proxy is a metafunction that gives useful conversions from
@@ -99,9 +94,7 @@ static_assert(std::is_same_v<jdouble, double>);
 template <typename VoidType>
 struct Proxy<VoidType,
              typename std::enable_if_t<std::is_same_v<VoidType, void>>>
-    : public ProxyBase<void> {
-  static void ProxyAsReturn() {}
-};
+    : public ProxyBase<void> {};
 
 template <typename CharType>
 struct Proxy<CharType,
@@ -147,11 +140,6 @@ struct Proxy<JString,
 
   template <typename Return>
   using AsReturn = LocalString;
-
-  template <typename>
-  static LocalString ProxyAsReturn(jobject obj) {
-    return {reinterpret_cast<jstring>(obj)};
-  }
 
   // These leak local instances of strings.  Usually, RAII mechanisms would
   // correctly release local instances, but here we are stripping that so it can

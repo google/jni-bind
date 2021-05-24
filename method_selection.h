@@ -317,24 +317,6 @@ struct ParamCompare {
         std::string_view(ParamSelectionT::GetParam().name_);
   };
 
-  // TODO(b/174256299): Unfortunately, Locals come in two flavours, one with
-  // a "dangerous move" tag, and one without.  Because they are parameterised
-  // differently, an additional (redundant) partial specialisation is required.
-  template <template <const auto&, const auto&, const auto&, typename> class T,
-            const auto& class_v, const auto& class_loader_v, const auto& jvm_v,
-            typename DangerousMoveTag>
-  struct Helper<
-      T<class_v, class_loader_v, jvm_v, DangerousMoveTag>,
-      std::enable_if_t<
-          std::is_base_of_v<RefBaseTag<jobject>, ParamT> &&
-          std::is_base_of_v<RefBaseTag<jobject>, T<class_v, class_loader_v,
-                                                   jvm_v, DangerousMoveTag>>>> {
-    // TODO(b/174272629): Exclude objects loaded by invalid loaders.
-    static constexpr bool val =
-        std::string_view(class_v.name_) ==
-        std::string_view(ParamSelectionT::GetParam().name_);
-  };
-
   static constexpr bool val = Helper<Query>::val;
 };
 
