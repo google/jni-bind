@@ -23,7 +23,6 @@
 
 #include "class_loader.h"
 #include "class_ref.h"
-#include "jni_type_proxy.h"
 #include "method.h"
 #include "proxy.h"
 #include "ref_base.h"

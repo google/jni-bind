@@ -15,7 +15,6 @@
 #include "params.h"
 
 #include "class.h"
-#include "jni_type_proxy.h"
 #include "local_object.h"
 #include "local_string.h"
 #include "mock_jni_env.h"

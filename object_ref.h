@@ -26,7 +26,6 @@
 #include "class_ref.h"
 #include "constructor.h"
 #include "field_ref.h"
-#include "jni_type_proxy.h"
 #include "method_ref.h"
 #include "proxy.h"
 #include "ref_base.h"

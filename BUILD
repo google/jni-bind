@@ -244,32 +244,6 @@ cc_library(
 )
 
 cc_library(
-    name = "jni_type_proxy",
-    hdrs = ["jni_type_proxy.h"],
-    deps = [
-        ":jni_dep",
-        ":object",
-        ":ref_base",
-        "//jni_helper:jni_typename_to_string",
-    ],
-)
-
-cc_test(
-    name = "jni_type_proxy_test",
-    srcs = ["jni_type_proxy_test.cc"],
-    deps = [
-        ":class",
-        ":jni_dep",
-        ":jni_test",
-        ":jni_type_proxy",
-        ":mock_jni_env",
-        ":object_ref",
-        "//jni_helper",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "jvm",
     hdrs = ["jvm.h"],
     deps = [
@@ -353,7 +327,6 @@ cc_library(
         ":class_loader",
         ":class_ref",
         ":jni_dep",
-        ":jni_type_proxy",
         ":method",
         ":params",
         ":proxy",
@@ -492,7 +465,6 @@ cc_library(
         ":default_class_loader",
         ":field_ref",
         ":jni_dep",
-        ":jni_type_proxy",
         ":jvm",
         ":jvm_ref",
         ":method_ref",
@@ -543,7 +515,6 @@ cc_test(
     srcs = ["params_test.cc"],
     deps = [
         ":class",
-        ":jni_type_proxy",
         ":mock_jni_env",
         ":object_ref",
         ":params",
@@ -665,7 +636,6 @@ cc_library(
     ],
     deps = [
         ":jni_dep",
-        ":jni_type_proxy",
         ":ref_base",
         ":string",
         "//jni_helper",

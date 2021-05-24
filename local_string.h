@@ -17,7 +17,6 @@
 #ifndef JNI_BIND_LOCAL_STRING_H_
 #define JNI_BIND_LOCAL_STRING_H_
 
-#include "jni_type_proxy.h"
 #include "ref_base.h"
 #include "string.h"
 #include "jni_dep.h"
@@ -55,38 +54,6 @@ class LocalString : public StringRefBase<LocalString> {
   void ClassSpecificDeleteObjectRef(jstring object_ref) {
     JniHelper::DeleteLocalObject(object_ref);
   }
-};
-
-// LocalStrings are just specialised implementations of a regular object with a
-// slightly modified interface.  Because of this, they depend on ObjectRef like
-// normal objects do (so they can also express Local and Global mechanics).
-//
-// When std::string is used in an interface, and the caller passes a string,
-// they actually mean "construct a new Java string from the characters I gave
-// you and pass that instead".
-//
-// Unfortunately, MethodRef cannot know the definition of a LocalString because
-// this would form a circular dependency, so the JniTypeProxy is provided here.
-//
-// TODO(b/174272629): Using std::string means you must include local_string.h
-// (which isn't intuitive).  There should be a SFINAE test in method_ref to
-// assert the inclusion of the header.
-template <typename StringType>
-struct JniTypeProxy<
-    StringType,
-    typename std::enable_if_t<std::is_same_v<std::string, StringType> ||
-                              std::is_same_v<std::string_view, StringType> ||
-                              std::is_same_v<const char *, StringType> ||
-                              std::is_same_v<jstring, StringType>>> {
-  // Using std::string_view allows passing any form of string and no excess
-  // copies will be performed.
-  using asInputParam = std::string_view;
-
-  static jstring Proxy(std::string_view s) {
-    return jstring{LocalString{s}.Release()};
-  }
-
-  static constexpr std::string_view ToString() { return "Ljava/lang/String;"; }
 };
 
 }  // namespace jni
