@@ -26,23 +26,22 @@
 namespace jni {
 
 template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
-class LocalClassLoader
-    : public ClassLoaderRef<jvm_v_, class_loader_v_,
-                            LocalClassLoader<class_loader_v_, jvm_v_>> {
+class LocalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
  public:
+  using Base = ClassLoaderRef<jvm_v_, class_loader_v_>;
+
   LocalClassLoader(jobject class_loader)
-      : ClassLoaderRef<jvm_v_, class_loader_v_,
-                       LocalClassLoader<class_loader_v_, jvm_v_>>(
-            class_loader) {}
+      : ClassLoaderRef<jvm_v_, class_loader_v_>(class_loader) {}
+
+  ~LocalClassLoader() {
+    if (Base::object_ref_) {
+      JniHelper::DeleteLocalObject(*Base::object_ref_);
+    }
+  }
 
  private:
-  template <const auto&, const auto&, const auto&, typename>
+  template <const auto&, const auto&, const auto&>
   friend class ObjectRef;
-
-  // Invoked through CRTP on dtor.
-  constexpr void ClassSpecificDeleteObjectRef(jobject object_ref) {
-    JniHelper::DeleteLocalObject(object_ref);
-  }
 };
 
 }  // namespace jni

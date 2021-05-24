@@ -39,9 +39,9 @@
 
 namespace jni {
 
-template <const auto& jvm_v_, const auto& class_loader_v_, typename CrtpBase>
-class ClassLoaderRef : public ObjectRef<kDefaultJvm, kJavaLangClassLoader,
-                                        kDefaultClassLoader, CrtpBase> {
+template <const auto& jvm_v_, const auto& class_loader_v_>
+class ClassLoaderRef
+    : public ObjectRef<kDefaultJvm, kJavaLangClassLoader, kDefaultClassLoader> {
  private:
   // Returns kDefaultJvm for default class loaded objects, otherwise returns the
   // jvm associated with this loader.  Default loaders do not use indexing,
@@ -58,8 +58,8 @@ class ClassLoaderRef : public ObjectRef<kDefaultJvm, kJavaLangClassLoader,
 
  public:
   ClassLoaderRef(jobject class_loader)
-      : ObjectRef<kDefaultJvm, kJavaLangClassLoader, kDefaultClassLoader,
-                  CrtpBase>(class_loader) {}
+      : ObjectRef<kDefaultJvm, kJavaLangClassLoader, kDefaultClassLoader>(
+            class_loader) {}
 
   static_assert(class_loader_v_ != kDefaultClassLoader,
                 "Custom class loaders should not use the default class loader,"

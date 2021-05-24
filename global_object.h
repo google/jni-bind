@@ -28,14 +28,10 @@ namespace jni {
 template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
-class GlobalObject : public ObjectRefBuilder_t<
-                         jvm_v_, class_v_, class_loader_v_,
-                         GlobalObject<class_v_, class_loader_v_, jvm_v_>> {
+class GlobalObject
+    : public ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_> {
  public:
-  using ObjectRefT =
-      ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_,
-                         GlobalObject<class_v_, class_loader_v_, jvm_v_>>;
-
+  using ObjectRefT = ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_>;
   using ObjectRefT::ObjectRefT;
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
@@ -53,12 +49,11 @@ class GlobalObject : public ObjectRefBuilder_t<
       : ObjectRefT(rhs.Release()) {
     static_assert(
         std::string_view(class_v.name_) == std::string_view(class_v_.name_),
-        "You are attempting to initialise a LocalObject from another class "
+        "You are attempting to initialise a GlobalObject from another class "
         "type");
   }
 
-  // TODO(b/174256299, b/174272629): Remove this and force callers to explicitly
-  // declare even void constructors.
+  // Promotes then wraps a local jobject.  Prefer using regular API over this.
   explicit GlobalObject()
       : GlobalObject(JniHelper::PromoteLocalToGlobalObject(
             LocalObject<class_v_, class_loader_v_, jvm_v_>{}.Release())) {}
@@ -66,28 +61,10 @@ class GlobalObject : public ObjectRefBuilder_t<
   GlobalObject(const GlobalObject&) = delete;
   GlobalObject(GlobalObject&& rhs) = default;
 
- private:
-  template <const auto&, const auto&, const auto&, typename, typename, size_t,
-            typename...>
-  friend class ImbueConstructor;
-
-  template <const auto&, const auto&, const auto&, typename>
-  friend class ObjectRef;
-
-  // Invoked through CRTP on ctor.
-  template <typename... Ts>
-  constexpr jobject ClassSpecificNewObjectRef(jmethodID class_ctor_method_ref,
-                                              Ts&&... ts) {
-    using ClassRefT = ClassRef_t<jvm_v_, class_loader_v_, class_v_>;
-
-    return JniHelper::PromoteLocalToGlobalObject(JniHelper::NewLocalObject(
-        ClassRefT::GetAndMaybeLoadClassRef(), class_ctor_method_ref,
-        std::forward<Ts>(ts)...));
-  }
-
-  // Invoked through CRTP on dtor.
-  constexpr void ClassSpecificDeleteObjectRef(jobject object_ref) {
-    JniHelper::DeleteGlobalObject(object_ref);
+  ~GlobalObject() {
+    if (ObjectRefT::object_ref_) {
+      JniHelper::DeleteGlobalObject(*ObjectRefT::object_ref_);
+    }
   }
 };
 

@@ -135,7 +135,6 @@ TEST_F(JniTestForClassLoaders,
 ////////////////////////////////////////////////////////////////////////////////
 // Non standard JVM, non-default classloader (ID teardown on JVM destruction).
 ////////////////////////////////////////////////////////////////////////////////
-
 TEST_F(JniTestForClassLoaders,
        ClassLoaderRefTest_DefaultLoadedObjectBuildsWithClassLoadedObject) {
   static constexpr Class kTestClass1{"TestClass1"};
@@ -152,7 +151,8 @@ TEST_F(JniTestForClassLoaders,
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{
       class_loader_local_to_be_wrapped};
-  auto a = local_class_loader.BuildLocalObject<kTestClass1>();
+  LocalObject<kTestClass1, kClassLoader> a =
+      local_class_loader.BuildLocalObject<kTestClass1>();
   LocalObject<kTestClass2> b{a};
   b("Foo", a);
 

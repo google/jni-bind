@@ -49,14 +49,13 @@ namespace jni {
 //
 // To call methods on the object, use the  operator(), to access fields, use
 // operator[].
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_,
-          typename CrtpBase_>
+template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
 class ObjectRef
-    : public MethodMap_t<
-          class_loader_v_, class_v_,
-          ObjectRef<jvm_v_, class_v_, class_loader_v_, CrtpBase_>>,
+    : public MethodMap_t<class_loader_v_, class_v_,
+                         ObjectRef<jvm_v_, class_v_, class_loader_v_>>,
       public metaprogramming::QueryableMap_t<
-          CrtpBase_, class_v_, &std::decay_t<decltype(class_v_)>::fields_>,
+          ObjectRef<jvm_v_, class_v_, class_loader_v_>, class_v_,
+          &std::decay_t<decltype(class_v_)>::fields_>,
       public RefBase<jobject, class_v_, class_loader_v_> {
  protected:
   static_assert(
@@ -68,13 +67,6 @@ class ObjectRef
   explicit ObjectRef(ObjectRef&& rhs) = default;
   ObjectRef(const ObjectRef& rhs) = delete;
   ObjectRef& operator=(const ObjectRef& rhs) = delete;
-
-  ~ObjectRef() {
-    if (RefBase::object_ref_) {
-      static_cast<CrtpBase_&>(*this).ClassSpecificDeleteObjectRef(
-          *RefBase::object_ref_);
-    }
-  }
 
   jclass GetJClass() const {
     return ClassRef_t<jvm_v_, class_loader_v_,
@@ -109,19 +101,18 @@ class ObjectRef
 // Imbues constructors for ObjectRefs and handles calling the correct
 // intermediate constructors.  Access to this class is constrainted for non
 // default classloaders (see |ValidatorProxy|).
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_,
-          typename CrtpBase_>
+template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
 class ConstructorValidator
-    : public ObjectRef<jvm_v_, class_v_, class_loader_v_, CrtpBase_> {
+    : public ObjectRef<jvm_v_, class_v_, class_loader_v_> {
  public:
-  using Base = ObjectRef<jvm_v_, class_v_, class_loader_v_, CrtpBase_>;
+  using Base = ObjectRef<jvm_v_, class_v_, class_loader_v_>;
   using Base::Base;
 
   // Objects can still be wrapped.  This could happen if a classloaded object
   // is built in Java and then passed through to JNI.
   ConstructorValidator(jobject obj) : Base(obj) {}
 
-  template <const auto& jvm_v, const auto& class_loader_v, typename CrtpBase>
+  template <const auto& jvm_v, const auto& class_loader_v>
   friend class ClassLoaderRef;
 
   static constexpr std::size_t kNumConstructors =
@@ -160,31 +151,25 @@ class ConstructorValidator
   }
 };
 
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_,
-          typename CrtpBase>
+template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
 struct ValidatorProxy
-    : public ConstructorValidator<jvm_v_, class_v_, class_loader_v_, CrtpBase> {
+    : public ConstructorValidator<jvm_v_, class_v_, class_loader_v_> {
   ValidatorProxy(jobject obj) : Base(obj) {}
 
  protected:
-  using Base =
-      ConstructorValidator<jvm_v_, class_v_, class_loader_v_, CrtpBase>;
+  using Base = ConstructorValidator<jvm_v_, class_v_, class_loader_v_>;
   using Base::Base;
 };
 
-template <const auto& jvm_v_, const auto& class_v_, typename CrtpBase>
-struct ValidatorProxy<jvm_v_, kDefaultClassLoader, class_v_, CrtpBase>
-    : public ConstructorValidator<jvm_v_, class_v_, kDefaultClassLoader,
-                                  CrtpBase> {
-  using Base =
-      ConstructorValidator<jvm_v_, class_v_, kDefaultClassLoader, CrtpBase>;
+template <const auto& jvm_v_, const auto& class_v_>
+struct ValidatorProxy<jvm_v_, kDefaultClassLoader, class_v_>
+    : public ConstructorValidator<jvm_v_, class_v_, kDefaultClassLoader> {
+  using Base = ConstructorValidator<jvm_v_, class_v_, kDefaultClassLoader>;
   using Base::Base;
 };
 
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_,
-          typename CrtpBase>
-using ObjectRefBuilder_t =
-    ValidatorProxy<jvm_v_, class_v_, class_loader_v_, CrtpBase>;
+template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
+using ObjectRefBuilder_t = ValidatorProxy<jvm_v_, class_v_, class_loader_v_>;
 
 }  // namespace jni
 

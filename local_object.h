@@ -34,13 +34,10 @@ namespace jni {
 template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
-class LocalObject : public ObjectRefBuilder_t<
-                        jvm_v_, class_v_, class_loader_v_,
-                        LocalObject<class_v_, class_loader_v_, jvm_v_>> {
+class LocalObject
+    : public ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_> {
  public:
-  using ObjectRefT =
-      ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_,
-                         LocalObject<class_v_, class_loader_v_, jvm_v_>>;
+  using ObjectRefT = ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_>;
   using ObjectRefT::ObjectRefT;
 
   LocalObject(jobject object) : ObjectRefT(object) {}
@@ -54,45 +51,10 @@ class LocalObject : public ObjectRefBuilder_t<
         "type");
   }
 
- protected:
-  // TODO(b/174256299): The rationale below no longer makes sense. Preventing
-  // this being used cross thread or being moved is impossible. Callers will
-  // need to read the documentation to know globals are needed for threading.
-  //
-  // In order to prevent accidental moving of a LocalObject outside of a JNI
-  // function's scope, LocalObject cannot be moved.  If this were permitted, an
-  // object could be moved by accident (say into a datastructure), stored, and
-  // then re-used on a subsequent JNI invocation (which is illegal).
-  //
-  // That said, if you truly want to move a LocalObject, you may, but be aware
-  // that you may introduce unseen failures and should probably just use a
-  // GlobalObject.  E.g. If you accidentally moved this into a datastructure
-  // with multi-threading, you would guarantee undefined behaviour.
-  //
-  // LocalObject(LocalObject&& rhs) = default;
-
-  template <const auto&, const auto&, const auto&, typename, typename, size_t,
-            typename...>
-  friend class ImbueConstructor;
-
-  template <const auto&, const auto&, const auto&, typename>
-  friend class ObjectRef;
-
-  template <const auto&, const auto&, typename>
-  friend class ClassLoaderRef;
-
-  // Invoked through CRTP on ctor.
-  template <typename... Ts>
-  constexpr jobject ClassSpecificNewObjectRef(jmethodID class_ctor_method_ref,
-                                              Ts&&... ts) {
-    return JniHelper::NewLocalObject(ObjectRefT::GetJClass(),
-                                     class_ctor_method_ref,
-                                     std::forward<Ts>(ts)...);
-  }
-
-  // Invoked through CRTP on dtor.
-  constexpr void ClassSpecificDeleteObjectRef(jobject object_ref) {
-    JniHelper::DeleteLocalObject(object_ref);
+  ~LocalObject() {
+    if (ObjectRefT::object_ref_) {
+      JniHelper::DeleteLocalObject(*ObjectRefT::object_ref_);
+    }
   }
 };
 

@@ -26,23 +26,23 @@
 namespace jni {
 
 template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
-class GlobalClassLoader
-    : public ClassLoaderRef<jvm_v_, class_loader_v_,
-                            GlobalClassLoader<class_loader_v_, jvm_v_> > {
+class GlobalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
  public:
+  using Base = ClassLoaderRef<jvm_v_, class_loader_v_>;
+
   // TODO(b/174256299): Make "global" from jobject more intuitive.
   GlobalClassLoader(jobject class_loader)
-      : ClassLoaderRef<jvm_v_, class_loader_v_,
-                       GlobalClassLoader<class_loader_v_, jvm_v_> >(
+      : ClassLoaderRef<jvm_v_, class_loader_v_>(
             JniHelper::PromoteLocalToGlobalObject(class_loader)) {}
 
- private:
-  template <const auto&, const auto&, const auto&, typename>
-  friend class ObjectRef;
+  template <const auto& class_loader_v, const auto& jvm_v>
+  GlobalClassLoader(GlobalClassLoader<class_loader_v, jvm_v>&& rhs)
+      : Base(rhs.Release()) {}
 
-  // Invoked through CRTP on dtor.
-  constexpr void ClassSpecificDeleteObjectRef(jobject object_ref) {
-    JniHelper::DeleteGlobalObject(object_ref);
+  ~GlobalClassLoader() {
+    if (Base::object_ref_) {
+      JniHelper::DeleteGlobalObject(*Base::object_ref_);
+    }
   }
 };
 
