@@ -41,14 +41,14 @@ struct MethodSelection;
 
 // Represents an overload which itself may be a set of permutations.
 template <typename MethodSelectionT, size_t overload_idx>
-struct Overload;
+struct OverloadSelection;
 
 // Represents a permutation (e.g. jstring => {std::string, const char*, etc...}
-template <typename MethodSelectionT, typename OverloadT, size_t permutation_idx>
+template <typename MethodSelectionT, typename OverloadSelectionT, size_t permutation_idx>
 struct Permutation;
 
 // Represents the exact selection of a specific parameter from a permutation.
-template <typename MethodSelectionT, typename OverloadT, typename PermutationT,
+template <typename MethodSelectionT, typename OverloadSelectionT, typename PermutationT,
           size_t param_idx>
 struct ParamSelection;
 
@@ -120,17 +120,17 @@ struct MethodSelection {
   template <size_t... Is, typename... Ts>
   struct Helper<std::index_sequence<Is...>, Ts...> {
     static constexpr bool val =
-        (Overload<MethodSelection, Is>::template OverloadViable<Ts...>() ||
+        (OverloadSelection<MethodSelection, Is>::template OverloadViable<Ts...>() ||
          ...);
 
     // kNoSelection is the max of std::size_t, so, this essentially selects any
     // idx (if a valid one exists), or defaults to kNoSelection.
     static constexpr std::pair<std::size_t, std::size_t>
         overload_permutation_idx_if_valid{
-            std::min({Overload<MethodSelection,
+            std::min({OverloadSelection<MethodSelection,
                                Is>::template OverloadIdxIfViable<Ts...>()...}),
             std::min(
-                {Overload<MethodSelection,
+                {OverloadSelection<MethodSelection,
                           Is>::template PermutationIdxIfViable<Ts...>()...})};
   };
 
@@ -149,14 +149,14 @@ struct MethodSelection {
   }
 
   template <typename... Ts>
-  using FindOverload = Overload<MethodSelection, IdxPair<Ts...>().first>;
+  using FindOverloadSelection = OverloadSelection<MethodSelection, IdxPair<Ts...>().first>;
 
   template <typename... Ts>
-  using FindPermutation = Overload<MethodSelection, IdxPair<Ts...>().second>;
+  using FindPermutation = OverloadSelection<MethodSelection, IdxPair<Ts...>().second>;
 };
 
 template <typename MethodSelectionT, size_t overload_idx>
-struct Overload {
+struct OverloadSelection {
   static constexpr const auto& GetParams() {
     if constexpr (MethodSelectionT::kIsConstructor) {
       return std::get<overload_idx>(MethodSelectionT::GetMethod()).params_;
@@ -179,7 +179,7 @@ struct Overload {
   }
 
   using CDecl = CDecl_t<ReturnRaw_t<std::decay_t<decltype(GetReturn())>>>;
-  using ReturnProxied = Return_t<CDecl, Overload>;
+  using ReturnProxied = Return_t<CDecl, OverloadSelection>;
 
   // Proxy every parameter argument as an argument that can be shown in a
   // function prototype.
@@ -209,12 +209,12 @@ struct Overload {
     static_assert(sizeof...(Is) == permutation_count);
 
     static constexpr bool val =
-        (Permutation<MethodSelectionT, Overload,
+        (Permutation<MethodSelectionT, OverloadSelection,
                      Is>::template PermutationViable<Ts...>() ||
          ...);
 
     static constexpr size_t first_valid_permutation = std::min(
-        {Permutation<MethodSelectionT, Overload,
+        {Permutation<MethodSelectionT, OverloadSelection,
                      Is>::template PermutationIdxIfViable<Ts...>()...});
   };
 
@@ -241,14 +241,14 @@ struct Overload {
   }
 };
 
-template <typename MethodSelectionT, typename OverloadT, size_t permutation_idx>
+template <typename MethodSelectionT, typename OverloadSelectionT, size_t permutation_idx>
 struct Permutation {
   using NBitSelection =
-      metaprogramming::Increment_t<typename OverloadT::NBitSequence,
+      metaprogramming::Increment_t<typename OverloadSelectionT::NBitSequence,
                                    permutation_idx>;
 
   template <size_t I>
-  using Param = ParamSelection<MethodSelectionT, OverloadT, Permutation, I>;
+  using Param = ParamSelection<MethodSelectionT, OverloadSelectionT, Permutation, I>;
 
   template <typename Is, typename... Ts>
   struct Helper;
@@ -269,19 +269,19 @@ struct Permutation {
   }
 };
 
-template <typename MethodSelectionT, typename OverloadT, typename PermutationT,
+template <typename MethodSelectionT, typename OverloadSelectionT, typename PermutationT,
           size_t param_idx>
 struct ParamSelection {
   static constexpr size_t selection_idx =
       PermutationT::NBitSelection::template GetBit<param_idx>::value_;
 
   constexpr static auto& GetParam() {
-    return std::get<param_idx>(OverloadT::GetParams().values_);
+    return std::get<param_idx>(OverloadSelectionT::GetParams().values_);
   }
 
   using ParamT = metaprogramming::TypeOfNthTupleElement_t<
       selection_idx, metaprogramming::TypeOfNthTupleElement_t<
-                         param_idx, typename OverloadT::ParamsProxied>>;
+                         param_idx, typename OverloadSelectionT::ParamsProxied>>;
 
   template <typename T>
   static constexpr bool viable = ParamCompare<ParamSelection, T>::val;
@@ -343,15 +343,15 @@ template <const auto& class_loader_v_, const auto& class_v_,
 struct PermutationSelectionForArgs {
   using MethodSelectionForArgs =
       MethodSelection_t<class_loader_v_, class_v_, is_constructor, method_idx>;
-  using OverloadForArgs =
-      typename MethodSelectionForArgs::template FindOverload<Args...>;
+  using OverloadSelectionForArgs =
+      typename MethodSelectionForArgs::template FindOverloadSelection<Args...>;
   using PermutationForArgs =
       typename MethodSelectionForArgs::template FindPermutation<Args...>;
 
   static constexpr bool kIsValidArgSet =
       MethodSelectionForArgs::template ArgSetViable<Args...>;
 
-  using PermutationRef = PermutationRef<MethodSelectionForArgs, OverloadForArgs,
+  using PermutationRef = PermutationRef<MethodSelectionForArgs, OverloadSelectionForArgs,
                                         PermutationForArgs>;
 };
 
