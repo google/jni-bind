@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "default_class_loader.h"
+#include "method_ref.h"
 #include "proxy.h"
 #include "metaprogramming/concatenate.h"
 #include "metaprogramming/invoke.h"
@@ -32,6 +33,11 @@
 namespace jni {
 
 static constexpr std::size_t kNoSelection = std::numeric_limits<size_t>::max();
+
+// Represents an indexing into a specific class and method.
+template <const auto& class_loader_v_, const auto& class_v_,
+          bool is_constructor, size_t method_idx>
+struct MethodSelection;
 
 // Represents an overload which itself may be a set of permutations.
 template <typename MethodSelectionT, size_t overload_idx>
@@ -51,7 +57,28 @@ struct ParamSelection;
 template <typename ParamSelectionT, typename Query>
 struct ParamCompare;
 
-// Represents an indexing into a specific class and method.
+// Represents the exact permutation selection for a set of arguments.
+template <const auto& class_loader_v_, const auto& class_v_,
+          bool is_constructor, size_t method_idx, typename... Args>
+struct PermutationSelectionForArgs;
+
+////////////////////////////////////////////////////////////////////////////////
+// Helper Aliases.
+////////////////////////////////////////////////////////////////////////////////
+template <const auto& class_loader_v_, const auto& class_v_,
+          bool is_constructor, size_t method_idx>
+using MethodSelection_t =
+    MethodSelection<class_loader_v_, class_v_, is_constructor, method_idx>;
+
+template <const auto& class_loader_v_, const auto& class_v_,
+          bool is_constructor, size_t method_idx, typename... Args>
+using PermutationSelectionForArgs_t =
+    PermutationSelectionForArgs<class_loader_v_, class_v_, is_constructor,
+                                method_idx, Args...>;
+
+////////////////////////////////////////////////////////////////////////////////
+// Implementation Details.
+////////////////////////////////////////////////////////////////////////////////
 template <const auto& class_loader_v_, const auto& class_v_,
           bool is_constructor, size_t method_idx>
 struct MethodSelection {
@@ -68,6 +95,14 @@ struct MethodSelection {
       return class_v_.constructors_;
     } else {
       return std::get<method_idx>(class_v_.methods_);
+    }
+  }
+
+  static constexpr const auto& Name() {
+    if constexpr (is_constructor) {
+      return "<init>";
+    } else {
+      return std::get<method_idx>(class_v_.methods_).name_;
     }
   }
 
@@ -120,19 +155,6 @@ struct MethodSelection {
   using FindPermutation = Overload<MethodSelection, IdxPair<Ts...>().second>;
 };
 
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx>
-using MethodSelection_t =
-    MethodSelection<class_loader_v_, class_v_, is_constructor, method_idx>;
-
-template <typename MethodSelection, typename... Args>
-using FindOverload_t =
-    typename MethodSelection ::template FindOverload<Args...>;
-
-template <typename MethodSelection, typename... Args>
-using FindPermutation_t =
-    typename MethodSelection ::template FindPermuation<Args...>;
-
 template <typename MethodSelectionT, size_t overload_idx>
 struct Overload {
   static constexpr const auto& GetParams() {
@@ -144,9 +166,12 @@ struct Overload {
     }
   }
 
+  static constexpr Return kObjectWhenConstructed{
+      Class{MethodSelectionT::GetClass().name_}};
+
   static constexpr const auto& GetReturn() {
     if constexpr (MethodSelectionT::kIsConstructor) {
-      return Return<void>{};
+      return kObjectWhenConstructed;
     } else {
       return std::get<overload_idx>(MethodSelectionT::GetMethod().invocations_)
           .return_;
@@ -154,10 +179,6 @@ struct Overload {
   }
 
   using CDecl = CDecl_t<ReturnRaw_t<std::decay_t<decltype(GetReturn())>>>;
-
-  using ProxyForReturn =
-      Proxy_t<ReturnRaw_t<std::decay_t<decltype(GetReturn())>>>;
-
   using ReturnProxied = Return_t<CDecl, Overload>;
 
   // Proxy every parameter argument as an argument that can be shown in a
@@ -315,6 +336,23 @@ struct ParamCompare {
   };
 
   static constexpr bool val = Helper<Query>::val;
+};
+
+template <const auto& class_loader_v_, const auto& class_v_,
+          bool is_constructor, size_t method_idx, typename... Args>
+struct PermutationSelectionForArgs {
+  using MethodSelectionForArgs =
+      MethodSelection_t<class_loader_v_, class_v_, is_constructor, method_idx>;
+  using OverloadForArgs =
+      typename MethodSelectionForArgs::template FindOverload<Args...>;
+  using PermutationForArgs =
+      typename MethodSelectionForArgs::template FindPermutation<Args...>;
+
+  static constexpr bool kIsValidArgSet =
+      MethodSelectionForArgs::template ArgSetViable<Args...>;
+
+  using PermutationRef = PermutationRef<MethodSelectionForArgs, OverloadForArgs,
+                                        PermutationForArgs>;
 };
 
 }  // namespace jni

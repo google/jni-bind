@@ -28,8 +28,10 @@
 #include "field_ref.h"
 #include "jni_type_proxy.h"
 #include "method_ref.h"
+#include "proxy.h"
 #include "ref_base.h"
 #include "class_loader.h"
+#include "default_class_loader.h"
 #include "jni_dep.h"
 #include "jni_helper/jni_env.h"
 #include "jvm_ref.h"
@@ -62,8 +64,8 @@ class ObjectRef
       "This class is not directly or indirectly supported by this loader.");
   using RefBase = RefBase<jobject, class_v_, class_loader_v_>;
 
+  ObjectRef() = delete;
   explicit ObjectRef(ObjectRef&& rhs) = default;
-
   ObjectRef(const ObjectRef& rhs) = delete;
   ObjectRef& operator=(const ObjectRef& rhs) = delete;
 
@@ -85,21 +87,15 @@ class ObjectRef
   // Invoked through CRTP from InvocableMap.
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
-    using MethodSelectionForTs =
-        MethodSelection_t<class_loader_v_, class_v_, false, I>;
-    using OverloadForTs =
-        typename MethodSelectionForTs::template FindOverload<Args...>;
-    using PermutationForTs =
-        typename MethodSelectionForTs::template FindPermutation<Args...>;
+    using PermutationForArgs =
+        PermutationSelectionForArgs_t<class_loader_v_, class_v_, false, I,
+                                      Args...>;
 
-    static_assert(MethodSelectionForTs::template ArgSetViable<Args...>(),
+    static_assert(PermutationForArgs::kIsValidArgSet,
                   "JNI Error: Invalid argument set.");
 
-    return PermutationRef<MethodSelectionForTs, OverloadForTs,
-                          PermutationForTs>::Invoke(GetJClass(),
-                                                    *RefBase::object_ref_,
-                                                    std::forward<Args>(
-                                                        args)...);
+    return PermutationForArgs::PermutationRef::Invoke(
+        GetJClass(), *RefBase::object_ref_, std::forward<Args>(args)...);
   }
 
   // Invoked through CRTP from QueryableMap.
@@ -110,144 +106,85 @@ class ObjectRef
   }
 };
 
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_,
-          typename CrtpBase_, size_t I>
-class ConstructorOverloadSet;
-
-// The terminal constructor overload, specialised on std::tuple<>.  Note, this
-// is when there are no more constructors left to represent, not, a constructor
-// with an empty set of arguments.
+// Imbues constructors for ObjectRefs and handles calling the correct
+// intermediate constructors.  Access to this class is constrainted for non
+// default classloaders (see |ValidatorProxy|).
 template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_,
           typename CrtpBase_>
-class ConstructorOverloadSet<jvm_v_, class_v_, class_loader_v_, CrtpBase_, 0>
+class ConstructorValidator
     : public ObjectRef<jvm_v_, class_v_, class_loader_v_, CrtpBase_> {
  public:
   using Base = ObjectRef<jvm_v_, class_v_, class_loader_v_, CrtpBase_>;
   using Base::Base;
-};
-
-// Never instantiated (used to extract Args).
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_,
-          typename CrtpBase_, typename BaseClass_, size_t I, typename... Args>
-class ImbueConstructor {};
-
-// This class "imbues" a contructor onto a given type based on a tuple of args.
-// E.g. Imbueing std::tuple<int, int> onto Foo gives Foo::Foo(int, int);
-//
-// The reason for this extra indirection is that variadic packs can't be
-// trivially passed around, they have to be packed into tuples, and extracted
-// through partial specialisation. ConstructorOverloadSet explodes the set of
-// all jni Constructor's, and then they inherit from this class (as well as
-// inheriting the constructor) to take a signature with the correct types.
-//
-// Lastly, this class will derive from BaseClass_ which allows for the types to
-// be daisy chained.  Each constructor overload inherits from this class to
-// imbue a constructor with the proper definition, and then uses this daisy
-// chaining to progress through all remaining constructors.
-//
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_,
-          typename CrtpBase_, typename BaseClass_, size_t I, typename... Args>
-class ImbueConstructor<jvm_v_, class_v_, class_loader_v_, CrtpBase_,
-                        BaseClass_, I, std::tuple<Args...>>
-    : public BaseClass_ {
- public:
-  using BaseClass_::BaseClass_;
-
-  // ClassSpecificNewObjectRef are static throughout the class, but
-  // GetConstructorMethodID is obviously particular to the constructor in use.
-  //
-  // The CrtpBase refers to the injected creation function that specialises to
-  // the object being wrapped, e.g. NewLocalRef, NewGlobalRef, etc...
-  //
-  // Despite the signature being explicit, this will unfortunately allow
-  // implicit conversions at the call site.  E.g. jint can implicitly convert
-  // a char.  It might be possible to delete these constructors, although I
-  // don't know if those deletions would shadow parent class constructors, and
-  // you'd actually need to delete every proxyable permutation of Args (e.g.
-  // ctor(jchar, jchar) needs to delete ctor(int, jchar), ctor(int, int),
-  // ctor(jchar, int).  The code complexity isn't worth the gain.
-  explicit ImbueConstructor(JniTypeProxyAsInputParamT_t<Args>&&... args)
-      : BaseClass_(static_cast<CrtpBase_&>(*this).ClassSpecificNewObjectRef(
-            ConstructorRef<class_v_, I - 1>::GetConstructorMethodID(
-                BaseClass_::GetJClass()),
-            JniTypeProxy<std::decay_t<Args>>::Proxy(
-                std::forward<decltype(args)>(args))...)) {}
-};
-
-// This class exists to extract the parameters from each constructor and "imbue"
-// them onto another type.  By providing the partial specialisation, they can
-// effectively steal the types from a constructor and apply them onto the
-// object.  See ImbueConstructor for details.
-//
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_,
-          typename CrtpBase_, size_t I>
-class ConstructorOverloadSet
-    : public ImbueConstructor<
-          jvm_v_, class_v_, class_loader_v_, CrtpBase_,
-          ConstructorOverloadSet<jvm_v_, class_v_, class_loader_v_, CrtpBase_,
-                                 I - 1>,
-          I,
-          metaprogramming::ExtractTupleFromType_t<std::decay_t<
-              decltype(std::get<I - 1>(class_v_.constructors_))>>> {
- public:
-  using NewConstructorT =
-      std::decay_t<decltype(std::get<I - 1>(class_v_.constructors_))>;
-  using ArgsAsTuple = metaprogramming::ExtractTupleFromType_t<NewConstructorT>;
-
-  using Base =
-      ImbueConstructor<jvm_v_, class_v_, class_loader_v_, CrtpBase_,
-                       ConstructorOverloadSet<jvm_v_, class_v_, class_loader_v_,
-                                              CrtpBase_, I - 1>,
-                       I,
-                       metaprogramming::ExtractTupleFromType_t<std::decay_t<
-                           decltype(std::get<I - 1>(class_v_.constructors_))>>>;
-  using Base::Base;
-};
-
-// Imbues constructors for class-loaded objects.
-// Constructors are exposed through |jni::ClassLoaderRef::BuildLocalObject| as
-// construction actually needs to happen through an instance of a classloader.
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_,
-          typename CrtpBase_>
-class ConstructorValidator
-    : public ConstructorOverloadSet<
-          jvm_v_, class_v_, class_loader_v_, CrtpBase_,
-          std::tuple_size_v<decltype(class_v_.constructors_)>> {
- public:
-  using Base = ConstructorOverloadSet<
-      jvm_v_, class_v_, class_loader_v_, CrtpBase_,
-      std::tuple_size_v<decltype(class_v_.constructors_)>>;
 
   // Objects can still be wrapped.  This could happen if a classloaded object
   // is built in Java and then passed through to JNI.
   ConstructorValidator(jobject obj) : Base(obj) {}
-  ConstructorValidator(RefBaseTag<jobject>&& rhs) : Base(std::move(rhs)) {}
 
- protected:
   template <const auto& jvm_v, const auto& class_loader_v, typename CrtpBase>
   friend class ClassLoaderRef;
 
+  static constexpr std::size_t kNumConstructors =
+      std::tuple_size_v<decltype(class_v_.constructors_)>;
+
   template <typename... Args>
-  ConstructorValidator(Args&&... args) : Base(std::forward<Args>(args)...) {}
+  struct Helper {
+    // 0 is (always) used to represent the constructor.
+    using type = PermutationSelectionForArgs_t<class_loader_v_, class_v_, true,
+                                               0, Args...>;
+  };
+
+  template <typename... Args>
+  using Permutation_t = typename Helper<Args...>::type;
+
+  template <typename... Args,
+            typename std::enable_if<sizeof...(Args) != 0, int>::type = 0>
+  ConstructorValidator(Args&&... args)
+      : Base(Permutation_t<Args...>::PermutationRef::Invoke(
+                 Base::GetJClass(), *Base::object_ref_,
+                 std::forward<Args>(args)...)
+                 .Release()) {
+    static_assert(Permutation_t<Args...>::kIsValidArgSet,
+                  "You have passed invalid arguments to construct this type.");
+  }
+
+  ConstructorValidator()
+      : Base(Permutation_t<>::PermutationRef::Invoke(Base::GetJClass(),
+                                                     *Base::object_ref_)
+                 .Release()) {
+    static_assert(
+        kNumConstructors != 0,
+        "You are attempting to construct an object which has no Constructor "
+        "defined.  If you intended to construct this object with no arguments, "
+        "ensure you define a jni::Constructor with no arguments.");
+  }
 };
 
-// Imbues constructors for objects not loaded through a classloader.
-template <const auto& jvm_v_, const auto& class_v_, typename CrtpBase_>
-class ConstructorValidator<jvm_v_, class_v_, kDefaultClassLoader, CrtpBase_>
-    : public ConstructorOverloadSet<
-          jvm_v_, class_v_, kDefaultClassLoader, CrtpBase_,
-          std::tuple_size_v<decltype(class_v_.constructors_)>> {
- public:
-  using Base = ConstructorOverloadSet<
-      jvm_v_, class_v_, kDefaultClassLoader, CrtpBase_,
-      std::tuple_size_v<decltype(class_v_.constructors_)>>;
+template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_,
+          typename CrtpBase>
+struct ValidatorProxy
+    : public ConstructorValidator<jvm_v_, class_v_, class_loader_v_, CrtpBase> {
+  ValidatorProxy(jobject obj) : Base(obj) {}
+
+ protected:
+  using Base =
+      ConstructorValidator<jvm_v_, class_v_, class_loader_v_, CrtpBase>;
+  using Base::Base;
+};
+
+template <const auto& jvm_v_, const auto& class_v_, typename CrtpBase>
+struct ValidatorProxy<jvm_v_, kDefaultClassLoader, class_v_, CrtpBase>
+    : public ConstructorValidator<jvm_v_, class_v_, kDefaultClassLoader,
+                                  CrtpBase> {
+  using Base =
+      ConstructorValidator<jvm_v_, class_v_, kDefaultClassLoader, CrtpBase>;
   using Base::Base;
 };
 
 template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_,
           typename CrtpBase>
 using ObjectRefBuilder_t =
-    ConstructorValidator<jvm_v_, class_v_, class_loader_v_, CrtpBase>;
+    ValidatorProxy<jvm_v_, class_v_, class_loader_v_, CrtpBase>;
 
 }  // namespace jni
 

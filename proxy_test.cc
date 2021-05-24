@@ -76,12 +76,12 @@ static_assert(std::is_same_v<Proxy_t<std::string>::CDecl, jstring>);
 
 void Foo() {
   LocalObject<kClass> obj;
-  LocalObject<kClass, kClassLoader> class_loaded_obj;
 
   static_assert(std::is_same_v<Proxy_t<decltype(kClass)>::CDecl, jobject>);
   static_assert(std::is_same_v<Proxy_t<decltype(obj)>::CDecl, jobject>);
   static_assert(
-      std::is_same_v<Proxy_t<decltype(class_loaded_obj)>::CDecl, jobject>);
+      std::is_same_v<Proxy_t<LocalObject<kClass, kClassLoader>>::CDecl,
+                     jobject>);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

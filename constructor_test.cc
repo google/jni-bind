@@ -33,9 +33,19 @@ using jni::test::MockJniEnv;
 using testing::_;
 using testing::StrEq;
 
+TEST_F(JniTest, ConstructorDoesntCompile) {
+  static constexpr Class c{
+      "LeavesEmptyStringForNoArgs",
+  };
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("()V")));
+  LocalObject<c> obj{};
+}
+
 TEST_F(JniTest, Constructor_LeavesEmptyStringForNoArgs) {
   static constexpr Class c{
       "LeavesEmptyStringForNoArgs",
+      // Note, a void constructor still must have a declaration to be used.
+      Constructor{},
   };
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("()V")));
   LocalObject<c> obj{};
@@ -45,6 +55,7 @@ TEST_F(JniTest, Constructor_TakesIntAsParameter) {
   static constexpr Class c{"TakesIntAsParameter", Constructor<jint>{}};
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("(I)V")));
   LocalObject<c> obj{1};
+  // LocalObject<c> obj2{}; // doesn't compile (good).
 }
 
 TEST_F(JniTest, Constructor_TakesFloatAsParameter) {
@@ -52,6 +63,7 @@ TEST_F(JniTest, Constructor_TakesFloatAsParameter) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("(F)V")));
 
   LocalObject<c> obj{1.f};
+  // LocalObject<c> obj2{}; // doesn't compile (good).
 }
 
 TEST_F(JniTest, Constructor_Takes3IntsAsParameter) {
@@ -59,7 +71,12 @@ TEST_F(JniTest, Constructor_Takes3IntsAsParameter) {
                            Constructor<jint, jint, jint>{}};
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("(III)V")));
 
-  LocalObject<c> obj{1, 2, 3};
+  // None of the following compile (good).
+  // LocalObject<c> obj0{};
+  // LocalObject<c> obj1{1};
+  // LocalObject<c> obj2{1, 2};
+
+  LocalObject<c> ob3{1, 2, 3};
 }
 
 TEST_F(JniTest, Constructor_TakesIntOrFloat) {
@@ -78,7 +95,7 @@ TEST_F(JniTest, Constructor_TakesIntOrFloat) {
 
 TEST_F(JniTest, Constructor_TakesObject) {
   static constexpr Class c1{
-      "Argument",
+      "Arg",
   };
 
   static constexpr Class c2{
@@ -87,10 +104,39 @@ TEST_F(JniTest, Constructor_TakesObject) {
   };
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("()V")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("(LArgument;)V")));
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("(LArg;)V")));
 
   LocalObject<c1> arg{};
-  LocalObject<c2> obj{arg};
+  // LocalObject<c2> obj0{}; // doesn't compile (good).
+  LocalObject<c2> obj1{arg};
+  // LocalObject<c2> obj2{arg, arg}; // doesn't compile (good).
+}
+
+TEST_F(JniTest, Constructor_TakesObjectEvenWhenOverloaded) {
+  static constexpr Class c1{
+      "Arg",
+  };
+
+  static constexpr Class c2{
+      "TakesObject",
+      Constructor{c1},
+      Constructor{c1, c1},
+      Constructor{c1, c1, c1},
+  };
+
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("()V")));
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("(LArg;)V")));
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("(LArg;LArg;)V")));
+  EXPECT_CALL(*env_,
+              GetMethodID(_, StrEq("<init>"), StrEq("(LArg;LArg;LArg;)V")));
+
+  LocalObject<c1> arg{};
+
+  // LocalObject<c2> obj0{}; // doesn't compile, (good).
+  LocalObject<c2> obj1{arg};
+  LocalObject<c2> obj2{arg, arg};
+  LocalObject<c2> obj3{arg, arg, arg};
+  // LocalObject<c2> obj4{arg, arg, arg, arg}; // doesn't compile (good).
 }
 
 TEST_F(JniTest, Constructor_TakesDifferentTypes) {

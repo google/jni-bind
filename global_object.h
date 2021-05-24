@@ -41,7 +41,16 @@ class GlobalObject : public ObjectRefBuilder_t<
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&& local_object)
       : ObjectRefT(
-            JniHelper::PromoteLocalToGlobalObject(local_object.Release())) {
+            JniHelper::PromoteLocalToGlobalObject(jobject{local_object})) {
+    static_assert(
+        std::string_view(class_v.name_) == std::string_view(class_v_.name_),
+        "You are attempting to initialise a LocalObject from another class "
+        "type");
+  }
+
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  GlobalObject(GlobalObject<class_v, class_loader_v, jvm_v>&& rhs)
+      : ObjectRefT(rhs.Release()) {
     static_assert(
         std::string_view(class_v.name_) == std::string_view(class_v_.name_),
         "You are attempting to initialise a LocalObject from another class "

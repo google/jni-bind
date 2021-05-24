@@ -27,12 +27,11 @@ namespace jni {
 
 // Used to detect RefBase in type proxying.
 // This is useful, e.g. when you want to say "an object that might be passed"
-// but the object's type is unknown.
+// but the object's type (i.e. full name + loader information) is unknown.
 template <typename NativeJavaType_>
 class RefBaseTag {
  public:
   RefBaseTag(NativeJavaType_ object) : object_ref_(object) {}
-
   RefBaseTag(RefBaseTag&& rhs) : object_ref_(rhs.Release()) {}
 
   NativeJavaType_ Release() {
@@ -59,10 +58,6 @@ class RefBaseTag {
 // This can also be used as a temporary when passed into a function that accepts
 // objects.  This ensures type correctness (names must match) but doesn't
 // require the full class description be used when describing the function.
-//
-// The tag is a way to separate RefBases that can be converted between each
-// other. For ObjectRefs, this will be the ClassLoader that loads the object's
-// class (not a child loader that is also able to use the class).
 template <typename NativeJavaType_, const auto& class_v_ = kNoClassSpecified,
           const auto& loader_v_ = kDefaultClassLoader>
 class RefBase : public RefBaseTag<NativeJavaType_> {

@@ -25,7 +25,6 @@
 #include "class_ref.h"
 #include "jni_type_proxy.h"
 #include "method.h"
-#include "method_selection.h"
 #include "proxy.h"
 #include "ref_base.h"
 #include "signature.h"
@@ -53,11 +52,16 @@ static inline auto& GetDefaultLoadedMethodList() {
 template <typename Method, typename Overload>
 struct OverloadRef {
   static const char* GetMethodSignature() {
-    static std::string overload_signature =
-        (Overload::GetParams().GetSignature() +
-         Overload::GetReturn().GetSignature());
-
-    return overload_signature.c_str();
+    if constexpr (Method::kIsConstructor) {
+      static std::string overload_signature =
+          (Overload::GetParams().GetSignature() + "V");
+      return overload_signature.c_str();
+    } else {
+      static std::string overload_signature =
+          (Overload::GetParams().GetSignature() +
+           Overload::GetReturn().GetSignature());
+      return overload_signature.c_str();
+    }
   }
 
   static jmethodID GetMethodID(jclass clazz) {
@@ -68,7 +72,7 @@ struct OverloadRef {
         GetDefaultLoadedMethodList().push_back(&return_value);
       }
 
-      return jni::JniHelper::GetMethodID(clazz, Method::GetMethod().name_,
+      return jni::JniHelper::GetMethodID(clazz, Method::Name(),
                                          GetMethodSignature());
     });
   }
@@ -86,6 +90,10 @@ struct PermutationRef {
       JniMethodInvoke<void>::Invoke(
           object, OverloadRef::GetMethodID(clazz),
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
+    } else if constexpr (Method::kIsConstructor) {
+      return {JniHelper::NewLocalObject(
+          clazz, OverloadRef::GetMethodID(clazz),
+          Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
       return {JniMethodInvoke<typename Overload::CDecl>::Invoke(
           object, OverloadRef::GetMethodID(clazz),
