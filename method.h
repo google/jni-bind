@@ -24,20 +24,20 @@
 
 namespace jni {
 
-struct InvocationBase {};
+struct OverloadBase {};
 
 // Represents a single overload of a given method.
 template <typename ReturnT_, typename Params_>
-struct Invocation : InvocationBase {
+struct Overload : OverloadBase {
   const ReturnT_ return_;
   const Params_ params_;
 
-  constexpr Invocation(ReturnT_ return_type, Params_ params)
+  constexpr Overload(ReturnT_ return_type, Params_ params)
       : return_(return_type), params_(params) {}
 };
 
 template <typename ReturnT_, typename Params_>
-Invocation(ReturnT_, Params_) -> Invocation<ReturnT_, Params_>;
+Overload(ReturnT_, Params_) -> Overload<ReturnT_, Params_>;
 
 struct MethodBase {};
 
@@ -49,29 +49,28 @@ struct Method<std::tuple<Returns...>, std::tuple<Params_...>>
     : public MethodBase {
  public:
   const char* name_;
-  const std::tuple<Invocation<Returns, Params_>...> invocations_;
+  const std::tuple<Overload<Returns, Params_>...> invocations_;
 
   template <typename ReturnT_, typename ParamsT_,
             std::enable_if_t<std::is_base_of_v<ParamsBase, ParamsT_>, int> = 0>
   constexpr Method(const char* name, ReturnT_ return_type, ParamsT_ params)
-      : name_(name), invocations_(Invocation{return_type, params}) {}
+      : name_(name), invocations_(Overload{return_type, params}) {}
 
-  constexpr Method(const char* name,
-                   Invocation<Returns, Params_>... invocations)
+  constexpr Method(const char* name, Overload<Returns, Params_>... invocations)
       : name_(name), invocations_(invocations...) {}
 };
 
 // CTAD for Non-overloaded form.
 template <
     typename ReturnT, typename ParamsT,
-    typename = std::enable_if_t<!std::is_base_of_v<InvocationBase, ReturnT> &&
-                                !std::is_base_of_v<InvocationBase, ParamsT>>>
+    typename = std::enable_if_t<!std::is_base_of_v<OverloadBase, ReturnT> &&
+                                !std::is_base_of_v<OverloadBase, ParamsT>>>
 Method(const char*, ReturnT, ParamsT)
     -> Method<std::tuple<ReturnT>, std::tuple<ParamsT>>;
 
 // CTAD for Overloaded form.
 template <typename... Returns, typename... Params>
-Method(const char*, Invocation<Returns, Params>...)
+Method(const char*, Overload<Returns, Params>...)
     -> Method<std::tuple<Returns...>, std::tuple<Params...>>;
 
 template <typename ReturnT1, typename ParamsT1, typename ReturnT2,

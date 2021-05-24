@@ -31,10 +31,10 @@
 namespace {
 
 using jni::Class;
-using jni::Invocation;
 using jni::LocalObject;
 using jni::Method;
 using jni::MethodSelection_t;
+using jni::Overload;
 using jni::Params;
 using jni::test::JniTest;
 using testing::_;
@@ -56,8 +56,8 @@ TEST_F(JniTest, MethodRef_AsksForCorrectMethods1) {
 TEST_F(JniTest, MethodRef_AsksForCorrectMethods2) {
   static constexpr Class kClass{
       "com/google/SupportsStrings",
-      Method{"Foo", Invocation{jni::Return<void>{}, Params{jint{}}},
-             Invocation{jni::Return<void>{}, Params{jstring{}}}}};
+      Method{"Foo", Overload{jni::Return<void>{}, Params{jint{}}},
+             Overload{jni::Return<void>{}, Params{jstring{}}}}};
   LocalObject<kClass> obj{};
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("(I)V")));
@@ -74,9 +74,9 @@ TEST_F(JniTest, MethodRef_AsksForCorrectMethods3) {
       "com/google/SupportsStrings",
       Method{
           "Foo",
-          Invocation{jni::Return<void>{}, Params{jint{}}},
-          Invocation{jni::Return<void>{}, Params{jstring{}}},
-          Invocation{jni::Return<void>{}, Params{jstring{}, jstring{}}},
+          Overload{jni::Return<void>{}, Params{jint{}}},
+          Overload{jni::Return<void>{}, Params{jstring{}}},
+          Overload{jni::Return<void>{}, Params{jstring{}, jstring{}}},
       }};
   LocalObject<kClass> obj{};
 
@@ -99,15 +99,15 @@ TEST_F(JniTest, MethodRef_AsksForCorrectMethodsWhenMultiplePresent4) {
       "com/google/SupportsStrings",
       Method{
           "Foo",
-          Invocation{jni::Return<void>{}, Params{jint{}}},
-          Invocation{jni::Return<void>{}, Params{jstring{}}},
-          Invocation{jni::Return<void>{}, Params{jstring{}, jstring{}}},
+          Overload{jni::Return<void>{}, Params{jint{}}},
+          Overload{jni::Return<void>{}, Params{jstring{}}},
+          Overload{jni::Return<void>{}, Params{jstring{}, jstring{}}},
       },
       Method{
           "Baz",
-          Invocation{jni::Return<void>{}, Params{jint{}}},
-          Invocation{jni::Return<void>{}, Params{jstring{}, jstring{}}},
-          Invocation{jni::Return<void>{}, Params{jfloat{}, jfloat{}}},
+          Overload{jni::Return<void>{}, Params{jint{}}},
+          Overload{jni::Return<void>{}, Params{jstring{}, jstring{}}},
+          Overload{jni::Return<void>{}, Params{jfloat{}, jfloat{}}},
       }};
   LocalObject<kClass> obj{};
 

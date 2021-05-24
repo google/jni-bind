@@ -32,12 +32,12 @@ namespace {
 using jni::Class;
 using jni::Constructor;
 using jni::GlobalObject;
-using jni::Invocation;
 using jni::kDefaultClassLoader;
 using jni::kNoSelection;
 using jni::LocalObject;
 using jni::Method;
 using jni::MethodSelection_t;
+using jni::Overload;
 using jni::Params;
 using jni::Return;
 
@@ -120,14 +120,14 @@ static_assert(!Sel_t<c1, false, 7>::ArgSetViable<LocalObj2>());
 ////////////////////////////////////////////////////////////////////////////////
 
 constexpr Method m_with_overloads{
-    Method{"method_with_overload_", Invocation{Return<void>{}, Params{}},
-           Invocation{Return<void>{}, Params<int>{}},
-           Invocation{Return<void>{}, Params<int, int>{}},
-           Invocation{Return<void>{}, Params<int, int, float, int>{}},
-           Invocation{Return<void>{}, Params<jstring>{}},
-           Invocation{Return<void>{}, Params<jstring, jstring>{}},
-           Invocation{Return<void>{}, Params{kClass1}},
-           Invocation{
+    Method{"method_with_overload_", Overload{Return<void>{}, Params{}},
+           Overload{Return<void>{}, Params<int>{}},
+           Overload{Return<void>{}, Params<int, int>{}},
+           Overload{Return<void>{}, Params<int, int, float, int>{}},
+           Overload{Return<void>{}, Params<jstring>{}},
+           Overload{Return<void>{}, Params<jstring, jstring>{}},
+           Overload{Return<void>{}, Params{kClass1}},
+           Overload{
                Return<void>{},
                Params{kClass2},
            }}};
