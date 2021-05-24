@@ -205,6 +205,48 @@ TEST_F(JniTest, MethodRef_PassesAndReturnsMultipleObjects) {
   jni::LocalObject<c1> obj5{object_under_test("Foo", obj1, obj2, obj3, obj4)};
 }
 
+TEST_F(JniTest, MethodRef_SupportsForwardDefines) {
+  static constexpr Class kClass1{
+      "kClass1",
+      Method{"m1", jni::Return<void>{}, Params{Class{"kClass1"}}},
+      Method{"m2", jni::Return<void>{}, Params{Class{"kClass2"}}},
+      Method{"m3", jni::Return{Class{"kClass1"}}, Params{}},
+      Method{"m4", jni::Return{Class{"kClass2"}}, Params{}},
+  };
+
+  static constexpr Class kClass2{
+      "kClass2",
+      Method{"m1", jni::Return<void>{}, Params{Class{"kClass1"}}},
+      Method{"m2", jni::Return<void>{}, Params{Class{"kClass2"}}},
+      Method{"m3", jni::Return{Class{"kClass1"}}, Params{}},
+      Method{"m4", jni::Return{Class{"kClass2"}}, Params{}},
+  };
+
+  const jobject fake_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
+
+  jni::LocalObject<kClass1> c1_obj1{fake_jobject};
+  jni::LocalObject<kClass1> c1_obj2{fake_jobject};
+
+  jni::LocalObject<kClass2> c2_obj1{fake_jobject};
+  jni::LocalObject<kClass2> c2_obj2{fake_jobject};
+
+  c1_obj1("m1", c1_obj1);
+  c1_obj1("m2", c2_obj1);
+  c1_obj1("m1", c1_obj1("m3"));
+  c1_obj1("m2", c1_obj1("m4"));
+
+  c2_obj1("m1", c1_obj1);
+  c2_obj1("m2", c2_obj2);
+  c2_obj1("m2", std::move(std::move(c2_obj2)));
+
+  c1_obj1("m2", std::move(c2_obj1));
+
+  // c2_obj1("m1", c1_obj1); // illegal! triggers warnings (post move read).
+  // c2_obj1("m2", c2_obj2); // illegal! triggers warnings (post move read).
+  // c2_obj1("m2", std::move(c2_obj2));  // illegal! triggers warnings (post
+  // move read).
+}
+
 TEST_F(JniTest, MethodRef_SupportsStrings) {
   static constexpr Class class_under_test{
       "com/google/SupportsStrings",
