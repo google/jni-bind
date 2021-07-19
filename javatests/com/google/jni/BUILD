@@ -33,6 +33,7 @@ android_jni_library(
     testonly = 1,
     srcs = ["context_test_jni.cc"],
     force_android = True,
+    whole_archive = False,
     deps = [
         ":object_test_helper_jni",
         "//:class",
@@ -86,6 +87,7 @@ android_jni_library(
     testonly = 1,
     srcs = ["local_object_test_jni.cc"],
     force_android = True,
+    whole_archive = False,
     deps = [
         ":object_test_helper_jni",
         "//:class",
@@ -145,6 +147,7 @@ android_jni_library(
     testonly = 1,
     srcs = ["global_object_test_jni.cc"],
     force_android = True,
+    whole_archive = False,
     deps = [
         ":object_test_helper_jni",
         "//:class",
@@ -201,6 +204,7 @@ android_jni_library(
     testonly = 1,
     srcs = ["field_test_jni.cc"],
     force_android = True,
+    whole_archive = False,
     deps = [
         ":object_test_helper_jni",
         "//:class",
@@ -255,6 +259,7 @@ android_jni_library(
     testonly = 1,
     srcs = ["method_test_jni.cc"],
     force_android = True,
+    whole_archive = False,
     deps = [
         ":object_test_helper_jni",
         "//:class",
@@ -311,6 +316,7 @@ android_jni_library(
     testonly = 1,
     srcs = ["string_test_jni.cc"],
     force_android = True,
+    whole_archive = False,
     deps = [
         ":object_test_helper_jni",
         "//:class",
@@ -367,6 +373,7 @@ android_jni_library(
     testonly = 1,
     srcs = ["class_loader_test_jni.cc"],
     force_android = True,
+    whole_archive = False,
     deps = [
         ":object_test_helper_jni",
         "//:class",
