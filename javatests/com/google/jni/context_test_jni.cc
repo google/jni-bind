@@ -17,6 +17,8 @@
 #include "jni_dep.h"
 #include "jvm_ref.h"
 
+namespace {
+
 using jni::GlobalObject;
 
 // A struct that could represent context to be maintained across multiple native
@@ -26,11 +28,19 @@ struct ContextStruct {
   GlobalObject<kObjectTestHelperClass> obj;
 };
 
+static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
+
+}  // namespace
+
 extern "C" {
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
-  static jni::JvmRef<jni::kDefaultJvm> jvm{pjvm};
   return JNI_VERSION_1_6;
+}
+
+JNIEXPORT void JNICALL Java_com_google_jni_ContextTest_DoSetup(JNIEnv* env,
+                                                               jclass) {
+  jvm.reset(new jni::JvmRef<jni::kDefaultJvm>{env});
 }
 
 JNIEXPORT jlong JNICALL

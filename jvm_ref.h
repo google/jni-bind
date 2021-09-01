@@ -67,10 +67,11 @@ class ThreadGuard {
   ThreadGuard(ThreadGuard&) = delete;
   ThreadGuard(ThreadGuard&&) = delete;
 
- private:
   template <const auto& jvm_v_>
   friend class JvmRef;
 
+  // This constructor must *never* be called before a |JvmRef| has been
+  // constructed. It depends on static setup from |JvmRef|.
   [[nodiscard]] ThreadGuard() {
     // Nested ThreadGuards should be permitted in the same way mutex locks are.
     thread_guard_count_++;
@@ -108,6 +109,7 @@ class ThreadGuard {
     JniEnv::SetEnv(jni_env);
   }
 
+ private:
   static inline thread_local int thread_guard_count_ = 0;
   static inline thread_local bool detach_thread_when_all_guards_released_;
 };
@@ -149,6 +151,17 @@ class JvmRef : public JvmRefBase {
      ...);
   }
 
+  JavaVM* BuildJavaVMFromEnv(JNIEnv* env) {
+    JavaVM* vm = nullptr;
+    // 0 Is success.
+    if (env->GetJavaVM(&vm) == 0) {
+      return vm;
+    } else {
+      return nullptr;
+    }
+  }
+
+  explicit JvmRef(JNIEnv* env) : JvmRefBase(BuildJavaVMFromEnv(env)) {}
   explicit JvmRef(JavaVM* vm) : JvmRefBase(vm) {}
 
   ~JvmRef() {

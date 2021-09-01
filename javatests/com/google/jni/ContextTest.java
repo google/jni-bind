@@ -28,6 +28,10 @@ public final class ContextTest {
     System.loadLibrary("context_test_jni");
   }
 
+  public ContextTest() {
+    DoSetup();
+  }
+
   @Test
   public void testGlobalObjectsPersistAcrossJniOverloads() {
     long native_context = CreateNativeContextObject(555);
@@ -51,6 +55,11 @@ public final class ContextTest {
     assertThat(QueryNativeObject(native_context).intVal1).isEqualTo(9876);
     DestroyNativeContext(native_context);
   }
+
+  // Some kind of "initial call".  This test suite doesn't override JNIOnload in order to emulate
+  // situations where this may not be accessible to the caller (or cannot be overridden) but the
+  // first call across JNI is known.
+  native void DoSetup();
 
   // Causes native code to create an object that will be stored in native code and returned on a
   // subsequent call.  This can only be done with global objects and not local objects.
