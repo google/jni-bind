@@ -17,23 +17,11 @@
 #include <tuple>
 #include <type_traits>
 
-#include "class.h"
-#include "class_loader.h"
 #include "jni_test.h"
-#include "jvm.h"
-#include "local_object.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "class.h"
-#include "class_loader.h"
-#include "global_object.h"
-#include "jni_dep.h"
-#include "local_string.h"
+#include "jni_bind.h"
 #include "metaprogramming/concatenate.h"
-#include "method.h"
-#include "method_selection.h"
-#include "params.h"
-#include "supported_class_set.h"
 
 using jni::AsDecl_t;
 using jni::Class;

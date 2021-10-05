@@ -14,23 +14,12 @@
 
 #include <optional>
 
-#include "class.h"
-#include "class_loader.h"
-#include "field.h"
-#include "field_ref.h"
-#include "global_object.h"
 #include "jni_test.h"
-#include "jvm.h"
-#include "local_object.h"
-#include "method.h"
-#include "method_ref.h"
 #include "mock_jni_env.h"
 #include "mock_jvm.h"
-#include "params.h"
-#include "return.h"
-#include "supported_class_set.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "jni_bind.h"
 #include "jni_dep.h"
 #include "jni_test.h"
 

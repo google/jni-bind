@@ -14,20 +14,11 @@
 
 #include "method_ref.h"
 
-#include "class.h"
-#include "global_object.h"
 #include "jni_test.h"
-#include "local_object.h"
-#include "local_string.h"
-#include "method.h"
-#include "method_selection.h"
 #include "mock_jni_env.h"
-#include "params.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "jni_dep.h"
-#include "jni_helper/jni_helper.h"
-#include "return.h"
+#include "jni_bind.h"
 
 namespace {
 

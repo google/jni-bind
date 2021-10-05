@@ -19,18 +19,11 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "class.h"
-#include "class_loader.h"
-#include "field.h"
-#include "field_ref.h"
+#include "jni_bind.h"
 #include "jni_dep.h"
 #include "jni_test.h"
 #include "jvm_ref.h"
-#include "method.h"
-#include "method_ref.h"
 #include "mock_jni_env.h"
-#include "params.h"
-#include "return.h"
 
 namespace {
 

@@ -16,13 +16,10 @@
 
 #include <optional>
 
-#include "class.h"
-#include "field.h"
-#include "global_object.h"
-#include "local_object.h"
 #include "mock_jni_env.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "jni_bind.h"
 #include "jni_dep.h"
 #include "jni_test.h"
 

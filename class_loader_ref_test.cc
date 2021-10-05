@@ -17,22 +17,11 @@
 #include <optional>
 #include <utility>
 
-#include "class.h"
-#include "class_loader.h"
-#include "global_class_loader.h"
 #include "jni_test.h"
-#include "jvm.h"
-#include "local_class_loader.h"
-#include "method.h"
-#include "method_ref.h"
 #include "mock_jni_env.h"
-#include "params.h"
-#include "return.h"
-#include "supported_class_set.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "jni_dep.h"
-#include "jvm_ref.h"
+#include "jni_bind.h"
 
 namespace {
 
