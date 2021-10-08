@@ -643,6 +643,20 @@ cc_test(
 )
 
 cc_library(
+    name = "string_concatenate",
+    hdrs = ["string_concatenate.h"],
+)
+
+cc_test(
+    name = "string_concatenate_test",
+    srcs = ["string_concatenate_test.cc"],
+    deps = [
+        ":string_concatenate",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "type_index_mask",
     hdrs = ["type_index_mask.h"],
     deps = [":type_of_nth_element"],
