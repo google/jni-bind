@@ -23,7 +23,6 @@
 #include <utility>
 
 #include "object.h"
-#include "jni_helper/jni_typename_to_string.h"
 
 namespace jni {
 

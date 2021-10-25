@@ -22,16 +22,16 @@
 #include <utility>
 
 #include "default_class_loader.h"
+#include "jni_helper/jni_typename_to_string.h"
 #include "metaprogramming/concatenate.h"
 #include "metaprogramming/invoke.h"
 #include "metaprogramming/n_bit_sequence.h"
-#include "metaprogramming/string_concatenate.h"
 #include "metaprogramming/tuple_manipulation.h"
 #include "metaprogramming/type_index_mask.h"
 #include "metaprogramming/type_of_nth_element.h"
 #include "method_ref.h"
-#include "name_constants.h"
 #include "proxy.h"
+#include "selector_static_info.h"
 
 namespace jni {
 
@@ -170,71 +170,26 @@ struct MethodSelection {
 
 template <typename MethodSelectionT, typename OverloadSelectionT>
 struct ReturnSelection {
-  using ReturnT =
+  using RawValT =
       ReturnRaw_t<std::decay_t<decltype(OverloadSelectionT::GetReturn())>>;
 
-  static constexpr bool kIsObject = std::is_base_of_v<Object, ReturnT>;
-
-  static constexpr std::string_view NameOrNothingIfNotAnObject() {
-    if constexpr (kIsObject) {
-      return OverloadSelectionT::GetReturn().return_raw_.name_;
-    } else {
-      return "";
-    }
+  static constexpr inline auto& Val() {
+    return OverloadSelectionT::GetReturn().return_raw_;
   }
-
-  static constexpr std::string_view kTypeNameOrNothingIfNotAnObject =
-      NameOrNothingIfNotAnObject();
-
-  static constexpr std::string_view ReturnName() {
-    if constexpr (kIsObject) {
-      return metaprogramming::StringConcatenate_v<
-          kLetterL, kTypeNameOrNothingIfNotAnObject, kSemiColon>;
-    } else {
-      return JavaTypeToString<ReturnT>();
-    }
-  }
-
-  static constexpr std::string_view kName = ReturnName();
 };
 
 template <typename MethodSelectionT, typename OverloadSelectionT,
           size_t param_idx>
 struct InputParamSelection {
-  static constexpr const auto& GetParam() {
+  static constexpr inline const auto& Val() {
     return std::get<param_idx>(OverloadSelectionT::GetParams().values_);
   }
 
-  using ParamT = std::decay_t<decltype(GetParam())>;
-
-  static constexpr bool kIsObject = std::is_base_of_v<Object, ParamT>;
-
-  static constexpr std::string_view NameOrNothingIfNotAnObject() {
-    if constexpr (kIsObject) {
-      return GetParam().name_;
-    } else {
-      return "";
-    }
-  }
-
-  static constexpr std::string_view kTypeNameOrNothingIfNotAnObject =
-      NameOrNothingIfNotAnObject();
-
-  static inline constexpr std::string_view Signature() {
-    if constexpr (kIsObject) {
-      return metaprogramming::StringConcatenate_v<
-          kLetterL, kTypeNameOrNothingIfNotAnObject, kSemiColon>;
-    } else {
-      return JavaTypeToString<ParamT>();
-    }
-  }
-
-  static constexpr std::string_view val = Signature();
+  using RawValT = std::decay_t<decltype(Val())>;
 };
 
 template <typename MethodSelectionT, size_t overload_idx>
 struct OverloadSelection {
-
   static constexpr Return kObjectWhenConstructed{
       Class{MethodSelectionT::GetClass().name_}};
 
@@ -336,8 +291,9 @@ struct OverloadSelection {
   template <size_t... Is>
   struct ParamHelper<std::index_sequence<Is...>> {
     static constexpr std::string_view val =
-        metaprogramming::StringConcatenate_v<InputParamSelection<
-            MethodSelectionT, OverloadSelection, Is>::val...>;
+        metaprogramming::StringConcatenate_v<
+            SelectorStaticInfo<InputParamSelection<
+                MethodSelectionT, OverloadSelection, Is>>::kTypeName...>;
   };
 
   static constexpr std::string_view kParamSignature =
@@ -350,7 +306,8 @@ struct OverloadSelection {
     if constexpr (MethodSelectionT::kIsConstructor) {
       return "V";
     } else {
-      return ReturnSelection<MethodSelectionT, OverloadSelection>::ReturnName();
+      return SelectorStaticInfo<
+          ReturnSelection<MethodSelectionT, OverloadSelection>>::kTypeName;
     }
   }
 

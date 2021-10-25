@@ -33,7 +33,6 @@ struct Return {
   constexpr explicit Return(ReturnRaw return_raw) : return_raw_(return_raw) {}
 };
 
-// TODO(b/174272629): Remove when shifted to the new TypeProxy.
 template <>
 struct Return<void> {
   using ReturnRaw = void;

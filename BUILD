@@ -378,8 +378,9 @@ cc_library(
     deps = [
         ":default_class_loader",
         ":method_ref",
-        ":name_constants",
         ":proxy",
+        ":selector_static_info",
+        "//jni_helper:jni_typename_to_string",
         "//metaprogramming:concatenate",
         "//metaprogramming:invoke",
         "//metaprogramming:n_bit_sequence",
@@ -582,6 +583,28 @@ cc_library(
         ":ref_base",
         "//jni_helper",
         "//jni_helper:jni_env",
+    ],
+)
+
+cc_library(
+    name = "selector_static_info",
+    hdrs = ["selector_static_info.h"],
+    deps = [
+        ":name_constants",
+        ":object",
+        ":return",
+        "//jni_helper:jni_typename_to_string",
+        "//metaprogramming:string_concatenate",
+    ],
+)
+
+cc_test(
+    name = "selector_static_info_test",
+    srcs = ["selector_static_info_test.cc"],
+    deps = [
+        ":jni_bind",
+        ":selector_static_info",
+        "@googletest//:gtest_main",
     ],
 )
 
