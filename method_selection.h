@@ -22,8 +22,6 @@
 #include <utility>
 
 #include "default_class_loader.h"
-#include "method_ref.h"
-#include "proxy.h"
 #include "metaprogramming/concatenate.h"
 #include "metaprogramming/invoke.h"
 #include "metaprogramming/n_bit_sequence.h"
@@ -31,6 +29,9 @@
 #include "metaprogramming/tuple_manipulation.h"
 #include "metaprogramming/type_index_mask.h"
 #include "metaprogramming/type_of_nth_element.h"
+#include "method_ref.h"
+#include "name_constants.h"
+#include "proxy.h"
 
 namespace jni {
 
@@ -87,17 +88,6 @@ template <const auto& class_loader_v_, const auto& class_v_,
 using PermutationSelectionForArgs_t =
     PermutationSelectionForArgs<class_loader_v_, class_v_, is_constructor,
                                 method_idx, Args...>;
-
-////////////////////////////////////////////////////////////////////////////////
-// Constants for signature generation.
-////////////////////////////////////////////////////////////////////////////////
-
-static constexpr std::string_view kLeftParenthesis{"("};
-static constexpr std::string_view kRightParenthesis{")"};
-static constexpr std::string_view kInit{"<init>"};
-static constexpr std::string_view kComma{","};
-static constexpr std::string_view kSemiColon{";"};
-static constexpr std::string_view kLetterL{"L"};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation Details.

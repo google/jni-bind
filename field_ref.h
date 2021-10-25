@@ -18,11 +18,12 @@
 #define JNI_BIND_FIELD_REF_H_
 
 #include <mutex>
+#include <string_view>
 #include <tuple>
 #include <utility>
 
 #include "class_ref.h"
-#include "field.h"
+#include "field_selection.h"
 #include "jni_dep.h"
 #include "jni_helper/field_value.h"
 #include "jni_helper/jni_helper.h"
@@ -48,6 +49,7 @@ class FieldRef {
  public:
   using ValueRaw =
       ValueRaw_t<std::decay_t<decltype(std::get<I>(class_v_.fields_))>>;
+  using FieldSelectionT = FieldSelection<class_loader_v_, class_v_, I>;
 
   explicit FieldRef(jclass class_ref, jobject object_ref)
       : class_ref_(class_ref), object_ref_(object_ref) {}
@@ -58,9 +60,8 @@ class FieldRef {
 
   static auto& GetField() { return std::get<I>(class_v_.fields_); }
 
-  static const char* GetFieldSignature() {
-    static std::string signature{GetField().Signature()};
-    return signature.c_str();
+  static std::string_view GetFieldSignature() {
+    return FieldSelection<class_loader_v_, class_v_, I>::GetSignature();
   }
 
   // This method is thread safe.
@@ -73,7 +74,7 @@ class FieldRef {
       }
 
       return jni::JniHelper::GetFieldID(clazz, GetField().name_,
-                                        GetFieldSignature());
+                                        GetFieldSignature().data());
     });
   }
 

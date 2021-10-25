@@ -159,7 +159,7 @@ cc_library(
     hdrs = ["field_ref.h"],
     deps = [
         ":class_ref",
-        ":field",
+        ":field_selection",
         ":jni_dep",
         "//jni_helper",
         "//jni_helper:field_value_getter",
@@ -179,6 +179,17 @@ cc_test(
         ":jni_test",
         ":mock_jni_env",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "field_selection",
+    hdrs = ["field_selection.h"],
+    deps = [
+        ":name_constants",
+        ":object",
+        "//jni_helper:jni_typename_to_string",
+        "//metaprogramming:string_concatenate",
     ],
 )
 
@@ -369,6 +380,7 @@ cc_library(
     deps = [
         ":default_class_loader",
         ":method_ref",
+        ":name_constants",
         ":proxy",
         "//metaprogramming:concatenate",
         "//metaprogramming:invoke",
@@ -430,6 +442,13 @@ cc_test(
         ":mock_jni_env",
         ":mock_jvm",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "name_constants",
+    hdrs = ["name_constants.h"],
+    deps = [
     ],
 )
 
