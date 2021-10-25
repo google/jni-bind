@@ -23,12 +23,6 @@
 
 #include "class_loader.h"
 #include "class_ref.h"
-#include "method.h"
-#include "proxy.h"
-#include "ref_base.h"
-#include "signature.h"
-#include "string.h"
-#include "class_loader.h"
 #include "jni_dep.h"
 #include "jni_helper/jni_env.h"
 #include "jni_helper/jni_helper.h"
@@ -36,8 +30,14 @@
 #include "metaprogramming/double_locked_value.h"
 #include "metaprogramming/invocable_map.h"
 #include "metaprogramming/optional_wrap.h"
+#include "metaprogramming/string_concatenate.h"
+#include "method.h"
 #include "params.h"
+#include "proxy.h"
+#include "ref_base.h"
 #include "return.h"
+#include "signature.h"
+#include "string.h"
 
 namespace jni {
 
@@ -50,17 +50,8 @@ static inline auto& GetDefaultLoadedMethodList() {
 
 template <typename Method, typename Overload>
 struct OverloadRef {
-  static const char* GetMethodSignature() {
-    if constexpr (Method::kIsConstructor) {
-      static std::string overload_signature =
-          (Overload::GetParams().GetSignature() + "V");
-      return overload_signature.c_str();
-    } else {
-      static std::string overload_signature =
-          (Overload::GetParams().GetSignature() +
-           Overload::GetReturn().GetSignature());
-      return overload_signature.c_str();
-    }
+  static constexpr std::string_view GetMethodSignature() {
+    return Overload::GetOverloadSignature();
   }
 
   static jmethodID GetMethodID(jclass clazz) {
@@ -72,7 +63,8 @@ struct OverloadRef {
       }
 
       return jni::JniHelper::GetMethodID(clazz, Method::Name(),
-                                         GetMethodSignature());
+                                         GetMethodSignature().data());
+
     });
   }
 };

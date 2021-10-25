@@ -344,6 +344,7 @@ cc_library(
         "//metaprogramming:double_locked_value",
         "//metaprogramming:invocable_map",
         "//metaprogramming:optional_wrap",
+        "//metaprogramming:string_concatenate",
     ],
 )
 
@@ -372,6 +373,8 @@ cc_library(
         "//metaprogramming:concatenate",
         "//metaprogramming:invoke",
         "//metaprogramming:n_bit_sequence",
+        "//metaprogramming:string_concatenate",
+        "//metaprogramming:tuple_manipulation",
         "//metaprogramming:type_index_mask",
         "//metaprogramming:type_of_nth_element",
     ],

@@ -27,6 +27,8 @@
 #include "metaprogramming/concatenate.h"
 #include "metaprogramming/invoke.h"
 #include "metaprogramming/n_bit_sequence.h"
+#include "metaprogramming/string_concatenate.h"
+#include "metaprogramming/tuple_manipulation.h"
 #include "metaprogramming/type_index_mask.h"
 #include "metaprogramming/type_of_nth_element.h"
 
@@ -52,10 +54,20 @@ template <typename MethodSelectionT, typename OverloadSelectionT, typename Permu
           size_t param_idx>
 struct ParamSelection;
 
+// The the type of an exact selection parameter in a method as part of the class
+// specification (vs. the selection of a parameter in some generated candidate).
+template <typename MethodSelectionT, typename OverloadSelectionT,
+          size_t param_idx>
+struct InputParamSelection;
+
 // Compares a ParamSelection (the type associated with an exact parameter of an
 // exact permutation) and exposes a value if they are equal.
 template <typename ParamSelectionT, typename Query>
 struct ParamCompare;
+
+// The type correlating to the selection of a return type of a method.
+template <typename MethodSelectionT, typename OverloadSelectionT>
+struct ReturnSelection;
 
 // Represents the exact permutation selection for a set of arguments.
 template <const auto& class_loader_v_, const auto& class_v_,
@@ -75,6 +87,17 @@ template <const auto& class_loader_v_, const auto& class_v_,
 using PermutationSelectionForArgs_t =
     PermutationSelectionForArgs<class_loader_v_, class_v_, is_constructor,
                                 method_idx, Args...>;
+
+////////////////////////////////////////////////////////////////////////////////
+// Constants for signature generation.
+////////////////////////////////////////////////////////////////////////////////
+
+static constexpr std::string_view kLeftParenthesis{"("};
+static constexpr std::string_view kRightParenthesis{")"};
+static constexpr std::string_view kInit{"<init>"};
+static constexpr std::string_view kComma{","};
+static constexpr std::string_view kSemiColon{";"};
+static constexpr std::string_view kLetterL{"L"};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation Details.
@@ -155,16 +178,72 @@ struct MethodSelection {
   using FindPermutation = OverloadSelection<MethodSelection, IdxPair<Ts...>().second>;
 };
 
-template <typename MethodSelectionT, size_t overload_idx>
-struct OverloadSelection {
-  static constexpr const auto& GetParams() {
-    if constexpr (MethodSelectionT::kIsConstructor) {
-      return std::get<overload_idx>(MethodSelectionT::GetMethod()).params_;
+template <typename MethodSelectionT, typename OverloadSelectionT>
+struct ReturnSelection {
+  using ReturnT =
+      ReturnRaw_t<std::decay_t<decltype(OverloadSelectionT::GetReturn())>>;
+
+  static constexpr bool kIsObject = std::is_base_of_v<Object, ReturnT>;
+
+  static constexpr std::string_view NameOrNothingIfNotAnObject() {
+    if constexpr (kIsObject) {
+      return OverloadSelectionT::GetReturn().return_raw_.name_;
     } else {
-      return std::get<overload_idx>(MethodSelectionT::GetMethod().invocations_)
-          .params_;
+      return "";
     }
   }
+
+  static constexpr std::string_view kTypeNameOrNothingIfNotAnObject =
+      NameOrNothingIfNotAnObject();
+
+  static constexpr std::string_view ReturnName() {
+    if constexpr (kIsObject) {
+      return metaprogramming::StringConcatenate_v<
+          kLetterL, kTypeNameOrNothingIfNotAnObject, kSemiColon>;
+    } else {
+      return JavaTypeToString<ReturnT>();
+    }
+  }
+
+  static constexpr std::string_view kName = ReturnName();
+};
+
+template <typename MethodSelectionT, typename OverloadSelectionT,
+          size_t param_idx>
+struct InputParamSelection {
+  static constexpr const auto& GetParam() {
+    return std::get<param_idx>(OverloadSelectionT::GetParams().values_);
+  }
+
+  using ParamT = std::decay_t<decltype(GetParam())>;
+
+  static constexpr bool kIsObject = std::is_base_of_v<Object, ParamT>;
+
+  static constexpr std::string_view NameOrNothingIfNotAnObject() {
+    if constexpr (kIsObject) {
+      return GetParam().name_;
+    } else {
+      return "";
+    }
+  }
+
+  static constexpr std::string_view kTypeNameOrNothingIfNotAnObject =
+      NameOrNothingIfNotAnObject();
+
+  static inline constexpr std::string_view Signature() {
+    if constexpr (kIsObject) {
+      return metaprogramming::StringConcatenate_v<
+          kLetterL, kTypeNameOrNothingIfNotAnObject, kSemiColon>;
+    } else {
+      return JavaTypeToString<ParamT>();
+    }
+  }
+
+  static constexpr std::string_view val = Signature();
+};
+
+template <typename MethodSelectionT, size_t overload_idx>
+struct OverloadSelection {
 
   static constexpr Return kObjectWhenConstructed{
       Class{MethodSelectionT::GetClass().name_}};
@@ -175,6 +254,15 @@ struct OverloadSelection {
     } else {
       return std::get<overload_idx>(MethodSelectionT::GetMethod().invocations_)
           .return_;
+    }
+  }
+
+  static constexpr const auto& GetParams() {
+    if constexpr (MethodSelectionT::kIsConstructor) {
+      return std::get<overload_idx>(MethodSelectionT::GetMethod()).params_;
+    } else {
+      return std::get<overload_idx>(MethodSelectionT::GetMethod().invocations_)
+          .params_;
     }
   }
 
@@ -204,6 +292,7 @@ struct OverloadSelection {
   template <typename Is, typename... Ts>
   struct Helper;
 
+  // Iterator for Permutation
   template <size_t... Is, typename... Ts>
   struct Helper<std::index_sequence<Is...>, Ts...> {
     static_assert(sizeof...(Is) == permutation_count);
@@ -217,6 +306,9 @@ struct OverloadSelection {
         {Permutation<MethodSelectionT, OverloadSelection,
                      Is>::template PermutationIdxIfViable<Ts...>()...});
   };
+
+  static constexpr size_t kNumParams =
+      std::tuple_size_v<decltype(GetParams().values_)>;
 
   template <typename... Ts>
   static constexpr size_t PermutationIdxIfViable() {
@@ -238,6 +330,45 @@ struct OverloadSelection {
   template <typename... Ts>
   static constexpr size_t OverloadIdxIfViable() {
     return OverloadViable<Ts...>() ? overload_idx : kNoSelection;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Static Signature Generation.
+  ////////////////////////////////////////////////////////////////////////////////
+  template <typename Is>
+  struct ParamHelper;
+
+  template <>
+  struct ParamHelper<std::index_sequence<>> {
+    static constexpr std::string_view val = "";
+  };
+
+  template <size_t... Is>
+  struct ParamHelper<std::index_sequence<Is...>> {
+    static constexpr std::string_view val =
+        metaprogramming::StringConcatenate_v<InputParamSelection<
+            MethodSelectionT, OverloadSelection, Is>::val...>;
+  };
+
+  static constexpr std::string_view kParamSignature =
+      metaprogramming::StringConcatenate_v<
+          kLeftParenthesis,
+          ParamHelper<std::make_index_sequence<kNumParams>>::val,
+          kRightParenthesis>;
+
+  static constexpr std::string_view GetReturnSignature() {
+    if constexpr (MethodSelectionT::kIsConstructor) {
+      return "V";
+    } else {
+      return ReturnSelection<MethodSelectionT, OverloadSelection>::ReturnName();
+    }
+  }
+
+  static constexpr std::string_view kReturnSignature = GetReturnSignature();
+
+  static constexpr std::string_view GetOverloadSignature() {
+    return metaprogramming::StringConcatenate_v<kParamSignature,
+                                                kReturnSignature>;
   }
 };
 
