@@ -19,8 +19,6 @@
 
 #include <string_view>
 
-#include "signature.h"
-
 namespace jni {
 
 template <typename ReturnRaw_>
@@ -33,10 +31,6 @@ struct Return {
 
   template <typename ReturnRaw>
   constexpr explicit Return(ReturnRaw return_raw) : return_raw_(return_raw) {}
-
-  std::string GetSignature() const {
-    return SignatureForSingleParameter(return_raw_);
-  }
 };
 
 // TODO(b/174272629): Remove when shifted to the new TypeProxy.
@@ -45,11 +39,6 @@ struct Return<void> {
   using ReturnRaw = void;
 
   constexpr Return() = default;
-
-  std::string GetSignature() const {
-    // Only when used as a return type does void become "V".
-    return "V";
-  }
 };
 
 Return()->Return<void>;

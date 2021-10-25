@@ -23,7 +23,6 @@
 #include <utility>
 
 #include "object.h"
-#include "signature.h"
 #include "jni_helper/jni_typename_to_string.h"
 
 namespace jni {
@@ -58,10 +57,6 @@ struct Params : ParamsBase {
       std::size_t N = sizeof...(ValuesRaw_), typename... Args,
       typename std::enable_if<(N > 0 && sizeof...(Args) == 0), int>::type = 0>
   constexpr explicit Params() {}
-
-  std::string GetSignature() const {
-    return "(" + SignatureForParameterTuple(values_) + ")";
-  }
 };
 
 template <typename... Ts>

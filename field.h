@@ -20,7 +20,6 @@
 #include <string>
 
 #include "params.h"
-#include "signature.h"
 
 namespace jni {
 
@@ -37,10 +36,6 @@ struct Field : public FieldBase {
   constexpr Field(const char* name) : name_(name) {}
   constexpr Field(const char* name, ValueRaw_ value_raw)
       : name_(name), value_raw_(value_raw) {}
-
-  std::string Signature() const {
-    return SignatureForSingleParameter(value_raw_);
-  }
 };
 
 template <typename ValueRaw_>

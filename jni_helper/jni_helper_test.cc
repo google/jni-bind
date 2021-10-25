@@ -22,7 +22,6 @@
 #include "mock_jni_env.h"
 #include "params.h"
 #include "return.h"
-#include "signature.h"
 
 namespace {
 
@@ -59,13 +58,6 @@ TEST_F(JniTest, JniHelper_CallsDeleteLocalObject) {
   static const jobject object{reinterpret_cast<jobject>(0XAAAAA)};
   EXPECT_CALL(*env_, DeleteLocalRef(object));
   JniHelper::DeleteLocalObject(object);
-}
-
-TEST_F(JniTest, JniHelper_CallsGetField) {
-  static const jclass clazz{reinterpret_cast<jclass>(0XAAAAA)};
-  static constexpr jni::Field kField{"FooField", jint{}};
-  EXPECT_CALL(*env_, GetFieldID(Eq(clazz), StrEq("FooField"), StrEq("I")));
-  JniHelper::GetFieldID(clazz, kField.name_, kField.Signature().c_str());
 }
 
 TEST_F(JniTest, JniHelper_CallsNewLocalString) {

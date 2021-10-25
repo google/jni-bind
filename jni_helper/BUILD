@@ -53,7 +53,6 @@ cc_test(
         "//:mock_jni_env",
         "//:params",
         "//:return",
-        "//:signature",
         "@googletest//:gtest_main",
     ],
 )

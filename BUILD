@@ -150,7 +150,6 @@ cc_library(
     hdrs = ["field.h"],
     deps = [
         ":params",
-        ":signature",
     ],
 )
 
@@ -347,7 +346,6 @@ cc_library(
         ":proxy",
         ":ref_base",
         ":return",
-        ":signature",
         ":string",
         "//jni_helper",
         "//jni_helper:jni_env",
@@ -512,22 +510,7 @@ cc_library(
     hdrs = ["params.h"],
     deps = [
         ":object",
-        ":signature",
         "//jni_helper:jni_typename_to_string",
-    ],
-)
-
-cc_test(
-    name = "params_test",
-    srcs = ["params_test.cc"],
-    deps = [
-        ":class",
-        ":mock_jni_env",
-        ":object_ref",
-        ":params",
-        ":string",
-        ":string_ref",
-        "@googletest//:gtest_main",
     ],
 )
 
@@ -588,31 +571,6 @@ cc_library(
 cc_library(
     name = "return",
     hdrs = ["return.h"],
-    deps = [
-        ":signature",
-    ],
-)
-
-cc_library(
-    name = "signature",
-    hdrs = ["signature.h"],
-    deps = [
-        ":object",
-        "//jni_helper:jni_typename_to_string",
-    ],
-)
-
-cc_test(
-    name = "signature_test",
-    srcs = ["signature_test.cc"],
-    deps = [
-        ":class",
-        ":mock_jni_env",
-        ":object_ref",
-        ":params",
-        ":signature",
-        "@googletest//:gtest_main",
-    ],
 )
 
 cc_library(

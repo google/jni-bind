@@ -36,7 +36,6 @@
 #include "proxy.h"
 #include "ref_base.h"
 #include "return.h"
-#include "signature.h"
 #include "string.h"
 
 namespace jni {
