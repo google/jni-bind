@@ -23,7 +23,6 @@
 #include <utility>
 
 #include "object.h"
-#include "proxy_definitions.h"
 #include "ref_base.h"
 #include "class.h"
 #include "class_loader.h"
@@ -43,6 +42,15 @@
 
 namespace jni {
 
+template <typename t1, typename t2 = void>
+struct Proxy;
+
+// Everything you are permitted to declare at method prototypes.
+// Note, if the size can reasonably differ, the jtype is enforced by virtue of
+// being a different type (i.e. you can't accidentally widen).
+using AllKeys = std::tuple<void, jboolean, jbyte, jshort, jint, jfloat, jlong,
+                           jchar, jdouble, jstring, jobject, jarray>;
+
 // Instead of directly searching for the type, convertible types are sought.
 // E.g. A string like "Foo" the type will be const char[4] not const char*.
 template <typename Query>
@@ -61,7 +69,7 @@ struct ProxyHelper {
   // Metafunction that builds a list of a passable type to all it's possible
   // passable types, which may not be the same.  E.g. jint => jint, but
   // jstring => jstring, const char*, std::string_view, std::string, etc.
-  struct CDeclToKey {
+  struct IndexToKey {
     // Proxies can be indexed by their |AsArg|s or their |AsDecl|.
     template <typename CDecl>
     using type = metaprogramming::CartesianProduct_t<
@@ -73,29 +81,33 @@ struct ProxyHelper {
   // Build a list of two element tuples (in preparation to build a map).  e.g.
   // { {jint, int}, {jstring, const char*}, {jstring, std::string}, etc. }.
   // Note that types may map to 1 or more types, such as jstring above.
-  using CDeclToKeyAsTuples = metaprogramming::Reduce_t<
+  using IndexToKeyAsTuples = metaprogramming::Reduce_t<
       metaprogramming::Combine,
-      metaprogramming::InvokePerTupArg_t<CDeclToKey, AllCDecls>>;
+      metaprogramming::InvokePerTupArg_t<IndexToKey, AllKeys>>;
 
   // Collapse this list into a set of keys and values consumable by
   // TypeToTypeMap.
-  using CDeclToKeyMap = metaprogramming::TypeToTypeMapFromKeyValuesTup_t<
-      metaprogramming::Flatten_t<CDeclToKeyAsTuples>>;
+  using IndexToKeyMap = metaprogramming::TypeToTypeMapFromKeyValuesTup_t<
+      metaprogramming::Flatten_t<IndexToKeyAsTuples>>;
 
   // When flipped, a type passed can be reverse indexed to select the same
   // Proxy partial specialisation.
-  using KeyToCDecl = metaprogramming::TypeToTypeMap_Invert<CDeclToKeyMap>;
+  using KeyToIndex = metaprogramming::TypeToTypeMap_Invert<IndexToKeyMap>;
 
-  using CDecl =
-      metaprogramming::TypeToTypeMapQueryWithComparator_t<KeyToCDecl,
+  using Index =
+      metaprogramming::TypeToTypeMapQueryWithComparator_t<KeyToIndex,
                                                           IsConvertibleKey<T>>;
 
-  using Proxy_t = Proxy<CDecl>;
+  using Proxy_t = Proxy<Index>;
+
+  using CDecl = typename Proxy_t::CDecl;
 
   template <typename Overload>
   using AsReturn_t = typename Proxy_t::template AsReturn<Overload>;
 
+  template <typename ParamSelection>
   using AsArg_t = typename Proxy_t::AsArg;
+
   using AsDecl_t = typename Proxy_t::AsDecl;
 };
 
@@ -104,14 +116,17 @@ template <typename T>
 using Proxy_t = typename ProxyHelper<T>::Proxy_t;
 
 template <typename T>
+using Index_t = typename ProxyHelper<T>::Index;
+
+template <typename T>
 using CDecl_t = typename ProxyHelper<T>::CDecl;
 
 template <typename T, typename OverloadSelection>
 using Return_t =
     typename ProxyHelper<T>::template AsReturn_t<OverloadSelection>;
 
-template <typename T>
-using Arg_t = typename ProxyHelper<T>::AsArg_t;
+template <typename T, typename ParamSelection>
+using Arg_t = typename ProxyHelper<T>::template AsArg_t<ParamSelection>;
 
 template <typename T>
 using AsDecl_t = typename ProxyHelper<T>::AsDecl_t;
@@ -121,7 +136,7 @@ using AsDecl_t = typename ProxyHelper<T>::AsDecl_t;
 ////////////////////////////////////////////////////////////////////////////////
 struct ProxyAsArgMetaFunc {
   template <typename T>
-  using type = Arg_t<T>;
+  using type = Arg_t<T, void>;
 };
 
 template <const auto& loader, const auto& class_v>
@@ -131,5 +146,9 @@ struct ProxyAsDeclMetaFunc {
 };
 
 }  // namespace jni
+
+// Consumers of Proxy *must* include proxy defininitions after proxy.h. This is
+// because Arrays define themselves using the proxies of other types.
+#include "proxy_definitions.h"
 
 #endif  // JNI_BIND_TYPE_PROXY_H_

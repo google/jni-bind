@@ -21,14 +21,17 @@
 #include <tuple>
 #include <type_traits>
 
+#include "array.h"
 #include "class.h"
 #include "class_loader.h"
 #include "jvm.h"
+#include "local_array.h"
 #include "local_string.h"
 #include "metaprogramming/contains.h"
 #include "object.h"
 #include "ref_base.h"
 #include "class_loader.h"
+#include "default_class_loader.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -36,22 +39,27 @@ namespace jni {
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class LocalObject;
 
-// Everything you are permitted to declare at method prototypes.
-// Note, if the size can reasonably differ, the jtype is enforced by virtue of
-// being a different type (i.e. you can't accidentally widen).
-using AllCDecls = std::tuple<void, jboolean, jbyte, jshort, jint, jfloat, jlong,
-                             jchar, jdouble, jstring, jobject>;
+template <typename T, const auto&>
+class LocalArray;
+
+template <typename Overload>
+struct ArrayHelper;
+
+template <typename TUndecayed>
+struct ProxyHelper;
 
 // Default Proxy, all types and values are pure passthrough.
-template <typename CDecl_>
+template <typename Key_>
 struct ProxyBase {
-  using CDecl = CDecl_;
+  using Key = Key_;
+
+  using CDecl = Key_;
 
   template <typename>
-  using AsReturn = CDecl;
+  using AsReturn = Key_;
 
-  using AsArg = std::tuple<CDecl_>;
-  using AsDecl = std::tuple<CDecl_>;
+  using AsArg = std::tuple<Key_>;
+  using AsDecl = std::tuple<Key_>;
 
   template <typename T>
   static auto ProxyAsArg(T&& t) {
@@ -71,6 +79,8 @@ struct ProxyBase {
 // the parent Proxy.
 //
 // Each proxy exports aliases for a given |CDecl|.
+//  |Index|: A uniquely identifying Key for proxy lookup.  This is usually the
+//    CDecl (e.g. jint => jint), but rich types may differ (Object =>jobject).
 //  |CDecl|: This is both the unique ID for a given proxy, as well as the
 //    distinct type (of which there is only one) that is usable when invoking a
 //    JNI call through the C API (e.g. |jint|, |jobject|).
@@ -78,12 +88,8 @@ struct ProxyBase {
 //  |AsDecl|: The type to be used in a function declaration, either as
 //   return or as a declared argument. If is templated by |class_v| and
 //   |class_loader_v| which can allow for additional decoration.
-template <typename CDecl, typename Enable = void>
-struct Proxy : public ProxyBase<CDecl> {
-  static_assert(
-      metaprogramming::TupContains_v<CDecl, AllCDecls>,
-      "You appear to be specifying an unimplemented type. See jni::Proxy.");
-};
+template <typename CDecl, typename Enable>
+struct Proxy : public ProxyBase<CDecl> {};
 
 static_assert(std::is_same_v<jboolean, unsigned char>);
 static_assert(std::is_same_v<jint, int>);
@@ -187,6 +193,46 @@ struct Proxy<JObject,
   static jobject ProxyAsArg(T&& t) {
     return t.Release();
   };
+};
+
+template <typename JArrayType>
+struct Proxy<JArrayType,
+             typename std::enable_if_t<std::is_same_v<JArrayType, jarray>>>
+    : public ProxyBase<JArrayType> {
+  using AsDecl = std::tuple<ArrayTag>;
+  // TODO(b/143908983): Constrain input types to the correct array type.  This
+  // is overly permissive and will allow incorrect types to be passed.
+  using AsArg = std::tuple<jarray, jbooleanArray, jbyteArray, jcharArray,
+                           jfloatArray, jintArray, jlongArray, jobjectArray,
+                           ArrayTag, RefBaseTag<jarray>>;
+
+  using CDecl = jobject;
+
+  template <typename Overload>
+  using AsReturn = typename ArrayHelper<Overload>::AsReturn;
+
+  static jarray ProxyAsArg(jarray arr) { return arr; };
+
+  template <typename T>
+  static jarray ProxyAsArg(T& t) {
+    return jarray{t};
+  };
+
+  template <typename T, typename = std::enable_if_t<
+                            std::is_base_of_v<RefBaseTag<jarray>, T>>>
+  static jarray ProxyAsArg(T&& t) {
+    return t.Release();
+  };
+};
+
+// This must be defined outside of Proxy so implicit definition doesn't occur.
+template <typename Overload>
+struct ArrayHelper {
+  static constexpr Array kArray{Overload::GetReturn().return_raw_};
+  using FullRawReturnT = std::decay_t<decltype(kArray.raw_type_)>;
+
+  // TODO(b/174273621): Support arrays of arrays.
+  using AsReturn = decltype(LocalArrayBuildFromArray<kArray>());
 };
 
 }  // namespace jni

@@ -170,8 +170,19 @@ struct MethodSelection {
 
 template <typename MethodSelectionT, typename OverloadSelectionT>
 struct ReturnSelection {
-  using RawValT =
-      ReturnRaw_t<std::decay_t<decltype(OverloadSelectionT::GetReturn())>>;
+  using RawValT = ArrayStrip_t<
+      ReturnRaw_t<std::decay_t<decltype(OverloadSelectionT::GetReturn())>>>;
+
+  static inline constexpr std::size_t ComputeRank() {
+    if constexpr (Rankifier<RawValT>::kComputableRank) {
+      return Rankifier<RawValT>::Rank(
+          OverloadSelectionT::GetReturn().return_raw_);
+    } else {
+      return 0;
+    }
+  }
+
+  static constexpr std::size_t kRank = ComputeRank();
 
   static constexpr inline auto& Val() {
     return OverloadSelectionT::GetReturn().return_raw_;
@@ -185,7 +196,10 @@ struct InputParamSelection {
     return std::get<param_idx>(OverloadSelectionT::GetParams().values_);
   }
 
-  using RawValT = std::decay_t<decltype(Val())>;
+  using RawValT = ArrayStrip_t<std::decay_t<decltype(Val())>>;
+
+  static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(
+      std::get<param_idx>(OverloadSelectionT::GetParams().values_));
 };
 
 template <typename MethodSelectionT, size_t overload_idx>
@@ -211,8 +225,13 @@ struct OverloadSelection {
     }
   }
 
+  // CDecl is the type used by the C API for a return type.
   using CDecl = CDecl_t<ReturnRaw_t<std::decay_t<decltype(GetReturn())>>>;
-  using ReturnProxied = Return_t<CDecl, OverloadSelection>;
+
+  // Return type is the richly decorated type returned (e.g LocalArray).
+  using ReturnProxied =
+      Return_t<ReturnRaw_t<std::decay_t<decltype(GetReturn())>>,
+               OverloadSelection>;
 
   // Proxy every parameter argument as an argument that can be shown in a
   // function prototype.
@@ -393,6 +412,17 @@ struct ParamCompare {
     static constexpr bool val =
         std::string_view(class_v.name_) ==
         std::string_view(ParamSelectionT::GetParam().name_);
+  };
+
+  // The partial specialisation to compare an Array.
+  template <template <typename, const auto&> class T, typename SpanType,
+            const auto& kAdditionalSpanData>
+  struct Helper<
+      T<SpanType, kAdditionalSpanData>,
+      std::enable_if_t<std::is_base_of_v<RefBaseTag<jarray>,
+                                         T<SpanType, kAdditionalSpanData>> &&
+                       std::is_base_of_v<RefBaseTag<jarray>, ParamT>>> {
+    static constexpr bool val = true;
   };
 
   static constexpr bool val = Helper<Query>::val;

@@ -5,6 +5,45 @@ licenses(["notice"])
 exports_files(["LICENSE"])
 
 cc_library(
+    name = "array",
+    hdrs = ["array.h"],
+    deps = [
+        ":jni_dep",
+        ":return",
+    ],
+)
+
+cc_library(
+    name = "array_ref",
+    hdrs = [
+        "array_ref.h",
+        "local_array.h",
+    ],
+    deps = [
+        ":array",
+        ":class",
+        ":default_class_loader",
+        ":jni_dep",
+        ":jvm",
+        ":object",
+        ":ref_base",
+        "//jni_helper",
+        "//jni_helper:jni_array_helper",
+    ],
+)
+
+cc_test(
+    name = "array_test",
+    srcs = ["array_test.cc"],
+    deps = [
+        ":array",
+        ":jni_bind",
+        ":jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "class",
     hdrs = ["class.h"],
     deps = [
@@ -217,6 +256,8 @@ cc_library(
     name = "jni_bind",
     hdrs = ["jni_bind.h"],
     deps = [
+        ":array",
+        ":array_ref",
         ":class",
         ":class_loader",
         ":class_loader_ref",
@@ -310,6 +351,17 @@ cc_test(
         ":supported_class_set",
         "//jni_helper",
         "//jni_helper:jni_env",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "local_array_test",
+    srcs = ["local_array_test.cc"],
+    deps = [
+        ":jni_bind",
+        ":jni_test",
+        ":mock_jni_env",
         "@googletest//:gtest_main",
     ],
 )
@@ -522,8 +574,11 @@ cc_library(
         "proxy_definitions.h",
     ],
     deps = [
+        ":array",
+        ":array_ref",
         ":class",
         ":class_loader",
+        ":default_class_loader",
         ":jni_dep",
         ":jvm",
         ":object",
@@ -590,6 +645,7 @@ cc_library(
     name = "selector_static_info",
     hdrs = ["selector_static_info.h"],
     deps = [
+        ":array",
         ":name_constants",
         ":object",
         ":return",

@@ -41,6 +41,15 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "jni_array_helper",
+    hdrs = ["jni_array_helper.h"],
+    deps = [
+        ":jni_env",
+        "//:jni_dep",
+    ],
+)
+
 cc_test(
     name = "jni_helper_test",
     srcs = ["jni_helper_test.cc"],
@@ -60,7 +69,10 @@ cc_test(
 cc_library(
     name = "jni_typename_to_string",
     hdrs = ["jni_typename_to_string.h"],
-    deps = ["//:jni_dep"],
+    deps = [
+        "//:array",
+        "//:jni_dep",
+    ],
 )
 
 cc_test(

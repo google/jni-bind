@@ -20,6 +20,7 @@
 #include "jni_dep.h"
 
 // Headers for static definitions.
+#include "array.h"
 #include "class.h"
 #include "class_loader.h"
 #include "constructor.h"
@@ -36,6 +37,7 @@
 #include "global_object.h"
 #include "global_string.h"
 #include "jvm_ref.h"
+#include "local_array.h"
 #include "local_class_loader.h"
 #include "local_object.h"
 #include "local_string.h"

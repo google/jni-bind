@@ -9,6 +9,8 @@ namespace jni {
 // Constants for signature generation.
 ////////////////////////////////////////////////////////////////////////////////
 
+static constexpr std::string_view kLeftBracket{"["};
+static constexpr std::string_view kRightBracket{"]"};
 static constexpr std::string_view kLeftParenthesis{"("};
 static constexpr std::string_view kRightParenthesis{")"};
 static constexpr std::string_view kInit{"<init>"};

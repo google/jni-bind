@@ -194,6 +194,59 @@ android_instrumentation_test(
 )
 
 ################################################################################
+# RJni Array Test
+################################################################################
+android_jni_library(
+    name = "array_test_jni",
+    testonly = 1,
+    srcs = ["array_test_jni.cc"],
+    force_android = True,
+    deps = [
+        "//:array",
+        "//:array_ref",
+        "//:class",
+        "//:jni_dep",
+        "//:jvm_ref",
+        "//:method",
+        "//:object_ref",
+        "//:params",
+        "//:return",
+        "//base",
+    ],
+)
+
+android_library(
+    name = "array_test_java_lib",
+    testonly = 1,
+    srcs = [
+        "ArrayTest.java",
+    ],
+    deps = [
+        "//third_party/android/androidx_test/runner/android_junit_runner",
+        "//third_party/java/junit:junit-android",
+        "//third_party/java/truth:truth-android",
+    ],
+)
+
+android_binary(
+    name = "array_test_app",
+    testonly = 1,
+    manifest = "AndroidDefaultManifest.xml",
+    multidex = "native",
+    deps = [
+        ":array_test_java_lib",
+        ":array_test_jni",
+        "//java/com/google/android/apps/common/testing/testrunner",
+    ],
+)
+
+android_instrumentation_test(
+    name = "array_instrumentation_test",
+    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    test_app = ":array_test_app",
+)
+
+################################################################################
 # RJni Field Test
 ################################################################################
 android_jni_library(

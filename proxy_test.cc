@@ -52,8 +52,7 @@ static_assert(std::is_same_v<Proxy_t<jshort>::CDecl, jshort>);
 static_assert(std::is_same_v<Proxy_t<jlong>::CDecl, jlong>);
 static_assert(std::is_same_v<Proxy_t<jdouble>::CDecl, jdouble>);
 
-// CDecls of non-primitive types.
-// Multiple types map to single index.
+// CDecls of non-primitive types: jstrings.
 static_assert(std::is_same_v<Proxy_t<const char*>::CDecl, jstring>);
 static_assert(std::is_same_v<decltype("Foo"), char const (&)[4]>);
 static_assert(std::is_same_v<Proxy_t<const char (&)[4]>::CDecl, jstring>);
@@ -62,6 +61,16 @@ static_assert(std::is_same_v<Proxy_t<const char*>::CDecl, jstring>);
 static_assert(std::is_same_v<Proxy_t<std::string_view>::CDecl, jstring>);
 static_assert(std::is_same_v<Proxy_t<std::string>::CDecl, jstring>);
 
+// CDecls of non-primitive types: jarrays.
+static_assert(std::is_same_v<Proxy_t<jarray>::CDecl, jobject>);
+static_assert(std::is_same_v<Proxy_t<ArrayTag>::CDecl, jobject>);
+
+// static_assert(std::is_same_v<Proxy_t<jarray>, jarray>);
+static_assert(std::is_same_v<Index_t<jarray>, jarray>);
+static_assert(std::is_same_v<Index_t<ArrayTag>, jarray>);
+static_assert(std::is_same_v<Index_t<RefBaseTag<jarray>>, jarray>);
+
+// CDecls of non-primitive types: jobjects.
 void Foo() {
   LocalObject<kClass> obj;
 

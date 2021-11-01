@@ -28,18 +28,6 @@ namespace jni {
 // JniHelper is a shim to using a JNIenv object.
 // This extra layer of indirection allows for quickly shimming all JNICalls
 // (e.g. adding exception checking, logging each JNI call, etc).
-//
-// This class serves as a viable default.  In some cases, this class will handle
-// basic default caching, e.g. a jMethodID is static to the application. The
-// calling class is responsible for invoking the appropriate methods and
-// managing the lifecycle themselves.
-//
-// e.g. If a globalRef is created, the owning object should call the paired
-//    DeleteGlobalObject when the global object falls out of scope.
-//
-// Many methods take arguments that are not used that have default arguments and
-// are unused.  These are solely to infer type information to ease signatures
-// in unit tests, but are fully specialised in actual implementation.
 **/
 class JniHelper {
  public:
