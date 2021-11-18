@@ -323,7 +323,8 @@ TEST_F(JniTestWithNoDefaultJvmRef,
 
   const jmethodID load_class_jmethod{reinterpret_cast<jmethodID>(0XAEAEAE)};
   const jobject custom_test_jobject{reinterpret_cast<jobject>(0XBABABA)};
-  const jclass custom_test_local_jclass{reinterpret_cast<jclass>(0XBBBBBB)};
+  const jobject second_custom_test_jobject{reinterpret_cast<jobject>(0XBBBBBB)};
+  const jclass custom_test_local_jclass{reinterpret_cast<jclass>(0XBCBCBC)};
   const jmethodID custom_test_init_jmethod{
       reinterpret_cast<jmethodID>(0XBDBDBD)};
   const jmethodID custom_test_method_jmethod{
@@ -347,6 +348,8 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   EXPECT_CALL(*env_, NewStringUTF(_))
       .WillOnce(testing::Return(custom_test_class_name));
 
+  // We should only try to load the class once even if we create multiple
+  // instances.
   EXPECT_CALL(*env_, CallObjectMethodV(class_loader_local_to_be_wrapped,
                                        load_class_jmethod, _))
       .WillOnce(testing::Return(custom_test_local_jclass));
@@ -359,6 +362,10 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   EXPECT_CALL(*env_, NewObjectV(AsGlobal(custom_test_local_jclass),
                                 custom_test_init_jmethod, _))
       .WillOnce(testing::Return(custom_test_jobject));
+  EXPECT_CALL(*env_, NewObjectV(AsGlobal(custom_test_local_jclass),
+                                custom_test_init_jmethod, _))
+      .WillOnce(testing::Return(second_custom_test_jobject));
+
   EXPECT_CALL(*env_, GetMethodID(AsGlobal(custom_test_local_jclass),
                                  StrEq("methodNoCrossTalk"),
 
@@ -375,6 +382,9 @@ TEST_F(JniTestWithNoDefaultJvmRef,
 
   auto custom_loader_object =
       class_loader.BuildLocalObject<kTestClassNoCrossTalk>(jint{1});
+
+  auto second_custom_loader_object =
+      class_loader.BuildLocalObject<kTestClassNoCrossTalk>(jint{2});
 
   EXPECT_EQ(custom_loader_object("methodNoCrossTalk", jint{2}), 123);
 

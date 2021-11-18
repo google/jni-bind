@@ -59,8 +59,9 @@ class ClassRef {
     return std::get<class_idx_>(GetClassLoader().supported_classes_);
   }
 
-  static void PrimeJClassFromClassLoader(jclass class_val) {
-    class_ref_.LoadAndMaybeInit([=]() { return class_val; });
+  template <typename Lambda>
+  static void PrimeJClassFromClassLoader(Lambda lambda) {
+    class_ref_.LoadAndMaybeInit(lambda);
   }
 
   static jclass GetAndMaybeLoadClassRef(
@@ -91,8 +92,9 @@ class ClassRef {
 template <const auto& class_loader_v, const auto& class_v>
 class DefaultClassRef {
  public:
-  static void PrimeJClassFromClassLoader(jclass class_val) {
-    class_ref_.LoadAndMaybeInit([=]() { return class_val; });
+  template <typename Lambda>
+  static void PrimeJClassFromClassLoader(Lambda lambda) {
+    class_ref_.LoadAndMaybeInit(lambda);
   }
 
   // Gets the class ref for class_v, possibly loading it in the process.
