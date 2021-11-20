@@ -39,7 +39,8 @@ namespace jni {
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class LocalObject;
 
-template <typename T, const auto&>
+template <typename SpanType, const auto& class_v_, const auto& class_loader_v_,
+          const auto& jvm_v_>
 class LocalArray;
 
 template <typename Overload>
@@ -202,9 +203,9 @@ struct Proxy<JArrayType,
   using AsDecl = std::tuple<ArrayTag>;
   // TODO(b/143908983): Constrain input types to the correct array type.  This
   // is overly permissive and will allow incorrect types to be passed.
-  using AsArg = std::tuple<jarray, jbooleanArray, jbyteArray, jcharArray,
-                           jfloatArray, jintArray, jlongArray, jobjectArray,
-                           ArrayTag, RefBaseTag<jarray>>;
+  using AsArg =
+      std::tuple<jarray, jbooleanArray, jbyteArray, jcharArray, jfloatArray,
+                 jintArray, jlongArray, ArrayTag, RefBaseTag<jarray>>;
 
   using CDecl = jobject;
 
@@ -225,13 +226,39 @@ struct Proxy<JArrayType,
   };
 };
 
+template <typename JObjectArrayType>
+struct Proxy<
+    JObjectArrayType,
+    typename std::enable_if_t<std::is_same_v<JObjectArrayType, jobjectArray>>>
+    : public ProxyBase<JObjectArrayType> {
+  using AsDecl = std::tuple<ObjectArrayTag>;
+  using AsArg =
+      std::tuple<jobjectArray, ObjectArrayTag, RefBaseTag<jobjectArray>>;
+  using CDecl = jobjectArray;
+
+  template <typename Overload>
+  using AsReturn = typename ArrayHelper<Overload>::AsReturn;
+
+  static jobjectArray ProxyAsArg(jobjectArray arr) { return arr; };
+
+  template <typename T>
+  static jobjectArray ProxyAsArg(T& t) {
+    return jobjectArray{t};
+  };
+
+  template <typename T, typename = std::enable_if_t<
+                            std::is_base_of_v<RefBaseTag<jobjectArray>, T>>>
+  static jobjectArray ProxyAsArg(T&& t) {
+    return t.Release();
+  };
+};
+
 // This must be defined outside of Proxy so implicit definition doesn't occur.
 template <typename Overload>
 struct ArrayHelper {
   static constexpr Array kArray{Overload::GetReturn().return_raw_};
   using FullRawReturnT = std::decay_t<decltype(kArray.raw_type_)>;
 
-  // TODO(b/174273621): Support arrays of arrays.
   using AsReturn = decltype(LocalArrayBuildFromArray<kArray>());
 };
 

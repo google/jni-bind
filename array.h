@@ -20,17 +20,29 @@
 #include <type_traits>
 
 #include "jni_dep.h"
+#include "object.h"
 #include "return.h"
 
 namespace jni {
 
+// Correlates to Proxy<jarray>.
 struct ArrayTag {};
 
+// Correlates to Proxy<jobjectArray>.
+struct ObjectArrayTag {};
+
 template <typename RawType>
-struct Array : public ArrayTag {
+struct Array;
+
+// Never instantiated.
+template <typename RawType, bool HoldsObject>
+struct ArrayImpl {};
+
+template <typename RawType>
+struct ArrayImpl<RawType, false> : public ArrayTag {
   RawType raw_type_;
 
-  constexpr Array(RawType raw_type) : raw_type_(raw_type) {}
+  constexpr ArrayImpl(RawType raw_type) : raw_type_(raw_type) {}
 
   template <typename RawTypeRhs>
   constexpr bool operator==(const Array<RawTypeRhs>& rhs) const {
@@ -44,6 +56,32 @@ struct Array : public ArrayTag {
   constexpr bool operator!=(const Array<RawTypeRhs>& rhs) const {
     return !(*this == rhs);
   }
+};
+
+template <typename RawType>
+struct ArrayImpl<RawType, true> : public ObjectArrayTag {
+  RawType raw_type_;
+
+  constexpr ArrayImpl(RawType raw_type) : raw_type_(raw_type) {}
+
+  template <typename RawTypeRhs>
+  constexpr bool operator==(const Array<RawTypeRhs>& rhs) const {
+    if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
+      return (raw_type_ == rhs.raw_type_);
+    }
+    return false;
+  }
+
+  template <typename RawTypeRhs>
+  constexpr bool operator!=(const Array<RawTypeRhs>& rhs) const {
+    return !(*this == rhs);
+  }
+};
+
+template <typename RawType>
+struct Array : public ArrayImpl<RawType, std::is_base_of_v<Object, RawType>> {
+  constexpr Array(RawType raw_type)
+      : ArrayImpl<RawType, std::is_base_of_v<Object, RawType>>(raw_type) {}
 };
 
 template <typename RawType>
@@ -62,6 +100,8 @@ struct Rankifier {
   template <typename ArrayT>
   static inline constexpr std::size_t Rank(const ArrayT& maybe_array) {
     if constexpr (std::is_base_of_v<ArrayTag,
+                                    std::decay_t<decltype(maybe_array)>> ||
+                  std::is_base_of_v<ObjectArrayTag,
                                     std::decay_t<decltype(maybe_array)>>) {
       return Rank(maybe_array.raw_type_) + 1;
     } else {

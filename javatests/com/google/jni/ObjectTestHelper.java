@@ -46,11 +46,15 @@ final class ObjectTestHelper {
     return new ObjectTestHelper(val1 + val2);
   }
 
-  // TODO(b/174252604): This currently can't be represented in JNI.
-  public ObjectTestHelper returnNewObjectWithFieldSetToSum(
-      ObjectTestHelper lhs, ObjectTestHelper rhs) {
+  public ObjectTestHelper returnNewObjectWithFieldSetToSum(ObjectTestHelper rhs) {
     return new ObjectTestHelper(
-        lhs.intVal1 + rhs.intVal1, lhs.intVal2 + rhs.intVal2, lhs.intVal3 + rhs.intVal3);
+        this.intVal1 + rhs.intVal1, this.intVal2 + rhs.intVal2, this.intVal3 + rhs.intVal3);
+  }
+
+  public boolean isEqualTo(ObjectTestHelper rhs) {
+    return this.intVal1 == rhs.intVal1
+        && this.intVal2 == rhs.intVal2
+        && this.intVal3 == rhs.intVal3;
   }
 
   public int intVal1;

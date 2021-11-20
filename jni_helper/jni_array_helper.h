@@ -226,7 +226,6 @@ struct JniArrayHelper<jdouble> : public JniArrayHelperBase {
 
 // Note, this requires both a jclass and a sample jobject to build from which
 // is unlike any other new array construction.
-// TODO(b/174273621): Support class objects.
 template <>
 struct JniArrayHelper<jobject> : public JniArrayHelperBase {
   static inline jobjectArray NewArray(std::size_t size, jclass class_id,
@@ -234,6 +233,18 @@ struct JniArrayHelper<jobject> : public JniArrayHelperBase {
     return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
                                                  initial_element);
   }
+
+  // The API of fetching objects only permits accessing one object at a time.
+  // TODO CONST or at least nasty warning.
+  static inline jobject GetArrayElement(jobjectArray array, std::size_t idx) {
+    return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
+  };
+
+  // The API of fetching objects only permits accessing one object at a time.
+  static inline void SetArrayElement(jobjectArray array, std::size_t idx,
+                                     jobject obj) {
+    jni::JniEnv::GetEnv()->SetObjectArrayElement(array, idx, obj);
+  };
 };
 
 }  // namespace jni

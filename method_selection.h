@@ -415,14 +415,31 @@ struct ParamCompare {
   };
 
   // The partial specialisation to compare an Array.
-  template <template <typename, const auto&> class T, typename SpanType,
-            const auto& kAdditionalSpanData>
+  template <template <typename, const auto&, const auto&, const auto&> class T,
+            typename SpanType, const auto& class_v, const auto& class_loader_v,
+            const auto& jvm_v>
   struct Helper<
-      T<SpanType, kAdditionalSpanData>,
-      std::enable_if_t<std::is_base_of_v<RefBaseTag<jarray>,
-                                         T<SpanType, kAdditionalSpanData>> &&
-                       std::is_base_of_v<RefBaseTag<jarray>, ParamT>>> {
+      T<SpanType, class_v, class_loader_v, jvm_v>,
+      std::enable_if_t<
+          std::is_base_of_v<RefBaseTag<jarray>,
+                            T<SpanType, class_v, class_loader_v, jvm_v>> &&
+          std::is_base_of_v<RefBaseTag<jarray>, ParamT>>> {
     static constexpr bool val = true;
+  };
+
+  // The partial specialisation to compare an object Array.
+  template <template <typename, const auto&, const auto&, const auto&> class T,
+            typename SpanType, const auto& class_v, const auto& class_loader_v,
+            const auto& jvm_v>
+  struct Helper<
+      T<SpanType, class_v, class_loader_v, jvm_v>,
+      std::enable_if_t<
+          std::is_base_of_v<RefBaseTag<jobjectArray>,
+                            T<SpanType, class_v, class_loader_v, jvm_v>> &&
+          std::is_base_of_v<RefBaseTag<jobjectArray>, ParamT>>> {
+    static constexpr bool val =
+        std::string_view(class_v.name_) ==
+        std::string_view(ParamSelectionT::GetParam().raw_type_.name_);
   };
 
   static constexpr bool val = Helper<Query>::val;

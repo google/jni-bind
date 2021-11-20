@@ -48,8 +48,9 @@ struct Proxy;
 // Everything you are permitted to declare at method prototypes.
 // Note, if the size can reasonably differ, the jtype is enforced by virtue of
 // being a different type (i.e. you can't accidentally widen).
-using AllKeys = std::tuple<void, jboolean, jbyte, jshort, jint, jfloat, jlong,
-                           jchar, jdouble, jstring, jobject, jarray>;
+using AllKeys =
+    std::tuple<void, jboolean, jbyte, jshort, jint, jfloat, jlong, jchar,
+               jdouble, jstring, jobject, jarray, jobjectArray>;
 
 // Instead of directly searching for the type, convertible types are sought.
 // E.g. A string like "Foo" the type will be const char[4] not const char*.

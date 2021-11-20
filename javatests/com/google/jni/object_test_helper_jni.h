@@ -38,8 +38,14 @@ constexpr jni::Class kObjectTestHelperClass {
     jni::Constructor<int, int, int>{},
 
     jni::Method{"returnNewObjectWithFieldSetToSum",
-      jni::Return{jni::Class{"com/google/jni/ObjectTestHelper"}},
-      jni::Params<int, int>{},
+      jni::Overload{
+        jni::Return{jni::Class{"com/google/jni/ObjectTestHelper"}},
+        jni::Params<int, int>{}
+      },
+      jni::Overload{
+        jni::Return{jni::Class{"com/google/jni/ObjectTestHelper"}},
+        jni::Params{jni::Class{"com/google/jni/ObjectTestHelper"}}
+      },
     },
 
     jni::Field{"intVal1", int{}},

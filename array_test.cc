@@ -118,9 +118,6 @@ TEST_F(JniTest, Array_HandlesSingleObjectArray) {
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("ObjectArray"), StrEq("()[LkClass2;")));
 
-  // TODO: Implement class support for arrays.
-  // static_assert(std::is_base_of_v<
-  //              LocalArrayTag<jobject>, decltype(obj("ObjectArray"))>);
   obj("ObjectArray");
 }
 
@@ -231,6 +228,35 @@ TEST_F(JniTest, Array_HandlesSingle2DClassAsReturn) {
 
   LocalObject<kClass> obj{jobject{nullptr}};
   obj("Foo");
+}
+
+TEST_F(JniTest, Array_HandlesSinglePredefinedClassAsParam) {
+  static constexpr Class kClass{"kClass"};
+  static constexpr Class kClassThatAcceptsArrays{
+      "ClassThatAcceptsArrays",
+      Method{"Foo", jni::Return<void>{}, Params{Array{kClass}}}};
+
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([LkClass;)V")));
+
+  LocalObject<kClass> obj{jobject{nullptr}};
+  LocalObject<kClassThatAcceptsArrays> obj_to_call_on{jobject{nullptr}};
+  LocalArray<jobject, kClass> local_array{5, obj};
+  obj_to_call_on("Foo", local_array);
+}
+
+TEST_F(JniTest, Array_HandlesSingleUndefinedClassAsParam) {
+  static constexpr Class kClassThatAcceptsArrays{
+      "ClassThatAcceptsArrays",
+      // Note, Class is defined inline here.
+      Method{"Foo", jni::Return<void>{}, Params{Array{Class{"kClass"}}}}};
+  static constexpr Class kClass{"kClass"};
+
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([LkClass;)V")));
+
+  LocalObject<kClass> obj{jobject{nullptr}};
+  LocalObject<kClassThatAcceptsArrays> obj_to_call_on{jobject{nullptr}};
+  LocalArray<jobject, kClass> local_array{5, obj};
+  obj_to_call_on("Foo", local_array);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

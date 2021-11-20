@@ -176,6 +176,15 @@ struct JniMethodInvoke<jobject, true> {
   }
 };
 
+template <>
+struct JniMethodInvoke<jobjectArray, true> {
+  template <typename... Ts>
+  static jobjectArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+        object, method_id, std::forward<Ts>(ts)...));
+  }
+};
+
 }  // namespace jni
 
 #endif  // JNI_BIND_METHOD_INVOKE_H_

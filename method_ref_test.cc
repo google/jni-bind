@@ -22,6 +22,7 @@
 
 namespace {
 
+using jni::Array;
 using jni::Class;
 using jni::kDefaultClassLoader;
 using jni::Method;
@@ -30,6 +31,7 @@ using jni::OverloadSelection;
 using jni::Params;
 using jni::Permutation;
 using jni::PermutationRef;
+using jni::PermutationSelectionForArgs_t;
 using jni::test::JniTest;
 using testing::_;
 using testing::Eq;
@@ -270,6 +272,20 @@ TEST_F(JniTest, MethodRef_SupportsStrings) {
   obj1("Foo", "This is a method.");
   obj1("Bar", "This is a method.", "It takes strings");
   obj1("Baz");
+}
+
+TEST_F(JniTest, MethodRef_SupportsArrays) {
+  static constexpr Class kClass{"kClass"};
+  static constexpr Class class_under_test{
+      "com/google/SupportsArrays",
+      Method{"Foo", jni::Return<void>{}, Params{Array{kClass}}},
+      Method{"Bar", jni::Return<void>{}, Params<int>{}}};
+
+  const jobject fake_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
+
+  jni::LocalArray<jobject, kClass> local_array{nullptr};
+  jni::LocalObject<class_under_test> obj1{fake_jobject};
+  obj1("Foo", local_array);
 }
 
 }  // namespace

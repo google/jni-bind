@@ -65,7 +65,6 @@ static_assert(std::is_same_v<Proxy_t<std::string>::CDecl, jstring>);
 static_assert(std::is_same_v<Proxy_t<jarray>::CDecl, jobject>);
 static_assert(std::is_same_v<Proxy_t<ArrayTag>::CDecl, jobject>);
 
-// static_assert(std::is_same_v<Proxy_t<jarray>, jarray>);
 static_assert(std::is_same_v<Index_t<jarray>, jarray>);
 static_assert(std::is_same_v<Index_t<ArrayTag>, jarray>);
 static_assert(std::is_same_v<Index_t<RefBaseTag<jarray>>, jarray>);

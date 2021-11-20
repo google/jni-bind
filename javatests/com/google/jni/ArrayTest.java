@@ -45,6 +45,8 @@ public class ArrayTest {
 
   native void nativeDoubleTests(ArrayTest arrayTest, double[] doubleArray);
 
+  native void nativeObjectTests(ArrayTest arrayTest, ObjectTestHelper[] objectArray);
+
   void rJniBooleanArray(boolean testForTrue, boolean[] arr) {
     for (int i = 0; i < arr.length; i++) {
       if (testForTrue) {
@@ -97,6 +99,15 @@ public class ArrayTest {
     }
   }
 
+  void rJniObjectArray(int objectMemberOffset, ObjectTestHelper[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+      int idxPlusOffset = i + objectMemberOffset;
+      ObjectTestHelper dummyThatMatchesIdx =
+          new ObjectTestHelper(idxPlusOffset, idxPlusOffset, idxPlusOffset);
+      assertTrue(dummyThatMatchesIdx.isEqualTo(arr[i]));
+    }
+  }
+
   @Test
   public void booleanTests() {
     boolean[] arr = {false, false, false};
@@ -143,5 +154,14 @@ public class ArrayTest {
   public void doubleTests() {
     double[] arr = {0, 1, 2, 3, 4, 5};
     nativeDoubleTests(this, arr);
+  }
+
+  @Test
+  public void objectTests() {
+    ObjectTestHelper[] objectTestHelper = {
+      new ObjectTestHelper(0, 0, 0), new ObjectTestHelper(1, 1, 1), new ObjectTestHelper(2, 2, 2)
+    };
+
+    nativeObjectTests(this, objectTestHelper);
   }
 }

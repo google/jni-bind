@@ -9,6 +9,7 @@ cc_library(
     hdrs = ["array.h"],
     deps = [
         ":jni_dep",
+        ":object",
         ":return",
     ],
 )
@@ -22,6 +23,7 @@ cc_library(
     deps = [
         ":array",
         ":class",
+        ":class_ref",
         ":default_class_loader",
         ":jni_dep",
         ":jvm",

@@ -202,9 +202,11 @@ android_jni_library(
     srcs = ["array_test_jni.cc"],
     force_android = True,
     deps = [
+        ":object_test_helper_jni",
         "//:array",
         "//:array_ref",
         "//:class",
+        "//:field",
         "//:jni_dep",
         "//:jvm_ref",
         "//:method",
@@ -220,6 +222,7 @@ android_library(
     testonly = 1,
     srcs = [
         "ArrayTest.java",
+        "ObjectTestHelper.java",
     ],
     deps = [
         "//third_party/android/androidx_test/runner/android_junit_runner",

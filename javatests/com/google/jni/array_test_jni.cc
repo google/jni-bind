@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "base/logging.h"
+#include "object_test_helper_jni.h"
 #include "class.h"
 #include "field.h"
+#include "javatests/com/google/jni/object_test_helper_jni.h"
 #include "jni_dep.h"
 #include "jvm_ref.h"
 #include "local_array.h"
@@ -42,6 +43,7 @@ static constexpr Class kArrayTest {
     Method {"rJniLongArray", Return<void>{}, Params{jlong{}, Array{jlong{}}}},
     Method {"rJniFloatArray", Return<void>{}, Params{float{}, Array{jfloat{}}}},
     Method {"rJniDoubleArray", Return<void>{}, Params{jdouble{}, Array{jdouble{}}}},
+    Method {"rJniObjectArray", Return<void>{}, Params{int{}, Array{kObjectTestHelperClass}}},
 };
 // clang-format on
 
@@ -286,6 +288,41 @@ JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeDoubleTests(
     }
   }
   rjni_test_helper("rJniDoubleArray", jdouble{5}, new_array);
+}
+
+JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeObjectTests(
+    JNIEnv* env, jclass, jobject test_fixture, jobjectArray object_array) {
+  LocalObject<kArrayTest> rjni_test_helper{test_fixture};
+
+  // Simple lvalue pass through works as expected.
+  LocalArray<jobject, kObjectTestHelperClass> local_arr{object_array};
+  rjni_test_helper("rJniObjectArray", 0, local_arr);
+
+  // Simple rvalue pass through works as expected.
+  rjni_test_helper("rJniObjectArray", 5,
+                   LocalArray<jobject, kObjectTestHelperClass>{
+                       1, LocalObject<kObjectTestHelperClass>{5, 5, 5}});
+
+  // Building a new array, and setting all the values by hand works.
+  LocalObject<kObjectTestHelperClass> obj{0, 0, 0};
+  LocalArray<jobject, kObjectTestHelperClass> new_array{8, obj};
+  {
+    for (int i = 0; i < new_array.Length(); ++i) {
+      new_array.Set(
+          i, LocalObject<kObjectTestHelperClass>{jint{i}, jint{i}, jint{i}});
+    }
+  }
+  rjni_test_helper("rJniObjectArray", 0, new_array);
+
+  // You can pull the view multiple times.
+  {
+    for (int i = 0; i < new_array.Length(); ++i) {
+      new_array.Set(i,
+                    LocalObject<kObjectTestHelperClass>{2, 2, 2}(
+                        "returnNewObjectWithFieldSetToSum", new_array.Get(i)));
+    }
+  }
+  rjni_test_helper("rJniObjectArray", 2, new_array);
 }
 
 }  // extern "C"

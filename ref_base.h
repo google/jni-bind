@@ -40,7 +40,7 @@ class RefBaseTag {
     return return_value;
   }
 
-  explicit operator NativeJavaType_() {
+  explicit operator NativeJavaType_() const {
     if (object_ref_) {
       return *object_ref_;
     }
