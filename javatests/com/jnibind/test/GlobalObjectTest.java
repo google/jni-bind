@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.jni;
+package com.jnibind.test;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * Exercises basic behaviours with local objects, ranging from those passed down to JNI to those
+ * Exercises basic behaviours with global objects, ranging from those passed down to JNI to those
  * constructed through rJNI.
  *
  * <p>This mostly focuses on lifecycle specific issues or issues relating to the use of objects or
@@ -31,50 +31,41 @@ import org.junit.runner.RunWith;
  * <p>Note, any object passed into JNI is always local.
  */
 @RunWith(AndroidJUnit4ClassRunner.class)
-public final class LocalObjectTest {
+public final class GlobalObjectTest {
   static {
-    System.loadLibrary("local_object_test_jni");
+    System.loadLibrary("global_object_test_jni");
   }
 
   native ObjectTestHelper jniCreateNewObject();
 
   @Test
-  public void createNewLocalObjectUsingNoArgConstructor() {
+  public void createNewGlobalObjectUsingNoArgConstructor() {
     assertThat(jniCreateNewObject()).isNotEqualTo(null);
   }
 
-  native ObjectTestHelper jniCreateNewLocalObjectFromObject(Object object);
+  native ObjectTestHelper jniCreateNewGlobalObjectSetIntVal123();
 
   @Test
-  public void createNewLocalObjectFromObject() {
-    Object innerObject = new Object();
-    ObjectTestHelper object = jniCreateNewLocalObjectFromObject(innerObject);
-    assertThat(object).isNotEqualTo(null);
-    assertThat(object.objectVal).isEqualTo(innerObject);
-  }
-
-  native ObjectTestHelper jniCreateNewLocalObjectSetIntVal123();
-
-  @Test
-  public void createNewLocalObjectSetIntVal123() {
-    ObjectTestHelper object = jniCreateNewLocalObjectSetIntVal123();
+  public void createNewGlobalObjectSetIntVal123() {
+    ObjectTestHelper object = jniCreateNewGlobalObjectSetIntVal123();
     assertThat(object).isNotEqualTo(null);
     assertThat(object.intVal1).isEqualTo(1);
     assertThat(object.intVal2).isEqualTo(2);
     assertThat(object.intVal3).isEqualTo(3);
   }
 
-  @UsedByNative("local_object_test_jni.cc")
-  ObjectTestHelper methodTakesLocalObjectReturnsNewObject(ObjectTestHelper object) {
+  // Takes a test helper and returns the output of |methodTakesGlobalObjectReturnsNewObject|.
+  native ObjectTestHelper jniBuildNewObjectsFromExistingObjects(
+      GlobalObjectTest testHelperObject, ObjectTestHelper objectToMutate);
+
+  @UsedByNative("global_object_test_jni.cc")
+  ObjectTestHelper methodTakesGlobalObjectReturnsNewObject(ObjectTestHelper object) {
     return new ObjectTestHelper(object.intVal1 + 5, object.intVal2 + 6, object.intVal3 + 7);
   }
 
-  native ObjectTestHelper jniBuildNewObjectsFromExistingObjects(
-      LocalObjectTest thisTestObject, ObjectTestHelper testHelperObject);
-
   @Test
   public void manipulateExistingObjectReturnSameObjectWithValPlusFive() {
-    // See methodTakesLocalObjectReturnsNewObject.
+    // intVal1 = 3 + 5 = 8.  See methodTakesGlobalObjectReturnsNewObject.
     ObjectTestHelper objectFromJni =
         jniBuildNewObjectsFromExistingObjects(this, new ObjectTestHelper(3, 4, 5));
     assertThat(objectFromJni.intVal1).isEqualTo(8);
@@ -82,11 +73,21 @@ public final class LocalObjectTest {
     assertThat(objectFromJni.intVal3).isEqualTo(12);
   }
 
-  native ObjectTestHelper jniManipulateNewLocalObjectSetIntVal238(LocalObjectTest thisTestObject);
+  /*
+   * TODO(b/143908983):  This test is currently broken.
+  @Test
+  public void manipulateExistingObjectReturnSameObjectWithValPlusFive() {
+    // intVal = 3 + 5 = 8.  See methodTakesGlobalObjectReturnsNewObject.
+    assertThat(jniBuildNewObjectsFromExistingObjects(this, new ObjectTestHelper(3)).intVal)
+        .isEqualTo(8);
+  }
+  */
+
+  native ObjectTestHelper jniManipulateNewGlobalObjectSetIntVal238(GlobalObjectTest thisTestObject);
 
   @Test
-  public void manipulatesMovedFromLocalObjectSetIntVal238() {
-    ObjectTestHelper object = jniManipulateNewLocalObjectSetIntVal238(this);
+  public void manipulatesMovedFromGlobalObjectSetIntVal238() {
+    ObjectTestHelper object = jniManipulateNewGlobalObjectSetIntVal238(this);
     assertThat(object).isNotEqualTo(null);
     assertThat(object.intVal1).isEqualTo(7);
     assertThat(object.intVal2).isEqualTo(9);
@@ -95,11 +96,12 @@ public final class LocalObjectTest {
 
   // Identical to above except creates a new Java object but passes as expiring
   // rvalue.  Materialized value (passed to Java) is {1, 5, 9};
-  native ObjectTestHelper jniMaterializeNewLocalObjectSetIntVal159(LocalObjectTest thisTestObject);
+  native ObjectTestHelper jniMaterializeNewGlobalObjectSetIntVal159(
+      GlobalObjectTest thisTestObject);
 
   @Test
-  public void materializeNewLocalObjectSetIntVal159() {
-    ObjectTestHelper object = jniMaterializeNewLocalObjectSetIntVal159(this);
+  public void materializeNewGlobalObjectSetIntVal159() {
+    ObjectTestHelper object = jniMaterializeNewGlobalObjectSetIntVal159(this);
     assertThat(object).isNotEqualTo(null);
     assertThat(object.intVal1).isEqualTo(6);
     assertThat(object.intVal2).isEqualTo(11);

@@ -40,7 +40,7 @@ using jni::Return;
 using jni::SupportedClassSet;
 
 static constexpr Class kClassLoaderTestClass{
-    "com/google/jni/ClassLoaderTest",
+    "com/jnibind/test/ClassLoaderTest",
     Method{"methodTakesLocalObjectReturnsNewObject",
            Return{kObjectTestHelperClass}, Params{kObjectTestHelperClass}},
 };
@@ -53,10 +53,10 @@ static constexpr ClassLoader kLiteTestClassLoader{
     kDefaultClassLoader, SupportedClassSet{kClassLoaderTestClass}};
 
 static constexpr Class kClassLoaderHelperClass{
-    "com/google/jni/ClassLoaderHelperClass", Constructor<jint>{},
+    "com/jnibind/test/ClassLoaderHelperClass", Constructor<jint>{},
     Method{"getValue", Return<jint>{}, Params{}}};
 static constexpr Class kClassLoaderHelperSubclass{
-    "com/google/jni/ClassLoaderHelperSubclass", Constructor<jint>{},
+    "com/jnibind/test/ClassLoaderHelperSubclass", Constructor<jint>{},
     Method{"getValue", Return<jint>{}, Params{}},
     Method{"castToParent", Return{kClassLoaderHelperClass}, Params{}}};
 
@@ -75,7 +75,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_google_jni_ClassLoaderTest_jniBuildNewObjectsFromClassLoader(
+Java_com_jnibind_test_ClassLoaderTest_jniBuildNewObjectsFromClassLoader(
     JNIEnv* env, jobject jtest_obj, jobject jclass_loader_obj) {
   GlobalClassLoader<kTestClassLoader, kJvmWithCustomClassLoaderSupport>
       class_loader{jclass_loader_obj};
@@ -89,7 +89,7 @@ Java_com_google_jni_ClassLoaderTest_jniBuildNewObjectsFromClassLoader(
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_google_jni_ClassLoaderTest_jniBuildNewObjectsFromDefaultClassLoader(
+Java_com_jnibind_test_ClassLoaderTest_jniBuildNewObjectsFromDefaultClassLoader(
     JNIEnv* env, jobject jtest_obj, jobject jclass_loader_obj) {
   GlobalClassLoader<kLiteTestClassLoader, kJvmWithCustomClassLoaderSupport>
       class_loader{jclass_loader_obj};
@@ -100,7 +100,7 @@ Java_com_google_jni_ClassLoaderTest_jniBuildNewObjectsFromDefaultClassLoader(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_google_jni_ClassLoaderTest_jniBuildsRemoteSubclassFromClassLoader(
+Java_com_jnibind_test_ClassLoaderTest_jniBuildsRemoteSubclassFromClassLoader(
     JNIEnv* env, jobject jtest_obj, jobject jclass_loader_obj, jint value) {
   LocalClassLoader<kCustomClassLoader, kJvmWithCustomClassLoaderSupport>
       class_loader{jclass_loader_obj};
@@ -116,7 +116,7 @@ Java_com_google_jni_ClassLoaderTest_jniBuildsRemoteSubclassFromClassLoader(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_google_jni_ClassLoaderTest_jniBuildsRemoteClassFromClassLoader(
+Java_com_jnibind_test_ClassLoaderTest_jniBuildsRemoteClassFromClassLoader(
     JNIEnv* env, jobject jtest_obj, jobject jclass_loader_obj, jint value) {
   LocalClassLoader<kCustomClassLoader, kJvmWithCustomClassLoaderSupport>
       class_loader{jclass_loader_obj};

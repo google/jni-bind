@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef JNI_BIND_JAVATESTS_COM_GOOGLE_AR_JNI_JNI_TEST_SECOND_OBJECT_JNI_H_
-#define JNI_BIND_JAVATESTS_COM_GOOGLE_AR_JNI_JNI_TEST_SECOND_OBJECT_JNI_H_
+#ifndef JNI_BIND_JAVATESTS_COM_JNIBIND_TEST_H
+#define JNI_BIND_JAVATESTS_COM_JNIBIND_TEST_H
 
 #include "class.h"
 #include "field.h"
@@ -30,7 +30,7 @@ constexpr jni::Class kObjectClass {
 };
 
 constexpr jni::Class kObjectTestHelperClass {
-    "com/google/jni/ObjectTestHelper",
+    "com/jnibind/test/ObjectTestHelper",
 
     jni::Constructor<>{},
     jni::Constructor{kObjectClass},
@@ -39,12 +39,12 @@ constexpr jni::Class kObjectTestHelperClass {
 
     jni::Method{"returnNewObjectWithFieldSetToSum",
       jni::Overload{
-        jni::Return{jni::Class{"com/google/jni/ObjectTestHelper"}},
+        jni::Return{jni::Class{"com/jnibind/test/ObjectTestHelper"}},
         jni::Params<int, int>{}
       },
       jni::Overload{
-        jni::Return{jni::Class{"com/google/jni/ObjectTestHelper"}},
-        jni::Params{jni::Class{"com/google/jni/ObjectTestHelper"}}
+        jni::Return{jni::Class{"com/jnibind/test/ObjectTestHelper"}},
+        jni::Params{jni::Class{"com/jnibind/test/ObjectTestHelper"}}
       },
     },
 
@@ -54,4 +54,4 @@ constexpr jni::Class kObjectTestHelperClass {
 };
 // clang-format on
 
-#endif  // JNI_BIND_JAVATESTS_COM_GOOGLE_AR_JNI_JNI_TEST_SECOND_OBJECT_JNI_H_
+#endif  // JNI_BIND_JAVATESTS_COM_JNIBIND_TEST_H

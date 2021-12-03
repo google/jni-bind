@@ -35,7 +35,7 @@ using jni::Return;
 
 // clang-format off
 constexpr Class kMethodTestHelper {
-    "com/google/jni/StringTestHelper",
+    "com/jnibind/test/StringTestHelper",
 
     // Void return type tests.
     Method{"voidMethodTakesString", Return<void>{}, Params<jstring>{}},
@@ -59,8 +59,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
 }
 
 /** Void return type tests. */
-JNIEXPORT void JNICALL Java_com_google_jni_StringTest_jniVoidMethodTakesString(
-    JNIEnv* env, jclass, jobject object, jstring string) {
+JNIEXPORT void JNICALL
+Java_com_jnibind_test_StringTest_jniVoidMethodTakesString(JNIEnv* env, jclass,
+                                                          jobject object,
+                                                          jstring string) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
   // TODO(b/175083373):  The following (and below) should compile with overload
   // sets.
@@ -74,10 +76,8 @@ JNIEXPORT void JNICALL Java_com_google_jni_StringTest_jniVoidMethodTakesString(
 }
 
 JNIEXPORT void JNICALL
-Java_com_google_jni_StringTest_jniVoidMethodTakesTwoStrings(JNIEnv* env, jclass,
-                                                            jobject object,
-                                                            jstring s1,
-                                                            jstring s2) {
+Java_com_jnibind_test_StringTest_jniVoidMethodTakesTwoStrings(
+    JNIEnv* env, jclass, jobject object, jstring s1, jstring s2) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
   r_jni_string_test_helper("voidMethodTakesTwoStrings",
                            std::string{LocalString{s1}.Pin().ToString()},
@@ -85,7 +85,7 @@ Java_com_google_jni_StringTest_jniVoidMethodTakesTwoStrings(JNIEnv* env, jclass,
 }
 
 JNIEXPORT void JNICALL
-Java_com_google_jni_StringTest_jniVoidMethodTakesFiveStrings(
+Java_com_jnibind_test_StringTest_jniVoidMethodTakesFiveStrings(
     JNIEnv* env, jclass, jobject object, jstring s1, jstring s2, jstring s3,
     jstring s4, jstring s5) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
@@ -99,9 +99,9 @@ Java_com_google_jni_StringTest_jniVoidMethodTakesFiveStrings(
 
 /** String return type tests. */
 JNIEXPORT jstring JNICALL
-Java_com_google_jni_StringTest_jniStringMethodTakesString(JNIEnv* env, jclass,
-                                                          jobject object,
-                                                          jstring string) {
+Java_com_jnibind_test_StringTest_jniStringMethodTakesString(JNIEnv* env, jclass,
+                                                            jobject object,
+                                                            jstring string) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
 
   // TODO(b/174272629):  This declaration is clumsy because Return<std::string> is
@@ -114,7 +114,7 @@ Java_com_google_jni_StringTest_jniStringMethodTakesString(JNIEnv* env, jclass,
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_google_jni_StringTest_jniStringMethodTakesTwoStrings(
+Java_com_jnibind_test_StringTest_jniStringMethodTakesTwoStrings(
     JNIEnv* env, jclass, jobject object, jstring s1, jstring s2) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
   return LocalString{
@@ -125,7 +125,7 @@ Java_com_google_jni_StringTest_jniStringMethodTakesTwoStrings(
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_google_jni_StringTest_jniStringMethodTakesFiveStrings(
+Java_com_jnibind_test_StringTest_jniStringMethodTakesFiveStrings(
     JNIEnv* env, jclass, jobject object, jstring s1, jstring s2, jstring s3,
     jstring s4, jstring s5) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};

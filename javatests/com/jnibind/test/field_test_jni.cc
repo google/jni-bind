@@ -31,7 +31,7 @@ using jni::LocalObject;
 
 // clang-format off
 constexpr Class kFieldTestHelper {
-    "com/google/jni/FieldTestHelper",
+    "com/jnibind/test/FieldTestHelper",
 
     Field{"intField", jint{}},
     Field{"floatField", jfloat{}},
@@ -47,23 +47,21 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
   return JNI_VERSION_1_6;
 }
 
-JNIEXPORT jint JNICALL Java_com_google_jni_FieldTest_jniIntField(JNIEnv* env,
-                                                                 jclass,
-                                                                 jobject object,
-                                                                 jint val) {
+JNIEXPORT jint JNICALL Java_com_jnibind_test_FieldTest_jniIntField(
+    JNIEnv* env, jclass, jobject object, jint val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
   rjni_test_helper["intField"].Set(jint{val});
   return rjni_test_helper["intField"].Get();
 }
 
-JNIEXPORT jfloat JNICALL Java_com_google_jni_FieldTest_jniFloatField(
+JNIEXPORT jfloat JNICALL Java_com_jnibind_test_FieldTest_jniFloatField(
     JNIEnv* env, jclass, jobject object, jfloat val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
   rjni_test_helper["floatField"].Set(jfloat{val});
   return rjni_test_helper["floatField"].Get();
 }
 
-JNIEXPORT jdouble JNICALL Java_com_google_jni_FieldTest_jniDoubleField(
+JNIEXPORT jdouble JNICALL Java_com_jnibind_test_FieldTest_jniDoubleField(
     JNIEnv* env, jclass, jobject object, jdouble val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
   rjni_test_helper["doubleField"].Set(jdouble{val});

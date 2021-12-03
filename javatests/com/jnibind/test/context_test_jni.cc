@@ -38,14 +38,14 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
   return JNI_VERSION_1_6;
 }
 
-JNIEXPORT void JNICALL Java_com_google_jni_ContextTest_DoSetup(JNIEnv* env,
-                                                               jclass) {
+JNIEXPORT void JNICALL Java_com_jnibind_test_ContextTest_DoSetup(JNIEnv* env,
+                                                                 jclass) {
   jvm.reset(new jni::JvmRef<jni::kDefaultJvm>{env});
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_google_jni_ContextTest_CreateNativeContextObject(JNIEnv* env, jclass,
-                                                          jint val) {
+Java_com_jnibind_test_ContextTest_CreateNativeContextObject(JNIEnv* env, jclass,
+                                                            jint val) {
   auto* ctx_struct = new ContextStruct{GlobalObject<kObjectTestHelperClass>{}};
   ctx_struct->obj["intVal1"].Set(jint{val});
 
@@ -53,7 +53,7 @@ Java_com_google_jni_ContextTest_CreateNativeContextObject(JNIEnv* env, jclass,
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_google_jni_ContextTest_CreateNativeContextObjectSetValToSum(
+Java_com_jnibind_test_ContextTest_CreateNativeContextObjectSetValToSum(
     JNIEnv* env, jclass, jint val1, jint val2) {
   // Creates a temporary test helper, calls its member method, and releases the
   // returned object across the C API boundary (then destroys the temporary).
@@ -62,19 +62,19 @@ Java_com_google_jni_ContextTest_CreateNativeContextObjectSetValToSum(
       .Release();
 }
 
-JNIEXPORT jobject JNICALL Java_com_google_jni_ContextTest_QueryNativeObject(
+JNIEXPORT jobject JNICALL Java_com_jnibind_test_ContextTest_QueryNativeObject(
     JNIEnv* env, jclass, void* ctx_void_ptr) {
   ContextStruct* ctx_struct = static_cast<ContextStruct*>(ctx_void_ptr);
   return jobject{ctx_struct->obj};
 }
 
-JNIEXPORT jobject JNICALL Java_com_google_jni_ContextTest_ExtractNativeObject(
+JNIEXPORT jobject JNICALL Java_com_jnibind_test_ContextTest_ExtractNativeObject(
     JNIEnv* env, jclass, void* ctx_void_ptr) {
   ContextStruct* ctx_struct = static_cast<ContextStruct*>(ctx_void_ptr);
   return ctx_struct->obj.Release();
 }
 
-JNIEXPORT void JNICALL Java_com_google_jni_ContextTest_DestroyNativeContext(
+JNIEXPORT void JNICALL Java_com_jnibind_test_ContextTest_DestroyNativeContext(
     JNIEnv* env, jclass, void* ctx_void_ptr) {
   delete static_cast<ContextStruct*>(ctx_void_ptr);
 }

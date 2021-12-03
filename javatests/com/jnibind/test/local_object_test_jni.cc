@@ -24,7 +24,7 @@
 #include "return.h"
 
 static constexpr jni::Class kLocalObjectTestClass{
-    "com/google/jni/LocalObjectTest",
+    "com/jnibind/test/LocalObjectTest",
     jni::Method{"methodTakesLocalObjectReturnsNewObject",
                 jni::Return{kObjectTestHelperClass},
                 jni::Params{kObjectTestHelperClass}},
@@ -38,25 +38,25 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_google_jni_LocalObjectTest_jniCreateNewObject(JNIEnv* env, jclass) {
+Java_com_jnibind_test_LocalObjectTest_jniCreateNewObject(JNIEnv* env, jclass) {
   return jni::LocalObject<kObjectTestHelperClass>{1, 2, 3}.Release();
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_google_jni_LocalObjectTest_jniCreateNewLocalObjectFromObject(
+Java_com_jnibind_test_LocalObjectTest_jniCreateNewLocalObjectFromObject(
     JNIEnv* env, jclass, jobject object) {
   jni::LocalObject<kObjectClass> java_object{object};
   return jni::LocalObject<kObjectTestHelperClass>{java_object}.Release();
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_google_jni_LocalObjectTest_jniCreateNewLocalObjectSetIntVal123(
+Java_com_jnibind_test_LocalObjectTest_jniCreateNewLocalObjectSetIntVal123(
     JNIEnv* env, jclass) {
   return jni::LocalObject<kObjectTestHelperClass>{1, 2, 3}.Release();
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_google_jni_LocalObjectTest_jniBuildNewObjectsFromExistingObjects(
+Java_com_jnibind_test_LocalObjectTest_jniBuildNewObjectsFromExistingObjects(
     JNIEnv* env, jclass, jobject jtest_obj, jobject jhelper_obj) {
   jni::LocalObject<kObjectTestHelperClass> helper_obj{jhelper_obj};
   return jni::LocalObject<kLocalObjectTestClass>{jtest_obj}(
@@ -65,7 +65,7 @@ Java_com_google_jni_LocalObjectTest_jniBuildNewObjectsFromExistingObjects(
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_google_jni_LocalObjectTest_jniManipulateNewLocalObjectSetIntVal238(
+Java_com_jnibind_test_LocalObjectTest_jniManipulateNewLocalObjectSetIntVal238(
     JNIEnv* env, jclass, jobject jtest_obj) {
   jni::LocalObject<kObjectTestHelperClass> helper_obj{2, 3, 8};
   return jni::LocalObject<kLocalObjectTestClass>{jtest_obj}(
@@ -74,7 +74,7 @@ Java_com_google_jni_LocalObjectTest_jniManipulateNewLocalObjectSetIntVal238(
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_google_jni_LocalObjectTest_jniMaterializeNewLocalObjectSetIntVal159(
+Java_com_jnibind_test_LocalObjectTest_jniMaterializeNewLocalObjectSetIntVal159(
     JNIEnv* env, jclass, jobject jtest_obj) {
   return jni::LocalObject<kLocalObjectTestClass>{jtest_obj}(
              "methodTakesLocalObjectReturnsNewObject",

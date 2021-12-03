@@ -15,7 +15,7 @@
 #include "object_test_helper_jni.h"
 #include "class.h"
 #include "field.h"
-#include "javatests/com/google/jni/object_test_helper_jni.h"
+#include "javatests/com/jnibind/test/object_test_helper_jni.h"
 #include "jni_dep.h"
 #include "jvm_ref.h"
 #include "local_array.h"
@@ -34,7 +34,7 @@ using jni::Return;
 
 // clang-format off
 static constexpr Class kArrayTest {
-    "com/google/jni/ArrayTest",
+    "com/jnibind/test/ArrayTest",
     Method {"rJniBooleanArray", Return<void>{}, Params{jboolean{}, Array{jboolean{}}}},
     Method {"rJniByteArray", Return<void>{}, Params{jbyte{}, Array{jbyte{}}}},
     Method {"rJniCharArray", Return<void>{}, Params{jchar{}, Array{jchar{}}}},
@@ -54,7 +54,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
   return JNI_VERSION_1_6;
 }
 
-JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeBooleanTests(
+JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeBooleanTests(
     JNIEnv* env, jclass, jobject test_fixture, jintArray boolean_array) {
   LocalObject<kArrayTest> rjni_test_helper{test_fixture};
 
@@ -86,7 +86,7 @@ JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeBooleanTests(
   rjni_test_helper("rJniBooleanArray", true, new_array);
 }
 
-JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeByteTests(
+JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeByteTests(
     JNIEnv* env, jclass, jobject test_fixture, jbyteArray byte_array) {
   LocalObject<kArrayTest> rjni_test_helper{test_fixture};
 
@@ -117,7 +117,7 @@ JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeByteTests(
   rjni_test_helper("rJniByteArray", jbyte{5}, new_array);
 }
 
-JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeCharTests(
+JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeCharTests(
     JNIEnv* env, jclass, jobject test_fixture, jcharArray char_array) {
   LocalObject<kArrayTest> rjni_test_helper{test_fixture};
 
@@ -148,7 +148,7 @@ JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeCharTests(
   rjni_test_helper("rJniCharArray", jchar{5}, new_array);
 }
 
-JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeShortTests(
+JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeShortTests(
     JNIEnv* env, jclass, jobject test_fixture, jshortArray short_array) {
   LocalObject<kArrayTest> rjni_test_helper{test_fixture};
 
@@ -180,7 +180,7 @@ JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeShortTests(
   rjni_test_helper("rJniShortArray", jshort{5}, new_array);
 }
 
-JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeIntTests(
+JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeIntTests(
     JNIEnv* env, jclass, jobject test_fixture, jintArray int_array) {
   LocalObject<kArrayTest> rjni_test_helper{test_fixture};
 
@@ -211,7 +211,7 @@ JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeIntTests(
   rjni_test_helper("rJniIntArray", 5, new_array);
 }
 
-JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeLongTests(
+JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeLongTests(
     JNIEnv* env, jclass, jobject test_fixture, jlongArray long_array) {
   LocalObject<kArrayTest> rjni_test_helper{test_fixture};
 
@@ -242,7 +242,7 @@ JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeLongTests(
   rjni_test_helper("rJniLongArray", jlong{5}, new_array);
 }
 
-JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeFloatTests(
+JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeFloatTests(
     JNIEnv* env, jclass, jobject test_fixture, jfloatArray float_array) {
   LocalObject<kArrayTest> rjni_test_helper{test_fixture};
 
@@ -258,7 +258,7 @@ JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeFloatTests(
   rjni_test_helper("rJniFloatArray", 2.5f, local_arr);
 }
 
-JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeDoubleTests(
+JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeDoubleTests(
     JNIEnv* env, jclass, jobject test_fixture, jdoubleArray double_array) {
   LocalObject<kArrayTest> rjni_test_helper{test_fixture};
 
@@ -290,7 +290,7 @@ JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeDoubleTests(
   rjni_test_helper("rJniDoubleArray", jdouble{5}, new_array);
 }
 
-JNIEXPORT void JNICALL Java_com_google_jni_ArrayTest_nativeObjectTests(
+JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeObjectTests(
     JNIEnv* env, jclass, jobject test_fixture, jobjectArray object_array) {
   LocalObject<kArrayTest> rjni_test_helper{test_fixture};
 
