@@ -70,6 +70,7 @@ class UtfStringView {
   UtfStringView(const UtfStringView &) = delete;
 
   // Returns a view into the pinned character string.
+  // Warning: std::string_view{nullptr} is undefined behaviour and may crash.
   const std::string_view ToString() const { return std::string_view{chars_}; }
 
  private:

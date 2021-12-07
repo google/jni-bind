@@ -32,10 +32,6 @@ using testing::StrEq;
 
 TEST_F(JniTest, String_NullWorks) {
   jni::LocalString local_jni_string{nullptr};
-  EXPECT_EQ(local_jni_string.Pin().ToString(), nullptr);
-
-  jni::GlobalString global_jni_string{nullptr};
-  EXPECT_EQ(global_jni_string.Pin().ToString(), nullptr);
 }
 
 TEST_F(JniTest, String_ConstructsFromOutputOfMethod) {
