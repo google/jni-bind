@@ -36,10 +36,10 @@ class Jvm {
   constexpr Jvm(ClassLoaderTs... class_loaders)
       : class_loaders_(class_loaders...) {}
 
-  template <const auto& class_loader_v, int... Is>
+  template <const auto& class_loader_v, std::size_t... Is>
   constexpr size_t IdxOfClassLoaderHelper(
-      std::integer_sequence<int, Is...>) const {
-    return std::max(
+      std::integer_sequence<std::size_t, Is...>) const {
+    return metaprogramming::ModifiedMax(
         {((std::get<Is>(class_loaders_) == class_loader_v) ? Is : -1)...});
   }
 
@@ -48,7 +48,7 @@ class Jvm {
   template <const auto& class_loader_v>
   constexpr size_t IdxOfClassLoader() const {
     return IdxOfClassLoaderHelper<class_loader_v>(
-        std::make_integer_sequence<int, sizeof...(ClassLoaderTs)>());
+        std::make_integer_sequence<std::size_t, sizeof...(ClassLoaderTs)>());
   }
 
   template <typename T>

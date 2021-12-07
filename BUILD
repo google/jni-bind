@@ -99,6 +99,7 @@ cc_library(
         "//class_defs:java_lang_classes",
         "//metaprogramming:all_unique",
         "//metaprogramming:base_filter",
+        "//metaprogramming:modified_max",
     ],
 )
 
@@ -184,6 +185,7 @@ cc_test(
 cc_library(
     name = "default_class_loader",
     hdrs = ["default_class_loader.h"],
+    deps = ["//metaprogramming:modified_max"],
 )
 
 cc_library(
@@ -315,6 +317,7 @@ cc_library(
         ":class_loader",
         ":jni_dep",
         "//jni_helper:jni_env",
+        "//metaprogramming:modified_max",
     ],
 )
 

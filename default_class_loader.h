@@ -19,10 +19,13 @@
 
 #include <tuple>
 
+#include "metaprogramming/modified_max.h"
+
 namespace jni {
 
 static constexpr std::size_t kDefaultClassLoaderIdx = 0;
-static constexpr int kClassNotInLoaderSetIdx = -1;
+static constexpr std::size_t kClassNotInLoaderSetIdx =
+    metaprogramming::kNegativeOne;
 
 // Class loader that can supply any class (to be used when none is specified).
 // Setting this as the root loader for user defined classes will disable checks
@@ -46,7 +49,7 @@ class DefaultClassLoader {
   }
 
   template <const auto& class_v>
-  constexpr int IdxOfClass() const {
+  constexpr std::size_t IdxOfClass() const {
     return kClassNotInLoaderSetIdx;
   }
 

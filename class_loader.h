@@ -26,6 +26,7 @@
 #include "default_class_loader.h"
 #include "metaprogramming/all_unique.h"
 #include "metaprogramming/base_filter.h"
+#include "metaprogramming/modified_max.h"
 #include "supported_class_set.h"
 
 namespace jni {
@@ -74,13 +75,16 @@ class ClassLoader {
     return !(*this == rhs);
   }
 
-  template <const auto& class_v, int... Is>
+  template <const auto& class_v, std::size_t... Is>
   constexpr std::size_t IdxOfClassHelper(
-      std::integer_sequence<int, Is...>) const {
-    return std::max({((std::get<Is>(supported_classes_) == class_v)
-                          ? Is
-                          : kClassNotInLoaderSetIdx)...,
-                     kClassNotInLoaderSetIdx});
+      std::integer_sequence<std::size_t, Is...>) const {
+    // std::max appears to be missing the initializer list overload in Bazel's
+    // implementation of clang.  This should simply be std::max.
+    return metaprogramming::ModifiedMax(
+        {((std::get<Is>(supported_classes_) == class_v)
+              ? std::size_t{Is}
+              : metaprogramming::kNegativeOne)...,
+         metaprogramming::kNegativeOne});
   }
 
   // Returns the index for a given class within this set (any given class ref is
@@ -88,7 +92,8 @@ class ClassLoader {
   template <const auto& class_v>
   constexpr std::size_t IdxOfClass() const {
     return IdxOfClassHelper<class_v>(
-        std::make_integer_sequence<int, sizeof...(SupportedClasses_)>());
+        std::make_integer_sequence<std::size_t,
+                                   sizeof...(SupportedClasses_)>());
   }
 
   // Tests if a class is supported by this class loader (not ancestors).

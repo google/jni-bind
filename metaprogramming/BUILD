@@ -523,6 +523,20 @@ cc_test(
 )
 
 cc_library(
+    name = "modified_max",
+    hdrs = ["modified_max.h"],
+)
+
+cc_test(
+    name = "modified_max_test",
+    srcs = ["modified_max_test.cc"],
+    deps = [
+        ":modified_max",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "n_bit",
     hdrs = ["n_bit.h"],
 )
