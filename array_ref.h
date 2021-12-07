@@ -16,8 +16,6 @@
 #ifndef JNI_BIND_ARRAY_REF_H_
 #define JNI_BIND_ARRAY_REF_H_
 
-#include <span>
-
 #include "array.h"
 #include "class.h"
 #include "default_class_loader.h"
