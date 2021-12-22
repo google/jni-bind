@@ -38,6 +38,11 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
   return JNI_VERSION_1_6;
 }
 
+JNIEXPORT void JNICALL
+Java_com_jnibind_test_ContextTest_jniTearDown(JNIEnv* env, jclass) {
+  jvm = nullptr;
+}
+
 JNIEXPORT void JNICALL Java_com_jnibind_test_ContextTest_DoSetup(JNIEnv* env,
                                                                  jclass) {
   jvm.reset(new jni::JvmRef<jni::kDefaultJvm>{env});

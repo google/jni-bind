@@ -33,6 +33,8 @@ using jni::Method;
 using jni::Params;
 using jni::Return;
 
+static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
+
 // clang-format off
 constexpr Class kMethodTestHelper {
     "com/jnibind/test/StringTestHelper",
@@ -54,8 +56,13 @@ constexpr Class kMethodTestHelper {
 extern "C" {
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
-  static jni::JvmRef<jni::kDefaultJvm> jvm{pjvm};
+  jvm.reset(new jni::JvmRef<jni::kDefaultJvm>(pjvm));
   return JNI_VERSION_1_6;
+}
+
+JNIEXPORT void JNICALL
+Java_com_jnibind_test_StringTest_jniTearDown(JavaVM* pjvm, void* reserved) {
+  jvm = nullptr;
 }
 
 /** Void return type tests. */

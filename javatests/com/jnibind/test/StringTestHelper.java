@@ -14,7 +14,6 @@
 
 package com.jnibind.test;
 
-import com.google.android.apps.common.proguard.UsedByNative;
 
 /**
  * This object is used to set mock expectations for StringTest as inner classes do not support
@@ -22,27 +21,27 @@ import com.google.android.apps.common.proguard.UsedByNative;
  */
 public class StringTestHelper {
   /** Void Methods. */
-  @UsedByNative("string_test_jni.cc")
+
   public void voidMethodTakesString(String s) {}
 
-  @UsedByNative("string_test_jni.cc")
+
   public void voidMethodTakesTwoStrings(String s1, String s2) {}
 
-  @UsedByNative("string_test_jni.cc")
+
   public void voidMethodTakesFiveStrings(String s1, String s2, String s3, String s4, String s5) {}
 
   /** String Methods. */
-  @UsedByNative("string_test_jni.cc")
+
   public String stringMethodTakesString(String s) {
     return s;
   }
 
-  @UsedByNative("string_test_jni.cc")
+
   public String stringMethodTakesTwoStrings(String s1, String s2) {
     return s1 + s2;
   }
 
-  @UsedByNative("string_test_jni.cc")
+
   public String stringMethodTakesFiveStrings(
       String s1, String s2, String s3, String s4, String s5) {
     return s1 + s2 + s3 + s4 + s5;

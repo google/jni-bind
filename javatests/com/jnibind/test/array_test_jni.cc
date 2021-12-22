@@ -13,9 +13,9 @@
 // limitations under the License.
 
 #include "object_test_helper_jni.h"
+#include "array_ref.h"
 #include "class.h"
 #include "field.h"
-#include "javatests/com/jnibind/test/object_test_helper_jni.h"
 #include "jni_dep.h"
 #include "jvm_ref.h"
 #include "local_array.h"
@@ -31,6 +31,8 @@ using jni::LocalObject;
 using jni::Method;
 using jni::Params;
 using jni::Return;
+
+static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
 
 // clang-format off
 static constexpr Class kArrayTest {
@@ -50,8 +52,13 @@ static constexpr Class kArrayTest {
 extern "C" {
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
-  static jni::JvmRef<jni::kDefaultJvm> jvm{pjvm};
+  jvm.reset(new jni::JvmRef<jni::kDefaultJvm>(pjvm));
   return JNI_VERSION_1_6;
+}
+
+JNIEXPORT void JNICALL
+Java_com_jnibind_test_ArrayTest_jniTearDown(JavaVM* pjvm, void* reserved) {
+  jvm = nullptr;
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeBooleanTests(

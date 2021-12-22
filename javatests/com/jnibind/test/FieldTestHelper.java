@@ -14,19 +14,18 @@
 
 package com.jnibind.test;
 
-import com.google.android.apps.common.proguard.UsedByNative;
 
 /**
  * This object is used to set mock expectations for FieldTest as inner classes do not support
  * mocking and the class definition must match the filename.
  */
 public class FieldTestHelper {
-  @UsedByNative("field_test_jni.cc")
+
   public int intField;
 
-  @UsedByNative("field_test_jni.cc")
+
   public float floatField;
 
-  @UsedByNative("field_test_jni.cc")
+
   public double doubleField;
 }

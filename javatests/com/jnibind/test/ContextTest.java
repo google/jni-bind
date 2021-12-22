@@ -16,11 +16,12 @@ package com.jnibind.test;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-@RunWith(AndroidJUnit4ClassRunner.class)
+@RunWith(JUnit4.class)
 public final class ContextTest {
   private static final String TAG = "ContextTest";
 
@@ -30,6 +31,11 @@ public final class ContextTest {
 
   public ContextTest() {
     DoSetup();
+  }
+
+  @AfterClass
+  public static void doShutDown() {
+    jniTearDown();
   }
 
   @Test
@@ -60,6 +66,9 @@ public final class ContextTest {
   // situations where this may not be accessible to the caller (or cannot be overridden) but the
   // first call across JNI is known.
   native void DoSetup();
+
+  // Tears down the JvmRef.
+  static native void jniTearDown();
 
   // Causes native code to create an object that will be stored in native code and returned on a
   // subsequent call.  This can only be done with global objects and not local objects.

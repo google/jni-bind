@@ -16,9 +16,10 @@ package com.jnibind.test;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Exercises get and set functionality across rJni.
@@ -26,13 +27,20 @@ import org.junit.runner.RunWith;
  * <p>All functions accept a value which they will set on the helper. Then they will query the same
  * value and return it across rJni.
  */
-@RunWith(AndroidJUnit4ClassRunner.class)
+@RunWith(JUnit4.class)
 public class FieldTest {
   static {
     System.loadLibrary("field_test_jni");
   }
 
   public FieldTestHelper rJniTestHelper = new FieldTestHelper();
+
+  static native void jniTearDown();
+
+  @AfterClass
+  public static void doShutDown() {
+    jniTearDown();
+  }
 
   /** Int Field Test. */
   native int jniIntField(FieldTestHelper mockFieldTestHelper, int val);

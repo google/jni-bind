@@ -16,10 +16,10 @@ package com.jnibind.test;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
-import com.google.android.apps.common.proguard.UsedByNative;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Exercises basic behaviours with global objects, ranging from those passed down to JNI to those
@@ -30,13 +30,20 @@ import org.junit.runner.RunWith;
  *
  * <p>Note, any object passed into JNI is always local.
  */
-@RunWith(AndroidJUnit4ClassRunner.class)
+@RunWith(JUnit4.class)
 public final class GlobalObjectTest {
   static {
     System.loadLibrary("global_object_test_jni");
   }
 
-  native ObjectTestHelper jniCreateNewObject();
+  static native void jniTearDown();
+
+  static native ObjectTestHelper jniCreateNewObject();
+
+  @AfterClass
+  public static void doShutDown() {
+    jniTearDown();
+  }
 
   @Test
   public void createNewGlobalObjectUsingNoArgConstructor() {
@@ -58,7 +65,7 @@ public final class GlobalObjectTest {
   native ObjectTestHelper jniBuildNewObjectsFromExistingObjects(
       GlobalObjectTest testHelperObject, ObjectTestHelper objectToMutate);
 
-  @UsedByNative("global_object_test_jni.cc")
+
   ObjectTestHelper methodTakesGlobalObjectReturnsNewObject(ObjectTestHelper object) {
     return new ObjectTestHelper(object.intVal1 + 5, object.intVal2 + 6, object.intVal3 + 7);
   }

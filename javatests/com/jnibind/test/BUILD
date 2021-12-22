@@ -1,14 +1,10 @@
-load("//tools/build_defs/android:rules.bzl", "android_binary", "android_instrumentation_test", "android_library")
-load("//mobile/build:build_defs.bzl", "android_jni_library")
-
 licenses(["notice"])
 
 ################################################################################
 # Shared Object used as a return value for testing.
 ################################################################################
-android_library(
+java_library(
     name = "object_test_helper",
-    testonly = 1,
     srcs = ["ObjectTestHelper.java"],
 )
 
@@ -28,11 +24,9 @@ cc_library(
 ################################################################################
 # Context Test
 ################################################################################
-android_jni_library(
-    name = "context_test_jni",
-    testonly = 1,
+cc_library(
+    name = "context_test_jni_impl",
     srcs = ["context_test_jni.cc"],
-    force_android = True,
     deps = [
         ":object_test_helper_jni",
         "//:class",
@@ -46,46 +40,35 @@ android_jni_library(
         "//:return",
         "//:string_ref",
     ],
+    alwayslink = True,
 )
 
-android_library(
-    name = "context_test_java_lib",
+cc_binary(
+    name = "libcontext_test_jni.so",
+    linkshared = True,
+    deps = [":context_test_jni_impl"],
+)
+
+java_test(
+    name = "ContextTest",
     testonly = 1,
     srcs = ["ContextTest.java"],
+    data = [":libcontext_test_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     deps = [
         ":object_test_helper",
-        "//third_party/android/androidx_test/runner/android_junit_runner",
-        "//third_party/java/junit:junit-android",
-        "//third_party/java/truth:truth-android",
+        "@maven//:com_google_truth_truth_1_1",
+        "@maven//:junit_junit_4_13_1",
     ],
-)
-
-android_binary(
-    name = "context_test_app",
-    testonly = 1,
-    manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
-    deps = [
-        ":context_test_java_lib",
-        ":context_test_jni",
-        "//java/com/google/android/apps/common/testing/testrunner",
-    ],
-)
-
-android_instrumentation_test(
-    name = "context_instrumentation_test",
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
-    test_app = ":context_test_app",
 )
 
 ################################################################################
 # RJni Local Object Tests
 ################################################################################
-android_jni_library(
-    name = "local_object_test_jni",
+cc_library(
+    name = "local_object_test_jni_impl",
     testonly = 1,
     srcs = ["local_object_test_jni.cc"],
-    force_android = True,
     deps = [
         ":object_test_helper_jni",
         "//:class",
@@ -101,50 +84,36 @@ android_jni_library(
         "//:return",
         "//:string_ref",
     ],
+    alwayslink = True,
 )
 
-android_library(
-    name = "object_test_local_java_lib",
+cc_binary(
+    name = "liblocal_object_test_jni.so",
     testonly = 1,
-    srcs = [
-        "LocalObjectTest.java",
-        "ObjectTestHelper.java",
-    ],
-    deps = [
-        ":local_object_test_jni",
-        "//java/com/google/android/apps/common/proguard:annotations",
-        "//third_party/android/androidx_test/runner/android_junit_runner",
-        "//third_party/java/junit:junit-android",
-        "//third_party/java/truth:truth-android",
-    ],
+    linkshared = True,
+    deps = [":local_object_test_jni_impl"],
 )
 
-android_binary(
-    name = "object_test_local_app",
+java_test(
+    name = "LocalObjectTest",
     testonly = 1,
-    manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
+    srcs = ["LocalObjectTest.java"],
+    data = [":liblocal_object_test_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     deps = [
-        ":local_object_test_jni",
-        ":object_test_local_java_lib",
-        "//java/com/google/android/apps/common/testing/testrunner",
+        ":object_test_helper",
+        "@maven//:com_google_truth_truth_1_1",
+        "@maven//:junit_junit_4_13_1",
     ],
-)
-
-android_instrumentation_test(
-    name = "object_local_instrumentation_test",
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
-    test_app = ":object_test_local_app",
 )
 
 ################################################################################
 # RJni Global Object Tests
 ################################################################################
-android_jni_library(
-    name = "global_object_test_jni",
+cc_library(
+    name = "global_object_test_jni_impl",
     testonly = 1,
     srcs = ["global_object_test_jni.cc"],
-    force_android = True,
     deps = [
         ":object_test_helper_jni",
         "//:class",
@@ -157,50 +126,36 @@ android_jni_library(
         "//:return",
         "//:string_ref",
     ],
+    alwayslink = True,
 )
 
-android_library(
-    name = "object_test_global_java_lib",
+cc_binary(
+    name = "libglobal_object_test_jni.so",
     testonly = 1,
-    srcs = [
-        "GlobalObjectTest.java",
-        "ObjectTestHelper.java",
-    ],
-    deps = [
-        ":global_object_test_jni",
-        "//java/com/google/android/apps/common/proguard:annotations",
-        "//third_party/android/androidx_test/runner/android_junit_runner",
-        "//third_party/java/junit:junit-android",
-        "//third_party/java/truth:truth-android",
-    ],
+    linkshared = True,
+    deps = [":global_object_test_jni_impl"],
 )
 
-android_binary(
-    name = "object_test_global_app",
+java_test(
+    name = "GlobalObjectTest",
     testonly = 1,
-    manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
+    srcs = ["GlobalObjectTest.java"],
+    data = [":libglobal_object_test_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     deps = [
-        ":global_object_test_jni",
-        ":object_test_global_java_lib",
-        "//java/com/google/android/apps/common/testing/testrunner",
+        ":object_test_helper",
+        "@maven//:com_google_truth_truth_1_1",
+        "@maven//:junit_junit_4_13_1",
     ],
-)
-
-android_instrumentation_test(
-    name = "object_global_instrumentation_test",
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
-    test_app = ":object_test_global_app",
 )
 
 ################################################################################
 # RJni Array Test
 ################################################################################
-android_jni_library(
-    name = "array_test_jni",
+cc_library(
+    name = "array_test_jni_impl",
     testonly = 1,
     srcs = ["array_test_jni.cc"],
-    force_android = True,
     deps = [
         ":object_test_helper_jni",
         "//:array",
@@ -213,225 +168,41 @@ android_jni_library(
         "//:object_ref",
         "//:params",
         "//:return",
-        "//base",
     ],
+    alwayslink = True,
 )
 
-android_library(
-    name = "array_test_java_lib",
+cc_binary(
+    name = "libarray_test_jni.so",
     testonly = 1,
-    srcs = [
-        "ArrayTest.java",
-        "ObjectTestHelper.java",
-    ],
-    deps = [
-        "//third_party/android/androidx_test/runner/android_junit_runner",
-        "//third_party/java/junit:junit-android",
-        "//third_party/java/truth:truth-android",
-    ],
+    linkshared = True,
+    deps = [":array_test_jni_impl"],
 )
 
-android_binary(
-    name = "array_test_app",
+java_test(
+    name = "ArrayTest",
     testonly = 1,
-    manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
+    srcs = ["ArrayTest.java"],
+    data = [":libarray_test_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     deps = [
-        ":array_test_java_lib",
-        ":array_test_jni",
-        "//java/com/google/android/apps/common/testing/testrunner",
+        ":object_test_helper",
+        "@maven//:com_google_truth_truth_1_1",
     ],
-)
-
-android_instrumentation_test(
-    name = "array_instrumentation_test",
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
-    test_app = ":array_test_app",
 )
 
 ################################################################################
 # RJni Field Test
 ################################################################################
-android_jni_library(
-    name = "field_test_jni",
+cc_library(
+    name = "field_test_jni_impl",
     testonly = 1,
     srcs = ["field_test_jni.cc"],
-    force_android = True,
     deps = [
         ":object_test_helper_jni",
         "//:class",
         "//:field",
         "//:jni_dep",
-        "//:jvm_ref",
-        "//:object_ref",
-        "//:params",
-        "//:return",
-        "//:string_ref",
-    ],
-)
-
-android_library(
-    name = "field_test_java_lib",
-    testonly = 1,
-    srcs = [
-        "FieldTest.java",
-        "FieldTestHelper.java",
-    ],
-    deps = [
-        "//java/com/google/android/apps/common/proguard:annotations",
-        "//third_party/android/androidx_test/runner/android_junit_runner",
-        "//third_party/java/junit:junit-android",
-        "//third_party/java/truth:truth-android",
-    ],
-)
-
-android_binary(
-    name = "field_test_app",
-    testonly = 1,
-    manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
-    deps = [
-        ":field_test_java_lib",
-        ":field_test_jni",
-        "//java/com/google/android/apps/common/testing/testrunner",
-    ],
-)
-
-android_instrumentation_test(
-    name = "field_instrumentation_test",
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
-    test_app = ":field_test_app",
-)
-
-################################################################################
-# RJni Method Test
-################################################################################
-android_jni_library(
-    name = "method_test_jni",
-    testonly = 1,
-    srcs = ["method_test_jni.cc"],
-    force_android = True,
-    deps = [
-        ":object_test_helper_jni",
-        "//:class",
-        "//:field",
-        "//:jni_dep",
-        "//:jvm_ref",
-        "//:method",
-        "//:object_ref",
-        "//:params",
-        "//:return",
-        "//:string_ref",
-    ],
-)
-
-android_library(
-    name = "method_test_java_lib",
-    testonly = 1,
-    srcs = [
-        "MethodTest.java",
-        "MethodTestHelper.java",
-    ],
-    deps = [
-        "//java/com/google/android/apps/common/proguard:annotations",
-        "//third_party/android/androidx_test/runner/android_junit_runner",
-        "//third_party/java/junit:junit-android",
-        "//third_party/java/mockito:mockito-android",
-        "//third_party/java/truth:truth-android",
-    ],
-)
-
-android_binary(
-    name = "method_test_app",
-    testonly = 1,
-    manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
-    deps = [
-        ":method_test_java_lib",
-        ":method_test_jni",
-        "//java/com/google/android/apps/common/testing/testrunner",
-    ],
-)
-
-android_instrumentation_test(
-    name = "method_instrumentation_test",
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
-    test_app = ":method_test_app",
-)
-
-################################################################################
-# RJni String Test
-################################################################################
-android_jni_library(
-    name = "string_test_jni",
-    testonly = 1,
-    srcs = ["string_test_jni.cc"],
-    force_android = True,
-    deps = [
-        ":object_test_helper_jni",
-        "//:class",
-        "//:field",
-        "//:jni_dep",
-        "//:jvm_ref",
-        "//:object_ref",
-        "//:params",
-        "//:return",
-        "//:string",
-        "//:string_ref",
-    ],
-)
-
-android_library(
-    name = "string_test_java_lib",
-    testonly = 1,
-    srcs = [
-        "StringTest.java",
-        "StringTestHelper.java",
-    ],
-    deps = [
-        "//java/com/google/android/apps/common/proguard:annotations",
-        "//third_party/android/androidx_test/runner/android_junit_runner",
-        "//third_party/java/junit:junit-android",
-        "//third_party/java/mockito:mockito-android",
-        "//third_party/java/truth:truth-android",
-    ],
-)
-
-android_binary(
-    name = "string_test_app",
-    testonly = 1,
-    manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
-    deps = [
-        ":string_test_java_lib",
-        ":string_test_jni",
-        "//java/com/google/android/apps/common/testing/testrunner",
-    ],
-)
-
-android_instrumentation_test(
-    name = "string_instrumentation_test",
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
-    test_app = ":string_test_app",
-)
-
-################################################################################
-# RJni ClassLoader Tests
-################################################################################
-android_jni_library(
-    name = "class_loader_test_jni",
-    testonly = 1,
-    srcs = ["class_loader_test_jni.cc"],
-    force_android = True,
-    deps = [
-        ":object_test_helper_jni",
-        "//:class",
-        "//:class_loader",
-        "//:class_loader_ref",
-        "//:constructor",
-        "//:field",
-        "//:jni_dep",
-        "//:jvm",
         "//:jvm_ref",
         "//:object",
         "//:object_ref",
@@ -439,55 +210,119 @@ android_jni_library(
         "//:return",
         "//:string_ref",
     ],
+    alwayslink = True,
 )
 
-android_library(
-    name = "class_loader_test_local_java_lib",
+cc_binary(
+    name = "libfield_test_jni.so",
+    testonly = 1,
+    linkshared = True,
+    deps = [":field_test_jni_impl"],
+)
+
+java_test(
+    name = "FieldTest",
     testonly = 1,
     srcs = [
-        "ClassLoaderTest.java",
-        "ObjectTestHelper.java",
+        "FieldTest.java",
+        "FieldTestHelper.java",
     ],
+    data = [":libfield_test_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     deps = [
-        "//java/com/google/android/apps/common/proguard:annotations",
-        "//third_party/android/androidx_test/core",
-        "//third_party/android/androidx_test/runner/android_junit_runner",
-        "//third_party/android/androidx_test/services/storage",
-        "//third_party/java/junit:junit-android",
-        "//third_party/java/truth:truth-android",
+        "@maven//:com_google_truth_truth_1_1",
+        "@maven//:junit_junit_4_13_1",
     ],
 )
 
-android_binary(
-    name = "class_loader_helpers",
+################################################################################
+# RJni Method Test
+################################################################################
+cc_library(
+    name = "method_test_jni_impl",
+    testonly = 1,
+    srcs = ["method_test_jni.cc"],
+    deps = [
+        ":object_test_helper_jni",
+        "//:class",
+        "//:field",
+        "//:jni_dep",
+        "//:jvm_ref",
+        "//:method",
+        "//:object",
+        "//:object_ref",
+        "//:params",
+        "//:return",
+        "//:string_ref",
+    ],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libmethod_test_jni.so",
+    testonly = 1,
+    linkshared = True,
+    deps = [":method_test_jni_impl"],
+)
+
+java_test(
+    name = "MethodTest",
     testonly = 1,
     srcs = [
-        "ClassLoaderHelperClass.java",
-        "ClassLoaderHelperSubclass.java",
+        "MethodTest.java",
+        "MethodTestHelper.java",
     ],
-    manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
-)
-
-android_binary(
-    name = "class_loader_test_local_app",
-    testonly = 1,
-    manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
+    data = [":libmethod_test_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     deps = [
-        ":class_loader_test_jni",
-        ":class_loader_test_local_java_lib",
-        "//java/com/google/android/apps/common/testing/testrunner",
+        "@maven//:com_google_truth_truth_1_1",
+        "@maven//:junit_junit_4_13_1",
+        "@maven//:org_mockito_mockito_core_2_28_2",
     ],
 )
 
-android_instrumentation_test(
-    name = "class_loader_local_instrumentation_test",
-    args = [
-        "--push_apks_to_sdcard",
-        "--test_args=remote_class_path=%s" % "$(location :class_loader_helpers.apk)",
+#################################################################################
+## RJni String Test
+#################################################################################
+cc_library(
+    name = "string_test_jni_impl",
+    testonly = 1,
+    srcs = ["string_test_jni.cc"],
+    deps = [
+        ":object_test_helper_jni",
+        "//:class",
+        "//:field",
+        "//:jni_dep",
+        "//:jvm_ref",
+        "//:method",
+        "//:object",
+        "//:object_ref",
+        "//:params",
+        "//:return",
+        "//:string_ref",
     ],
-    data = [":class_loader_helpers.apk"],
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
-    test_app = ":class_loader_test_local_app",
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libstring_test_jni.so",
+    testonly = 1,
+    linkshared = True,
+    deps = [":string_test_jni_impl"],
+)
+
+java_test(
+    name = "StringTest",
+    testonly = 1,
+    srcs = [
+        "StringTest.java",
+        "StringTestHelper.java",
+    ],
+    data = [":libstring_test_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    deps = [
+        "@maven//:com_google_truth_truth_1_1",
+        "@maven//:junit_junit_4_13_1",
+        "@maven//:org_mockito_mockito_core_2_28_2",
+    ],
 )

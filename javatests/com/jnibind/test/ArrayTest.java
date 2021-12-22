@@ -18,16 +18,24 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Exercises array functionality arcross rJNI. */
-@RunWith(AndroidJUnit4ClassRunner.class)
+@RunWith(JUnit4.class)
 public class ArrayTest {
   static {
     System.loadLibrary("array_test_jni");
   }
+
+  @AfterClass
+  public static void doShutDown() {
+    jniTearDown();
+  }
+
+  static native void jniTearDown();
 
   native void nativeBooleanTests(ArrayTest arrayTest, boolean[] intArray);
 

@@ -23,6 +23,8 @@
 #include "params.h"
 #include "return.h"
 
+static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
+
 static constexpr jni::Class kLocalObjectTestClass{
     "com/jnibind/test/LocalObjectTest",
     jni::Method{"methodTakesLocalObjectReturnsNewObject",
@@ -33,8 +35,13 @@ static constexpr jni::Class kLocalObjectTestClass{
 extern "C" {
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
-  static jni::JvmRef<jni::kDefaultJvm> jvm{pjvm};
+  jvm.reset(new jni::JvmRef<jni::kDefaultJvm>(pjvm));
   return JNI_VERSION_1_6;
+}
+
+JNIEXPORT void JNICALL Java_com_jnibind_test_LocalObjectTest_jniTearDown(
+    JavaVM* pjvm, void* reserved) {
+  jvm = nullptr;
 }
 
 JNIEXPORT jobject JNICALL

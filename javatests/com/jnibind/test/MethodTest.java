@@ -22,10 +22,11 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
+import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -41,10 +42,17 @@ import org.mockito.junit.MockitoRule;
  *
  * <p>Because of how signatures are generated, this provides decent coverage.
  */
-@RunWith(AndroidJUnit4ClassRunner.class)
+@RunWith(JUnit4.class)
 public class MethodTest {
   static {
     System.loadLibrary("method_test_jni");
+  }
+
+  static native void jniTearDown();
+
+  @AfterClass
+  public static void doShutDown() {
+    jniTearDown();
   }
 
   @Rule public final MockitoRule mockito = MockitoJUnit.rule();

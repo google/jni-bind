@@ -17,21 +17,29 @@ package com.jnibind.test;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.verify;
 
-import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
+import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-@RunWith(AndroidJUnit4ClassRunner.class)
+@RunWith(JUnit4.class)
 public final class StringTest {
   @Rule public final MockitoRule mockito = MockitoJUnit.rule();
   @Mock public StringTestHelper rJniStringTestHelper;
 
   static {
     System.loadLibrary("string_test_jni");
+  }
+
+  static native void jniTearDown();
+
+  @AfterClass
+  public static void doShutDown() {
+    jniTearDown();
   }
 
   native void jniVoidMethodTakesString(StringTestHelper helper, String s);

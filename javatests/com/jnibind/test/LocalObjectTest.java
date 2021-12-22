@@ -16,10 +16,10 @@ package com.jnibind.test;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
-import com.google.android.apps.common.proguard.UsedByNative;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Exercises basic behaviours with local objects, ranging from those passed down to JNI to those
@@ -30,13 +30,20 @@ import org.junit.runner.RunWith;
  *
  * <p>Note, any object passed into JNI is always local.
  */
-@RunWith(AndroidJUnit4ClassRunner.class)
+@RunWith(JUnit4.class)
 public final class LocalObjectTest {
   static {
     System.loadLibrary("local_object_test_jni");
   }
 
-  native ObjectTestHelper jniCreateNewObject();
+  static native ObjectTestHelper jniCreateNewObject();
+
+  static native void jniTearDown();
+
+  @AfterClass
+  public static void doShutDown() {
+    jniTearDown();
+  }
 
   @Test
   public void createNewLocalObjectUsingNoArgConstructor() {
@@ -64,7 +71,7 @@ public final class LocalObjectTest {
     assertThat(object.intVal3).isEqualTo(3);
   }
 
-  @UsedByNative("local_object_test_jni.cc")
+
   ObjectTestHelper methodTakesLocalObjectReturnsNewObject(ObjectTestHelper object) {
     return new ObjectTestHelper(object.intVal1 + 5, object.intVal2 + 6, object.intVal3 + 7);
   }

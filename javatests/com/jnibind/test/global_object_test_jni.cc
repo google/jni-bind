@@ -20,6 +20,8 @@
 #include "params.h"
 #include "return.h"
 
+static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
+
 constexpr jni::Class kGlobalObjectTestClass{
     "com/jnibind/test/GlobalObjectTest",
     jni::Method{"methodTakesGlobalObjectReturnsNewObject",
@@ -30,8 +32,13 @@ constexpr jni::Class kGlobalObjectTestClass{
 extern "C" {
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
-  static jni::JvmRef<jni::kDefaultJvm> jvm{pjvm};
+  jvm.reset(new jni::JvmRef<jni::kDefaultJvm>(pjvm));
   return JNI_VERSION_1_6;
+}
+
+JNIEXPORT void JNICALL Java_com_jnibind_test_GlobalObjectTest_jniTearDown(
+    JavaVM* pjvm, void* reserved) {
+  jvm = nullptr;
 }
 
 JNIEXPORT jobject JNICALL
