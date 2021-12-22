@@ -28,6 +28,9 @@ namespace jni {
 template <typename SpanType>
 class ArrayView {
  public:
+  ArrayView(ArrayView&&) = delete;
+  ArrayView(const ArrayView&) = delete;
+
   ArrayView(jarray array, bool copy_on_completion)
       : array_(array),
         get_array_elements_result_(
@@ -46,6 +49,11 @@ class ArrayView {
   const GetArrayElementsResult<SpanType> get_array_elements_result_;
   const bool copy_on_completion_;
 };
+
+// This CTAD guide is required for materialising new ArrayViews from |Pin()|
+// calls as move and copy constructors are deleted.
+template <typename SpanType>
+ArrayView(ArrayView<SpanType>&&) -> ArrayView<SpanType>;
 
 template <typename SpanType, const auto& class_v_, const auto& class_loader_v_,
           const auto& jvm_v_>

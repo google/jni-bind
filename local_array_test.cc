@@ -291,6 +291,22 @@ TEST_F(JniTest, LocalArray_GetsAndReleaseArrayBuffer) {
   ArrayView<jdouble> double_array_pin = {double_array.Pin()};
 }
 
+TEST_F(JniTest, LocalArrayView_AllowsCTAD) {
+  jbooleanArray fake_boolean_jobject{reinterpret_cast<jbooleanArray>(0xaaaaaa)};
+  jboolean* fake_raw_boolean_ptr{reinterpret_cast<jboolean*>(0xbaaaaaaa)};
+
+  EXPECT_CALL(*env_, GetBooleanArrayElements(Eq(fake_boolean_jobject), _))
+      .WillOnce(Return(fake_raw_boolean_ptr));
+  EXPECT_CALL(*env_, ReleaseBooleanArrayElements(Eq(fake_boolean_jobject),
+                                                 Eq(fake_raw_boolean_ptr), 0));
+
+  LocalArray<jboolean> boolean_array{fake_boolean_jobject};
+  ArrayView ctad_array_view {boolean_array.Pin()};
+
+  // Despite supporting construction from xvalue, move ctor is deleted (good).
+  // ArrayView ctad_array_view_2 {std::move(ctad_array_view)};
+}
+
 TEST_F(JniTest, LocalArray_ConstructsFromAnObject) {
   static constexpr Class kClass{"kClass"};
   LocalArray<jobject, kClass> local_obj_array{1, LocalObject<kClass>{}};
