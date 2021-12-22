@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+
 #include "object_test_helper_jni.h"
 #include "class.h"
 #include "field.h"

@@ -31,6 +31,8 @@ load("@rules_jvm_external//:defs.bzl", "maven_install")
 maven_install(
     artifacts = [
         "com.google.truth:truth:1.1",
+        "junit:junit:4.12",
+        "org.mockito:mockito-core:2.28.2",
     ],
     repositories = [
         # Private repositories are supported through HTTP Basic auth
