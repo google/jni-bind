@@ -32,6 +32,10 @@
 #include "string.h"
 #include "supported_class_set.h"
 
+// Convenience headers for system libraries.
+#include "class_defs/java_lang_classes.h"
+#include "class_defs/java_util_classes.h"
+
 // Headers for dynamic definitions.
 #include "global_class_loader.h"
 #include "global_object.h"

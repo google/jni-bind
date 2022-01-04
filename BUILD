@@ -277,6 +277,8 @@ cc_library(
         ":string",
         ":string_ref",
         ":supported_class_set",
+        "//class_defs:java_lang_classes",
+        "//class_defs:java_util_classes",
     ],
 )
 
