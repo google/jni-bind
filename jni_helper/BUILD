@@ -26,7 +26,6 @@ cc_test(
     srcs = ["jni_env_test.cc"],
     deps = [
         ":jni_env",
-        ":jni_helper",
         "//:jni_dep",
         "@googletest//:gtest_main",
     ],
@@ -69,10 +68,7 @@ cc_test(
 cc_library(
     name = "jni_typename_to_string",
     hdrs = ["jni_typename_to_string.h"],
-    deps = [
-        "//:array",
-        "//:jni_dep",
-    ],
+    deps = ["//:jni_dep"],
 )
 
 cc_test(

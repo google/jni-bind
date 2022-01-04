@@ -25,14 +25,7 @@ cc_test(
 cc_library(
     name = "all_unique",
     hdrs = ["all_unique.h"],
-    deps = [
-        ":apply",
-        ":concatenate",
-        ":contains",
-        ":invoke",
-        ":reverse",
-        ":tuple_manipulation",
-    ],
+    deps = [":contains"],
 )
 
 cc_test(
@@ -77,7 +70,6 @@ cc_test(
         ":apply",
         ":concatenate",
         ":invoke",
-        ":per_element",
         ":same",
         ":tuple_manipulation",
         ":type_of_nth_element",
@@ -154,7 +146,6 @@ cc_library(
     name = "concatenate",
     hdrs = ["concatenate.h"],
     deps = [
-        ":combine",
         ":invoke",
         ":per_element",
         ":reduce",
@@ -174,9 +165,6 @@ cc_test(
 cc_library(
     name = "conditional",
     hdrs = ["conditional.h"],
-    deps = [
-        ":tuple_manipulation",
-    ],
 )
 
 cc_test(
@@ -331,7 +319,6 @@ cc_test(
     srcs = ["interleave_test.cc"],
     deps = [
         ":interleave",
-        ":tuple_manipulation",
         "@googletest//:gtest_main",
     ],
 )
@@ -355,7 +342,6 @@ cc_library(
     hdrs = ["invocable_map.h"],
     deps = [
         ":interleave",
-        ":lambda_string",
         ":tuple_from_size",
         ":tuple_manipulation",
         ":type_of_nth_element",
@@ -367,7 +353,6 @@ cc_test(
     srcs = ["invocable_map_test.cc"],
     deps = [
         ":invocable_map",
-        ":lambda_string",
         "@googletest//:gtest_main",
     ],
 )
@@ -430,7 +415,6 @@ cc_test(
     name = "type_map_test",
     srcs = ["type_map_test.cc"],
     deps = [
-        ":lambda_string",
         ":type_map",
         "@googletest//:gtest_main",
     ],
@@ -456,7 +440,6 @@ cc_library(
     hdrs = ["queryable_map.h"],
     deps = [
         ":interleave",
-        ":lambda_string",
         ":tuple_from_size",
         ":tuple_manipulation",
         ":type_of_nth_element",
@@ -689,7 +672,6 @@ cc_library(
     name = "type_to_type_map",
     hdrs = ["type_to_type_map.h"],
     deps = [
-        ":all_unique",
         ":concatenate",
         ":even_odd",
         ":find_idx_of_val",

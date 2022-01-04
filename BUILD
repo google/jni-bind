@@ -38,7 +38,6 @@ cc_test(
     name = "array_test",
     srcs = ["array_test.cc"],
     deps = [
-        ":array",
         ":jni_bind",
         ":jni_test",
         "@googletest//:gtest_main",
@@ -54,7 +53,6 @@ cc_library(
         ":jni_dep",
         ":method",
         ":object",
-        "//jni_helper",
         "//metaprogramming:all_unique",
         "//metaprogramming:base_filter",
     ],
@@ -319,7 +317,6 @@ cc_library(
         ":class_loader",
         ":jni_dep",
         "//jni_helper:jni_env",
-        "//metaprogramming:modified_max",
     ],
 )
 
@@ -426,7 +423,6 @@ cc_test(
         ":jni_test",
         ":method_ref",
         ":mock_jni_env",
-        "//jni_helper",
         "@googletest//:gtest_main",
     ],
 )
@@ -443,7 +439,6 @@ cc_library(
         "//metaprogramming:concatenate",
         "//metaprogramming:invoke",
         "//metaprogramming:n_bit_sequence",
-        "//metaprogramming:string_concatenate",
         "//metaprogramming:tuple_manipulation",
         "//metaprogramming:type_index_mask",
         "//metaprogramming:type_of_nth_element",
@@ -568,10 +563,7 @@ cc_test(
 cc_library(
     name = "params",
     hdrs = ["params.h"],
-    deps = [
-        ":object",
-        "//jni_helper:jni_typename_to_string",
-    ],
+    deps = [":object"],
 )
 
 cc_library(
@@ -613,7 +605,6 @@ cc_test(
     deps = [
         ":jni_bind",
         ":jni_test",
-        ":jvm",
         ":proxy",
         "//metaprogramming:concatenate",
         "@googletest//:gtest_main",
@@ -626,7 +617,6 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
-        ":default_class_loader",
         "//jni_helper:jni_env",
     ],
 )
