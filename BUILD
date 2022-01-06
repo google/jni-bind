@@ -17,10 +17,7 @@ cc_library(
 
 cc_library(
     name = "array_ref",
-    hdrs = [
-        "array_ref.h",
-        "local_array.h",
-    ],
+    hdrs = ["array_ref.h"],
     deps = [
         ":array",
         ":class",
@@ -30,6 +27,23 @@ cc_library(
         ":jvm",
         ":object",
         ":ref_base",
+        "//jni_helper",
+        "//jni_helper:jni_array_helper",
+    ],
+)
+
+cc_library(
+    name = "local_array",
+    hdrs = ["local_array.h"],
+    deps = [
+        ":array",
+        ":array_ref",
+        ":class",
+        ":class_ref",
+        ":default_class_loader",
+        ":jni_dep",
+        ":jvm",
+        ":object",
         "//jni_helper",
         "//jni_helper:jni_array_helper",
     ],
@@ -283,7 +297,6 @@ cc_library(
     hdrs = ["jni_bind.h"],
     deps = [
         ":array",
-        ":array_ref",
         ":class",
         ":class_loader",
         ":constructor",
@@ -293,6 +306,7 @@ cc_library(
         ":jni_dep",
         ":jvm",
         ":jvm_ref",
+        ":local_array",
         ":local_class_loader",
         ":local_object",
         ":method",
@@ -621,12 +635,12 @@ cc_library(
     ],
     deps = [
         ":array",
-        ":array_ref",
         ":class",
         ":class_loader",
         ":default_class_loader",
         ":jni_dep",
         ":jvm",
+        ":local_array",
         ":object",
         ":ref_base",
         ":string_ref",

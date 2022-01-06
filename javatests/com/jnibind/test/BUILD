@@ -150,6 +150,7 @@ cc_library(
         "//:field",
         "//:jni_dep",
         "//:jvm_ref",
+        "//:local_array",
         "//:local_object",
         "//:params",
         "//:return",
