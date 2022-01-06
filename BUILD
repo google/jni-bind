@@ -120,15 +120,12 @@ cc_library(
     name = "class_loader_ref",
     hdrs = [
         "class_loader_ref.h",
-        "global_class_loader.h",
-        "local_class_loader.h",
     ],
     deps = [
         ":class",
         ":class_loader",
         ":global_object",
         ":jni_dep",
-        ":jvm",
         ":jvm_ref",
         ":local_object",
         ":method",
@@ -138,7 +135,6 @@ cc_library(
         ":return",
         ":string_ref",
         "//class_defs:java_lang_classes",
-        "//jni_helper",
         "//jni_helper:jni_env",
         "//metaprogramming:contains",
         "//metaprogramming:queryable_map",
@@ -238,6 +234,18 @@ cc_library(
 )
 
 cc_library(
+    name = "global_class_loader",
+    hdrs = ["global_class_loader.h"],
+    deps = [
+        ":class_loader",
+        ":class_loader_ref",
+        ":jni_dep",
+        ":jvm",
+        "//jni_helper",
+    ],
+)
+
+cc_library(
     name = "global_object",
     hdrs = ["global_object.h"],
     deps = [
@@ -278,13 +286,14 @@ cc_library(
         ":array_ref",
         ":class",
         ":class_loader",
-        ":class_loader_ref",
         ":constructor",
         ":field",
+        ":global_class_loader",
         ":global_object",
         ":jni_dep",
         ":jvm",
         ":jvm_ref",
+        ":local_class_loader",
         ":local_object",
         ":method",
         ":params",
@@ -358,10 +367,12 @@ cc_test(
         ":class",
         ":class_loader",
         ":class_loader_ref",
+        ":global_class_loader",
         ":jni_dep",
         ":jni_test",
         ":jvm",
         ":jvm_ref",
+        ":local_class_loader",
         ":local_object",
         ":method",
         ":mock_jni_env",
@@ -383,6 +394,18 @@ cc_test(
         ":jni_test",
         ":mock_jni_env",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "local_class_loader",
+    hdrs = ["local_class_loader.h"],
+    deps = [
+        ":class_loader",
+        ":class_loader_ref",
+        ":jni_dep",
+        ":jvm",
+        ":jvm_ref",
     ],
 )
 
