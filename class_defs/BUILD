@@ -2,6 +2,11 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
+filegroup(
+    name = "headers_for_export",
+    srcs = glob(["**/*.h"]),
+)
+
 exports_files(["LICENSE"])
 
 cc_library(

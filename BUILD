@@ -3,6 +3,14 @@ package(
     licenses = ["notice"],
 )
 
+filegroup(
+    name = "headers_for_export",
+    srcs = glob(
+        ["**/*.h"],
+        exclude = ["jni_bind_release.h"],
+    ),
+)
+
 exports_files(["LICENSE"])
 
 cc_library(
@@ -318,6 +326,25 @@ cc_library(
         "//class_defs:java_lang_classes",
         "//class_defs:java_util_classes",
     ],
+)
+
+filegroup(
+    name = "jni_bind_decorative_text",
+    srcs = [
+        "jni_bind_release_leader.inc",
+        "jni_bind_release_trailer.inc",
+    ],
+    data = [
+        "jni_bind_release_leader.inc",
+        "jni_bind_release_trailer.inc",
+    ],
+)
+
+# Use :jni_bind, this is solely for build validation of the release header.
+cc_library(
+    name = "jni_bind_release_target",
+    hdrs = ["jni_bind_release.h"],
+    visibility = ["//visibility:private"],
 )
 
 # Intentionally placed at root because of issues in Bazel.
