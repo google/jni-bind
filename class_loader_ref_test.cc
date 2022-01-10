@@ -12,13 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "class_loader_ref.h"
-
 #include <optional>
 #include <utility>
 
 #include "jni_test.h"
-#include "mock_jni_env.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "jni_bind.h"

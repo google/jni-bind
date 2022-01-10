@@ -19,9 +19,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "jni_dep.h"
-#include "jvm.h"
-#include "jvm_ref.h"
+#include "jni_bind.h"
 #include "mock_jni_env.h"
 #include "mock_jvm.h"
 

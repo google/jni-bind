@@ -15,12 +15,7 @@
 #include <memory>
 
 #include "object_test_helper_jni.h"
-#include "class.h"
-#include "global_object.h"
-#include "jni_dep.h"
-#include "jvm_ref.h"
-#include "params.h"
-#include "return.h"
+#include "jni_bind.h"
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
 

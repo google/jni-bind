@@ -1,5 +1,3 @@
-#include "selector_static_info.h"
-
 #include "jni_bind.h"
 
 using jni::Class;

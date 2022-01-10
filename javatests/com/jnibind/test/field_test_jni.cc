@@ -15,17 +15,7 @@
 #include <memory>
 
 #include "object_test_helper_jni.h"
-#include "class.h"
-#include "field.h"
-#include "global_object.h"
-#include "global_string.h"
-#include "jni_dep.h"
-#include "jvm_ref.h"
-#include "local_object.h"
-#include "local_string.h"
-#include "object.h"
-#include "params.h"
-#include "return.h"
+#include "jni_bind.h"
 
 using jni::Class;
 using jni::Field;

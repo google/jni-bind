@@ -12,16 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "constructor.h"
-
-#include "mock_jni_env.h"
 #include <gtest/gtest.h>
-#include "class.h"
-#include "jni_dep.h"
+#include "jni_bind.h"
 #include "jni_test.h"
-#include "local_object.h"
-#include "params.h"
-#include "return.h"
 
 namespace {
 

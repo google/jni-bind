@@ -12,29 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "jvm.h"
-
 #include <thread>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "class.h"
-#include "class_loader.h"
-#include "class_loader_ref.h"
-#include "global_class_loader.h"
-#include "jni_dep.h"
+#include "jni_bind.h"
 #include "jni_helper/jni_env.h"
 #include "jni_helper/jni_helper.h"
 #include "jni_test.h"
-#include "jvm_ref.h"
-#include "local_class_loader.h"
-#include "local_object.h"
-#include "method.h"
-#include "mock_jni_env.h"
-#include "mock_jvm.h"
-#include "params.h"
-#include "return.h"
-#include "supported_class_set.h"
 
 namespace {
 

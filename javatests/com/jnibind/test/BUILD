@@ -11,14 +11,7 @@ java_library(
 cc_library(
     name = "object_test_helper_jni",
     hdrs = ["object_test_helper_jni.h"],
-    deps = [
-        "//:class",
-        "//:field",
-        "//:method",
-        "//:object",
-        "//:params",
-        "//:return",
-    ],
+    deps = ["//:jni_bind"],
 )
 
 ################################################################################
@@ -29,9 +22,7 @@ cc_library(
     srcs = ["context_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
-        "//:global_object",
-        "//:jni_dep",
-        "//:jvm_ref",
+        "//:jni_bind",
     ],
     alwayslink = True,
 )
@@ -64,15 +55,7 @@ cc_library(
     srcs = ["local_object_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
-        "//:class",
-        "//:class_loader",
-        "//:constructor",
-        "//:global_class_loader",
-        "//:jni_dep",
-        "//:jvm_ref",
-        "//:local_object",
-        "//:params",
-        "//:return",
+        "//:jni_bind",
     ],
     alwayslink = True,
 )
@@ -106,12 +89,7 @@ cc_library(
     srcs = ["global_object_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
-        "//:class",
-        "//:global_object",
-        "//:jni_dep",
-        "//:jvm_ref",
-        "//:params",
-        "//:return",
+        "//:jni_bind",
     ],
     alwayslink = True,
 )
@@ -145,15 +123,7 @@ cc_library(
     srcs = ["array_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
-        "//:array_ref",
-        "//:class",
-        "//:field",
-        "//:jni_dep",
-        "//:jvm_ref",
-        "//:local_array",
-        "//:local_object",
-        "//:params",
-        "//:return",
+        "//:jni_bind",
     ],
     alwayslink = True,
 )
@@ -186,16 +156,7 @@ cc_library(
     srcs = ["field_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
-        "//:class",
-        "//:field",
-        "//:global_object",
-        "//:jni_dep",
-        "//:jvm_ref",
-        "//:local_object",
-        "//:object",
-        "//:params",
-        "//:return",
-        "//:string_ref",
+        "//:jni_bind",
     ],
     alwayslink = True,
 )
@@ -231,17 +192,7 @@ cc_library(
     srcs = ["method_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
-        "//:class",
-        "//:field",
-        "//:global_object",
-        "//:jni_dep",
-        "//:jvm_ref",
-        "//:local_object",
-        "//:method",
-        "//:object",
-        "//:params",
-        "//:return",
-        "//:string_ref",
+        "//:jni_bind",
     ],
     alwayslink = True,
 )
@@ -278,17 +229,7 @@ cc_library(
     srcs = ["string_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
-        "//:class",
-        "//:field",
-        "//:global_object",
-        "//:jni_dep",
-        "//:jvm_ref",
-        "//:local_object",
-        "//:method",
-        "//:object",
-        "//:params",
-        "//:return",
-        "//:string_ref",
+        "//:jni_bind",
     ],
     alwayslink = True,
 )
@@ -299,18 +240,7 @@ cc_library(
     srcs = ["class_loader_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
-        "//:class",
-        "//:class_loader",
-        "//:constructor",
-        "//:global_class_loader",
-        "//:jni_dep",
-        "//:jvm",
-        "//:jvm_ref",
-        "//:local_class_loader",
-        "//:local_object",
-        "//:params",
-        "//:return",
-        "//:supported_class_set",
+        "//:jni_bind",
     ],
 )
 

@@ -12,24 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "global_object.h"
-
 #include <optional>
 #include <utility>
 
-#include "class.h"
-#include "field.h"
-#include "method.h"
-#include "mock_jni_env.h"
-#include "return.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "field_ref.h"
-#include "jni_dep.h"
+#include "jni_bind.h"
 #include "jni_test.h"
-#include "jvm_ref.h"
-#include "method_ref.h"
-#include "params.h"
 
 namespace {
 

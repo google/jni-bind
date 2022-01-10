@@ -13,18 +13,7 @@
 // limitations under the License.
 
 #include "object_test_helper_jni.h"
-#include "class.h"
-#include "class_loader.h"
-#include "constructor.h"
-#include "global_class_loader.h"
-#include "jni_dep.h"
-#include "jvm.h"
-#include "jvm_ref.h"
-#include "local_class_loader.h"
-#include "local_object.h"
-#include "params.h"
-#include "return.h"
-#include "supported_class_set.h"
+#include "jni_bind.h"
 
 using jni::Class;
 using jni::ClassLoader;

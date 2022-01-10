@@ -12,13 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "class_loader.h"
-
-#include "class.h"
 #include "jni_test.h"
-#include "supported_class_set.h"
 #include <gtest/gtest.h>
-#include "class_loader_ref.h"
+#include "jni_bind.h"
 
 namespace {
 

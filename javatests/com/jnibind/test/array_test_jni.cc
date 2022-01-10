@@ -15,15 +15,7 @@
 #include <memory>
 
 #include "object_test_helper_jni.h"
-#include "array_ref.h"
-#include "class.h"
-#include "field.h"
-#include "jni_dep.h"
-#include "jvm_ref.h"
-#include "local_array.h"
-#include "local_object.h"
-#include "params.h"
-#include "return.h"
+#include "jni_bind.h"
 
 using jni::Array;
 using jni::ArrayView;

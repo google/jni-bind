@@ -12,20 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "method_selection.h"
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "class.h"
-#include "class_loader.h"
-#include "default_class_loader.h"
-#include "global_object.h"
-#include "local_object.h"
-#include "method.h"
-#include "params.h"
-#include "ref_base.h"
-#include "return.h"
-#include "supported_class_set.h"
+#include "jni_bind.h"
 
 namespace {
 

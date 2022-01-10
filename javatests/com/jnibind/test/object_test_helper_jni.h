@@ -17,12 +17,7 @@
 #ifndef JNI_BIND_JAVATESTS_COM_JNIBIND_TEST_H
 #define JNI_BIND_JAVATESTS_COM_JNIBIND_TEST_H
 
-#include "class.h"
-#include "field.h"
-#include "method.h"
-#include "object.h"
-#include "params.h"
-#include "return.h"
+#include "jni_bind.h"
 
 // clang-format off
 constexpr jni::Class kObjectClass {

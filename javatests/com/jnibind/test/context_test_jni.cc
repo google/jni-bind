@@ -15,9 +15,7 @@
 #include <memory>
 
 #include "object_test_helper_jni.h"
-#include "global_object.h"
-#include "jni_dep.h"
-#include "jvm_ref.h"
+#include "jni_bind.h"
 
 namespace {
 

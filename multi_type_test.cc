@@ -15,12 +15,9 @@
 #include <optional>
 
 #include "jni_test.h"
-#include "mock_jni_env.h"
-#include "mock_jvm.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "jni_bind.h"
-#include "jni_dep.h"
 #include "jni_test.h"
 
 namespace {

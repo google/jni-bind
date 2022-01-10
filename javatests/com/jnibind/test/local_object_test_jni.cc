@@ -15,15 +15,7 @@
 #include <memory>
 
 #include "object_test_helper_jni.h"
-#include "class.h"
-#include "class_loader.h"
-#include "constructor.h"
-#include "global_class_loader.h"
-#include "jni_dep.h"
-#include "jvm_ref.h"
-#include "local_object.h"
-#include "params.h"
-#include "return.h"
+#include "jni_bind.h"
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
 

@@ -101,11 +101,8 @@ cc_test(
     name = "class_test",
     srcs = ["class_test.cc"],
     deps = [
-        ":class",
-        ":global_object",
-        ":jni_dep",
+        ":jni_bind",
         ":jni_test",
-        ":local_object",
         ":mock_jni_env",
         "@googletest//:gtest_main",
     ],
@@ -129,11 +126,8 @@ cc_test(
     name = "class_loader_test",
     srcs = ["class_loader_test.cc"],
     deps = [
-        ":class",
-        ":class_loader",
-        ":class_loader_ref",
+        ":jni_bind",
         ":jni_test",
-        ":supported_class_set",
         "@googletest//:gtest_main",
     ],
 )
@@ -167,7 +161,6 @@ cc_test(
     name = "class_loader_ref_test",
     srcs = ["class_loader_ref_test.cc"],
     deps = [
-        ":class_loader_ref",
         ":jni_bind",
         ":jni_test",
         ":mock_jni_env",
@@ -190,14 +183,9 @@ cc_test(
     name = "constructor_test",
     srcs = ["constructor_test.cc"],
     deps = [
-        ":class",
-        ":constructor",
-        ":jni_dep",
+        ":jni_bind",
         ":jni_test",
-        ":local_object",
         ":mock_jni_env",
-        ":params",
-        ":return",
         "@googletest//:gtest_main",
     ],
 )
@@ -211,9 +199,7 @@ cc_library(
 cc_library(
     name = "field",
     hdrs = ["field.h"],
-    deps = [
-        ":params",
-    ],
+    deps = [":params"],
 )
 
 cc_library(
@@ -235,9 +221,7 @@ cc_test(
     name = "field_ref_test",
     srcs = ["field_ref_test.cc"],
     deps = [
-        ":field_ref",
         ":jni_bind",
-        ":jni_dep",
         ":jni_test",
         ":mock_jni_env",
         "@googletest//:gtest_main",
@@ -283,18 +267,8 @@ cc_test(
     name = "global_object_test",
     srcs = ["global_object_test.cc"],
     deps = [
-        ":class",
-        ":field",
-        ":field_ref",
-        ":global_object",
-        ":jni_dep",
+        ":jni_bind",
         ":jni_test",
-        ":jvm_ref",
-        ":method",
-        ":method_ref",
-        ":mock_jni_env",
-        ":params",
-        ":return",
         "@googletest//:gtest_main",
     ],
 )
@@ -366,9 +340,8 @@ cc_library(
     testonly = 1,
     hdrs = ["jni_test.h"],
     deps = [
+        ":jni_bind",
         ":jni_dep",
-        ":jvm",
-        ":jvm_ref",
         ":mock_jni_env",
         ":mock_jvm",
         "@googletest//:gtest_main",
@@ -405,22 +378,8 @@ cc_test(
     name = "jvm_test",
     srcs = ["jvm_test.cc"],
     deps = [
-        ":class",
-        ":class_loader",
-        ":class_loader_ref",
-        ":global_class_loader",
-        ":jni_dep",
+        ":jni_bind",
         ":jni_test",
-        ":jvm",
-        ":jvm_ref",
-        ":local_class_loader",
-        ":local_object",
-        ":method",
-        ":mock_jni_env",
-        ":mock_jvm",
-        ":params",
-        ":return",
-        ":supported_class_set",
         "//jni_helper",
         "//jni_helper:jni_env",
         "@googletest//:gtest_main",
@@ -469,10 +428,7 @@ cc_test(
     srcs = ["local_object_test.cc"],
     deps = [
         ":jni_bind",
-        ":jni_dep",
         ":jni_test",
-        ":jvm_ref",
-        ":local_object",
         ":mock_jni_env",
         "@googletest//:gtest_main",
     ],
@@ -509,13 +465,10 @@ cc_library(
 
 cc_test(
     name = "method_ref_test",
-    srcs = [
-        "method_ref_test.cc",
-    ],
+    srcs = ["method_ref_test.cc"],
     deps = [
         ":jni_bind",
         ":jni_test",
-        ":method_ref",
         ":mock_jni_env",
         "@googletest//:gtest_main",
     ],
@@ -543,17 +496,7 @@ cc_test(
     name = "method_selection_test",
     srcs = ["method_selection_test.cc"],
     deps = [
-        ":class",
-        ":class_loader",
-        ":default_class_loader",
-        ":global_object",
-        ":local_object",
-        ":method",
-        ":method_selection",
-        ":params",
-        ":ref_base",
-        ":return",
-        ":supported_class_set",
+        ":jni_bind",
         "@googletest//:gtest_main",
     ],
 )
@@ -583,7 +526,6 @@ cc_test(
     srcs = ["multi_type_test.cc"],
     deps = [
         ":jni_bind",
-        ":jni_dep",
         ":jni_test",
         ":mock_jni_env",
         ":mock_jvm",
@@ -594,8 +536,6 @@ cc_test(
 cc_library(
     name = "name_constants",
     hdrs = ["name_constants.h"],
-    deps = [
-    ],
 )
 
 cc_library(
@@ -631,18 +571,8 @@ cc_test(
     name = "overload_ref_test",
     srcs = ["overload_ref_test.cc"],
     deps = [
-        ":class",
-        ":global_object",
-        ":jni_dep",
+        ":jni_bind",
         ":jni_test",
-        ":local_object",
-        ":method",
-        ":method_ref",
-        ":method_selection",
-        ":mock_jni_env",
-        ":params",
-        ":return",
-        ":string_ref",
         "//jni_helper",
         "@googletest//:gtest_main",
     ],
@@ -693,7 +623,6 @@ cc_test(
     deps = [
         ":jni_bind",
         ":jni_test",
-        ":proxy",
         "//metaprogramming:concatenate",
         "@googletest//:gtest_main",
     ],
@@ -744,7 +673,6 @@ cc_test(
     srcs = ["selector_static_info_test.cc"],
     deps = [
         ":jni_bind",
-        ":selector_static_info",
         "@googletest//:gtest_main",
     ],
 )
@@ -767,14 +695,8 @@ cc_test(
     name = "string_ref_test",
     srcs = ["string_ref_test.cc"],
     deps = [
-        ":class",
-        ":jni_dep",
+        ":jni_bind",
         ":jni_test",
-        ":local_object",
-        ":method",
-        ":mock_jni_env",
-        ":params",
-        ":string_ref",
         "@googletest//:gtest_main",
     ],
 )
