@@ -17,12 +17,12 @@
 #ifndef JNI_BIND_CLASS_DEFS_JAVA_UTIL_CLASSES_H_
 #define JNI_BIND_CLASS_DEFS_JAVA_UTIL_CLASSES_H_
 
-#include "class.h"
 #include "class_defs/java_lang_classes.h"
+#include "implementation/class.h"
+#include "implementation/method.h"
+#include "implementation/params.h"
+#include "implementation/return.h"
 #include "jni_dep.h"
-#include "method.h"
-#include "params.h"
-#include "return.h"
 
 namespace jni {
 

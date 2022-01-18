@@ -13,11 +13,11 @@ cc_library(
     name = "java_lang_classes",
     hdrs = ["java_lang_classes.h"],
     deps = [
-        "//:class",
         "//:jni_dep",
-        "//:method",
-        "//:params",
-        "//:return",
+        "//implementation:class",
+        "//implementation:method",
+        "//implementation:params",
+        "//implementation:return",
     ],
 )
 
@@ -26,10 +26,10 @@ cc_library(
     hdrs = ["java_util_classes.h"],
     deps = [
         ":java_lang_classes",
-        "//:class",
         "//:jni_dep",
-        "//:method",
-        "//:params",
-        "//:return",
+        "//implementation:class",
+        "//implementation:method",
+        "//implementation:params",
+        "//implementation:return",
     ],
 )
