@@ -1045,25 +1045,6 @@ Class(const char*)
 
 }  // namespace jni
 
-namespace jni {
-
-inline constexpr Class kJavaLangClass{"java/lang/Class"};
-
-inline constexpr Class kJavaLangObject{"java/lang/Object"};
-
-inline constexpr Method kLoadClassMethod{"loadClass", Return{kJavaLangClass},
-                                         Params<jstring>{}};
-
-inline constexpr Class kJavaLangClassLoader{"java/lang/ClassLoader",
-                                            kLoadClassMethod};
-
-// TODO (b/143908983): This should be in kJavaLangClass, but we currently
-// cannot represent dependency loops (ClassLoader.findClass() returns a class,
-// Class.getClassLoader() returns a ClassLoader) without a dummy class.
-inline constexpr Method kGetClassLoaderMethod{
-    "getClassLoader", Return{kJavaLangClassLoader}, Params{}};
-
-}  // namespace jni
 
 #include <tuple>
 
@@ -1167,6 +1148,26 @@ class NullClassLoader {
 
 inline constexpr NullClassLoader kNullClassLoader;
 inline constexpr DefaultClassLoader kDefaultClassLoader;
+
+}  // namespace jni
+
+namespace jni {
+
+inline constexpr Class kJavaLangClass{"java/lang/Class"};
+
+inline constexpr Class kJavaLangObject{"java/lang/Object"};
+
+inline constexpr Method kLoadClassMethod{"loadClass", Return{kJavaLangClass},
+                                         Params<jstring>{}};
+
+inline constexpr Class kJavaLangClassLoader{"java/lang/ClassLoader",
+                                            kLoadClassMethod};
+
+// TODO (b/143908983): This should be in kJavaLangClass, but we currently
+// cannot represent dependency loops (ClassLoader.findClass() returns a class,
+// Class.getClassLoader() returns a ClassLoader) without a dummy class.
+inline constexpr Method kGetClassLoaderMethod{
+    "getClassLoader", Return{kJavaLangClassLoader}, Params{}};
 
 }  // namespace jni
 
@@ -3458,8 +3459,60 @@ struct FieldHelper {
   static ValueRaw GetValue(const jobject object_ref, const jfieldID field_ref_);
 
   static void SetValue(const jobject object_ref, const jfieldID field_ref_,
-                       ValueRaw&& new_value);
+                       ValueRaw&& value);
 };
+
+template <>
+inline jboolean FieldHelper<jboolean>::GetValue(const jobject object_ref,
+                                                const jfieldID field_ref_) {
+  return jni::JniEnv::GetEnv()->GetBooleanField(object_ref, field_ref_);
+}
+
+template <>
+inline void FieldHelper<jboolean>::SetValue(const jobject object_ref,
+                                            const jfieldID field_ref_,
+                                            jboolean&& value) {
+  jni::JniEnv::GetEnv()->SetBooleanField(object_ref, field_ref_, value);
+}
+
+template <>
+inline jbyte FieldHelper<jbyte>::GetValue(const jobject object_ref,
+                                          const jfieldID field_ref_) {
+  return jni::JniEnv::GetEnv()->GetByteField(object_ref, field_ref_);
+}
+
+template <>
+inline void FieldHelper<jbyte>::SetValue(const jobject object_ref,
+                                         const jfieldID field_ref_,
+                                         jbyte&& value) {
+  jni::JniEnv::GetEnv()->SetByteField(object_ref, field_ref_, value);
+}
+
+template <>
+inline jchar FieldHelper<jchar>::GetValue(const jobject object_ref,
+                                          const jfieldID field_ref_) {
+  return jni::JniEnv::GetEnv()->GetCharField(object_ref, field_ref_);
+}
+
+template <>
+inline void FieldHelper<jchar>::SetValue(const jobject object_ref,
+                                         const jfieldID field_ref_,
+                                         jchar&& value) {
+  jni::JniEnv::GetEnv()->SetCharField(object_ref, field_ref_, value);
+}
+
+template <>
+inline jshort FieldHelper<jshort>::GetValue(const jobject object_ref,
+                                            const jfieldID field_ref_) {
+  return jni::JniEnv::GetEnv()->GetShortField(object_ref, field_ref_);
+}
+
+template <>
+inline void FieldHelper<jshort>::SetValue(const jobject object_ref,
+                                          const jfieldID field_ref_,
+                                          jshort&& value) {
+  jni::JniEnv::GetEnv()->SetShortField(object_ref, field_ref_, value);
+}
 
 template <>
 inline jint FieldHelper<jint>::GetValue(const jobject object_ref,
@@ -3470,8 +3523,21 @@ inline jint FieldHelper<jint>::GetValue(const jobject object_ref,
 template <>
 inline void FieldHelper<jint>::SetValue(const jobject object_ref,
                                         const jfieldID field_ref_,
-                                        jint&& new_value) {
-  jni::JniEnv::GetEnv()->SetIntField(object_ref, field_ref_, new_value);
+                                        jint&& value) {
+  jni::JniEnv::GetEnv()->SetIntField(object_ref, field_ref_, value);
+}
+
+template <>
+inline jlong FieldHelper<jlong>::GetValue(const jobject object_ref,
+                                          const jfieldID field_ref_) {
+  return jni::JniEnv::GetEnv()->GetLongField(object_ref, field_ref_);
+}
+
+template <>
+inline void FieldHelper<jlong>::SetValue(const jobject object_ref,
+                                         const jfieldID field_ref_,
+                                         jlong&& value) {
+  jni::JniEnv::GetEnv()->SetLongField(object_ref, field_ref_, value);
 }
 
 template <>
@@ -3483,8 +3549,8 @@ inline jfloat FieldHelper<jfloat>::GetValue(const jobject object_ref,
 template <>
 inline void FieldHelper<jfloat>::SetValue(const jobject object_ref,
                                           const jfieldID field_ref_,
-                                          jfloat&& new_value) {
-  jni::JniEnv::GetEnv()->SetFloatField(object_ref, field_ref_, new_value);
+                                          jfloat&& value) {
+  jni::JniEnv::GetEnv()->SetFloatField(object_ref, field_ref_, value);
 }
 
 template <>
@@ -3496,8 +3562,8 @@ inline jdouble FieldHelper<jdouble>::GetValue(const jobject object_ref,
 template <>
 inline void FieldHelper<jdouble>::SetValue(const jobject object_ref,
                                            const jfieldID field_ref_,
-                                           jdouble&& new_value) {
-  jni::JniEnv::GetEnv()->SetDoubleField(object_ref, field_ref_, new_value);
+                                           jdouble&& value) {
+  jni::JniEnv::GetEnv()->SetDoubleField(object_ref, field_ref_, value);
 }
 
 }  // namespace jni
@@ -4068,6 +4134,7 @@ struct OverloadRef {
 
       return jni::JniHelper::GetMethodID(clazz, Method::Name(),
                                          GetMethodSignature().data());
+
     });
   }
 };
@@ -5122,17 +5189,6 @@ class ClassLoaderRef
 
 }  // namespace jni
 
-namespace jni {
-
-inline constexpr Class kJavaUtilList{
-    "java/util/List",
-    Method{"add", jni::Return<jboolean>{}, jni::Params{kJavaLangObject}},
-    Method{"clear", jni::Return{}, jni::Params{}},
-    Method{"get", jni::Return{kJavaLangObject}, jni::Params<jint>{}},
-    Method{"remove", jni::Return{kJavaLangObject}, jni::Params<jint>{}},
-    Method{"size", jni::Return<jint>{}, jni::Params{}}};
-
-}  // namespace jni
 
 namespace jni {
 
@@ -5179,6 +5235,18 @@ class GlobalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
     }
   }
 };
+
+}  // namespace jni
+
+namespace jni {
+
+inline constexpr Class kJavaUtilList{
+    "java/util/List",
+    Method{"add", jni::Return<jboolean>{}, jni::Params{kJavaLangObject}},
+    Method{"clear", jni::Return{}, jni::Params{}},
+    Method{"get", jni::Return{kJavaLangObject}, jni::Params<jint>{}},
+    Method{"remove", jni::Return{kJavaLangObject}, jni::Params<jint>{}},
+    Method{"size", jni::Return<jint>{}, jni::Params{}}};
 
 }  // namespace jni
 

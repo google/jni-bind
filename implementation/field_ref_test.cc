@@ -46,4 +46,82 @@ TEST_F(JniTest, Field_SimpleGetAndSet) {
   obj["SomeField"].Set(123);
 }
 
+// clang-format off
+static constexpr Class java_class_under_test{
+    "com/google/TestClass",
+    Field{"booleanField", jboolean{}},
+    Field{"byteField", jbyte{}},
+    Field{"charField", jchar{}},
+    Field{"shortField", jshort{}},
+    Field{"intField", jint{}},
+    Field{"longField", jlong{}},
+    Field{"floatField", jfloat{}},
+    Field{"doubleField", jdouble{}}
+};
+// clang-format on
+
+TEST_F(JniTest, Field_BooleanField) {
+  jni::LocalObject<java_class_under_test> obj{};
+  EXPECT_CALL(*env_, GetBooleanField);
+  EXPECT_CALL(*env_, SetBooleanField);
+  obj["booleanField"].Get();
+  obj["booleanField"].Set(true);
+}
+
+TEST_F(JniTest, Field_ByteField) {
+  jni::LocalObject<java_class_under_test> obj{};
+  EXPECT_CALL(*env_, GetByteField);
+  EXPECT_CALL(*env_, SetByteField);
+  obj["byteField"].Get();
+  obj["byteField"].Set(jbyte{123});
+}
+
+TEST_F(JniTest, Field_CharField) {
+  jni::LocalObject<java_class_under_test> obj{};
+  EXPECT_CALL(*env_, GetCharField);
+  EXPECT_CALL(*env_, SetCharField);
+  obj["charField"].Get();
+  obj["charField"].Set(jchar{'a'});
+}
+
+TEST_F(JniTest, Field_ShortField) {
+  jni::LocalObject<java_class_under_test> obj{};
+  EXPECT_CALL(*env_, GetShortField);
+  EXPECT_CALL(*env_, SetShortField);
+  obj["shortField"].Get();
+  obj["shortField"].Set(jshort{123});
+}
+
+TEST_F(JniTest, Field_intField) {
+  jni::LocalObject<java_class_under_test> obj{};
+  EXPECT_CALL(*env_, GetIntField);
+  EXPECT_CALL(*env_, SetIntField);
+  obj["intField"].Get();
+  obj["intField"].Set(123);
+}
+
+TEST_F(JniTest, Field_longField) {
+  jni::LocalObject<java_class_under_test> obj{};
+  EXPECT_CALL(*env_, GetLongField);
+  EXPECT_CALL(*env_, SetLongField);
+  obj["longField"].Get();
+  obj["longField"].Set(123);
+}
+
+TEST_F(JniTest, Field_floatField) {
+  jni::LocalObject<java_class_under_test> obj{};
+  EXPECT_CALL(*env_, GetFloatField);
+  EXPECT_CALL(*env_, SetFloatField);
+  obj["floatField"].Get();
+  obj["floatField"].Set(123.f);
+}
+
+TEST_F(JniTest, Field_doubleField) {
+  jni::LocalObject<java_class_under_test> obj{};
+  EXPECT_CALL(*env_, GetDoubleField);
+  EXPECT_CALL(*env_, SetDoubleField);
+  obj["doubleField"].Get();
+  obj["doubleField"].Set(123.l);
+}
+
 }  // namespace
