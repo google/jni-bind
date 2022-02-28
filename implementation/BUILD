@@ -203,6 +203,7 @@ cc_library(
     deps = [
         ":class_ref",
         ":field_selection",
+        ":proxy",
         "//:jni_dep",
         "//implementation/jni_helper",
         "//implementation/jni_helper:field_value_getter",
@@ -229,6 +230,7 @@ cc_library(
     deps = [
         ":name_constants",
         ":object",
+        ":selector_static_info",
         "//implementation/jni_helper:jni_typename_to_string",
         "//metaprogramming:string_concatenate",
     ],

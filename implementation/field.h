@@ -31,17 +31,18 @@ struct Field : public FieldBase {
   using ValueRaw = ValueRaw_;
 
   const char* name_;
-  const ValueRaw_ value_raw_ = {};
+
+  const ValueRaw_ return_raw_ = {};
+  const ValueRaw_ raw_type_ = return_raw_;
 
   constexpr Field(const char* name) : name_(name) {}
   constexpr Field(const char* name, ValueRaw_ value_raw)
-      : name_(name), value_raw_(value_raw) {}
+      : name_(name), return_raw_(value_raw) {}
 };
 
 template <typename ValueRaw_>
 Field(const char*, ValueRaw_) -> Field<ValueRaw_>;
 
-//==============================================================================
 template <typename T>
 using ValueRaw_t = typename T::ValueRaw;
 

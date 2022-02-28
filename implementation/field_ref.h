@@ -26,6 +26,7 @@
 #include "implementation/field_selection.h"
 #include "implementation/jni_helper/field_value.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/proxy.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
 #include "metaprogramming/optional_wrap.h"
@@ -58,9 +59,9 @@ class FieldRef {
   FieldRef(const FieldRef&&) = delete;
   void operator=(const FieldRef&) = delete;
 
-  static auto& GetField() { return std::get<I>(class_v_.fields_); }
+  static constexpr auto& GetField() { return std::get<I>(class_v_.fields_); }
 
-  static std::string_view GetFieldSignature() {
+  static constexpr std::string_view GetFieldSignature() {
     return FieldSelection<class_loader_v_, class_v_, I>::GetSignature();
   }
 
@@ -78,13 +79,19 @@ class FieldRef {
     });
   }
 
-  ValueRaw Get() {
-    return FieldHelper<ValueRaw>::GetValue(object_ref_, GetFieldID(class_ref_));
+  using ProxyForField = Proxy_t<ValueRaw>;
+  using CDeclForField = CDecl_t<ValueRaw>;
+
+  Return_t<ValueRaw, FieldSelectionT> Get() {
+    return FieldHelper<CDeclForField>::GetValue(object_ref_,
+                                                GetFieldID(class_ref_));
   }
 
-  void Set(ValueRaw&& value) {
-    FieldHelper<ValueRaw>::SetValue(object_ref_, GetFieldID(class_ref_),
-                                    std::forward<ValueRaw>(value));
+  template <typename T>
+  void Set(T&& value) {
+    FieldHelper<CDecl_t<ValueRaw>>::SetValue(
+        object_ref_, GetFieldID(class_ref_),
+        ProxyForField::ProxyAsArg(std::forward<T>(value)));
   }
 
  private:

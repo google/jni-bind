@@ -15,6 +15,7 @@
 package com.jnibind.test;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -85,5 +86,35 @@ public class FieldTest {
 
     assertThat(jniDoubleField(rJniTestHelper, Double.MIN_VALUE)).isEqualTo(Double.MIN_VALUE);
     assertThat(rJniTestHelper.doubleField).isEqualTo(Double.MIN_VALUE);
+  }
+
+  /** Object Field Tests. */
+  FieldTestHelper fieldTestHelper = new FieldTestHelper(0, 0.f, 0d);
+
+  // Takes the input values, builds a new FieldTestHelper object, and sets |this|'s
+  // instance of fieldTestHelper to this new object.
+  native void jniObjectFieldSet(FieldTest fieldTest, int val1, float val2, double val3);
+
+  @Test
+  public void objectGetTests() {
+    assertTrue(fieldTestHelper.isEqualTo(new FieldTestHelper(0, 0, 0)));
+    FieldTestHelper fieldTestHelperCopy = fieldTestHelper;
+    assertThat(fieldTestHelperCopy).isEqualTo(fieldTestHelper);
+
+    jniObjectFieldSet(this, 1, 2.f, 3d);
+    assertThat(fieldTestHelper.isEqualTo(new FieldTestHelper(1, 2.f, 3d))).isTrue();
+    assertThat(fieldTestHelper).isNotEqualTo(fieldTestHelperCopy);
+
+    jniObjectFieldSet(this, 4, 5.f, 6d);
+    assertTrue(fieldTestHelper.isEqualTo(new FieldTestHelper(4, 5.f, 6d)));
+    assertThat(fieldTestHelper).isNotEqualTo(fieldTestHelperCopy);
+  }
+
+  native FieldTestHelper jniObjectFieldGet(FieldTest fieldTest);
+
+  @Test
+  public void objectSetTests() {
+    FieldTestHelper fieldTestHelperCopy = fieldTestHelper;
+    assertThat(jniObjectFieldGet(this)).isEqualTo(fieldTestHelperCopy);
   }
 }

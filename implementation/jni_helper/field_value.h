@@ -134,6 +134,19 @@ inline void FieldHelper<jdouble>::SetValue(const jobject object_ref,
   jni::JniEnv::GetEnv()->SetDoubleField(object_ref, field_ref_, value);
 }
 
+template <>
+inline jobject FieldHelper<jobject>::GetValue(const jobject object_ref,
+                                              const jfieldID field_ref_) {
+  return jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_);
+}
+
+template <>
+inline void FieldHelper<jobject>::SetValue(const jobject object_ref,
+                                           const jfieldID field_ref_,
+                                           jobject&& new_value) {
+  jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
+}
+
 }  // namespace jni
 
 #endif  // JNI_BIND_FIELD_VALUE_GETTER_H_

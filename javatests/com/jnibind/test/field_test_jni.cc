@@ -18,6 +18,7 @@
 #include "jni_bind.h"
 
 using jni::Class;
+using jni::Constructor;
 using jni::Field;
 using jni::LocalObject;
 
@@ -26,10 +27,17 @@ static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
 // clang-format off
 constexpr Class kFieldTestHelper {
     "com/jnibind/test/FieldTestHelper",
+    Constructor{},
+    Constructor{int{}, float{}, double{}},
 
     Field{"intField", jint{}},
     Field{"floatField", jfloat{}},
     Field{"doubleField", jdouble{}},
+};
+
+constexpr Class kFieldTest {
+    "com/jnibind/test/FieldTest",
+    Field{"fieldTestHelper", kFieldTestHelper},
 };
 
 // clang-format on
@@ -65,6 +73,20 @@ JNIEXPORT jdouble JNICALL Java_com_jnibind_test_FieldTest_jniDoubleField(
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
   rjni_test_helper["doubleField"].Set(jdouble{val});
   return rjni_test_helper["doubleField"].Get();
+}
+
+JNIEXPORT void JNICALL Java_com_jnibind_test_FieldTest_jniObjectFieldSet(
+    JNIEnv* env, jclass, jobject test_class, jint intVal, jfloat floatVal,
+    jdouble doubleVal) {
+  LocalObject<kFieldTest> field_test{test_class};
+  LocalObject<kFieldTestHelper> obj{intVal, floatVal, doubleVal};
+
+  field_test["fieldTestHelper"].Set(obj);
+}
+
+JNIEXPORT jobject JNICALL Java_com_jnibind_test_FieldTest_jniObjectFieldGet(
+    JNIEnv* env, jclass, jobject test_class) {
+  return LocalObject<kFieldTest>{test_class}["fieldTestHelper"].Get().Release();
 }
 
 }  // extern "C"

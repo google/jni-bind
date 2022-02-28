@@ -20,6 +20,7 @@
 #include "implementation/jni_helper/jni_typename_to_string.h"
 #include "implementation/name_constants.h"
 #include "implementation/object.h"
+#include "implementation/selector_static_info.h"
 #include "metaprogramming/string_concatenate.h"
 
 namespace jni {
@@ -28,15 +29,28 @@ template <const auto& class_loader_v_, const auto& class_v_, size_t field_idx_>
 struct FieldSelection {
   static constexpr const auto& GetClass() { return class_v_; }
   static constexpr const auto& GetClassLoader() { return class_loader_v_; }
-  static auto& GetField() { return std::get<field_idx_>(class_v_.fields_); }
 
-  using FieldT = std::decay_t<decltype(GetField().value_raw_)>;
+  static constexpr auto& GetField() {
+    return std::get<field_idx_>(class_v_.fields_);
+  }
+  static constexpr auto& Val() {
+    return std::get<field_idx_>(class_v_.fields_);
+  }
+
+  static constexpr auto& GetReturn() {
+    return std::get<field_idx_>(class_v_.fields_);
+  }
+
+  using FieldT = std::decay_t<decltype(GetField().return_raw_)>;
+  using RawValT = std::decay_t<decltype(GetField().return_raw_)>;
 
   static constexpr bool kIsObject = std::is_base_of_v<Object, FieldT>;
+  static constexpr std::size_t kRank = 1;
 
   static constexpr std::string_view NameOrNothingIfNotAnObject() {
     if constexpr (kIsObject) {
-      return GetField().name_;
+      return SelectorStaticInfo<
+          FieldSelection>::TypeNameOrNothingIfNotAnObject();
     } else {
       return "";
     }

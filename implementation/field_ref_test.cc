@@ -24,6 +24,7 @@ namespace {
 using jni::Class;
 using jni::Field;
 
+using jni::LocalObject;
 using jni::test::JniTest;
 using testing::_;
 using testing::Eq;
@@ -122,6 +123,42 @@ TEST_F(JniTest, Field_doubleField) {
   EXPECT_CALL(*env_, SetDoubleField);
   obj["doubleField"].Get();
   obj["doubleField"].Set(123.l);
+}
+
+TEST_F(JniTest, Field_ObjectGet) {
+  static constexpr Class kClass{"com/google/TestClass",
+                                Field{"classField", Class{"kClass2"}}};
+  static constexpr Class kClass2{"kClass2"};
+
+  jfieldID field_id{reinterpret_cast<jfieldID>(0XDEDEDE)};
+  jobject fake_obj{reinterpret_cast<jobject>(0XCDCDCD)};
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("classField"), StrEq("LkClass2;")))
+      .WillOnce(Return(field_id));
+  EXPECT_CALL(*env_, GetObjectField(_, field_id)).WillOnce(Return(fake_obj));
+
+  jni::LocalObject<kClass> obj{};
+  jni::LocalObject<kClass2> obj2 = obj["classField"].Get();
+}
+
+TEST_F(JniTest, Field_ObjectSet) {
+  static constexpr Class kClass2{"kClass2"};
+  static constexpr Class kClass{
+      "com/google/TestClass",
+      // Field{"classField", Class{"kClass2"}}}; // also works
+      Field{"classField", kClass2}};
+
+  jfieldID field_id{reinterpret_cast<jfieldID>(0XDEDEDE)};
+  jobject fake_obj{reinterpret_cast<jobject>(0XCDCDCD)};
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("classField"), StrEq("LkClass2;")))
+      .WillOnce(Return(field_id));
+  EXPECT_CALL(*env_, SetObjectField(_, field_id, fake_obj)).Times(4);
+
+  jni::LocalObject<kClass> obj{};
+  LocalObject<kClass2> some_obj{fake_obj};
+  obj["classField"].Set(fake_obj);
+  obj["classField"].Set(LocalObject<kClass2>{fake_obj});
+  obj["classField"].Set(some_obj);
+  obj["classField"].Set(std::move(some_obj));
 }
 
 }  // namespace

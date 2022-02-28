@@ -14,18 +14,26 @@
 
 package com.jnibind.test;
 
-
 /**
  * This object is used to set mock expectations for FieldTest as inner classes do not support
  * mocking and the class definition must match the filename.
  */
 public class FieldTestHelper {
+  public int intField = 0;
+  public float floatField = 0;
+  public double doubleField = 0;
 
-  public int intField;
+  FieldTestHelper() {}
 
+  FieldTestHelper(int intField, float floatField, double doubleField) {
+    this.intField = intField;
+    this.floatField = floatField;
+    this.doubleField = doubleField;
+  }
 
-  public float floatField;
-
-
-  public double doubleField;
+  boolean isEqualTo(FieldTestHelper rhs) {
+    return intField == rhs.intField
+        && floatField == rhs.floatField
+        && doubleField == rhs.doubleField;
+  }
 }
