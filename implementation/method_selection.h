@@ -171,12 +171,11 @@ struct MethodSelection {
 template <typename MethodSelectionT, typename OverloadSelectionT>
 struct ReturnSelection {
   using RawValT = ArrayStrip_t<
-      ReturnRaw_t<std::decay_t<decltype(OverloadSelectionT::GetReturn())>>>;
+      Raw_t<std::decay_t<decltype(OverloadSelectionT::GetReturn())>>>;
 
   static inline constexpr std::size_t ComputeRank() {
     if constexpr (Rankifier<RawValT>::kComputableRank) {
-      return Rankifier<RawValT>::Rank(
-          OverloadSelectionT::GetReturn().return_raw_);
+      return Rankifier<RawValT>::Rank(OverloadSelectionT::GetReturn().raw_);
     } else {
       return 0;
     }
@@ -185,7 +184,7 @@ struct ReturnSelection {
   static constexpr std::size_t kRank = ComputeRank();
 
   static constexpr inline auto& Val() {
-    return OverloadSelectionT::GetReturn().return_raw_;
+    return OverloadSelectionT::GetReturn().raw_;
   }
 };
 
@@ -226,12 +225,11 @@ struct OverloadSelection {
   }
 
   // CDecl is the type used by the C API for a return type.
-  using CDecl = CDecl_t<ReturnRaw_t<std::decay_t<decltype(GetReturn())>>>;
+  using CDecl = CDecl_t<Raw_t<std::decay_t<decltype(GetReturn())>>>;
 
   // Return type is the richly decorated type returned (e.g LocalArray).
   using ReturnProxied =
-      Return_t<ReturnRaw_t<std::decay_t<decltype(GetReturn())>>,
-               OverloadSelection>;
+      Return_t<Raw_t<std::decay_t<decltype(GetReturn())>>, OverloadSelection>;
 
   // Proxy every parameter argument as an argument that can be shown in a
   // function prototype.

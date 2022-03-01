@@ -173,7 +173,7 @@ struct Proxy<JObject,
     // It's illegal to initialise this type with a sub-object of another,
     // however, we can construct types with enough validation to guarantee
     // correctness.
-    static constexpr Class kClass{OverloadT::GetReturn().return_raw_.name_};
+    static constexpr Class kClass{OverloadT::GetReturn().raw_.name_};
 
     // TODO(b/174272629): Class loaders should also be enforced.
     using type = LocalObject<kClass, kDefaultClassLoader, kDefaultJvm>;
@@ -257,7 +257,7 @@ struct Proxy<
 // This must be defined outside of Proxy so implicit definition doesn't occur.
 template <typename Overload>
 struct ArrayHelper {
-  static constexpr Array kArray{Overload::GetReturn().return_raw_};
+  static constexpr Array kArray{Overload::GetReturn().raw_};
   using FullRawReturnT = std::decay_t<decltype(kArray.raw_type_)>;
 
   using AsReturn = decltype(LocalArrayBuildFromArray<kArray>());

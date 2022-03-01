@@ -48,8 +48,7 @@ static inline auto& GetDefaultLoadedFieldList() {
 template <const auto& class_loader_v_, const auto& class_v_, size_t I>
 class FieldRef {
  public:
-  using ValueRaw =
-      ValueRaw_t<std::decay_t<decltype(std::get<I>(class_v_.fields_))>>;
+  using Raw = Raw_t<std::decay_t<decltype(std::get<I>(class_v_.fields_))>>;
   using FieldSelectionT = FieldSelection<class_loader_v_, class_v_, I>;
 
   explicit FieldRef(jclass class_ref, jobject object_ref)
@@ -79,17 +78,17 @@ class FieldRef {
     });
   }
 
-  using ProxyForField = Proxy_t<ValueRaw>;
-  using CDeclForField = CDecl_t<ValueRaw>;
+  using ProxyForField = Proxy_t<Raw>;
+  using CDeclForField = CDecl_t<Raw>;
 
-  Return_t<ValueRaw, FieldSelectionT> Get() {
+  Return_t<Raw, FieldSelectionT> Get() {
     return FieldHelper<CDeclForField>::GetValue(object_ref_,
                                                 GetFieldID(class_ref_));
   }
 
   template <typename T>
   void Set(T&& value) {
-    FieldHelper<CDecl_t<ValueRaw>>::SetValue(
+    FieldHelper<CDecl_t<Raw>>::SetValue(
         object_ref_, GetFieldID(class_ref_),
         ProxyForField::ProxyAsArg(std::forward<T>(value)));
   }

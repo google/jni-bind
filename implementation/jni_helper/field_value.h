@@ -22,12 +22,12 @@
 
 namespace jni {
 
-template <typename ValueRaw>
+template <typename Raw>
 struct FieldHelper {
-  static ValueRaw GetValue(const jobject object_ref, const jfieldID field_ref_);
+  static Raw GetValue(const jobject object_ref, const jfieldID field_ref_);
 
   static void SetValue(const jobject object_ref, const jfieldID field_ref_,
-                       ValueRaw&& value);
+                       Raw&& value);
 };
 
 template <>

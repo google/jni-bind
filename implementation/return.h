@@ -21,34 +21,34 @@
 
 namespace jni {
 
-template <typename ReturnRaw_>
+template <typename Raw_>
 struct Return {
-  const ReturnRaw_ return_raw_ = {};
+  const Raw_ raw_ = {};
 
-  using ReturnRaw = ReturnRaw_;
+  using Raw = Raw_;
 
   constexpr Return() = default;
 
-  template <typename ReturnRaw>
-  constexpr explicit Return(ReturnRaw return_raw) : return_raw_(return_raw) {}
+  template <typename Raw>
+  constexpr explicit Return(Raw raw) : raw_(raw) {}
 };
 
 template <>
 struct Return<void> {
-  using ReturnRaw = void;
+  using Raw = void;
 
   constexpr Return() = default;
 };
 
 Return()->Return<void>;
 
-template <typename ReturnRaw>
-Return(ReturnRaw) -> Return<ReturnRaw>;
+template <typename Raw>
+Return(Raw) -> Return<Raw>;
 
 //==============================================================================
 
 template <typename T>
-using ReturnRaw_t = typename T::ReturnRaw;
+using Raw_t = typename T::Raw;
 
 }  // namespace jni
 

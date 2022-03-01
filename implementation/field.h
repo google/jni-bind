@@ -25,26 +25,26 @@ namespace jni {
 
 struct FieldBase {};
 
-template <typename ValueRaw_>
+template <typename Raw_>
 struct Field : public FieldBase {
  public:
-  using ValueRaw = ValueRaw_;
+  using Raw = Raw_;
 
   const char* name_;
 
-  const ValueRaw_ return_raw_ = {};
-  const ValueRaw_ raw_type_ = return_raw_;
+  const Raw_ raw_ = {};
+  const Raw_ raw_type_ = raw_;
 
   constexpr Field(const char* name) : name_(name) {}
-  constexpr Field(const char* name, ValueRaw_ value_raw)
-      : name_(name), return_raw_(value_raw) {}
+  constexpr Field(const char* name, Raw_ value_raw)
+      : name_(name), raw_(value_raw) {}
 };
 
-template <typename ValueRaw_>
-Field(const char*, ValueRaw_) -> Field<ValueRaw_>;
+template <typename Raw_>
+Field(const char*, Raw_) -> Field<Raw_>;
 
 template <typename T>
-using ValueRaw_t = typename T::ValueRaw;
+using Raw_t = typename T::Raw;
 
 }  // namespace jni
 

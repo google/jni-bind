@@ -41,8 +41,8 @@ struct FieldSelection {
     return std::get<field_idx_>(class_v_.fields_);
   }
 
-  using FieldT = std::decay_t<decltype(GetField().return_raw_)>;
-  using RawValT = std::decay_t<decltype(GetField().return_raw_)>;
+  using FieldT = std::decay_t<decltype(GetField().raw_)>;
+  using RawValT = std::decay_t<decltype(GetField().raw_)>;
 
   static constexpr bool kIsObject = std::is_base_of_v<Object, FieldT>;
   static constexpr std::size_t kRank = 1;

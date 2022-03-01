@@ -86,10 +86,9 @@ struct PermutationRef {
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
       static constexpr bool is_array =
-          std::is_base_of_v<ArrayTag,
-                            decltype(Overload::GetReturn().return_raw_)> ||
+          std::is_base_of_v<ArrayTag, decltype(Overload::GetReturn().raw_)> ||
           std::is_base_of_v<ObjectArrayTag,
-                            decltype(Overload::GetReturn().return_raw_)>;
+                            decltype(Overload::GetReturn().raw_)>;
 
       return {JniMethodInvoke<typename Overload::CDecl, is_array>::Invoke(
           object, OverloadRef::GetMethodID(clazz),
