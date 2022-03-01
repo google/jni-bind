@@ -686,34 +686,34 @@ inline void JniHelper::ReleaseStringUTFChars(jstring str, const char* chars) {
 
 namespace jni {
 
-template <typename ReturnRaw_>
+template <typename Raw_>
 struct Return {
-  const ReturnRaw_ return_raw_ = {};
+  const Raw_ raw_ = {};
 
-  using ReturnRaw = ReturnRaw_;
+  using Raw = Raw_;
 
   constexpr Return() = default;
 
-  template <typename ReturnRaw>
-  constexpr explicit Return(ReturnRaw return_raw) : return_raw_(return_raw) {}
+  template <typename Raw>
+  constexpr explicit Return(Raw raw) : raw_(raw) {}
 };
 
 template <>
 struct Return<void> {
-  using ReturnRaw = void;
+  using Raw = void;
 
   constexpr Return() = default;
 };
 
 Return()->Return<void>;
 
-template <typename ReturnRaw>
-Return(ReturnRaw) -> Return<ReturnRaw>;
+template <typename Raw>
+Return(Raw) -> Return<Raw>;
 
 //==============================================================================
 
 template <typename T>
-using ReturnRaw_t = typename T::ReturnRaw;
+using Raw_t = typename T::Raw;
 
 }  // namespace jni
 
@@ -864,25 +864,26 @@ namespace jni {
 
 struct FieldBase {};
 
-template <typename ValueRaw_>
+template <typename Raw_>
 struct Field : public FieldBase {
  public:
-  using ValueRaw = ValueRaw_;
+  using Raw = Raw_;
 
   const char* name_;
-  const ValueRaw_ value_raw_ = {};
+
+  const Raw_ raw_ = {};
+  const Raw_ raw_type_ = raw_;
 
   constexpr Field(const char* name) : name_(name) {}
-  constexpr Field(const char* name, ValueRaw_ value_raw)
-      : name_(name), value_raw_(value_raw) {}
+  constexpr Field(const char* name, Raw_ value_raw)
+      : name_(name), raw_(value_raw) {}
 };
 
-template <typename ValueRaw_>
-Field(const char*, ValueRaw_) -> Field<ValueRaw_>;
+template <typename Raw_>
+Field(const char*, Raw_) -> Field<Raw_>;
 
-//==============================================================================
 template <typename T>
-using ValueRaw_t = typename T::ValueRaw;
+using Raw_t = typename T::Raw;
 
 }  // namespace jni
 
@@ -2273,6 +2274,40 @@ struct ArrayStrip<Array<T>> {
 
 }  // namespace jni
 
+#include <array>
+#include <string_view>
+
+namespace jni::metaprogramming {
+
+struct StringConcatenate {
+  template <std::string_view const&... Vs>
+  struct Helper {
+    static constexpr auto BuildConcatenation() noexcept {
+      constexpr std::size_t len = (Vs.size() + ... + 0);
+      std::array<char, len + 1> arr{};
+      auto append_single_string =
+          [i = 0, &arr](auto const& string_to_concatenate) mutable {
+            for (auto c : string_to_concatenate) arr[i++] = c;
+          };
+      (append_single_string(Vs), ...);
+      arr[len] = 0;
+
+      return arr;
+    }
+
+    static constexpr auto arr = BuildConcatenation();
+    static constexpr std::string_view value{arr.data(), arr.size() - 1};
+  };
+
+  template <std::string_view const&... Vs>
+  static constexpr std::string_view value = Helper<Vs...>::value;
+};
+
+template <std::string_view const&... Vs>
+static constexpr auto StringConcatenate_v = StringConcatenate::value<Vs...>;
+
+}  // namespace jni::metaprogramming
+
 #include <tuple>
 
 namespace jni::metaprogramming {
@@ -2504,6 +2539,97 @@ using Odd_t = typename Odd::template type<Ts...>;
 
 }  // namespace jni::metaprogramming
 
+
+#include <string_view>
+
+namespace jni {
+
+// Translates a single JNI term (e.g. jint -> "I") as if it were being used as a
+// parameter to a method.
+//
+// Note, the context a parameter is used on occasion will alter a signature,
+// e.g. void in a return is explicit, whereas when used as a parameter, it is
+// represented as the omission of any value.
+//
+// Additionally, Android will obnoxiously fail to compile the standard looking:
+//    static constexpr char kStr[] = "SomeString";
+//
+// Because it is against style to import have a using declaration header wide,
+// but these are also template definitions, they must remain in this header, and
+// so there are goofy looking "using literal" declarations throughout.
+//
+// https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/types.html
+//
+// TODO:  Rename to JavaPrimitiveTypeToString
+template <typename JavaType>
+constexpr std::string_view JavaTypeToString();
+
+template <>
+constexpr std::string_view JavaTypeToString<void>() {
+  // Note:  This only applies when used as a return, not as a parameter.  This
+  // could be enforced through type system, but maybe feels excessive to do so.
+  // For now, enforcing this is unnecesssary, as this function is only called
+  // for each Param, which, in the case of no params, is 0 times.
+  using namespace std::literals;
+  return "V"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jboolean>() {
+  using namespace std::literals;
+  return "Z"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jbyte>() {
+  using namespace std::literals;
+  return "B"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jchar>() {
+  using namespace std::literals;
+  return "C"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jshort>() {
+  using namespace std::literals;
+  return "S"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jint>() {
+  using namespace std::literals;
+  return "I"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jlong>() {
+  using namespace std::literals;
+  return "J"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jfloat>() {
+  using namespace std::literals;
+  return "F"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jdouble>() {
+  using namespace std::literals;
+  return "D"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jstring>() {
+  using namespace std::literals;
+  return "Ljava/lang/String;"sv;
+}
+
+}  // namespace jni
+
 #include <optional>
 #include <string>
 #include <string_view>
@@ -2558,6 +2684,25 @@ class UtfStringView {
   const jstring java_string_;
   const char* chars_;
 };
+
+}  // namespace jni
+
+#include <string_view>
+
+namespace jni {
+
+////////////////////////////////////////////////////////////////////////////////
+// Constants for signature generation.
+////////////////////////////////////////////////////////////////////////////////
+
+static constexpr std::string_view kLeftBracket{"["};
+static constexpr std::string_view kRightBracket{"]"};
+static constexpr std::string_view kLeftParenthesis{"("};
+static constexpr std::string_view kRightParenthesis{")"};
+static constexpr std::string_view kInit{"<init>"};
+static constexpr std::string_view kComma{","};
+static constexpr std::string_view kSemiColon{";"};
+static constexpr std::string_view kLetterL{"L"};
 
 }  // namespace jni
 
@@ -2752,40 +2897,6 @@ using TupleFromSize_t = decltype(TupleFromSize<DefaultType, N>());
 
 }  // namespace jni::metaprogramming
 
-#include <array>
-#include <string_view>
-
-namespace jni::metaprogramming {
-
-struct StringConcatenate {
-  template <std::string_view const&... Vs>
-  struct Helper {
-    static constexpr auto BuildConcatenation() noexcept {
-      constexpr std::size_t len = (Vs.size() + ... + 0);
-      std::array<char, len + 1> arr{};
-      auto append_single_string =
-          [i = 0, &arr](auto const& string_to_concatenate) mutable {
-            for (auto c : string_to_concatenate) arr[i++] = c;
-          };
-      (append_single_string(Vs), ...);
-      arr[len] = 0;
-
-      return arr;
-    }
-
-    static constexpr auto arr = BuildConcatenation();
-    static constexpr std::string_view value{arr.data(), arr.size() - 1};
-  };
-
-  template <std::string_view const&... Vs>
-  static constexpr std::string_view value = Helper<Vs...>::value;
-};
-
-template <std::string_view const&... Vs>
-static constexpr auto StringConcatenate_v = StringConcatenate::value<Vs...>;
-
-}  // namespace jni::metaprogramming
-
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -2943,108 +3054,96 @@ using CartesianProduct_t = typename CartesianProduct::template type<Tups...>;
 
 namespace jni {
 
-// Translates a single JNI term (e.g. jint -> "I") as if it were being used as a
-// parameter to a method.
+// Helper to generate full signature information for a "selected" value, and
+// possibly some container information.  Here, |Selector| is |MethodSelection|,
+// |FieldSelection|, etc.
 //
-// Note, the context a parameter is used on occasion will alter a signature,
-// e.g. void in a return is explicit, whereas when used as a parameter, it is
-// represented as the omission of any value.
+// Unfortunately, the type system does not permit passing subobjects, however,
+// types can be used that represent a specific selection upon an object.  This
+// consolidates all signature info.
 //
-// Additionally, Android will obnoxiously fail to compile the standard looking:
-//    static constexpr char kStr[] = "SomeString";
-//
-// Because it is against style to import have a using declaration header wide,
-// but these are also template definitions, they must remain in this header, and
-// so there are goofy looking "using literal" declarations throughout.
-//
-// https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/types.html
-//
-// TODO:  Rename to JavaPrimitiveTypeToString
-template <typename JavaType>
-constexpr std::string_view JavaTypeToString();
+// |Selector| must express a type alias for RawVal (e.g. jint, Class{...}, etc.)
+// and a type alias |RawValT| which is std::decay_t<RawVal>;
+template <typename Selector>
+struct SelectorStaticInfo {
+  template <std::size_t I>
+  struct IthRawTypeMember {
+    template <typename T>
+    static constexpr const auto& Val(const T& val) {
+      return IthRawTypeMember<I - 1>::Val(val.raw_type_);
+    }
+  };
 
-template <>
-constexpr std::string_view JavaTypeToString<void>() {
-  // Note:  This only applies when used as a return, not as a parameter.  This
-  // could be enforced through type system, but maybe feels excessive to do so.
-  // For now, enforcing this is unnecesssary, as this function is only called
-  // for each Param, which, in the case of no params, is 0 times.
-  using namespace std::literals;
-  return "V"sv;
-}
+  template <>
+  struct IthRawTypeMember<0> {
+    template <typename T>
+    static constexpr const auto& Val(const T& val) {
+      return val;
+    }
+  };
 
-template <>
-constexpr std::string_view JavaTypeToString<jboolean>() {
-  using namespace std::literals;
-  return "Z"sv;
-}
+  // Strangely, the compiler refuses to peer through Val and loses the
+  // constexpr-ness (i.e std::decay_t<decltype(Val())>; is not a constant
+  // expression).
+  static constexpr inline const auto& Val() {
+    if constexpr (Selector::kRank == 0) {
+      return Selector::Val();
+    } else {
+      return IthRawTypeMember<kRank>::Val(Selector::Val());
+    }
+  }
 
-template <>
-constexpr std::string_view JavaTypeToString<jbyte>() {
-  using namespace std::literals;
-  return "B"sv;
-}
+  using RawValT = typename Selector::RawValT;
 
-template <>
-constexpr std::string_view JavaTypeToString<jchar>() {
-  using namespace std::literals;
-  return "C"sv;
-}
+  static constexpr inline bool kIsObject = std::is_base_of_v<Object, RawValT>;
+  static constexpr std::size_t kRank = Selector::kRank;
 
-template <>
-constexpr std::string_view JavaTypeToString<jshort>() {
-  using namespace std::literals;
-  return "S"sv;
-}
+  static constexpr std::string_view TypeNameOrNothingIfNotAnObject() {
+    if constexpr (kIsObject) {
+      return Val().name_;
+    } else {
+      return "";
+    }
+  }
 
-template <>
-constexpr std::string_view JavaTypeToString<jint>() {
-  using namespace std::literals;
-  return "I"sv;
-}
+  static constexpr std::string_view kTypeNameOrNothingIfNotAnObject =
+      TypeNameOrNothingIfNotAnObject();
 
-template <>
-constexpr std::string_view JavaTypeToString<jlong>() {
-  using namespace std::literals;
-  return "J"sv;
-}
+  template <std::size_t repeat_cnt>
+  struct Repeat {
+    static constexpr std::string_view val =
+        metaprogramming::StringConcatenate_v<kLeftBracket,
+                                             Repeat<repeat_cnt - 1>::val>;
+  };
 
-template <>
-constexpr std::string_view JavaTypeToString<jfloat>() {
-  using namespace std::literals;
-  return "F"sv;
-}
+  template <>
+  struct Repeat<0> {
+    static constexpr std::string_view val = "";
+  };
 
-template <>
-constexpr std::string_view JavaTypeToString<jdouble>() {
-  using namespace std::literals;
-  return "D"sv;
-}
+  static constexpr std::string_view kEmptyStr = "";
+  static constexpr std::string_view kModifierStr =
+      (kRank == 0) ? "" : Repeat<kRank>::val;
 
-template <>
-constexpr std::string_view JavaTypeToString<jstring>() {
-  using namespace std::literals;
-  return "Ljava/lang/String;"sv;
-}
+  static constexpr std::string_view UndecoratedTypeName() {
+    if constexpr (kIsObject) {
+      return metaprogramming::StringConcatenate_v<
+          kLetterL, kTypeNameOrNothingIfNotAnObject, kSemiColon>;
+    } else {
+      return JavaTypeToString<RawValT>();
+    }
+  }
 
-}  // namespace jni
+  static constexpr std::string_view kUndecoratedTypeName =
+      UndecoratedTypeName();
 
-#include <string_view>
+  static constexpr std::string_view TypeName() {
+    return metaprogramming::StringConcatenate_v<kModifierStr,
+                                                kUndecoratedTypeName>;
+  }
 
-namespace jni {
-
-////////////////////////////////////////////////////////////////////////////////
-// Constants for signature generation.
-////////////////////////////////////////////////////////////////////////////////
-
-static constexpr std::string_view kLeftBracket{"["};
-static constexpr std::string_view kRightBracket{"]"};
-static constexpr std::string_view kLeftParenthesis{"("};
-static constexpr std::string_view kRightParenthesis{")"};
-static constexpr std::string_view kInit{"<init>"};
-static constexpr std::string_view kComma{","};
-static constexpr std::string_view kSemiColon{";"};
-static constexpr std::string_view kLetterL{"L"};
+  static constexpr std::string_view kTypeName = TypeName();
+};
 
 }  // namespace jni
 
@@ -3454,12 +3553,12 @@ class InvocableMap
 
 namespace jni {
 
-template <typename ValueRaw>
+template <typename Raw>
 struct FieldHelper {
-  static ValueRaw GetValue(const jobject object_ref, const jfieldID field_ref_);
+  static Raw GetValue(const jobject object_ref, const jfieldID field_ref_);
 
   static void SetValue(const jobject object_ref, const jfieldID field_ref_,
-                       ValueRaw&& value);
+                       Raw&& value);
 };
 
 template <>
@@ -3566,9 +3665,23 @@ inline void FieldHelper<jdouble>::SetValue(const jobject object_ref,
   jni::JniEnv::GetEnv()->SetDoubleField(object_ref, field_ref_, value);
 }
 
+template <>
+inline jobject FieldHelper<jobject>::GetValue(const jobject object_ref,
+                                              const jfieldID field_ref_) {
+  return jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_);
+}
+
+template <>
+inline void FieldHelper<jobject>::SetValue(const jobject object_ref,
+                                           const jfieldID field_ref_,
+                                           jobject&& new_value) {
+  jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
+}
+
 }  // namespace jni
 
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
 
@@ -3710,7 +3823,7 @@ struct Proxy<JObject,
     // It's illegal to initialise this type with a sub-object of another,
     // however, we can construct types with enough validation to guarantee
     // correctness.
-    static constexpr Class kClass{OverloadT::GetReturn().return_raw_.name_};
+    static constexpr Class kClass{OverloadT::GetReturn().raw_.name_};
 
     // TODO(b/174272629): Class loaders should also be enforced.
     using type = LocalObject<kClass, kDefaultClassLoader, kDefaultJvm>;
@@ -3794,7 +3907,7 @@ struct Proxy<
 // This must be defined outside of Proxy so implicit definition doesn't occur.
 template <typename Overload>
 struct ArrayHelper {
-  static constexpr Array kArray{Overload::GetReturn().return_raw_};
+  static constexpr Array kArray{Overload::GetReturn().raw_};
   using FullRawReturnT = std::decay_t<decltype(kArray.raw_type_)>;
 
   using AsReturn = decltype(LocalArrayBuildFromArray<kArray>());
@@ -3924,15 +4037,28 @@ template <const auto& class_loader_v_, const auto& class_v_, size_t field_idx_>
 struct FieldSelection {
   static constexpr const auto& GetClass() { return class_v_; }
   static constexpr const auto& GetClassLoader() { return class_loader_v_; }
-  static auto& GetField() { return std::get<field_idx_>(class_v_.fields_); }
 
-  using FieldT = std::decay_t<decltype(GetField().value_raw_)>;
+  static constexpr auto& GetField() {
+    return std::get<field_idx_>(class_v_.fields_);
+  }
+  static constexpr auto& Val() {
+    return std::get<field_idx_>(class_v_.fields_);
+  }
+
+  static constexpr auto& GetReturn() {
+    return std::get<field_idx_>(class_v_.fields_);
+  }
+
+  using FieldT = std::decay_t<decltype(GetField().raw_)>;
+  using RawValT = std::decay_t<decltype(GetField().raw_)>;
 
   static constexpr bool kIsObject = std::is_base_of_v<Object, FieldT>;
+  static constexpr std::size_t kRank = 1;
 
   static constexpr std::string_view NameOrNothingIfNotAnObject() {
     if constexpr (kIsObject) {
-      return GetField().name_;
+      return SelectorStaticInfo<
+          FieldSelection>::TypeNameOrNothingIfNotAnObject();
     } else {
       return "";
     }
@@ -4008,102 +4134,6 @@ using FunctionTraitsArg_t =
 
 }  // namespace jni::metaprogramming
 
-#include <string_view>
-
-namespace jni {
-
-// Helper to generate full signature information for a "selected" value, and
-// possibly some container information.  Here, |Selector| is |MethodSelection|,
-// |FieldSelection|, etc.
-//
-// Unfortunately, the type system does not permit passing subobjects, however,
-// types can be used that represent a specific selection upon an object.  This
-// consolidates all signature info.
-//
-// |Selector| must express a type alias for RawVal (e.g. jint, Class{...}, etc.)
-// and a type alias |RawValT| which is std::decay_t<RawVal>;
-template <typename Selector>
-struct SelectorStaticInfo {
-  template <std::size_t I>
-  struct IthRawTypeMember {
-    template <typename T>
-    static constexpr const auto& Val(const T& val) {
-      return IthRawTypeMember<I - 1>::Val(val.raw_type_);
-    }
-  };
-
-  template <>
-  struct IthRawTypeMember<0> {
-    template <typename T>
-    static constexpr const auto& Val(const T& val) {
-      return val;
-    }
-  };
-
-  // Strangely, the compiler refuses to peer through Val and loses the
-  // constexpr-ness (i.e std::decay_t<decltype(Val())>; is not a constant
-  // expression).
-  static constexpr inline const auto& Val() {
-    if constexpr (Selector::kRank == 0) {
-      return Selector::Val();
-    } else {
-      return IthRawTypeMember<kRank>::Val(Selector::Val());
-    }
-  }
-
-  using RawValT = typename Selector::RawValT;
-
-  static constexpr inline bool kIsObject = std::is_base_of_v<Object, RawValT>;
-  static constexpr std::size_t kRank = Selector::kRank;
-
-  static constexpr std::string_view TypeNameOrNothingIfNotAnObject() {
-    if constexpr (kIsObject) {
-      return Val().name_;
-    } else {
-      return "";
-    }
-  }
-
-  static constexpr std::string_view kTypeNameOrNothingIfNotAnObject =
-      TypeNameOrNothingIfNotAnObject();
-
-  template <std::size_t repeat_cnt>
-  struct Repeat {
-    static constexpr std::string_view val =
-        metaprogramming::StringConcatenate_v<kLeftBracket,
-                                             Repeat<repeat_cnt - 1>::val>;
-  };
-
-  template <>
-  struct Repeat<0> {
-    static constexpr std::string_view val = "";
-  };
-
-  static constexpr std::string_view kEmptyStr = "";
-  static constexpr std::string_view kModifierStr =
-      (kRank == 0) ? "" : Repeat<kRank>::val;
-
-  static constexpr std::string_view UndecoratedTypeName() {
-    if constexpr (kIsObject) {
-      return metaprogramming::StringConcatenate_v<
-          kLetterL, kTypeNameOrNothingIfNotAnObject, kSemiColon>;
-    } else {
-      return JavaTypeToString<RawValT>();
-    }
-  }
-
-  static constexpr std::string_view kUndecoratedTypeName =
-      UndecoratedTypeName();
-
-  static constexpr std::string_view TypeName() {
-    return metaprogramming::StringConcatenate_v<kModifierStr,
-                                                kUndecoratedTypeName>;
-  }
-
-  static constexpr std::string_view kTypeName = TypeName();
-};
-
-}  // namespace jni
 
 #include <mutex>
 #include <tuple>
@@ -4157,10 +4187,9 @@ struct PermutationRef {
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
       static constexpr bool is_array =
-          std::is_base_of_v<ArrayTag,
-                            decltype(Overload::GetReturn().return_raw_)> ||
+          std::is_base_of_v<ArrayTag, decltype(Overload::GetReturn().raw_)> ||
           std::is_base_of_v<ObjectArrayTag,
-                            decltype(Overload::GetReturn().return_raw_)>;
+                            decltype(Overload::GetReturn().raw_)>;
 
       return {JniMethodInvoke<typename Overload::CDecl, is_array>::Invoke(
           object, OverloadRef::GetMethodID(clazz),
@@ -4209,8 +4238,7 @@ static inline auto& GetDefaultLoadedFieldList() {
 template <const auto& class_loader_v_, const auto& class_v_, size_t I>
 class FieldRef {
  public:
-  using ValueRaw =
-      ValueRaw_t<std::decay_t<decltype(std::get<I>(class_v_.fields_))>>;
+  using Raw = Raw_t<std::decay_t<decltype(std::get<I>(class_v_.fields_))>>;
   using FieldSelectionT = FieldSelection<class_loader_v_, class_v_, I>;
 
   explicit FieldRef(jclass class_ref, jobject object_ref)
@@ -4220,9 +4248,9 @@ class FieldRef {
   FieldRef(const FieldRef&&) = delete;
   void operator=(const FieldRef&) = delete;
 
-  static auto& GetField() { return std::get<I>(class_v_.fields_); }
+  static constexpr auto& GetField() { return std::get<I>(class_v_.fields_); }
 
-  static std::string_view GetFieldSignature() {
+  static constexpr std::string_view GetFieldSignature() {
     return FieldSelection<class_loader_v_, class_v_, I>::GetSignature();
   }
 
@@ -4240,13 +4268,19 @@ class FieldRef {
     });
   }
 
-  ValueRaw Get() {
-    return FieldHelper<ValueRaw>::GetValue(object_ref_, GetFieldID(class_ref_));
+  using ProxyForField = Proxy_t<Raw>;
+  using CDeclForField = CDecl_t<Raw>;
+
+  Return_t<Raw, FieldSelectionT> Get() {
+    return FieldHelper<CDeclForField>::GetValue(object_ref_,
+                                                GetFieldID(class_ref_));
   }
 
-  void Set(ValueRaw&& value) {
-    FieldHelper<ValueRaw>::SetValue(object_ref_, GetFieldID(class_ref_),
-                                    std::forward<ValueRaw>(value));
+  template <typename T>
+  void Set(T&& value) {
+    FieldHelper<CDecl_t<Raw>>::SetValue(
+        object_ref_, GetFieldID(class_ref_),
+        ProxyForField::ProxyAsArg(std::forward<T>(value)));
   }
 
  private:
@@ -4401,12 +4435,11 @@ struct MethodSelection {
 template <typename MethodSelectionT, typename OverloadSelectionT>
 struct ReturnSelection {
   using RawValT = ArrayStrip_t<
-      ReturnRaw_t<std::decay_t<decltype(OverloadSelectionT::GetReturn())>>>;
+      Raw_t<std::decay_t<decltype(OverloadSelectionT::GetReturn())>>>;
 
   static inline constexpr std::size_t ComputeRank() {
     if constexpr (Rankifier<RawValT>::kComputableRank) {
-      return Rankifier<RawValT>::Rank(
-          OverloadSelectionT::GetReturn().return_raw_);
+      return Rankifier<RawValT>::Rank(OverloadSelectionT::GetReturn().raw_);
     } else {
       return 0;
     }
@@ -4415,7 +4448,7 @@ struct ReturnSelection {
   static constexpr std::size_t kRank = ComputeRank();
 
   static constexpr inline auto& Val() {
-    return OverloadSelectionT::GetReturn().return_raw_;
+    return OverloadSelectionT::GetReturn().raw_;
   }
 };
 
@@ -4456,12 +4489,11 @@ struct OverloadSelection {
   }
 
   // CDecl is the type used by the C API for a return type.
-  using CDecl = CDecl_t<ReturnRaw_t<std::decay_t<decltype(GetReturn())>>>;
+  using CDecl = CDecl_t<Raw_t<std::decay_t<decltype(GetReturn())>>>;
 
   // Return type is the richly decorated type returned (e.g LocalArray).
   using ReturnProxied =
-      Return_t<ReturnRaw_t<std::decay_t<decltype(GetReturn())>>,
-               OverloadSelection>;
+      Return_t<Raw_t<std::decay_t<decltype(GetReturn())>>, OverloadSelection>;
 
   // Proxy every parameter argument as an argument that can be shown in a
   // function prototype.
