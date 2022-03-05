@@ -258,7 +258,7 @@ All JNI types have corresponding `JNI Bind` types. These types are used differen
 | jarray       | jni::Array<T>                | jarray, jni::LocalArray, , jlongArray             | jni::LocalArray<T>                             |
 |              |                              | jbooleanArray, jbyteArray, jcharArray,            |                                                |
 |              |                              | jfloatArray, jintArray                            |                                                |
-| jobjectarray | jni::Array<jobject, kClass>  | jarray, jni::LocalArray, , jlongArray             | jni::LocalArray<T>                             |
+| jobjectarray | jni::Array<jobject, kClass>  | jarray, jni::LocalArray<jobject, kClass>,         | jni::LocalArray<T>                             |
 
 More conversions will be added later and this table will be updated as they are. In particular `wchar` views into jstrings will offer a zero copy view into java strings.  Also, `jarray` will support `std::span` views for its underlying types.
 
@@ -365,7 +365,69 @@ Sample [method_test_jni.cc](javatests/com/jnibind/test/method_test_jni.cc), [Met
 <a name="arrays"></a>
 ## Arrays
 
-*Documentation coming soon!*
+Java arrays can be defined in JNI Bind and offer similar mechanics as you would expect with other types.
+
+[`jni:Array<type, possible_class_definition>`](implementation/array.h) provides the static definition, which is referenced by [`LocalArray<type, possible_class_definition>`](implementation/local_array.h) which provides [`Get`/`Set`](implementation/array_ref.h) methods, or [`ArrayView`](implementation/array_ref.h) via `Pin(bool copy_on_completion=true)`. [`ArrayView`](implementation/array_ref.h) has a `ptr()` method which itself can be used to modify underlying values (to be copied back out when `ArrayView` falls off scope).
+
+```cpp
+LocalArray<jint> arr{3}; // {0, 0, 0}
+// LocalArray<jint> int_arr{1,2,3}; // coming soon
+LocalArray<jint> another_valid_arr {some_jarray_val};
+
+{
+  // Value is written when it falls off scope
+  ArrayView view = arr.Pin(/*copy_on_completion=true*/);
+  view.ptr()[0] = 123;
+}
+
+// You can also use helper methods Set/Get.
+arr.Get(0); // 123
+arr.Set(1, 456);
+
+```
+
+If `copy_on_completion` is `false`, values will *not* be copied back when the scope of `ArrayView` falls off scope (otherwise it will). This can be used as an optimisation when you only intend to read from the array.
+
+Arrays can be used in conjunction with fields and methods as you would expect:
+
+```cpp
+  static constexpr Class kClass{
+    "com/google/SupportsStrings",
+    Method{ "Foo", Array{int{}} },
+    Field { "intArrayField", Array<int>{} },
+    // , Field { "intArrayArrayField", Array{ Array { int{} } }  // coming soon
+};
+
+LocalObject<kClass> obj{};
+LocalArray<int> arr = obj["intArrayField"];
+```
+
+Arrays can be used in conjunction with primitive types or classes, but if they are used with classes they will always consist of `LocalObjects` (reasoning about a `LocalArray` with a `GlobalObject` is too confusing).
+
+```cpp
+static constexpr Class kClass{
+    "com/google/SupportsStrings",
+    Field { "objectArrayField", Array<jobject, kClass>{} }
+};
+
+LocalArray<jint> int_arr{1,2,3};
+
+// Arrays work just like any other type in JNI Bind.
+obj("Foo", 1);
+obj("Foo", "arg");
+obj("Foo", "arg", jstring{nullptr});
+```
+
+`LocalArray` has two constructors, one for construction from an existing `jarray` object (similar to `LocalObject`) and another that builds a new array full of zero initialised objects. For primitives, simply indicate the size, for object arrays, provide a default object that will be used to fill the array.
+
+```cpp
+    LocalArray<int> local_int_array{3};
+    LocalArray<jobject, kClass> local_obj_array{5, LocalObject<kClass>{}};
+```
+
+*Arrays of arrays, while legal, are not currently supported. They will be supported in the future.*
+
+Sample [local_array.h](implementation/local_array_test.cc), [array_test_jni.cc](javatests/com/jnibind/test/array_test_jni.cc), [ArrayTest.java](javatests/com/jnibind/test/ArrayTest.java).
 
 <a name="upcoming-features"></a>
 ## Upcoming Features
