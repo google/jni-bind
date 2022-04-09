@@ -55,6 +55,7 @@ template <typename Key_>
 struct ProxyBase {
   using Key = Key_;
 
+  template <typename = void>
   using CDecl = Key_;
 
   template <typename>
@@ -208,6 +209,7 @@ struct Proxy<JArrayType,
       std::tuple<jarray, jbooleanArray, jbyteArray, jcharArray, jfloatArray,
                  jintArray, jlongArray, ArrayTag, RefBaseTag<jarray>>;
 
+  template <typename Overload>
   using CDecl = jobject;
 
   template <typename Overload>
@@ -235,6 +237,7 @@ struct Proxy<
   using AsDecl = std::tuple<ObjectArrayTag>;
   using AsArg =
       std::tuple<jobjectArray, ObjectArrayTag, RefBaseTag<jobjectArray>>;
+  template <typename = void>
   using CDecl = jobjectArray;
 
   template <typename Overload>

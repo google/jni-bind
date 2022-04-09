@@ -101,7 +101,8 @@ struct ProxyHelper {
 
   using Proxy_t = Proxy<Index>;
 
-  using CDecl = typename Proxy_t::CDecl;
+  template <typename Overload = void>
+  using CDecl = typename Proxy_t::template CDecl<Overload>;
 
   template <typename Overload>
   using AsReturn_t = typename Proxy_t::template AsReturn<Overload>;
@@ -119,8 +120,8 @@ using Proxy_t = typename ProxyHelper<T>::Proxy_t;
 template <typename T>
 using Index_t = typename ProxyHelper<T>::Index;
 
-template <typename T>
-using CDecl_t = typename ProxyHelper<T>::CDecl;
+template <typename T, typename Overload = void>
+using CDecl_t = typename ProxyHelper<T>::template CDecl<Overload>;
 
 template <typename T, typename OverloadSelection>
 using Return_t =

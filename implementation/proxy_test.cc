@@ -40,41 +40,41 @@ static constexpr Class kClass2{
 static constexpr ClassLoader kClassLoader{kDefaultClassLoader,
                                           SupportedClassSet{kClass}};
 
-// CDecls of primitive types.
-static_assert(std::is_same_v<Proxy_t<void>::CDecl, void>);
-static_assert(std::is_same_v<Proxy_t<jint>::CDecl, jint>);
-static_assert(std::is_same_v<Proxy_t<jfloat>::CDecl, jfloat>);
-static_assert(std::is_same_v<Proxy_t<jbyte>::CDecl, jbyte>);
-static_assert(std::is_same_v<Proxy_t<jchar>::CDecl, jchar>);
-static_assert(std::is_same_v<Proxy_t<jshort>::CDecl, jshort>);
-static_assert(std::is_same_v<Proxy_t<jlong>::CDecl, jlong>);
-static_assert(std::is_same_v<Proxy_t<jdouble>::CDecl, jdouble>);
+////////////////////////////////////////////////////////////////////////////////
+// Primitive Tests.
+////////////////////////////////////////////////////////////////////////////////
+// static_assert(std::is_same_v<Proxy_t<void>::CDecl, void>);
+static_assert(std::is_same_v<Proxy_t<void>::CDecl<void>, void>);
+static_assert(std::is_same_v<Proxy_t<jint>::CDecl<void>, jint>);
+static_assert(std::is_same_v<Proxy_t<jfloat>::CDecl<void>, jfloat>);
+static_assert(std::is_same_v<Proxy_t<jbyte>::CDecl<void>, jbyte>);
+static_assert(std::is_same_v<Proxy_t<jchar>::CDecl<void>, jchar>);
+static_assert(std::is_same_v<Proxy_t<jshort>::CDecl<void>, jshort>);
+static_assert(std::is_same_v<Proxy_t<jlong>::CDecl<void>, jlong>);
+static_assert(std::is_same_v<Proxy_t<jdouble>::CDecl<void>, jdouble>);
 
-// CDecls of non-primitive types: jstrings.
-static_assert(std::is_same_v<Proxy_t<const char*>::CDecl, jstring>);
+////////////////////////////////////////////////////////////////////////////////
+// String Tests.
+////////////////////////////////////////////////////////////////////////////////
+static_assert(std::is_same_v<Proxy_t<const char*>::CDecl<void>, jstring>);
 static_assert(std::is_same_v<decltype("Foo"), char const (&)[4]>);
-static_assert(std::is_same_v<Proxy_t<const char (&)[4]>::CDecl, jstring>);
+static_assert(std::is_same_v<Proxy_t<const char (&)[4]>::CDecl<void>, jstring>);
 
-static_assert(std::is_same_v<Proxy_t<const char*>::CDecl, jstring>);
-static_assert(std::is_same_v<Proxy_t<std::string_view>::CDecl, jstring>);
-static_assert(std::is_same_v<Proxy_t<std::string>::CDecl, jstring>);
+static_assert(std::is_same_v<Proxy_t<const char*>::CDecl<void>, jstring>);
+static_assert(std::is_same_v<Proxy_t<std::string_view>::CDecl<void>, jstring>);
+static_assert(std::is_same_v<Proxy_t<std::string>::CDecl<void>, jstring>);
 
-// CDecls of non-primitive types: jarrays.
-static_assert(std::is_same_v<Proxy_t<jarray>::CDecl, jobject>);
-static_assert(std::is_same_v<Proxy_t<ArrayTag>::CDecl, jobject>);
-
-static_assert(std::is_same_v<Index_t<jarray>, jarray>);
-static_assert(std::is_same_v<Index_t<ArrayTag>, jarray>);
-static_assert(std::is_same_v<Index_t<RefBaseTag<jarray>>, jarray>);
-
-// CDecls of non-primitive types: jobjects.
+////////////////////////////////////////////////////////////////////////////////
+// Object Tests.
+////////////////////////////////////////////////////////////////////////////////
 void Foo() {
   LocalObject<kClass> obj;
 
-  static_assert(std::is_same_v<Proxy_t<decltype(kClass)>::CDecl, jobject>);
-  static_assert(std::is_same_v<Proxy_t<decltype(obj)>::CDecl, jobject>);
   static_assert(
-      std::is_same_v<Proxy_t<LocalObject<kClass, kClassLoader>>::CDecl,
+      std::is_same_v<Proxy_t<decltype(kClass)>::CDecl<void>, jobject>);
+  static_assert(std::is_same_v<Proxy_t<decltype(obj)>::CDecl<void>, jobject>);
+  static_assert(
+      std::is_same_v<Proxy_t<LocalObject<kClass, kClassLoader>>::CDecl<void>,
                      jobject>);
 }
 
