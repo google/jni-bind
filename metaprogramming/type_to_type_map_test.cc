@@ -14,6 +14,8 @@
 
 #include "type_to_type_map.h"
 
+#include <tuple>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -26,13 +28,18 @@ struct D {};
 struct E {};
 struct F {};
 
-using jni::metaprogramming::TypeToTypeMap;
-using jni::metaprogramming::TypeToTypeMapFromKeyValues_t;
-using jni::metaprogramming::TypeToTypeMapQuery_t;
+using ::jni::metaprogramming::TypeToTypeMap;
+using ::jni::metaprogramming::TypeToTypeMap_Keys_t;
+using ::jni::metaprogramming::TypeToTypeMap_Values_t;
+using ::jni::metaprogramming::TypeToTypeMapFromKeyValues_t;
+using ::jni::metaprogramming::TypeToTypeMapQuery_t;
 
-// Regular simple queries.
-static_assert(std::is_same_v<
-              TypeToTypeMapQuery_t<TypeToTypeMapFromKeyValues_t<A, B>, A>, B>);
+// Keys and values are expected.
+using MapUnderTest = TypeToTypeMapFromKeyValues_t<A, B, C, D, E, F>;
+static_assert(
+    std::is_same_v<std::tuple<A, C, E>, TypeToTypeMap_Keys_t<MapUnderTest>>);
+static_assert(
+    std::is_same_v<std::tuple<B, D, F>, TypeToTypeMap_Values_t<MapUnderTest>>);
 
 // Simple queries from basic non-trivial maps.
 using TestMap1 = TypeToTypeMapFromKeyValues_t<A, B, C, D>;

@@ -678,6 +678,7 @@ cc_library(
     hdrs = ["type_to_type_map.h"],
     deps = [
         ":concatenate",
+        ":contains",
         ":even_odd",
         ":find_idx_of_val",
         ":same",

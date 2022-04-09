@@ -20,6 +20,7 @@
 #include <tuple>
 
 #include "concatenate.h"
+#include "contains.h"
 #include "even_odd.h"
 #include "find_idx_of_val.h"
 #include "same.h"
@@ -33,18 +34,26 @@ namespace jni::metaprogramming {
 template <typename Tup1, typename Tup2>
 struct TypeToTypeMap {};
 
-template <typename... Keys, typename... Values>
-struct TypeToTypeMap<std::tuple<Keys...>, std::tuple<Values...>> {
-  static_assert(sizeof...(Keys) == sizeof...(Values),
+template <typename... Keys_, typename... Values_>
+struct TypeToTypeMap<std::tuple<Keys_...>, std::tuple<Values_...>> {
+  static_assert(sizeof...(Keys_) == sizeof...(Values_),
                 "Keys must be an equal size to the value.");
 
-  using Invert = TypeToTypeMap<std::tuple<Values...>, std::tuple<Keys...>>;
+  using Keys = std::tuple<Keys_...>;
+  using Values = std::tuple<Values_...>;
+  using Invert = TypeToTypeMap<std::tuple<Values_...>, std::tuple<Keys_...>>;
 
   template <typename Comparator>
   using type =
-      TypeOfNthElement_t<FindIdxOfValWithComparator_idx<Comparator, Keys...>,
-                         Values...>;
+      TypeOfNthElement_t<FindIdxOfValWithComparator_idx<Comparator, Keys_...>,
+                         Values_...>;
 };
+
+template <typename TypeToTypeMap>
+using TypeToTypeMap_Keys_t = typename TypeToTypeMap::Keys;
+
+template <typename TypeToTypeMap>
+using TypeToTypeMap_Values_t = typename TypeToTypeMap::Values;
 
 // Metafunction to invert the map from keys->vals to vals->keys.
 // Note, keys do not need to be unique.
