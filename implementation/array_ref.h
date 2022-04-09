@@ -17,6 +17,7 @@
 #define JNI_BIND_ARRAY_REF_H_
 
 #include "implementation/array.h"
+#include "implementation/array_view.h"
 #include "implementation/class.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/jni_array_helper.h"
@@ -25,41 +26,19 @@
 
 namespace jni {
 
+struct ArrayRefPrimitiveBaseTag {};
+
+// Tag for non object array ref like tags (e.g. jintArray but not jobjectArray).
 template <typename SpanType>
-class ArrayView {
- public:
-  ArrayView(ArrayView&&) = delete;
-  ArrayView(const ArrayView&) = delete;
+struct ArrayRefPrimitiveTag : ArrayRefPrimitiveBaseTag {};
 
-  ArrayView(jarray array, bool copy_on_completion)
-      : array_(array),
-        get_array_elements_result_(
-            JniArrayHelper<SpanType>::GetArrayElements(array)),
-        copy_on_completion_(copy_on_completion) {}
-
-  ~ArrayView() {
-    JniArrayHelper<SpanType>::ReleaseArrayElements(
-        array_, get_array_elements_result_.ptr_, copy_on_completion_);
-  }
-
-  SpanType* ptr() { return get_array_elements_result_.ptr_; }
-
- protected:
-  const jarray array_;
-  const GetArrayElementsResult<SpanType> get_array_elements_result_;
-  const bool copy_on_completion_;
-};
-
-// This CTAD guide is required for materialising new ArrayViews from |Pin()|
-// calls as move and copy constructors are deleted.
-template <typename SpanType>
-ArrayView(ArrayView<SpanType>&&) -> ArrayView<SpanType>;
-
+// |SpanType| is primitive types like jint, jfloat, etc.
 template <typename SpanType, const auto& class_v_, const auto& class_loader_v_,
           const auto& jvm_v_>
-class ArrayRef : public RefBaseTag<jarray> {
+class ArrayRef : public RefBaseTag<RegularToArrayTypeMap_t<SpanType>>,
+                 ArrayRefPrimitiveTag<SpanType> {
  public:
-  using Base = RefBaseTag<jarray>;
+  using Base = RefBaseTag<RegularToArrayTypeMap_t<SpanType>>;
   using Base::Base;
 
   ArrayView<SpanType> Pin(bool copy_on_completion = true) {

@@ -32,6 +32,7 @@
 #include "ref_base.h"
 #include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/proxy.h"
 #include "jni_dep.h"
 #include "metaprogramming/contains.h"
 
@@ -40,8 +41,8 @@ namespace jni {
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class LocalObject;
 
-template <typename SpanType, const auto& class_v_, const auto& class_loader_v_,
-          const auto& jvm_v_>
+template <typename SpanType, std::size_t kRank, const auto& class_v_,
+          const auto& class_loader_v_, const auto& jvm_v_>
 class LocalArray;
 
 template <typename Overload>
@@ -93,12 +94,6 @@ struct ProxyBase {
 //   |class_loader_v| which can allow for additional decoration.
 template <typename CDecl, typename Enable>
 struct Proxy : public ProxyBase<CDecl> {};
-
-static_assert(std::is_same_v<jboolean, unsigned char>);
-static_assert(std::is_same_v<jint, int>);
-static_assert(std::is_same_v<jfloat, float>);
-// static_assert(std::is_same_v<jlong, long>);  // not true on all platforms.
-static_assert(std::is_same_v<jdouble, double>);
 
 template <typename VoidType>
 struct Proxy<VoidType,
@@ -198,19 +193,20 @@ struct Proxy<JObject,
   };
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Array Proxy Definitions.
+////////////////////////////////////////////////////////////////////////////////
+
+// Proxy for arrays of arrays (e.g. Array{Array{int}}).
 template <typename JArrayType>
 struct Proxy<JArrayType,
              typename std::enable_if_t<std::is_same_v<JArrayType, jarray>>>
     : public ProxyBase<JArrayType> {
-  using AsDecl = std::tuple<ArrayTag>;
-  // TODO(b/143908983): Constrain input types to the correct array type.  This
-  // is overly permissive and will allow incorrect types to be passed.
-  using AsArg =
-      std::tuple<jarray, jbooleanArray, jbyteArray, jcharArray, jfloatArray,
-                 jintArray, jlongArray, ArrayTag, RefBaseTag<jarray>>;
+  using AsDecl = std::tuple<ArrayTag<jarray>>;
+  using AsArg = std::tuple<jarray, ArrayTag<jarray>, RefBaseTag<jarray>>;
 
   template <typename Overload>
-  using CDecl = jobject;
+  using CDecl = typename ArrayHelper<Overload>::StrippedCDecl;
 
   template <typename Overload>
   using AsReturn = typename ArrayHelper<Overload>::AsReturn;
@@ -229,14 +225,52 @@ struct Proxy<JArrayType,
   };
 };
 
+template <typename SpanType>
+struct ArrayRefPrimitiveTag;
+
+// Primitive array like types such as jintArray, jfloatArray.
+template <typename JArrayType>
+struct Proxy<JArrayType,
+             typename std::enable_if_t<kIsPrimitiveArrayType<JArrayType>>>
+    : public ProxyBase<JArrayType> {
+  // Non-array primitive type (e.g. jintArray => jint).
+  using CDeclOfPrimitiveType = ArrayToRegularTypeMap_t<JArrayType>;
+
+  using AsDecl = std::tuple<ArrayTag<JArrayType>>;
+  using AsArg =
+      std::tuple<JArrayType, RefBaseTag<JArrayType>, ArrayTag<JArrayType>,
+                 ArrayRefPrimitiveTag<CDeclOfPrimitiveType>>;
+
+  template <typename = void>
+  using CDecl = RegularToArrayTypeMap_t<CDeclOfPrimitiveType>;
+
+  template <typename Overload>
+  using AsReturn = typename ArrayHelper<Overload>::AsReturn;
+
+  static JArrayType ProxyAsArg(JArrayType arr) { return arr; };
+
+  template <typename T>
+  static JArrayType ProxyAsArg(T& t) {
+    return JArrayType{t};
+  };
+
+  template <typename T, typename = std::enable_if_t<
+                            std::is_base_of_v<RefBaseTag<JArrayType>, T>>>
+  static JArrayType ProxyAsArg(T&& t) {
+    return t.Release();
+  };
+};
+
+// Arrays of objects.
 template <typename JObjectArrayType>
 struct Proxy<
     JObjectArrayType,
     typename std::enable_if_t<std::is_same_v<JObjectArrayType, jobjectArray>>>
     : public ProxyBase<JObjectArrayType> {
-  using AsDecl = std::tuple<ObjectArrayTag>;
-  using AsArg =
-      std::tuple<jobjectArray, ObjectArrayTag, RefBaseTag<jobjectArray>>;
+  using AsDecl = std::tuple<ArrayTag<jobjectArray>>;
+  using AsArg = std::tuple<jobjectArray, ArrayTag<jobjectArray>,
+                           RefBaseTag<jobjectArray>>;
+
   template <typename = void>
   using CDecl = jobjectArray;
 
@@ -260,10 +294,33 @@ struct Proxy<
 // This must be defined outside of Proxy so implicit definition doesn't occur.
 template <typename Overload>
 struct ArrayHelper {
-  static constexpr Array kArray{Overload::GetReturn().raw_};
-  using FullRawReturnT = std::decay_t<decltype(kArray.raw_type_)>;
+  template <const auto& t>
+  struct Helper {
+    static constexpr auto val = FullArrayStripV(t.raw_type_);
 
-  using AsReturn = decltype(LocalArrayBuildFromArray<kArray>());
+    using StrippedCDecl = CDecl_t<std::decay_t<decltype(val)>>;
+    using ConvertedCDecl = RegularToArrayTypeMap_t<StrippedCDecl>;
+  };
+
+  template <const auto& array_val>
+  static constexpr auto LocalArrayBuildFromArray() {
+    using RawT = std::decay_t<ArrayStrip_t<decltype(array_val.raw_type_)>>;
+    constexpr std::size_t kRank =
+        Rankifier<decltype(array_val)>::Rank(array_val);
+
+    // TODO(b/143908983): Support multi-dimensional arrays.
+    if constexpr (!std::is_same_v<CDecl_t<RawT>, jobject>) {
+      return LocalArray<RawT, kRank, kNoClassSpecified>{nullptr};
+    } else {
+      return LocalArray<jobject, kRank, Helper<array_val>::val>{
+          jobjectArray{nullptr}};
+    }
+  }
+
+  static constexpr auto kVal{Overload::GetReturn().raw_};
+
+  using StrippedCDecl = typename Helper<kVal>::ConvertedCDecl;
+  using AsReturn = decltype(LocalArrayBuildFromArray<kVal>());
 };
 
 }  // namespace jni

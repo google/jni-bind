@@ -20,27 +20,14 @@
 namespace {
 
 using jni::Class;
-using jni::GlobalObject;
-using jni::LocalObject;
 using jni::test::JniTest;
 
-TEST_F(JniTest, Class_CallsNewObjectForConstructor) {
-  static constexpr Class c{"jcg/ARCore"};
+static constexpr Class k_class_one{"classOne"};
+static constexpr Class k_class_one_prime{"classOne"};
+static constexpr Class k_class_two{"classTwo"};
 
-  EXPECT_CALL(*env_, NewObjectV).Times(2);
-  LocalObject<c> local{};
-  GlobalObject<c> global{};
-}
-
-TEST_F(JniTest, Class_DoesntCallNewObjectForWrap) {
-  static constexpr Class c{"jcg/ARCore"};
-  const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
-
-  EXPECT_CALL(*env_, NewObjectV).Times(0);
-  EXPECT_CALL(*env_, NewObjectA).Times(0);
-  EXPECT_CALL(*env_, NewObjectArray).Times(0);
-  GlobalObject<c> global_object{object};
-  LocalObject<c> local_object{object};
-}
+static_assert(k_class_one == k_class_one);
+static_assert(k_class_one == k_class_one_prime);
+static_assert(!(k_class_two == k_class_one_prime));
 
 }  // namespace

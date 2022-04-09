@@ -105,7 +105,7 @@ struct JniMethodInvoke<jstring, false> {
 // Array Types.
 ////////////////////////////////////////////////////////////////////////////////
 template <>
-struct JniMethodInvoke<jboolean, true> {
+struct JniMethodInvoke<jbooleanArray, true> {
   template <typename... Ts>
   static jbooleanArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
     return static_cast<jbooleanArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
@@ -114,7 +114,7 @@ struct JniMethodInvoke<jboolean, true> {
 };
 
 template <>
-struct JniMethodInvoke<jbyte, true> {
+struct JniMethodInvoke<jbyteArray, true> {
   template <typename... Ts>
   static jbyteArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
     return static_cast<jbyteArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
@@ -123,7 +123,7 @@ struct JniMethodInvoke<jbyte, true> {
 };
 
 template <>
-struct JniMethodInvoke<jchar, true> {
+struct JniMethodInvoke<jcharArray, true> {
   template <typename... Ts>
   static jcharArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
     return static_cast<jcharArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
@@ -141,7 +141,7 @@ struct JniMethodInvoke<jshortArray, true> {
 };
 
 template <>
-struct JniMethodInvoke<jint, true> {
+struct JniMethodInvoke<jintArray, true> {
   template <typename... Ts>
   static jintArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
     return static_cast<jintArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
@@ -150,7 +150,7 @@ struct JniMethodInvoke<jint, true> {
 };
 
 template <>
-struct JniMethodInvoke<jfloat, true> {
+struct JniMethodInvoke<jfloatArray, true> {
   template <typename... Ts>
   static jfloatArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
     return static_cast<jfloatArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
@@ -159,19 +159,19 @@ struct JniMethodInvoke<jfloat, true> {
 };
 
 template <>
-struct JniMethodInvoke<jlong, true> {
+struct JniMethodInvoke<jdoubleArray, true> {
   template <typename... Ts>
-  static jlongArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return static_cast<jlongArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+  static jdoubleArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jdoubleArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
 };
 
 template <>
-struct JniMethodInvoke<jobject, true> {
+struct JniMethodInvoke<jlongArray, true> {
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+  static jlongArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jlongArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
 };

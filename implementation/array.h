@@ -22,24 +22,102 @@
 #include "implementation/object.h"
 #include "implementation/return.h"
 #include "jni_dep.h"
+#include "metaprogramming/contains.h"
+#include "metaprogramming/type_to_type_map.h"
 
 namespace jni {
 
-// Correlates to Proxy<jarray>.
+template <typename T>
 struct ArrayTag {};
 
-// Correlates to Proxy<jobjectArray>.
-struct ObjectArrayTag {};
+template <typename T>
+static constexpr bool kIsArrayType =
+    std::is_base_of_v<ArrayTag<jbyteArray>, T> ||
+    std::is_base_of_v<ArrayTag<jcharArray>, T> ||
+    std::is_base_of_v<ArrayTag<jshortArray>, T> ||
+    std::is_base_of_v<ArrayTag<jintArray>, T> ||
+    std::is_base_of_v<ArrayTag<jfloatArray>, T> ||
+    std::is_base_of_v<ArrayTag<jdoubleArray>, T> ||
+    std::is_base_of_v<ArrayTag<jlongArray>, T> ||
+    std::is_base_of_v<ArrayTag<jbooleanArray>, T> ||
+    std::is_base_of_v<ArrayTag<jobjectArray>, T> ||
+    std::is_base_of_v<ArrayTag<jarray>, T>;
+
+// Primitive Keys.
+using PrimitiveKeys =
+    std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
+               jfloatArray, jdoubleArray, jbooleanArray>;
+
+template <typename T>
+static constexpr bool kIsPrimitiveArrayType =
+    metaprogramming::TupContains_v<T, PrimitiveKeys>;
+
+// Simple type for proxying types used in the API (e.g. jint) to their
+// corresponding array type (e.g. jintarray). Only use the former type when
+// using JNI Bind (e.g. LocalArray<jint>, not LocalArray<jintArray>).
+using RegularToArrayTypeMap = metaprogramming::TypeToTypeMap<
+    std::tuple<jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jboolean,
+               jobject, jarray>,
+    std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
+               jfloatArray, jdoubleArray, jbooleanArray, jobjectArray, jarray>>;
+
+// Given a type, returns the corresponding array type (e.g. jint => jintArray).
+template <typename T>
+using RegularToArrayTypeMap_t =
+    metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap, T>;
+
+template <typename T>
+using ArrayToRegularTypeMap_t =
+    metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap::Invert, T>;
 
 template <typename RawType>
 struct Array;
 
-// Never instantiated.
-template <typename RawType, bool HoldsObject>
-struct ArrayImpl {};
-
+////////////////////////////////////////////////////////////////////////////////
+// Array Non-Object Implementation.
+////////////////////////////////////////////////////////////////////////////////
 template <typename RawType>
-struct ArrayImpl<RawType, false> : public ArrayTag {
+struct ArrayNonObjectTypeImpl {
+  RawType raw_type_;
+
+  constexpr ArrayNonObjectTypeImpl(RawType raw_type) : raw_type_(raw_type) {}
+
+  template <typename RawTypeRhs>
+  constexpr bool operator==(const Array<RawTypeRhs>& rhs) const {
+    if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
+      return (raw_type_ == rhs.raw_type_);
+    }
+    return false;
+  }
+
+  template <typename RawTypeRhs>
+  constexpr bool operator!=(const Array<RawTypeRhs>& rhs) const {
+    return !(*this == rhs);
+  }
+};
+
+// Primitive array implementaiton.
+template <typename T, bool HoldsObject>
+struct ArrayImpl : public ArrayNonObjectTypeImpl<T>,
+                   ArrayTag<RegularToArrayTypeMap_t<T>> {
+ public:
+  using ArrayNonObjectTypeImpl<T>::ArrayNonObjectTypeImpl;
+};
+
+// Arrays of arrays are nominally special in that they index as jarrays but they
+// will CDecl as their most base type.
+template <typename T>
+struct ArrayImpl<Array<T>, false> : public ArrayNonObjectTypeImpl<Array<T>>,
+                                    ArrayTag<jarray> {
+ public:
+  using ArrayNonObjectTypeImpl<Array<T>>::ArrayNonObjectTypeImpl;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Array Object Implementation.
+////////////////////////////////////////////////////////////////////////////////
+template <typename RawType>
+struct ArrayImpl<RawType, true> : public ArrayTag<jobjectArray> {
   RawType raw_type_;
 
   constexpr ArrayImpl(RawType raw_type) : raw_type_(raw_type) {}
@@ -58,26 +136,8 @@ struct ArrayImpl<RawType, false> : public ArrayTag {
   }
 };
 
-template <typename RawType>
-struct ArrayImpl<RawType, true> : public ObjectArrayTag {
-  RawType raw_type_;
-
-  constexpr ArrayImpl(RawType raw_type) : raw_type_(raw_type) {}
-
-  template <typename RawTypeRhs>
-  constexpr bool operator==(const Array<RawTypeRhs>& rhs) const {
-    if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
-      return (raw_type_ == rhs.raw_type_);
-    }
-    return false;
-  }
-
-  template <typename RawTypeRhs>
-  constexpr bool operator!=(const Array<RawTypeRhs>& rhs) const {
-    return !(*this == rhs);
-  }
-};
-
+// This type correlates to those used in declarations,
+//   e.g. Field { Array { Array { jint {} } } }.
 template <typename RawType>
 struct Array : public ArrayImpl<RawType, std::is_base_of_v<Object, RawType>> {
   constexpr Array(RawType raw_type)
@@ -91,7 +151,7 @@ template <typename RawType>
 Array(Array<RawType>) -> Array<Array<RawType>>;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Rank + Type Strip Utilities.
+// Rank Utilities.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct Rankifier {
@@ -99,10 +159,7 @@ struct Rankifier {
 
   template <typename ArrayT>
   static inline constexpr std::size_t Rank(const ArrayT& maybe_array) {
-    if constexpr (std::is_base_of_v<ArrayTag,
-                                    std::decay_t<decltype(maybe_array)>> ||
-                  std::is_base_of_v<ObjectArrayTag,
-                                    std::decay_t<decltype(maybe_array)>>) {
+    if constexpr (kIsArrayType<std::decay_t<decltype(maybe_array)>>) {
       return Rank(maybe_array.raw_type_) + 1;
     } else {
       return 0;
@@ -120,8 +177,11 @@ struct Rankifier<void> {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Strip Utilities.
 // Takes an native array like type, and emits the innermost type.
 // e.g. {Array<int>, Array{Array<int>}, Array{Array{Array<int>}} } => int.
+////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct ArrayStrip {
   using type = T;
@@ -134,6 +194,37 @@ template <typename T>
 struct ArrayStrip<Array<T>> {
   using type = ArrayStrip_t<T>;
 };
+
+template <typename T>
+constexpr auto FullArrayStripV(const T& val) {
+  if constexpr (kIsArrayType<std::decay_t<decltype(val)>>) {
+    return FullArrayStripV(val.raw_type_);
+  } else {
+    return val;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Array Build from Span + Rank.
+////////////////////////////////////////////////////////////////////////////////
+template <typename RawType, std::size_t kRank>
+struct ArrayFromRank {
+  // Deferred
+  template <std::size_t kRecursedRank>
+  struct Helper {
+    using type = Array<typename ArrayFromRank<RawType, kRank - 1>::type>;
+  };
+
+  template <>
+  struct Helper<0> {
+    using type = RawType;
+  };
+
+  using type = typename Helper<kRank>::type;
+};
+
+template <typename RawType, std::size_t kRank>
+using ArrayFromRank_t = typename ArrayFromRank<RawType, kRank>::type;
 
 }  // namespace jni
 

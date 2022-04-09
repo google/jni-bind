@@ -56,11 +56,11 @@ Java_com_jnibind_test_ArrayTest_jniTearDown(JavaVM* pjvm, void* reserved) {
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeBooleanTests(
-    JNIEnv* env, jclass, jobject test_fixture, jintArray boolean_array) {
+    JNIEnv* env, jclass, jobject test_fixture, jbooleanArray boolean_array) {
   LocalObject<kArrayTest> rjni_test_helper{test_fixture};
 
   // Simple lvalue pass through works as expected.
-  LocalArray<jint> local_arr{boolean_array};
+  LocalArray<jboolean> local_arr{boolean_array};
   rjni_test_helper("rJniBooleanArray", false, local_arr);
 
   // Simple rvalue pass through works as expected.
@@ -296,17 +296,17 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeObjectTests(
   LocalObject<kArrayTest> rjni_test_helper{test_fixture};
 
   // Simple lvalue pass through works as expected.
-  LocalArray<jobject, kObjectTestHelperClass> local_arr{object_array};
+  LocalArray<jobject, 1, kObjectTestHelperClass> local_arr{object_array};
   rjni_test_helper("rJniObjectArray", 0, local_arr);
 
   // Simple rvalue pass through works as expected.
   rjni_test_helper("rJniObjectArray", 5,
-                   LocalArray<jobject, kObjectTestHelperClass>{
+                   LocalArray<jobject, 1, kObjectTestHelperClass>{
                        1, LocalObject<kObjectTestHelperClass>{5, 5, 5}});
 
   // Building a new array, and setting all the values by hand works.
   LocalObject<kObjectTestHelperClass> obj{0, 0, 0};
-  LocalArray<jobject, kObjectTestHelperClass> new_array{8, obj};
+  LocalArray<jobject, 1, kObjectTestHelperClass> new_array{8, obj};
   {
     for (int i = 0; i < new_array.Length(); ++i) {
       new_array.Set(

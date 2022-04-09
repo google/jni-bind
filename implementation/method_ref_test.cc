@@ -280,7 +280,7 @@ TEST_F(JniTest, MethodRef_SupportsArrays) {
 
   const jobject fake_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
 
-  jni::LocalArray<jobject, kClass> local_array{nullptr};
+  jni::LocalArray<jobject, 1, kClass> local_array{nullptr};
   jni::LocalObject<class_under_test> obj1{fake_jobject};
   obj1("Foo", local_array);
 }

@@ -70,7 +70,7 @@ struct OverloadRef {
 
 template <typename Method, typename Overload, typename Permutation>
 struct PermutationRef {
-  using ReturnProxied = typename Overload::ReturnProxied;
+  using ReturnProxied = typename Overload::AsReturn;
   using OverloadRef = OverloadRef<Method, Overload>;
 
   template <typename... Params>
@@ -86,9 +86,7 @@ struct PermutationRef {
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
       static constexpr bool is_array =
-          std::is_base_of_v<ArrayTag, decltype(Overload::GetReturn().raw_)> ||
-          std::is_base_of_v<ObjectArrayTag,
-                            decltype(Overload::GetReturn().raw_)>;
+          kIsArrayType<decltype(Overload::GetReturn().raw_)>;
 
       return {JniMethodInvoke<typename Overload::CDecl, is_array>::Invoke(
           object, OverloadRef::GetMethodID(clazz),

@@ -15,6 +15,8 @@ cc_library(
         ":object",
         ":return",
         "//:jni_dep",
+        "//metaprogramming:contains",
+        "//metaprogramming:type_to_type_map",
     ],
 )
 
@@ -23,14 +25,20 @@ cc_library(
     hdrs = ["array_ref.h"],
     deps = [
         ":array",
+        ":array_view",
         ":class",
-        ":class_ref",
         ":default_class_loader",
-        ":jvm",
-        ":object",
         ":ref_base",
         "//:jni_dep",
-        "//implementation/jni_helper",
+        "//implementation/jni_helper:jni_array_helper",
+    ],
+)
+
+cc_library(
+    name = "array_view",
+    hdrs = ["array_view.h"],
+    deps = [
+        "//:jni_dep",
         "//implementation/jni_helper:jni_array_helper",
     ],
 )
@@ -400,6 +408,8 @@ cc_library(
     name = "method_selection",
     hdrs = ["method_selection.h"],
     deps = [
+        ":array",
+        ":array_ref",
         ":default_class_loader",
         ":method_ref",
         ":proxy",
@@ -494,6 +504,7 @@ cc_library(
     ],
     deps = [
         ":array",
+        ":array_ref",
         ":class",
         ":class_loader",
         ":default_class_loader",

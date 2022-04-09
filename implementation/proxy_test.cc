@@ -25,6 +25,7 @@ using jni::AsDecl_t;
 using jni::Class;
 using jni::ClassLoader;
 using jni::GlobalObject;
+using jni::LocalArray;
 using jni::LocalObject;
 using jni::Proxy_t;
 using jni::Return_t;
@@ -77,6 +78,20 @@ void Foo() {
       std::is_same_v<Proxy_t<LocalObject<kClass, kClassLoader>>::CDecl<void>,
                      jobject>);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Minimal Array Tests.
+// So much of array logic for proxies is exercised in :array_test that it's not
+// worth replicating here as these tests often rely on full permuation info.
+////////////////////////////////////////////////////////////////////////////////
+
+static_assert(std::is_same_v<Index_t<jarray>, jarray>);
+static_assert(std::is_same_v<Index_t<jbooleanArray>, jbooleanArray>);
+static_assert(std::is_same_v<Index_t<jintArray>, jintArray>);
+static_assert(std::is_same_v<Index_t<jshortArray>, jshortArray>);
+
+static_assert(std::is_base_of_v<RefBaseTag<jintArray>, LocalArray<jint>>);
+static_assert(std::is_base_of_v<RefBaseTag<jfloatArray>, LocalArray<jfloat>>);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Types as declarations.

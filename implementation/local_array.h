@@ -41,25 +41,22 @@ class LocalObject;
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class GlobalObject;
 
-template <typename SpanType>
-struct LocalArrayTag {};
-
-// Represents a an array object (e.g. int[], Object[], etc).
+// Represents a an array object (e.g. int[], float[][], Object[], etc).
 // Currently GlobalArrays do not exist, as reasoning about the lifecycles of the
 // underlying objects is non-trivial, e.g. a GlobalArray taking a local object
 // would result in a possibly unexpected extension of lifetime.
-template <typename SpanType, const auto& class_v_ = kNoClassSpecified,
+template <typename SpanType, std::size_t kRank = 1,
+          const auto& class_v_ = kNoClassSpecified,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class LocalArray : public ArrayRef<SpanType, kNoClassSpecified,
-                                   kDefaultClassLoader, kDefaultJvm>,
-                   LocalArrayTag<ArrayStrip_t<SpanType>> {
+                                   kDefaultClassLoader, kDefaultJvm> {
  public:
   using Base =
       ArrayRef<SpanType, kNoClassSpecified, kDefaultClassLoader, kDefaultJvm>;
 
-  // Note: jintArray, jfloatArray, etc. are implicitly convertible to jarray.
-  LocalArray(jarray array) : Base(array) {}
+  LocalArray(RegularToArrayTypeMap_t<SpanType> array) : Base(array) {}
+  LocalArray(LocalArray<SpanType, kRank>&& rhs) : Base(rhs.Release()) {}
 
   ~LocalArray() {
     if (Base::object_ref_) {
@@ -73,10 +70,11 @@ class LocalArray : public ArrayRef<SpanType, kNoClassSpecified,
 };
 
 // For classes (only default class loaded objects supported).
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-class LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>
-    : public ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_>,
-      LocalArrayTag<jobject> {
+// TODO(b/406948932): Add span views for construction.
+template <std::size_t kRank_, const auto& class_v_, const auto& class_loader_v_,
+          const auto& jvm_v_>
+class LocalArray<jobject, kRank_, class_v_, class_loader_v_, jvm_v_>
+    : public ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_> {
  public:
   using Base = ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_>;
   using ObjectClassRefT = ClassRef_t<jvm_v_, class_loader_v_, class_v_>;
@@ -84,11 +82,22 @@ class LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>
   // Note: jintArray, jfloatArray, etc. are implicitly convertible to jarray.
   LocalArray(jobjectArray array) : Base(array) {}
 
-  // Same as above.
+  template <std::size_t kRank, const auto& class_v, const auto& class_loader_v,
+            const auto& jvm_v>
+  LocalArray(LocalArray<jobject, kRank, class_v, class_loader_v, jvm_v>&& rhs)
+      : Base(rhs.Release()) {
+    static_assert(kRank == kRank_ && class_v == class_v_ &&
+                  class_loader_v == class_loader_v_);
+  }
+
+  // Construct from LocalObject lvalue (object is used as template).
+  //
+  // e.g.
+  //  LocalArray arr { 5, LocalObject<kClass> {args...} };
+  //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
   template <template <const auto&, const auto&, const auto&>
             class ObjectContainer,
             const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  // TODO(b/406948932): Add span views for construction.
   LocalArray(
       std::size_t size,
       const ObjectContainer<class_v, class_loader_v, jvm_v>& local_object)
@@ -98,11 +107,7 @@ class LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>
                 static_cast<jobject>(local_object)),
             static_cast<jobject>(local_object))) {}
 
-  // Construct from LocalObject lvalue (object is used as template).
-  //
-  // e.g.
-  //  LocalArray arr { 5, LocalObject<kClass> {args...} };
-  //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
+  // Same as above.
   template <template <const auto&, const auto&, const auto&>
             class ObjectContainer>
   LocalArray(std::size_t size,
@@ -123,15 +128,14 @@ LocalArray(std::size_t,
 
 template <typename SpanType>
 LocalArray(std::size_t, SpanType)
-    -> LocalArray<SpanType, kNoClassSpecified, kDefaultClassLoader,
+    -> LocalArray<SpanType, 1, kNoClassSpecified, kDefaultClassLoader,
                   kDefaultJvm>;
 
-template <const auto& array_val>
-constexpr auto LocalArrayBuildFromArray() {
-  using SpanType = std::decay_t<decltype(array_val.raw_type_)>;
+template <const auto& kArrayVal>
+struct LocalArrayBuildFromArray_Helper {};
 
-  return LocalArray<SpanType, array_val>{jarray{nullptr}};
-}
+template <typename TUndecayed>
+struct ProxyHelper;
 
 }  // namespace jni
 

@@ -21,6 +21,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "implementation/array.h"
+#include "implementation/array_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
 #include "implementation/method_ref.h"
@@ -225,10 +227,11 @@ struct OverloadSelection {
   }
 
   // CDecl is the type used by the C API for a return type.
-  using CDecl = CDecl_t<Raw_t<std::decay_t<decltype(GetReturn())>>>;
+  using CDecl =
+      CDecl_t<Raw_t<std::decay_t<decltype(GetReturn())>>, OverloadSelection>;
 
   // Return type is the richly decorated type returned (e.g LocalArray).
-  using ReturnProxied =
+  using AsReturn =
       Return_t<Raw_t<std::decay_t<decltype(GetReturn())>>, OverloadSelection>;
 
   // Proxy every parameter argument as an argument that can be shown in a
@@ -412,29 +415,34 @@ struct ParamCompare {
         std::string_view(ParamSelectionT::GetParam().name_);
   };
 
-  // The partial specialisation to compare an Array.
-  template <template <typename, const auto&, const auto&, const auto&> class T,
-            typename SpanType, const auto& class_v, const auto& class_loader_v,
-            const auto& jvm_v>
+  // ArrayRef objects (i.e. lvalue and rvalues of |LocalArray|s).
+  template <
+      template <typename, std::size_t, const auto&, const auto&, const auto&>
+      class T,
+      typename SpanType, std::size_t kRank, const auto& class_v,
+      const auto& class_loader_v, const auto& jvm_v>
   struct Helper<
-      T<SpanType, class_v, class_loader_v, jvm_v>,
+      T<SpanType, kRank, class_v, class_loader_v, jvm_v>,
       std::enable_if_t<
-          std::is_base_of_v<RefBaseTag<jarray>,
-                            T<SpanType, class_v, class_loader_v, jvm_v>> &&
-          std::is_base_of_v<RefBaseTag<jarray>, ParamT>>> {
+          std::is_base_of_v<ArrayRefPrimitiveBaseTag,
+                            std::decay_t<T<SpanType, kRank, class_v,
+                                           class_loader_v, jvm_v>>> &&
+          std::is_base_of_v<ArrayRefPrimitiveTag<SpanType>, ParamT>>> {
     static constexpr bool val = true;
   };
 
   // The partial specialisation to compare an object Array.
-  template <template <typename, const auto&, const auto&, const auto&> class T,
-            typename SpanType, const auto& class_v, const auto& class_loader_v,
-            const auto& jvm_v>
+  template <
+      template <typename, std::size_t, const auto&, const auto&, const auto&>
+      class T,
+      typename SpanType, std::size_t kRank, const auto& class_v,
+      const auto& class_loader_v, const auto& jvm_v>
   struct Helper<
-      T<SpanType, class_v, class_loader_v, jvm_v>,
-      std::enable_if_t<
-          std::is_base_of_v<RefBaseTag<jobjectArray>,
-                            T<SpanType, class_v, class_loader_v, jvm_v>> &&
-          std::is_base_of_v<RefBaseTag<jobjectArray>, ParamT>>> {
+      T<SpanType, kRank, class_v, class_loader_v, jvm_v>,
+      std::enable_if_t<std::is_base_of_v<RefBaseTag<jobjectArray>,
+                                         T<SpanType, kRank, class_v,
+                                           class_loader_v, jvm_v>> &&
+                       std::is_base_of_v<RefBaseTag<jobjectArray>, ParamT>>> {
     static constexpr bool val =
         std::string_view(class_v.name_) ==
         std::string_view(ParamSelectionT::GetParam().raw_type_.name_);
