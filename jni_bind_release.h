@@ -113,6 +113,7 @@ using ExtractTupleFromType_t =
 
 }  // namespace jni::metaprogramming
 
+
 namespace jni::metaprogramming {
 
 // Metafunction to forward all args in a tuple on to a metafunction.
@@ -130,6 +131,7 @@ template <typename Func, typename... Ts>
 static constexpr auto Unwrap_v = Unwrap_t<Func, Ts...>::value;
 
 }  // namespace jni::metaprogramming
+
 
 #include <tuple>
 #include <type_traits>
@@ -163,6 +165,7 @@ using TypeOfNthTupleElement_t = Unwrap_t<TypeOfNthElement<N>, TupType>;
 
 }  // namespace jni::metaprogramming
 
+
 #include <tuple>
 
 namespace jni::metaprogramming {
@@ -192,6 +195,7 @@ using PerElement_t = typename PerElement<Func>::template type<Ts...>;
 
 }  // namespace jni::metaprogramming
 
+
 #include <tuple>
 
 namespace jni::metaprogramming {
@@ -218,6 +222,7 @@ using Combine_t = typename Combine::template type<Tup1, Tup2>;
 
 }  // namespace jni::metaprogramming
 
+
 namespace jni {
 
 struct Object {
@@ -226,6 +231,7 @@ struct Object {
 };
 
 }  // namespace jni
+
 
 #include <tuple>
 #include <type_traits>
@@ -245,6 +251,7 @@ struct Same {
 };
 
 }  // namespace jni::metaprogramming
+
 
 #include <tuple>
 #include <type_traits>
@@ -290,6 +297,7 @@ template <typename Operation, typename... Ts>
 using Reduce_t = typename Reduce<Operation>::template type<Ts...>;
 
 }  // namespace jni::metaprogramming
+
 
 #include <tuple>
 #include <type_traits>
@@ -344,6 +352,7 @@ using InvokePerTupArgAsPack_t =
 
 }  // namespace jni::metaprogramming
 
+
 #include <tuple>
 #include <type_traits>
 
@@ -363,6 +372,7 @@ template <typename Func, typename... Ts>
 static constexpr bool Any_v = Any_t<Func, Ts...>::value;
 
 }  // namespace jni::metaprogramming
+
 
 namespace jni {
 
@@ -404,6 +414,7 @@ class JniEnv {
 };
 
 }  // namespace jni
+
 
 #include <string>
 #include <string_view>
@@ -460,6 +471,7 @@ using ParamsRawTup_t = typename T::ParamsRawTup;
 
 }  // namespace jni
 
+
 #include <tuple>
 #include <type_traits>
 
@@ -484,6 +496,7 @@ constexpr bool ContainsValue(const SoughtType& sought_value, Ts&&... ts) {
 }
 
 }  // namespace jni::metaprogramming
+
 
 #include <tuple>
 
@@ -513,6 +526,7 @@ template <typename... Tups>
 using ConcatenateTup_t = Reduce_t<Combine, Tups...>;
 
 }  // namespace jni::metaprogramming
+
 
 #include <utility>
 
@@ -682,6 +696,7 @@ inline void JniHelper::ReleaseStringUTFChars(jstring str, const char* chars) {
 
 }  // namespace jni
 
+
 #include <string_view>
 
 namespace jni {
@@ -716,6 +731,7 @@ template <typename T>
 using Raw_t = typename T::Raw;
 
 }  // namespace jni
+
 
 #include <tuple>
 #include <type_traits>
@@ -780,6 +796,7 @@ constexpr bool operator==(const Method<ReturnT1, ParamsT1>& lhs,
 
 }  // namespace jni
 
+
 #include <tuple>
 #include <type_traits>
 
@@ -828,6 +845,7 @@ using BaseFilterWithDefault_t =
 
 }  // namespace jni::metaprogramming
 
+
 #include <type_traits>
 
 namespace jni::metaprogramming {
@@ -858,6 +876,7 @@ constexpr bool AllUniqueValues(const T1&& t1, const Ts&&... ts) {
 
 }  // namespace jni::metaprogramming
 
+
 #include <string>
 
 namespace jni {
@@ -886,6 +905,7 @@ template <typename T>
 using Raw_t = typename T::Raw;
 
 }  // namespace jni
+
 
 namespace jni {
 
@@ -950,6 +970,7 @@ class ConstructorRef : public ConstructorBase {
 
 }  // namespace jni
 
+
 #include <cstddef>
 #include <initializer_list>
 #include <limits>
@@ -990,6 +1011,7 @@ constexpr std::size_t ModifiedMax(
 }
 
 }  // namespace jni::metaprogramming
+
 
 #include <string_view>
 #include <tuple>
@@ -1048,6 +1070,134 @@ Class(const char*)
 
 
 #include <tuple>
+#include <type_traits>
+
+namespace jni::metaprogramming {
+
+// Metafunction that binds a metafunction (e.g. Same), a query (e.g. "A"),  a
+// variadic pack as arguments, and returns the idx of the query.  All members
+// of the variadic pack must be unique.
+//
+// |Comparator| must express a static bool data member "value".
+template <typename Comparator>
+struct FindIdxOfVal {
+  template <typename... Ts>
+  struct FindIdxOfValHelper {
+    static_assert(sizeof...(Ts) == -1, "The sought element is not in the set");
+  };
+
+  template <typename T, typename... Ts>
+  struct FindIdxOfValHelper<T, Ts...> {
+    template <std::size_t idx>
+    static constexpr std::size_t GetIdxHelper() {
+      if constexpr (Comparator::template value<T>) {
+        return idx;
+      } else {
+        return FindIdxOfValHelper<Ts...>::template GetIdxHelper<idx - 1>();
+      }
+    }
+
+    static constexpr std::size_t GetIdx() {
+      return sizeof...(Ts) - GetIdxHelper<sizeof...(Ts)>();
+    }
+  };
+
+  // Done once in a seperate struct for improved compilation time.
+  template <typename... Ts>
+  struct StaticAssertWrapper {
+    static_assert(AllUnique_v<Ts...>,
+                  "FindIdxOfVal only operates on unique sets.");
+    static constexpr std::size_t value = FindIdxOfValHelper<Ts...>::GetIdx();
+  };
+
+  template <typename... Ts>
+  static constexpr std::size_t value = StaticAssertWrapper<Ts...>::value;
+};
+
+template <typename Comparator, typename... Ts>
+static constexpr std::size_t FindIdxOfValWithComparator_idx =
+    FindIdxOfVal<Comparator>::template value<Ts...>;
+
+// Convenience alias with default of std::is_same Comparator (typical use case).
+template <typename Query, typename... Ts>
+static constexpr std::size_t FindIdxOfVal_idx =
+    FindIdxOfValWithComparator_idx<Same<Query>, Ts...>;
+
+template <typename Comparator, typename TupType>
+static constexpr std::size_t FindIdxOfValInTupWithComparator_idx =
+    TupleUnroller_v<FindIdxOfVal<Comparator>, TupType>;
+
+// Convenience alias with default of std::is_same Comparator (typical use case).
+template <typename Query, typename TupType>
+static constexpr std::size_t FindIdxOfValInTup_idx =
+    FindIdxOfValInTupWithComparator_idx<Same<Query>, TupType>;
+
+}  // namespace jni::metaprogramming
+
+
+#include <tuple>
+
+namespace jni::metaprogramming {
+
+// Metafunction to return only even elements.
+struct Even {
+  template <typename... Ts>
+  struct EvenHelper {};
+
+  template <>
+  struct EvenHelper<std::tuple<>> {
+    using type = std::tuple<>;
+  };
+
+  template <typename... Ts>
+  struct OddHelper {};
+
+  template <>
+  struct OddHelper<std::tuple<>> {
+    using type = std::tuple<>;
+  };
+
+  template <typename T, typename... Ts>
+  struct OddHelper<std::tuple<T, Ts...>> {
+    using type = typename EvenHelper<std::tuple<Ts...>>::type;
+  };
+
+  template <typename T, typename... Ts>
+  struct EvenHelper<std::tuple<T, Ts...>> {
+    using type = ConcatenateTup_t<std::tuple<T>,
+                                  typename OddHelper<std::tuple<Ts...>>::type>;
+  };
+
+  template <typename... Ts>
+  using type = typename EvenHelper<std::tuple<Ts...>>::type;
+};
+
+template <typename... Ts>
+using Even_t = typename Even::template type<Ts...>;
+
+// Metafunction to return only odd elements.
+struct Odd {
+  template <typename... Ts>
+  struct OddHelper {
+    using type = std::tuple<>;
+  };
+
+  template <typename T, typename... Ts>
+  struct OddHelper<std::tuple<T, Ts...>> {
+    using type = Even_t<Ts...>;
+  };
+
+  template <typename... Ts>
+  using type = typename OddHelper<std::tuple<Ts...>>::type;
+};
+
+template <typename... Ts>
+using Odd_t = typename Odd::template type<Ts...>;
+
+}  // namespace jni::metaprogramming
+
+
+#include <tuple>
 
 namespace jni {
 
@@ -1069,6 +1219,7 @@ template <typename... Classes>
 SupportedClassSet(Classes...) -> SupportedClassSet<Classes...>;
 
 }  // namespace jni
+
 
 #include <tuple>
 
@@ -1152,6 +1303,7 @@ inline constexpr DefaultClassLoader kDefaultClassLoader;
 
 }  // namespace jni
 
+
 namespace jni {
 
 inline constexpr Class kJavaLangClass{"java/lang/Class"};
@@ -1172,509 +1324,58 @@ inline constexpr Method kGetClassLoaderMethod{
 
 }  // namespace jni
 
-#include <tuple>
-#include <type_traits>
-#include <utility>
-
-namespace jni {
-
-inline constexpr struct NoClassLoader {
-} kNoClassLoaderSpecified;
-
-// Represents the compile time info we have about a class loader. In general,
-// this is just the list of classes we expect to be loadable from a class loader
-// and its parent loader.
-//
-// Classes from different loaders are typically incompatible, but Class loaders
-// delegate classes that they cannot directly load to their parent loaders, so
-// classes attached to two different class loaders will still be compatible if
-// they were loaded by a shared parent loader.
-template <typename ParentLoader_, typename... SupportedClasses_>
-class ClassLoader {
- public:
-  const ParentLoader_ parent_loader_;
-  const std::tuple<SupportedClasses_...> supported_classes_;
-
-  // TODO (b/143908983): Loaders should not be able to supply classes that their
-  // parents do.
-  explicit constexpr ClassLoader(
-      ParentLoader_ parent_loader,
-      SupportedClassSet<SupportedClasses_...> supported_class_set)
-      : parent_loader_(parent_loader),
-        supported_classes_(supported_class_set.supported_classes_) {}
-
-  explicit constexpr ClassLoader(
-      SupportedClassSet<SupportedClasses_...> supported_class_set)
-      : parent_loader_(kDefaultClassLoader),
-        supported_classes_(supported_class_set.supported_classes_) {}
-
-  bool constexpr operator==(
-      const ClassLoader<ParentLoader_, SupportedClasses_...>& rhs) const {
-    return (*this).parent_loader_ == rhs.parent_loader_ &&
-           (*this).supported_classes_ == rhs.supported_classes_;
-  }
-  template <typename T>
-  bool constexpr operator==(const T& rhs) const {
-    return false;
-  }
-  template <typename T>
-  bool constexpr operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
-
-  template <const auto& class_v, std::size_t... Is>
-  constexpr std::size_t IdxOfClassHelper(
-      std::integer_sequence<std::size_t, Is...>) const {
-    // std::max appears to be missing the initializer list overload in Bazel's
-    // implementation of clang.  This should simply be std::max.
-    return metaprogramming::ModifiedMax(
-        {((std::get<Is>(supported_classes_) == class_v)
-              ? std::size_t{Is}
-              : metaprogramming::kNegativeOne)...,
-         metaprogramming::kNegativeOne});
-  }
-
-  // Returns the index for a given class within this set (any given class ref is
-  // defined by this index).
-  template <const auto& class_v>
-  constexpr std::size_t IdxOfClass() const {
-    return IdxOfClassHelper<class_v>(
-        std::make_integer_sequence<std::size_t,
-                                   sizeof...(SupportedClasses_)>());
-  }
-
-  // Tests if a class is supported by this class loader (not ancestors).
-  template <const auto& possibly_supported_class>
-  constexpr bool SupportedByThisSet() const {
-    return IdxOfClass<possibly_supported_class>() != kClassNotInLoaderSetIdx;
-  }
-
-  // Tests if a class is supported by this class loader (ancestors included).
-  template <const auto& possibly_supported_class,
-            bool ignore_default_loader = false>
-  constexpr bool SupportedDirectlyOrIndirectly() const {
-    return parent_loader_.template SupportedDirectlyOrIndirectly<
-               possibly_supported_class>() ||
-           SupportedByThisSet<possibly_supported_class>();
-  }
-
-  // Returns the index for parent-most ancestor that supports a given class.
-  template <const auto& possibly_supported_class>
-  constexpr std::size_t IdxOfAncestor(std::size_t cur_idx = 0) const {
-    if (SupportedByThisSet<possibly_supported_class>() &&
-        !parent_loader_.template SupportedDirectlyOrIndirectly<
-            possibly_supported_class, true>()) {
-      return cur_idx;
-    }
-    return parent_loader_.template IdxOfAncestor<possibly_supported_class>(
-        cur_idx + 1);
-  }
-};
-
-template <typename ParentLoader_, typename... SupportedClasses_>
-ClassLoader(ParentLoader_ parent_loader,
-            SupportedClassSet<SupportedClasses_...> supported_classes)
-    -> ClassLoader<ParentLoader_, SupportedClasses_...>;
-
-template <typename... SupportedClasses_>
-ClassLoader(SupportedClassSet<SupportedClasses_...>)
-    -> ClassLoader<DefaultClassLoader, SupportedClasses_...>;
-
-template <typename T, std::size_t I>
-constexpr auto& GetAncestor(const T& loader) {
-  if constexpr (I == 0) {
-    return loader;
-  } else {
-    return GetAncestor<decltype(loader.parent_loader_), I - 1>(
-        loader.parent_loader_);
-  }
-}
-
-template <const auto& loader, const auto& possibly_supported_class>
-constexpr const auto& ParentLoaderForClass() {
-  if constexpr (!loader.template SupportedDirectlyOrIndirectly<
-                    possibly_supported_class>()) {
-    return kNullClassLoader;
-  } else if constexpr (loader.template IdxOfAncestor<
-                           possibly_supported_class>() !=
-                       kClassNotInLoaderSetIdx) {
-    return GetAncestor<
-        decltype(loader),
-        loader.template IdxOfAncestor<possibly_supported_class>()>(loader);
-  } else {
-    return kDefaultClassLoader;
-  }
-}
-
-}  // namespace jni
-
-#include <atomic>
-#include <functional>
-#include <mutex>
-
-namespace jni::metaprogramming {
-
-// This class is intended to mimic a function local static except that it
-// supports being reset. The object is constructed with a lambda and all
-// subsequent loads will be thread safe, invoking the lambda once (and only
-// once) if the currently stored value is T{0}.
-//
-// This class is thread-safe.  Loads will be cheap (after a potentially
-// expensive initial init), stores are expensive.
-template <typename T_>
-class DoubleLockedValue {
- public:
-  template <typename Lambda>
-  inline T_ LoadAndMaybeInit(Lambda lambda) {
-    // Typical case, value already initialised, perform cheap load and return.
-    T_ return_value = value_.load(std::memory_order_acquire);
-
-    if (return_value != T_{0}) {
-      return return_value;
-    }
-
-    // Value was nil (uninitialised), perform heavy-weight lock.
-    std::lock_guard<std::mutex> lock_guard{lock_};
-
-    // Check another thread didn't race to lock before.
-    return_value = value_.load(std::memory_order_acquire);
-    if (return_value != T_{}) {
-      return return_value;
-    }
-
-    // Perform the potentially expensive initialisation and return.
-    return_value = lambda();
-    value_.store(return_value, std::memory_order_release);
-    return return_value;
-  }
-
-  // Sets the value to {0}.
-  inline void Reset() {
-    std::lock_guard<std::mutex> lock_guard{lock_};
-    value_.store(0, std::memory_order_release);
-  }
-
-  // Sets the value to {0} and iff the value was not {0} prior to being torn
-  // down, the teardown lambda will be invoked with this value.
-  template <typename TeardownLambda>
-  inline void Reset(TeardownLambda lambda) {
-    std::lock_guard<std::mutex> lock_guard{lock_};
-    auto val = value_.load();
-    if (val != 0) {
-      lambda(val);
-      value_.store(0, std::memory_order_release);
-    }
-  }
-
- private:
-  std::atomic<T_> value_ = {0};
-  std::mutex lock_;
-};
-
-}  // namespace jni::metaprogramming
-
-#include <utility>
-
-namespace jni {
-
-template <typename ReturnType, bool is_array = false>
-class JniMethodInvoke {};
-
-template <>
-struct JniMethodInvoke<void, false> {
-  template <typename... Ts>
-  static void Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    jni::JniEnv::GetEnv()->CallVoidMethod(object, method_id,
-                                          std::forward<Ts>(ts)...);
-  }
-};
-
-template <>
-struct JniMethodInvoke<jboolean, false> {
-  template <typename... Ts>
-  static jboolean Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return jni::JniEnv::GetEnv()->CallBooleanMethod(object, method_id,
-                                                    std::forward<Ts>(ts)...);
-  }
-};
-
-template <>
-struct JniMethodInvoke<jint, false> {
-  template <typename... Ts>
-  static jint Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return jni::JniEnv::GetEnv()->CallIntMethod(object, method_id,
-                                                std::forward<Ts>(ts)...);
-  }
-};
-
-template <>
-struct JniMethodInvoke<jlong, false> {
-  template <typename... Ts>
-  static jlong Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return jni::JniEnv::GetEnv()->CallLongMethod(object, method_id,
-                                                 std::forward<Ts>(ts)...);
-  }
-};
-
-template <>
-struct JniMethodInvoke<jfloat, false> {
-  template <typename... Ts>
-  static jfloat Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return jni::JniEnv::GetEnv()->CallFloatMethod(object, method_id,
-                                                  std::forward<Ts>(ts)...);
-  }
-};
-
-template <>
-struct JniMethodInvoke<jdouble, false> {
-  template <typename... Ts>
-  static jdouble Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return jni::JniEnv::GetEnv()->CallDoubleMethod(object, method_id,
-                                                   std::forward<Ts>(ts)...);
-  }
-};
-
-template <>
-struct JniMethodInvoke<jobject, false> {
-  // This always returns a local reference which should be embedded in type
-  // information wherever this is used.
-  template <typename... Ts>
-  static jobject Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return jni::JniEnv::GetEnv()->CallObjectMethod(object, method_id,
-                                                   std::forward<Ts>(ts)...);
-  }
-};
-
-template <>
-struct JniMethodInvoke<jstring, false> {
-  template <typename... Ts>
-  static jobject Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return jni::JniEnv::GetEnv()->CallObjectMethod(object, method_id,
-                                                   std::forward<Ts>(ts)...);
-  }
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// Array Types.
-////////////////////////////////////////////////////////////////////////////////
-template <>
-struct JniMethodInvoke<jboolean, true> {
-  template <typename... Ts>
-  static jbooleanArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return static_cast<jbooleanArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
-        object, method_id, std::forward<Ts>(ts)...));
-  }
-};
-
-template <>
-struct JniMethodInvoke<jbyte, true> {
-  template <typename... Ts>
-  static jbyteArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return static_cast<jbyteArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
-        object, method_id, std::forward<Ts>(ts)...));
-  }
-};
-
-template <>
-struct JniMethodInvoke<jchar, true> {
-  template <typename... Ts>
-  static jcharArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return static_cast<jcharArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
-        object, method_id, std::forward<Ts>(ts)...));
-  }
-};
-
-template <>
-struct JniMethodInvoke<jshortArray, true> {
-  template <typename... Ts>
-  static jshortArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return static_cast<jshortArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
-        object, method_id, std::forward<Ts>(ts)...));
-  }
-};
-
-template <>
-struct JniMethodInvoke<jint, true> {
-  template <typename... Ts>
-  static jintArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return static_cast<jintArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
-        object, method_id, std::forward<Ts>(ts)...));
-  }
-};
-
-template <>
-struct JniMethodInvoke<jfloat, true> {
-  template <typename... Ts>
-  static jfloatArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return static_cast<jfloatArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
-        object, method_id, std::forward<Ts>(ts)...));
-  }
-};
-
-template <>
-struct JniMethodInvoke<jlong, true> {
-  template <typename... Ts>
-  static jlongArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return static_cast<jlongArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
-        object, method_id, std::forward<Ts>(ts)...));
-  }
-};
-
-template <>
-struct JniMethodInvoke<jobject, true> {
-  template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
-        object, method_id, std::forward<Ts>(ts)...));
-  }
-};
-
-template <>
-struct JniMethodInvoke<jobjectArray, true> {
-  template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
-    return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
-        object, method_id, std::forward<Ts>(ts)...));
-  }
-};
-
-}  // namespace jni
 
 #include <tuple>
-#include <type_traits>
-#include <utility>
-
-namespace jni {
-
-template <typename... ClassLoaderTs>
-class Jvm {
- public:
-  const std::tuple<ClassLoaderTs...> class_loaders_;
-
-  constexpr Jvm(ClassLoaderTs... class_loaders)
-      : class_loaders_(class_loaders...) {}
-
-  template <const auto& class_loader_v, std::size_t... Is>
-  constexpr size_t IdxOfClassLoaderHelper(
-      std::integer_sequence<std::size_t, Is...>) const {
-    return metaprogramming::ModifiedMax(
-        {((std::get<Is>(class_loaders_) == class_loader_v) ? Is : -1)...});
-  }
-
-  // Returns the index for a given classloader within this set (any given class
-  // ref is defined by this index).
-  template <const auto& class_loader_v>
-  constexpr size_t IdxOfClassLoader() const {
-    return IdxOfClassLoaderHelper<class_loader_v>(
-        std::make_integer_sequence<std::size_t, sizeof...(ClassLoaderTs)>());
-  }
-
-  template <typename T>
-  bool constexpr operator==(const T& rhs) const {
-    return false;
-  }
-  bool constexpr operator==(const Jvm&) const { return true; }
-
-  template <typename T>
-  bool constexpr operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
-};
-
-template <typename... ClassLoaderTs>
-Jvm(ClassLoaderTs...) -> Jvm<ClassLoaderTs...>;
-
-// Convenience Jvm definition.
-// Compatible with default class loader or specified loaders.
-inline constexpr Jvm kDefaultJvm{kDefaultClassLoader};
-
-}  // namespace jni
-
-#include <tuple>
-#include <utility>
 
 namespace jni::metaprogramming {
 
-// Metafunction to take a sequence of indices, and produce the corresponding
-// elements in sequences of tuples.
-template <std::size_t... sizes>
-struct TypeIndexMask {
-  template <typename, typename... Ts>
-  struct GetHelper {};
+// Maps types to other types.
+// Keys do not need to be unique, although queries only return the first entry.
+template <typename Tup1, typename Tup2>
+struct TypeToTypeMap {};
 
-  template <std::size_t... Is, typename... Ts>
-  struct GetHelper<std::index_sequence<Is...>, Ts...> {
-    using type = std::tuple<TypeOfNthTupleElement_t<Is, Ts>...>;
-  };
+template <typename... Keys_, typename... Values_>
+struct TypeToTypeMap<std::tuple<Keys_...>, std::tuple<Values_...>> {
+  static_assert(sizeof...(Keys_) == sizeof...(Values_),
+                "Keys must be an equal size to the value.");
 
-  template <typename... Ts>
-  using Get = typename GetHelper<std::index_sequence<sizes...>, Ts...>::type;
+  using Keys = std::tuple<Keys_...>;
+  using Values = std::tuple<Values_...>;
+  using Invert = TypeToTypeMap<std::tuple<Values_...>, std::tuple<Keys_...>>;
 
-  template <typename>
-  struct SequenceGenerator {};
-
-  template <typename... Ts>
-  struct SequenceGenerator<std::tuple<Ts...>> {
-    using type = Get<Ts...>;
-  };
-
-  template <typename Tup>
-  using type = typename SequenceGenerator<Tup>::type;
+  template <typename Comparator>
+  using type =
+      TypeOfNthElement_t<FindIdxOfValWithComparator_idx<Comparator, Keys_...>,
+                         Values_...>;
 };
 
-template <typename TupOfTypes, std::size_t... sizes>
-using TypeTupFromIndexMask_t =
-    typename TypeIndexMask<sizes...>::template type<TupOfTypes>;
+template <typename TypeToTypeMap>
+using TypeToTypeMap_Keys_t = typename TypeToTypeMap::Keys;
 
-}  // namespace jni::metaprogramming
+template <typename TypeToTypeMap>
+using TypeToTypeMap_Values_t = typename TypeToTypeMap::Values;
 
-#include <algorithm>
-#include <utility>
+// Metafunction to invert the map from keys->vals to vals->keys.
+// Note, keys do not need to be unique.
+template <typename TypeToTypeMap>
+using TypeToTypeMap_Invert = typename TypeToTypeMap::Invert;
 
-namespace jni::metaprogramming {
+template <typename TypeToTypeMap, typename Query>
+using TypeToTypeMapQuery_t = typename TypeToTypeMap::template type<Same<Query>>;
 
-// Represents a value that can be [0, max], and an overflow bit.
-// When incremented, the type will rollover, and set its overflow bit.
-template <size_t cur_value, size_t max = 1, bool overflow_bit = false>
-struct NBit {
-  static constexpr size_t value_ = cur_value;
-  static constexpr size_t overflow_bit_ = overflow_bit;
+// Queries a type map using a custom comparator,
+// If multiple keys satisfy, the first is returned.
+template <typename TypeToTypeMap, typename Comparator>
+using TypeToTypeMapQueryWithComparator_t =
+    typename TypeToTypeMap::template type<Comparator>;
 
-  // Only unary values will ever need the clamp.
-  using Increment =
-      NBit<(value_ == max ? 0 : std::clamp(value_ + 1, size_t{0}, max)), max,
-           value_ == max>;
+// Builds a TypeToTypeMap from interleaved Keys and Values.
+template <typename... Ts>
+using TypeToTypeMapFromKeyValues_t = TypeToTypeMap<Even_t<Ts...>, Odd_t<Ts...>>;
 
-  using ResetOverflow = NBit<cur_value, max, false>;
-};
-
-}  // namespace jni::metaprogramming
-
-#include <type_traits>
-#include <utility>
-
-namespace jni::metaprogramming {
-
-// Metafunction to increment types a certain number of times.
-// Types must export a type alias "Increment" which increments the type once.
-template <std::size_t I>
-struct Increment {
-  template <typename T, std::size_t Idx>
-  struct IncrementCountHelper {
-    using type = typename Increment<Idx - 1>::template type<T>::Increment;
-  };
-
-  template <typename T>
-  struct IncrementCountHelper<T, 0> {
-    using type = T;
-  };
-
-  template <typename T>
-  using type = typename IncrementCountHelper<T, I>::type;
-};
-
-template <typename T, std::size_t I = 1>
-using Increment_t = typename Increment<I>::template type<T>;
+template <typename TupleOfKeyValuePairs>
+using TypeToTypeMapFromKeyValuesTup_t =
+    TupleToType_t<TupleOfKeyValuePairs, TypeToTypeMapFromKeyValues_t>;
 
 }  // namespace jni::metaprogramming
 
@@ -1908,6 +1609,469 @@ struct JniArrayHelper<jobject> : public JniArrayHelperBase {
 
 }  // namespace jni
 
+
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+namespace jni {
+
+inline constexpr struct NoClassLoader {
+} kNoClassLoaderSpecified;
+
+// Represents the compile time info we have about a class loader. In general,
+// this is just the list of classes we expect to be loadable from a class loader
+// and its parent loader.
+//
+// Classes from different loaders are typically incompatible, but Class loaders
+// delegate classes that they cannot directly load to their parent loaders, so
+// classes attached to two different class loaders will still be compatible if
+// they were loaded by a shared parent loader.
+template <typename ParentLoader_, typename... SupportedClasses_>
+class ClassLoader {
+ public:
+  const ParentLoader_ parent_loader_;
+  const std::tuple<SupportedClasses_...> supported_classes_;
+
+  // TODO (b/143908983): Loaders should not be able to supply classes that their
+  // parents do.
+  explicit constexpr ClassLoader(
+      ParentLoader_ parent_loader,
+      SupportedClassSet<SupportedClasses_...> supported_class_set)
+      : parent_loader_(parent_loader),
+        supported_classes_(supported_class_set.supported_classes_) {}
+
+  explicit constexpr ClassLoader(
+      SupportedClassSet<SupportedClasses_...> supported_class_set)
+      : parent_loader_(kDefaultClassLoader),
+        supported_classes_(supported_class_set.supported_classes_) {}
+
+  bool constexpr operator==(
+      const ClassLoader<ParentLoader_, SupportedClasses_...>& rhs) const {
+    return (*this).parent_loader_ == rhs.parent_loader_ &&
+           (*this).supported_classes_ == rhs.supported_classes_;
+  }
+  template <typename T>
+  bool constexpr operator==(const T& rhs) const {
+    return false;
+  }
+  template <typename T>
+  bool constexpr operator!=(const T& rhs) const {
+    return !(*this == rhs);
+  }
+
+  template <const auto& class_v, std::size_t... Is>
+  constexpr std::size_t IdxOfClassHelper(
+      std::integer_sequence<std::size_t, Is...>) const {
+    // std::max appears to be missing the initializer list overload in Bazel's
+    // implementation of clang.  This should simply be std::max.
+    return metaprogramming::ModifiedMax(
+        {((std::get<Is>(supported_classes_) == class_v)
+              ? std::size_t{Is}
+              : metaprogramming::kNegativeOne)...,
+         metaprogramming::kNegativeOne});
+  }
+
+  // Returns the index for a given class within this set (any given class ref is
+  // defined by this index).
+  template <const auto& class_v>
+  constexpr std::size_t IdxOfClass() const {
+    return IdxOfClassHelper<class_v>(
+        std::make_integer_sequence<std::size_t,
+                                   sizeof...(SupportedClasses_)>());
+  }
+
+  // Tests if a class is supported by this class loader (not ancestors).
+  template <const auto& possibly_supported_class>
+  constexpr bool SupportedByThisSet() const {
+    return IdxOfClass<possibly_supported_class>() != kClassNotInLoaderSetIdx;
+  }
+
+  // Tests if a class is supported by this class loader (ancestors included).
+  template <const auto& possibly_supported_class,
+            bool ignore_default_loader = false>
+  constexpr bool SupportedDirectlyOrIndirectly() const {
+    return parent_loader_.template SupportedDirectlyOrIndirectly<
+               possibly_supported_class>() ||
+           SupportedByThisSet<possibly_supported_class>();
+  }
+
+  // Returns the index for parent-most ancestor that supports a given class.
+  template <const auto& possibly_supported_class>
+  constexpr std::size_t IdxOfAncestor(std::size_t cur_idx = 0) const {
+    if (SupportedByThisSet<possibly_supported_class>() &&
+        !parent_loader_.template SupportedDirectlyOrIndirectly<
+            possibly_supported_class, true>()) {
+      return cur_idx;
+    }
+    return parent_loader_.template IdxOfAncestor<possibly_supported_class>(
+        cur_idx + 1);
+  }
+};
+
+template <typename ParentLoader_, typename... SupportedClasses_>
+ClassLoader(ParentLoader_ parent_loader,
+            SupportedClassSet<SupportedClasses_...> supported_classes)
+    -> ClassLoader<ParentLoader_, SupportedClasses_...>;
+
+template <typename... SupportedClasses_>
+ClassLoader(SupportedClassSet<SupportedClasses_...>)
+    -> ClassLoader<DefaultClassLoader, SupportedClasses_...>;
+
+template <typename T, std::size_t I>
+constexpr auto& GetAncestor(const T& loader) {
+  if constexpr (I == 0) {
+    return loader;
+  } else {
+    return GetAncestor<decltype(loader.parent_loader_), I - 1>(
+        loader.parent_loader_);
+  }
+}
+
+template <const auto& loader, const auto& possibly_supported_class>
+constexpr const auto& ParentLoaderForClass() {
+  if constexpr (!loader.template SupportedDirectlyOrIndirectly<
+                    possibly_supported_class>()) {
+    return kNullClassLoader;
+  } else if constexpr (loader.template IdxOfAncestor<
+                           possibly_supported_class>() !=
+                       kClassNotInLoaderSetIdx) {
+    return GetAncestor<
+        decltype(loader),
+        loader.template IdxOfAncestor<possibly_supported_class>()>(loader);
+  } else {
+    return kDefaultClassLoader;
+  }
+}
+
+}  // namespace jni
+
+
+#include <tuple>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+// Metafunction to take a sequence of indices, and produce the corresponding
+// elements in sequences of tuples.
+template <std::size_t... sizes>
+struct TypeIndexMask {
+  template <typename, typename... Ts>
+  struct GetHelper {};
+
+  template <std::size_t... Is, typename... Ts>
+  struct GetHelper<std::index_sequence<Is...>, Ts...> {
+    using type = std::tuple<TypeOfNthTupleElement_t<Is, Ts>...>;
+  };
+
+  template <typename... Ts>
+  using Get = typename GetHelper<std::index_sequence<sizes...>, Ts...>::type;
+
+  template <typename>
+  struct SequenceGenerator {};
+
+  template <typename... Ts>
+  struct SequenceGenerator<std::tuple<Ts...>> {
+    using type = Get<Ts...>;
+  };
+
+  template <typename Tup>
+  using type = typename SequenceGenerator<Tup>::type;
+};
+
+template <typename TupOfTypes, std::size_t... sizes>
+using TypeTupFromIndexMask_t =
+    typename TypeIndexMask<sizes...>::template type<TupOfTypes>;
+
+}  // namespace jni::metaprogramming
+
+
+#include <algorithm>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+// Represents a value that can be [0, max], and an overflow bit.
+// When incremented, the type will rollover, and set its overflow bit.
+template <size_t cur_value, size_t max = 1, bool overflow_bit = false>
+struct NBit {
+  static constexpr size_t value_ = cur_value;
+  static constexpr size_t overflow_bit_ = overflow_bit;
+
+  // Only unary values will ever need the clamp.
+  using Increment =
+      NBit<(value_ == max ? 0 : std::clamp(value_ + 1, size_t{0}, max)), max,
+           value_ == max>;
+
+  using ResetOverflow = NBit<cur_value, max, false>;
+};
+
+}  // namespace jni::metaprogramming
+
+
+#include <type_traits>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+// Metafunction to increment types a certain number of times.
+// Types must export a type alias "Increment" which increments the type once.
+template <std::size_t I>
+struct Increment {
+  template <typename T, std::size_t Idx>
+  struct IncrementCountHelper {
+    using type = typename Increment<Idx - 1>::template type<T>::Increment;
+  };
+
+  template <typename T>
+  struct IncrementCountHelper<T, 0> {
+    using type = T;
+  };
+
+  template <typename T>
+  using type = typename IncrementCountHelper<T, I>::type;
+};
+
+template <typename T, std::size_t I = 1>
+using Increment_t = typename Increment<I>::template type<T>;
+
+}  // namespace jni::metaprogramming
+
+
+#include <mutex>
+#include <atomic>
+#include <functional>
+
+namespace jni::metaprogramming {
+
+// This class is intended to mimic a function local static except that it
+// supports being reset. The object is constructed with a lambda and all
+// subsequent loads will be thread safe, invoking the lambda once (and only
+// once) if the currently stored value is T{0}.
+//
+// This class is thread-safe.  Loads will be cheap (after a potentially
+// expensive initial init), stores are expensive.
+template<typename T_>
+class DoubleLockedValue {
+ public:
+  template <typename Lambda>
+  inline T_ LoadAndMaybeInit(Lambda lambda) {
+    // Typical case, value already initialised, perform cheap load and return.
+    T_ return_value = value_.load(std::memory_order_acquire);
+
+    if(return_value != T_{0}) {
+      return return_value;
+    }
+
+    // Value was nil (uninitialised), perform heavy-weight lock.
+    std::lock_guard<std::mutex> lock_guard {lock_};
+
+    // Check another thread didn't race to lock before.
+    return_value = value_.load(std::memory_order_acquire);
+    if(return_value != T_{}) {
+      return return_value;
+    }
+
+    // Perform the potentially expensive initialisation and return.
+    return_value = lambda();
+    value_.store(return_value, std::memory_order_release);
+    return return_value;
+  }
+
+  // Sets the value to {0}.
+  inline void Reset() {
+    std::lock_guard<std::mutex> lock_guard {lock_};
+    value_.store(0, std::memory_order_release);
+  }
+
+  // Sets the value to {0} and iff the value was not {0} prior to being torn
+  // down, the teardown lambda will be invoked with this value.
+  template <typename TeardownLambda>
+  inline void Reset(TeardownLambda lambda) {
+    std::lock_guard<std::mutex> lock_guard {lock_};
+    auto val = value_.load();
+    if(val != 0) {
+      lambda(val);
+      value_.store(0, std::memory_order_release);
+    }
+  }
+
+ private:
+  std::atomic<T_> value_ = {0};
+  std::mutex lock_;
+};
+
+}  // namespace jni::metaprogramming
+
+
+#include <utility>
+
+namespace jni {
+
+template <typename ReturnType, bool is_array = false>
+class JniMethodInvoke {};
+
+template <>
+struct JniMethodInvoke<void, false> {
+  template <typename... Ts>
+  static void Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    jni::JniEnv::GetEnv()->CallVoidMethod(object, method_id,
+                                          std::forward<Ts>(ts)...);
+  }
+};
+
+template <>
+struct JniMethodInvoke<jboolean, false> {
+  template <typename... Ts>
+  static jboolean Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return jni::JniEnv::GetEnv()->CallBooleanMethod(object, method_id,
+                                                    std::forward<Ts>(ts)...);
+  }
+};
+
+template <>
+struct JniMethodInvoke<jint, false> {
+  template <typename... Ts>
+  static jint Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return jni::JniEnv::GetEnv()->CallIntMethod(object, method_id,
+                                                std::forward<Ts>(ts)...);
+  }
+};
+
+template <>
+struct JniMethodInvoke<jlong, false> {
+  template <typename... Ts>
+  static jlong Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return jni::JniEnv::GetEnv()->CallLongMethod(object, method_id,
+                                                 std::forward<Ts>(ts)...);
+  }
+};
+
+template <>
+struct JniMethodInvoke<jfloat, false> {
+  template <typename... Ts>
+  static jfloat Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return jni::JniEnv::GetEnv()->CallFloatMethod(object, method_id,
+                                                  std::forward<Ts>(ts)...);
+  }
+};
+
+template <>
+struct JniMethodInvoke<jdouble, false> {
+  template <typename... Ts>
+  static jdouble Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return jni::JniEnv::GetEnv()->CallDoubleMethod(object, method_id,
+                                                   std::forward<Ts>(ts)...);
+  }
+};
+
+template <>
+struct JniMethodInvoke<jobject, false> {
+  // This always returns a local reference which should be embedded in type
+  // information wherever this is used.
+  template <typename... Ts>
+  static jobject Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return jni::JniEnv::GetEnv()->CallObjectMethod(object, method_id,
+                                                   std::forward<Ts>(ts)...);
+  }
+};
+
+template <>
+struct JniMethodInvoke<jstring, false> {
+  template <typename... Ts>
+  static jobject Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return jni::JniEnv::GetEnv()->CallObjectMethod(object, method_id,
+                                                   std::forward<Ts>(ts)...);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Array Types.
+////////////////////////////////////////////////////////////////////////////////
+template <>
+struct JniMethodInvoke<jbooleanArray, true> {
+  template <typename... Ts>
+  static jbooleanArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jbooleanArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+        object, method_id, std::forward<Ts>(ts)...));
+  }
+};
+
+template <>
+struct JniMethodInvoke<jbyteArray, true> {
+  template <typename... Ts>
+  static jbyteArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jbyteArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+        object, method_id, std::forward<Ts>(ts)...));
+  }
+};
+
+template <>
+struct JniMethodInvoke<jcharArray, true> {
+  template <typename... Ts>
+  static jcharArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jcharArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+        object, method_id, std::forward<Ts>(ts)...));
+  }
+};
+
+template <>
+struct JniMethodInvoke<jshortArray, true> {
+  template <typename... Ts>
+  static jshortArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jshortArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+        object, method_id, std::forward<Ts>(ts)...));
+  }
+};
+
+template <>
+struct JniMethodInvoke<jintArray, true> {
+  template <typename... Ts>
+  static jintArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jintArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+        object, method_id, std::forward<Ts>(ts)...));
+  }
+};
+
+template <>
+struct JniMethodInvoke<jfloatArray, true> {
+  template <typename... Ts>
+  static jfloatArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jfloatArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+        object, method_id, std::forward<Ts>(ts)...));
+  }
+};
+
+template <>
+struct JniMethodInvoke<jdoubleArray, true> {
+  template <typename... Ts>
+  static jdoubleArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jdoubleArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+        object, method_id, std::forward<Ts>(ts)...));
+  }
+};
+
+template <>
+struct JniMethodInvoke<jlongArray, true> {
+  template <typename... Ts>
+  static jlongArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jlongArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+        object, method_id, std::forward<Ts>(ts)...));
+  }
+};
+
+template <>
+struct JniMethodInvoke<jobjectArray, true> {
+  template <typename... Ts>
+  static jobjectArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+        object, method_id, std::forward<Ts>(ts)...));
+  }
+};
+
+}  // namespace jni
+
+
 #include <optional>
 
 namespace jni {
@@ -1964,6 +2128,597 @@ template <typename T>
 using RefBaseT_t = typename T::RefBaseT;
 
 }  // namespace jni
+
+
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+namespace jni {
+
+template <typename... ClassLoaderTs>
+class Jvm {
+ public:
+  const std::tuple<ClassLoaderTs...> class_loaders_;
+
+  constexpr Jvm(ClassLoaderTs... class_loaders)
+      : class_loaders_(class_loaders...) {}
+
+  template <const auto& class_loader_v, std::size_t... Is>
+  constexpr size_t IdxOfClassLoaderHelper(
+      std::integer_sequence<std::size_t, Is...>) const {
+    return metaprogramming::ModifiedMax(
+        {((std::get<Is>(class_loaders_) == class_loader_v) ? Is : -1)...});
+  }
+
+  // Returns the index for a given classloader within this set (any given class
+  // ref is defined by this index).
+  template <const auto& class_loader_v>
+  constexpr size_t IdxOfClassLoader() const {
+    return IdxOfClassLoaderHelper<class_loader_v>(
+        std::make_integer_sequence<std::size_t, sizeof...(ClassLoaderTs)>());
+  }
+
+  template <typename T>
+  bool constexpr operator==(const T& rhs) const {
+    return false;
+  }
+  bool constexpr operator==(const Jvm&) const { return true; }
+
+  template <typename T>
+  bool constexpr operator!=(const T& rhs) const {
+    return !(*this == rhs);
+  }
+};
+
+template <typename... ClassLoaderTs>
+Jvm(ClassLoaderTs...) -> Jvm<ClassLoaderTs...>;
+
+// Convenience Jvm definition.
+// Compatible with default class loader or specified loaders.
+inline constexpr Jvm kDefaultJvm{kDefaultClassLoader};
+
+}  // namespace jni
+
+        copy_on_completion_(copy_on_completion) {}
+
+  ~ArrayView() {
+    JniArrayHelper<SpanType>::ReleaseArrayElements(
+        array_, get_array_elements_result_.ptr_, copy_on_completion_);
+  }
+
+  SpanType* ptr() { return get_array_elements_result_.ptr_; }
+
+ protected:
+  const jarray array_;
+  const GetArrayElementsResult<SpanType> get_array_elements_result_;
+  const bool copy_on_completion_;
+};
+
+// This CTAD guide is required for materialising new ArrayViews from |Pin()|
+// calls as move and copy constructors are deleted.
+template <typename SpanType>
+ArrayView(ArrayView<SpanType>&&) -> ArrayView<SpanType>;
+
+}  // namespace jni
+
+
+#include <type_traits>
+
+namespace jni {
+
+template <typename T>
+struct ArrayTag {};
+
+template <typename T>
+static constexpr bool kIsArrayType =
+    std::is_base_of_v<ArrayTag<jbyteArray>, T> ||
+    std::is_base_of_v<ArrayTag<jcharArray>, T> ||
+    std::is_base_of_v<ArrayTag<jshortArray>, T> ||
+    std::is_base_of_v<ArrayTag<jintArray>, T> ||
+    std::is_base_of_v<ArrayTag<jfloatArray>, T> ||
+    std::is_base_of_v<ArrayTag<jdoubleArray>, T> ||
+    std::is_base_of_v<ArrayTag<jlongArray>, T> ||
+    std::is_base_of_v<ArrayTag<jbooleanArray>, T> ||
+    std::is_base_of_v<ArrayTag<jobjectArray>, T> ||
+    std::is_base_of_v<ArrayTag<jarray>, T>;
+
+// Primitive Keys.
+using PrimitiveKeys =
+    std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
+               jfloatArray, jdoubleArray, jbooleanArray>;
+
+template <typename T>
+static constexpr bool kIsPrimitiveArrayType =
+    metaprogramming::TupContains_v<T, PrimitiveKeys>;
+
+// Simple type for proxying types used in the API (e.g. jint) to their
+// corresponding array type (e.g. jintarray). Only use the former type when
+// using JNI Bind (e.g. LocalArray<jint>, not LocalArray<jintArray>).
+using RegularToArrayTypeMap = metaprogramming::TypeToTypeMap<
+    std::tuple<jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jboolean,
+               jobject, jarray>,
+    std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
+               jfloatArray, jdoubleArray, jbooleanArray, jobjectArray, jarray>>;
+
+// Given a type, returns the corresponding array type (e.g. jint => jintArray).
+template <typename T>
+using RegularToArrayTypeMap_t =
+    metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap, T>;
+
+template <typename T>
+using ArrayToRegularTypeMap_t =
+    metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap::Invert, T>;
+
+template <typename RawType>
+struct Array;
+
+////////////////////////////////////////////////////////////////////////////////
+// Array Non-Object Implementation.
+////////////////////////////////////////////////////////////////////////////////
+template <typename RawType>
+struct ArrayNonObjectTypeImpl {
+  RawType raw_type_;
+
+  constexpr ArrayNonObjectTypeImpl(RawType raw_type) : raw_type_(raw_type) {}
+
+  template <typename RawTypeRhs>
+  constexpr bool operator==(const Array<RawTypeRhs>& rhs) const {
+    if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
+      return (raw_type_ == rhs.raw_type_);
+    }
+    return false;
+  }
+
+  template <typename RawTypeRhs>
+  constexpr bool operator!=(const Array<RawTypeRhs>& rhs) const {
+    return !(*this == rhs);
+  }
+};
+
+// Primitive array implementaiton.
+template <typename T, bool HoldsObject>
+struct ArrayImpl : public ArrayNonObjectTypeImpl<T>,
+                   ArrayTag<RegularToArrayTypeMap_t<T>> {
+ public:
+  using ArrayNonObjectTypeImpl<T>::ArrayNonObjectTypeImpl;
+};
+
+// Arrays of arrays are nominally special in that they index as jarrays but they
+// will CDecl as their most base type.
+template <typename T>
+struct ArrayImpl<Array<T>, false> : public ArrayNonObjectTypeImpl<Array<T>>,
+                                    ArrayTag<jarray> {
+ public:
+  using ArrayNonObjectTypeImpl<Array<T>>::ArrayNonObjectTypeImpl;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Array Object Implementation.
+////////////////////////////////////////////////////////////////////////////////
+template <typename RawType>
+struct ArrayImpl<RawType, true> : public ArrayTag<jobjectArray> {
+  RawType raw_type_;
+
+  constexpr ArrayImpl(RawType raw_type) : raw_type_(raw_type) {}
+
+  template <typename RawTypeRhs>
+  constexpr bool operator==(const Array<RawTypeRhs>& rhs) const {
+    if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
+      return (raw_type_ == rhs.raw_type_);
+    }
+    return false;
+  }
+
+  template <typename RawTypeRhs>
+  constexpr bool operator!=(const Array<RawTypeRhs>& rhs) const {
+    return !(*this == rhs);
+  }
+};
+
+// This type correlates to those used in declarations,
+//   e.g. Field { Array { Array { jint {} } } }.
+template <typename RawType>
+struct Array : public ArrayImpl<RawType, std::is_base_of_v<Object, RawType>> {
+  constexpr Array(RawType raw_type)
+      : ArrayImpl<RawType, std::is_base_of_v<Object, RawType>>(raw_type) {}
+};
+
+template <typename RawType>
+Array(RawType) -> Array<RawType>;
+
+template <typename RawType>
+Array(Array<RawType>) -> Array<Array<RawType>>;
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank Utilities.
+////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+struct Rankifier {
+  static constexpr bool kComputableRank = true;
+
+  template <typename ArrayT>
+  static inline constexpr std::size_t Rank(const ArrayT& maybe_array) {
+    if constexpr (kIsArrayType<std::decay_t<decltype(maybe_array)>>) {
+      return Rank(maybe_array.raw_type_) + 1;
+    } else {
+      return 0;
+    }
+  }
+};
+
+template <>
+struct Rankifier<void> {
+  static constexpr bool kComputableRank = false;
+
+  template <typename ArrayT>
+  constexpr std::size_t Rank(const ArrayT& maybe_array) {
+    return 0;
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Strip Utilities.
+// Takes an native array like type, and emits the innermost type.
+// e.g. {Array<int>, Array{Array<int>}, Array{Array{Array<int>}} } => int.
+////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+struct ArrayStrip {
+  using type = T;
+};
+
+template <typename T>
+using ArrayStrip_t = typename ArrayStrip<T>::type;
+
+template <typename T>
+struct ArrayStrip<Array<T>> {
+  using type = ArrayStrip_t<T>;
+};
+
+template <typename T>
+constexpr auto FullArrayStripV(const T& val) {
+  if constexpr (kIsArrayType<std::decay_t<decltype(val)>>) {
+    return FullArrayStripV(val.raw_type_);
+  } else {
+    return val;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Array Build from Span + Rank.
+////////////////////////////////////////////////////////////////////////////////
+template <typename RawType, std::size_t kRank>
+struct ArrayFromRank {
+  // Deferred
+  template <std::size_t kRecursedRank>
+  struct Helper {
+    using type = Array<typename ArrayFromRank<RawType, kRank - 1>::type>;
+  };
+
+  template <>
+  struct Helper<0> {
+    using type = RawType;
+  };
+
+  using type = typename Helper<kRank>::type;
+};
+
+template <typename RawType, std::size_t kRank>
+using ArrayFromRank_t = typename ArrayFromRank<RawType, kRank>::type;
+
+}  // namespace jni
+
+
+#include <array>
+#include <string_view>
+
+namespace jni::metaprogramming {
+
+struct StringConcatenate {
+  template <std::string_view const&... Vs>
+  struct Helper {
+    static constexpr auto BuildConcatenation() noexcept {
+      constexpr std::size_t len = (Vs.size() + ... + 0);
+      std::array<char, len + 1> arr{};
+      auto append_single_string =
+          [i = 0, &arr](auto const& string_to_concatenate) mutable {
+            for (auto c : string_to_concatenate) arr[i++] = c;
+          };
+      (append_single_string(Vs), ...);
+      arr[len] = 0;
+
+      return arr;
+    }
+
+    static constexpr auto arr = BuildConcatenation();
+    static constexpr std::string_view value{arr.data(), arr.size() - 1};
+  };
+
+  template <std::string_view const&... Vs>
+  static constexpr std::string_view value = Helper<Vs...>::value;
+};
+
+template <std::string_view const&... Vs>
+static constexpr auto StringConcatenate_v = StringConcatenate::value<Vs...>;
+
+}  // namespace jni::metaprogramming
+
+
+#include <tuple>
+
+namespace jni::metaprogramming {
+
+struct Reverse {
+  template <typename... Ts>
+  struct Helper {
+    using type = std::tuple<>;
+  };
+
+  template <typename... Ts>
+  using Helper_t = typename Helper<std::tuple<Ts...>>::type;
+
+  template <typename T1, typename... Ts>
+  struct Helper<std::tuple<T1, Ts...>> {
+    using type = ConcatenateTup_t<Helper_t<Ts...>, std::tuple<T1>>;
+  };
+
+  template <typename... Ts>
+  using type = Helper_t<Ts...>;
+};
+
+template <typename... Ts>
+using Reverse_t = typename Reverse::template type<Ts...>;
+
+template <typename Tup>
+using Reverse_Tup = TupleUnroller_t<Reverse, Tup>;
+
+}  // namespace jni::metaprogramming
+
+
+#include <algorithm>
+#include <tuple>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+template <typename...>
+struct NBitSequence {};
+
+template <>
+struct NBitSequence<> {
+  using Increment = NBitSequence<>;
+};
+
+// Represents a sequence of "NBits".  This can be useful for generating
+// selections of pools of objects of various sizes.
+//
+// For a sequence with N values, a tuple of size N that contains tuples whose
+// sizes match those of max_values can be selected from using TypeMask.
+//
+// In other words, a sequence of N sets of sizes K0, K1, K2...KN can represent a
+// single selection with an NBitSequence where sizeof...(values) == N and
+// sizeof...(max_values) == N where Ki == max_values[i].
+template <size_t... values, size_t... max_values, bool... overflows>
+struct NBitSequence<NBit<values, max_values, overflows>...> {
+  static constexpr size_t sequence_size_ = sizeof...(values);
+
+  using Sequence = std::tuple<NBit<values, max_values, overflows>...>;
+  using TypeMask = TypeIndexMask<values...>;
+
+  template <size_t I>
+  using GetBit = TypeOfNthTupleElement_t<I, Sequence>;
+
+  // Helper method to compare values of all NBits.
+  template <size_t... Bits>
+  static constexpr bool Same(std::index_sequence<Bits...> = {}) {
+    static_assert(sizeof...(Bits) == sizeof...(values));
+    return std::is_same_v<std::index_sequence<values...>,
+                          std::index_sequence<Bits...>>;
+  }
+
+  static constexpr size_t max_representable_size_ = ((max_values + 1) * ...);
+
+  template <size_t... Bits>
+  static constexpr bool same_ = Same(std::index_sequence<Bits...>{});
+
+  // If the next bit is overflowing (i.e. it just rolled over), this current
+  // value increments. Bits only overflow for a single cycle, otherwise higher
+  // order bits flip when no rollover is happening.
+  template <size_t I>
+  struct IncrementedBit {
+    using type = std::conditional_t<IncrementedBit<I + 1>::type::overflow_bit_,
+                                    typename GetBit<I>::Increment,
+                                    typename GetBit<I>::ResetOverflow>;
+  };
+
+  template <>
+  struct IncrementedBit<sequence_size_ - 1> {
+    using type = typename GetBit<sequence_size_ - 1>::Increment;
+  };
+
+  template <typename index_sequence>
+  struct IncrementSequenceHelper {};
+
+  template <size_t... Is>
+  struct IncrementSequenceHelper<std::index_sequence<Is...>> {
+    using type = NBitSequence<typename IncrementedBit<Is>::type...>;
+  };
+
+  using Increment = typename IncrementSequenceHelper<
+      std::make_index_sequence<sequence_size_>>::type;
+};
+
+}  // namespace jni::metaprogramming
+
+
+#include <string_view>
+
+namespace jni {
+
+// Translates a single JNI term (e.g. jint -> "I") as if it were being used as a
+// parameter to a method.
+//
+// Note, the context a parameter is used on occasion will alter a signature,
+// e.g. void in a return is explicit, whereas when used as a parameter, it is
+// represented as the omission of any value.
+//
+// Additionally, Android will obnoxiously fail to compile the standard looking:
+//    static constexpr char kStr[] = "SomeString";
+//
+// Because it is against style to import have a using declaration header wide,
+// but these are also template definitions, they must remain in this header, and
+// so there are goofy looking "using literal" declarations throughout.
+//
+// https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/types.html
+//
+// TODO:  Rename to JavaPrimitiveTypeToString
+template <typename JavaType>
+constexpr std::string_view JavaTypeToString();
+
+template <>
+constexpr std::string_view JavaTypeToString<void>() {
+  // Note:  This only applies when used as a return, not as a parameter.  This
+  // could be enforced through type system, but maybe feels excessive to do so.
+  // For now, enforcing this is unnecesssary, as this function is only called
+  // for each Param, which, in the case of no params, is 0 times.
+  using namespace std::literals;
+  return "V"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jboolean>() {
+  using namespace std::literals;
+  return "Z"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jbyte>() {
+  using namespace std::literals;
+  return "B"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jchar>() {
+  using namespace std::literals;
+  return "C"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jshort>() {
+  using namespace std::literals;
+  return "S"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jint>() {
+  using namespace std::literals;
+  return "I"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jlong>() {
+  using namespace std::literals;
+  return "J"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jfloat>() {
+  using namespace std::literals;
+  return "F"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jdouble>() {
+  using namespace std::literals;
+  return "D"sv;
+}
+
+template <>
+constexpr std::string_view JavaTypeToString<jstring>() {
+  using namespace std::literals;
+  return "Ljava/lang/String;"sv;
+}
+
+}  // namespace jni
+
+
+#include <optional>
+#include <string>
+#include <string_view>
+
+namespace jni {
+
+static constexpr Class kJavaLangString{"java/lang/String"};
+
+template <typename CrtpBase>
+class StringRefBase : public RefBase<jstring, kJavaLangString> {
+ public:
+  using RefBaseT = RefBase<jstring>;
+  StringRefBase(jstring object) : RefBase<jstring, kJavaLangString>(object) {}
+
+  ~StringRefBase() {
+    if (object_ref_) {
+      static_cast<CrtpBase &>(*this).ClassSpecificDeleteObjectRef(*object_ref_);
+    }
+  }
+};
+
+// Represents a UTF view into a jstring (see jni::String::Pin()).
+//
+// This class will immediately pin memory associated with the jstring, and
+// release on leaving scope. Note, this class will *always* make an expensive
+// copy, as strings are natively represented in Java as Unicode.
+//
+// (C++20 will offer a compatible std::string_view but C++17 does not).
+class UtfStringView {
+ public:
+  UtfStringView(jstring java_string)
+      : java_string_(java_string),
+        chars_(java_string_
+                   ? JniEnv::GetEnv()->GetStringUTFChars(java_string,
+                                                         /*isCopy=*/nullptr)
+                   : nullptr) {}
+
+  ~UtfStringView() {
+    if (chars_) {
+      JniHelper::ReleaseStringUTFChars(java_string_, chars_);
+    }
+  }
+
+  UtfStringView(UtfStringView &&) = delete;
+  UtfStringView(const UtfStringView &) = delete;
+
+  // Returns a view into the pinned character string.
+  // Warning: std::string_view{nullptr} is undefined behaviour and may crash.
+  const std::string_view ToString() const { return std::string_view{chars_}; }
+
+ private:
+  const jstring java_string_;
+  const char *chars_;
+};
+
+}  // namespace jni
+
+
+#include <string_view>
+
+namespace jni {
+
+////////////////////////////////////////////////////////////////////////////////
+// Constants for signature generation.
+////////////////////////////////////////////////////////////////////////////////
+
+static constexpr std::string_view kLeftBracket{"["};
+static constexpr std::string_view kRightBracket{"]"};
+static constexpr std::string_view kLeftParenthesis{"("};
+static constexpr std::string_view kRightParenthesis{")"};
+static constexpr std::string_view kInit{"<init>"};
+static constexpr std::string_view kComma{","};
+static constexpr std::string_view kSemiColon{";"};
+static constexpr std::string_view kLetterL{"L"};
+
+}  // namespace jni
+
 
 #include <atomic>
 #include <mutex>  // NOLINT
@@ -2158,591 +2913,22 @@ using ClassRef_t =
 
 }  // namespace jni
 
-#include <type_traits>
 
 namespace jni {
 
-// Correlates to Proxy<jarray>.
-struct ArrayTag {};
+struct ArrayRefPrimitiveBaseTag {};
 
-// Correlates to Proxy<jobjectArray>.
-struct ObjectArrayTag {};
-
-template <typename RawType>
-struct Array;
-
-// Never instantiated.
-template <typename RawType, bool HoldsObject>
-struct ArrayImpl {};
-
-template <typename RawType>
-struct ArrayImpl<RawType, false> : public ArrayTag {
-  RawType raw_type_;
-
-  constexpr ArrayImpl(RawType raw_type) : raw_type_(raw_type) {}
-
-  template <typename RawTypeRhs>
-  constexpr bool operator==(const Array<RawTypeRhs>& rhs) const {
-    if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
-      return (raw_type_ == rhs.raw_type_);
-    }
-    return false;
-  }
-
-  template <typename RawTypeRhs>
-  constexpr bool operator!=(const Array<RawTypeRhs>& rhs) const {
-    return !(*this == rhs);
-  }
-};
-
-template <typename RawType>
-struct ArrayImpl<RawType, true> : public ObjectArrayTag {
-  RawType raw_type_;
-
-  constexpr ArrayImpl(RawType raw_type) : raw_type_(raw_type) {}
-
-  template <typename RawTypeRhs>
-  constexpr bool operator==(const Array<RawTypeRhs>& rhs) const {
-    if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
-      return (raw_type_ == rhs.raw_type_);
-    }
-    return false;
-  }
-
-  template <typename RawTypeRhs>
-  constexpr bool operator!=(const Array<RawTypeRhs>& rhs) const {
-    return !(*this == rhs);
-  }
-};
-
-template <typename RawType>
-struct Array : public ArrayImpl<RawType, std::is_base_of_v<Object, RawType>> {
-  constexpr Array(RawType raw_type)
-      : ArrayImpl<RawType, std::is_base_of_v<Object, RawType>>(raw_type) {}
-};
-
-template <typename RawType>
-Array(RawType) -> Array<RawType>;
-
-template <typename RawType>
-Array(Array<RawType>) -> Array<Array<RawType>>;
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank + Type Strip Utilities.
-////////////////////////////////////////////////////////////////////////////////
-template <typename T>
-struct Rankifier {
-  static constexpr bool kComputableRank = true;
-
-  template <typename ArrayT>
-  static inline constexpr std::size_t Rank(const ArrayT& maybe_array) {
-    if constexpr (std::is_base_of_v<ArrayTag,
-                                    std::decay_t<decltype(maybe_array)>> ||
-                  std::is_base_of_v<ObjectArrayTag,
-                                    std::decay_t<decltype(maybe_array)>>) {
-      return Rank(maybe_array.raw_type_) + 1;
-    } else {
-      return 0;
-    }
-  }
-};
-
-template <>
-struct Rankifier<void> {
-  static constexpr bool kComputableRank = false;
-
-  template <typename ArrayT>
-  constexpr std::size_t Rank(const ArrayT& maybe_array) {
-    return 0;
-  }
-};
-
-// Takes an native array like type, and emits the innermost type.
-// e.g. {Array<int>, Array{Array<int>}, Array{Array{Array<int>}} } => int.
-template <typename T>
-struct ArrayStrip {
-  using type = T;
-};
-
-template <typename T>
-using ArrayStrip_t = typename ArrayStrip<T>::type;
-
-template <typename T>
-struct ArrayStrip<Array<T>> {
-  using type = ArrayStrip_t<T>;
-};
-
-}  // namespace jni
-
-#include <array>
-#include <string_view>
-
-namespace jni::metaprogramming {
-
-struct StringConcatenate {
-  template <std::string_view const&... Vs>
-  struct Helper {
-    static constexpr auto BuildConcatenation() noexcept {
-      constexpr std::size_t len = (Vs.size() + ... + 0);
-      std::array<char, len + 1> arr{};
-      auto append_single_string =
-          [i = 0, &arr](auto const& string_to_concatenate) mutable {
-            for (auto c : string_to_concatenate) arr[i++] = c;
-          };
-      (append_single_string(Vs), ...);
-      arr[len] = 0;
-
-      return arr;
-    }
-
-    static constexpr auto arr = BuildConcatenation();
-    static constexpr std::string_view value{arr.data(), arr.size() - 1};
-  };
-
-  template <std::string_view const&... Vs>
-  static constexpr std::string_view value = Helper<Vs...>::value;
-};
-
-template <std::string_view const&... Vs>
-static constexpr auto StringConcatenate_v = StringConcatenate::value<Vs...>;
-
-}  // namespace jni::metaprogramming
-
-#include <tuple>
-
-namespace jni::metaprogramming {
-
-struct Reverse {
-  template <typename... Ts>
-  struct Helper {
-    using type = std::tuple<>;
-  };
-
-  template <typename... Ts>
-  using Helper_t = typename Helper<std::tuple<Ts...>>::type;
-
-  template <typename T1, typename... Ts>
-  struct Helper<std::tuple<T1, Ts...>> {
-    using type = ConcatenateTup_t<Helper_t<Ts...>, std::tuple<T1>>;
-  };
-
-  template <typename... Ts>
-  using type = Helper_t<Ts...>;
-};
-
-template <typename... Ts>
-using Reverse_t = typename Reverse::template type<Ts...>;
-
-template <typename Tup>
-using Reverse_Tup = TupleUnroller_t<Reverse, Tup>;
-
-}  // namespace jni::metaprogramming
-
-#include <algorithm>
-#include <tuple>
-#include <utility>
-
-namespace jni::metaprogramming {
-
-template <typename...>
-struct NBitSequence {};
-
-template <>
-struct NBitSequence<> {
-  using Increment = NBitSequence<>;
-};
-
-// Represents a sequence of "NBits".  This can be useful for generating
-// selections of pools of objects of various sizes.
-//
-// For a sequence with N values, a tuple of size N that contains tuples whose
-// sizes match those of max_values can be selected from using TypeMask.
-//
-// In other words, a sequence of N sets of sizes K0, K1, K2...KN can represent a
-// single selection with an NBitSequence where sizeof...(values) == N and
-// sizeof...(max_values) == N where Ki == max_values[i].
-template <size_t... values, size_t... max_values, bool... overflows>
-struct NBitSequence<NBit<values, max_values, overflows>...> {
-  static constexpr size_t sequence_size_ = sizeof...(values);
-
-  using Sequence = std::tuple<NBit<values, max_values, overflows>...>;
-  using TypeMask = TypeIndexMask<values...>;
-
-  template <size_t I>
-  using GetBit = TypeOfNthTupleElement_t<I, Sequence>;
-
-  // Helper method to compare values of all NBits.
-  template <size_t... Bits>
-  static constexpr bool Same(std::index_sequence<Bits...> = {}) {
-    static_assert(sizeof...(Bits) == sizeof...(values));
-    return std::is_same_v<std::index_sequence<values...>,
-                          std::index_sequence<Bits...>>;
-  }
-
-  static constexpr size_t max_representable_size_ = ((max_values + 1) * ...);
-
-  template <size_t... Bits>
-  static constexpr bool same_ = Same(std::index_sequence<Bits...>{});
-
-  // If the next bit is overflowing (i.e. it just rolled over), this current
-  // value increments. Bits only overflow for a single cycle, otherwise higher
-  // order bits flip when no rollover is happening.
-  template <size_t I>
-  struct IncrementedBit {
-    using type = std::conditional_t<IncrementedBit<I + 1>::type::overflow_bit_,
-                                    typename GetBit<I>::Increment,
-                                    typename GetBit<I>::ResetOverflow>;
-  };
-
-  template <>
-  struct IncrementedBit<sequence_size_ - 1> {
-    using type = typename GetBit<sequence_size_ - 1>::Increment;
-  };
-
-  template <typename index_sequence>
-  struct IncrementSequenceHelper {};
-
-  template <size_t... Is>
-  struct IncrementSequenceHelper<std::index_sequence<Is...>> {
-    using type = NBitSequence<typename IncrementedBit<Is>::type...>;
-  };
-
-  using Increment = typename IncrementSequenceHelper<
-      std::make_index_sequence<sequence_size_>>::type;
-};
-
-}  // namespace jni::metaprogramming
-
-#include <tuple>
-#include <type_traits>
-
-namespace jni::metaprogramming {
-
-// Metafunction that binds a metafunction (e.g. Same), a query (e.g. "A"),  a
-// variadic pack as arguments, and returns the idx of the query.  All members
-// of the variadic pack must be unique.
-//
-// |Comparator| must express a static bool data member "value".
-template <typename Comparator>
-struct FindIdxOfVal {
-  template <typename... Ts>
-  struct FindIdxOfValHelper {
-    static_assert(sizeof...(Ts) == -1, "The sought element is not in the set");
-  };
-
-  template <typename T, typename... Ts>
-  struct FindIdxOfValHelper<T, Ts...> {
-    template <std::size_t idx>
-    static constexpr std::size_t GetIdxHelper() {
-      if constexpr (Comparator::template value<T>) {
-        return idx;
-      } else {
-        return FindIdxOfValHelper<Ts...>::template GetIdxHelper<idx - 1>();
-      }
-    }
-
-    static constexpr std::size_t GetIdx() {
-      return sizeof...(Ts) - GetIdxHelper<sizeof...(Ts)>();
-    }
-  };
-
-  // Done once in a seperate struct for improved compilation time.
-  template <typename... Ts>
-  struct StaticAssertWrapper {
-    static_assert(AllUnique_v<Ts...>,
-                  "FindIdxOfVal only operates on unique sets.");
-    static constexpr std::size_t value = FindIdxOfValHelper<Ts...>::GetIdx();
-  };
-
-  template <typename... Ts>
-  static constexpr std::size_t value = StaticAssertWrapper<Ts...>::value;
-};
-
-template <typename Comparator, typename... Ts>
-static constexpr std::size_t FindIdxOfValWithComparator_idx =
-    FindIdxOfVal<Comparator>::template value<Ts...>;
-
-// Convenience alias with default of std::is_same Comparator (typical use case).
-template <typename Query, typename... Ts>
-static constexpr std::size_t FindIdxOfVal_idx =
-    FindIdxOfValWithComparator_idx<Same<Query>, Ts...>;
-
-template <typename Comparator, typename TupType>
-static constexpr std::size_t FindIdxOfValInTupWithComparator_idx =
-    TupleUnroller_v<FindIdxOfVal<Comparator>, TupType>;
-
-// Convenience alias with default of std::is_same Comparator (typical use case).
-template <typename Query, typename TupType>
-static constexpr std::size_t FindIdxOfValInTup_idx =
-    FindIdxOfValInTupWithComparator_idx<Same<Query>, TupType>;
-
-}  // namespace jni::metaprogramming
-
-#include <tuple>
-
-namespace jni::metaprogramming {
-
-// Metafunction to return only even elements.
-struct Even {
-  template <typename... Ts>
-  struct EvenHelper {};
-
-  template <>
-  struct EvenHelper<std::tuple<>> {
-    using type = std::tuple<>;
-  };
-
-  template <typename... Ts>
-  struct OddHelper {};
-
-  template <>
-  struct OddHelper<std::tuple<>> {
-    using type = std::tuple<>;
-  };
-
-  template <typename T, typename... Ts>
-  struct OddHelper<std::tuple<T, Ts...>> {
-    using type = typename EvenHelper<std::tuple<Ts...>>::type;
-  };
-
-  template <typename T, typename... Ts>
-  struct EvenHelper<std::tuple<T, Ts...>> {
-    using type = ConcatenateTup_t<std::tuple<T>,
-                                  typename OddHelper<std::tuple<Ts...>>::type>;
-  };
-
-  template <typename... Ts>
-  using type = typename EvenHelper<std::tuple<Ts...>>::type;
-};
-
-template <typename... Ts>
-using Even_t = typename Even::template type<Ts...>;
-
-// Metafunction to return only odd elements.
-struct Odd {
-  template <typename... Ts>
-  struct OddHelper {
-    using type = std::tuple<>;
-  };
-
-  template <typename T, typename... Ts>
-  struct OddHelper<std::tuple<T, Ts...>> {
-    using type = Even_t<Ts...>;
-  };
-
-  template <typename... Ts>
-  using type = typename OddHelper<std::tuple<Ts...>>::type;
-};
-
-template <typename... Ts>
-using Odd_t = typename Odd::template type<Ts...>;
-
-}  // namespace jni::metaprogramming
-
-
-#include <string_view>
-
-namespace jni {
-
-// Translates a single JNI term (e.g. jint -> "I") as if it were being used as a
-// parameter to a method.
-//
-// Note, the context a parameter is used on occasion will alter a signature,
-// e.g. void in a return is explicit, whereas when used as a parameter, it is
-// represented as the omission of any value.
-//
-// Additionally, Android will obnoxiously fail to compile the standard looking:
-//    static constexpr char kStr[] = "SomeString";
-//
-// Because it is against style to import have a using declaration header wide,
-// but these are also template definitions, they must remain in this header, and
-// so there are goofy looking "using literal" declarations throughout.
-//
-// https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/types.html
-//
-// TODO:  Rename to JavaPrimitiveTypeToString
-template <typename JavaType>
-constexpr std::string_view JavaTypeToString();
-
-template <>
-constexpr std::string_view JavaTypeToString<void>() {
-  // Note:  This only applies when used as a return, not as a parameter.  This
-  // could be enforced through type system, but maybe feels excessive to do so.
-  // For now, enforcing this is unnecesssary, as this function is only called
-  // for each Param, which, in the case of no params, is 0 times.
-  using namespace std::literals;
-  return "V"sv;
-}
-
-template <>
-constexpr std::string_view JavaTypeToString<jboolean>() {
-  using namespace std::literals;
-  return "Z"sv;
-}
-
-template <>
-constexpr std::string_view JavaTypeToString<jbyte>() {
-  using namespace std::literals;
-  return "B"sv;
-}
-
-template <>
-constexpr std::string_view JavaTypeToString<jchar>() {
-  using namespace std::literals;
-  return "C"sv;
-}
-
-template <>
-constexpr std::string_view JavaTypeToString<jshort>() {
-  using namespace std::literals;
-  return "S"sv;
-}
-
-template <>
-constexpr std::string_view JavaTypeToString<jint>() {
-  using namespace std::literals;
-  return "I"sv;
-}
-
-template <>
-constexpr std::string_view JavaTypeToString<jlong>() {
-  using namespace std::literals;
-  return "J"sv;
-}
-
-template <>
-constexpr std::string_view JavaTypeToString<jfloat>() {
-  using namespace std::literals;
-  return "F"sv;
-}
-
-template <>
-constexpr std::string_view JavaTypeToString<jdouble>() {
-  using namespace std::literals;
-  return "D"sv;
-}
-
-template <>
-constexpr std::string_view JavaTypeToString<jstring>() {
-  using namespace std::literals;
-  return "Ljava/lang/String;"sv;
-}
-
-}  // namespace jni
-
-#include <optional>
-#include <string>
-#include <string_view>
-
-namespace jni {
-
-static constexpr Class kJavaLangString{"java/lang/String"};
-
-template <typename CrtpBase>
-class StringRefBase : public RefBase<jstring, kJavaLangString> {
- public:
-  using RefBaseT = RefBase<jstring>;
-  StringRefBase(jstring object) : RefBase<jstring, kJavaLangString>(object) {}
-
-  ~StringRefBase() {
-    if (object_ref_) {
-      static_cast<CrtpBase&>(*this).ClassSpecificDeleteObjectRef(*object_ref_);
-    }
-  }
-};
-
-// Represents a UTF view into a jstring (see jni::String::Pin()).
-//
-// This class will immediately pin memory associated with the jstring, and
-// release on leaving scope. Note, this class will *always* make an expensive
-// copy, as strings are natively represented in Java as Unicode.
-//
-// (C++20 will offer a compatible std::string_view but C++17 does not).
-class UtfStringView {
- public:
-  UtfStringView(jstring java_string)
-      : java_string_(java_string),
-        chars_(java_string_
-                   ? JniEnv::GetEnv()->GetStringUTFChars(java_string,
-                                                         /*isCopy=*/nullptr)
-                   : nullptr) {}
-
-  ~UtfStringView() {
-    if (chars_) {
-      JniHelper::ReleaseStringUTFChars(java_string_, chars_);
-    }
-  }
-
-  UtfStringView(UtfStringView&&) = delete;
-  UtfStringView(const UtfStringView&) = delete;
-
-  // Returns a view into the pinned character string.
-  // Warning: std::string_view{nullptr} is undefined behaviour and may crash.
-  const std::string_view ToString() const { return std::string_view{chars_}; }
-
- private:
-  const jstring java_string_;
-  const char* chars_;
-};
-
-}  // namespace jni
-
-#include <string_view>
-
-namespace jni {
-
-////////////////////////////////////////////////////////////////////////////////
-// Constants for signature generation.
-////////////////////////////////////////////////////////////////////////////////
-
-static constexpr std::string_view kLeftBracket{"["};
-static constexpr std::string_view kRightBracket{"]"};
-static constexpr std::string_view kLeftParenthesis{"("};
-static constexpr std::string_view kRightParenthesis{")"};
-static constexpr std::string_view kInit{"<init>"};
-static constexpr std::string_view kComma{","};
-static constexpr std::string_view kSemiColon{";"};
-static constexpr std::string_view kLetterL{"L"};
-
-}  // namespace jni
-
-namespace jni {
-
+// Tag for non object array ref like tags (e.g. jintArray but not jobjectArray).
 template <typename SpanType>
-class ArrayView {
- public:
-  ArrayView(ArrayView&&) = delete;
-  ArrayView(const ArrayView&) = delete;
+struct ArrayRefPrimitiveTag : ArrayRefPrimitiveBaseTag {};
 
-  ArrayView(jarray array, bool copy_on_completion)
-      : array_(array),
-        get_array_elements_result_(
-            JniArrayHelper<SpanType>::GetArrayElements(array)),
-        copy_on_completion_(copy_on_completion) {}
-
-  ~ArrayView() {
-    JniArrayHelper<SpanType>::ReleaseArrayElements(
-        array_, get_array_elements_result_.ptr_, copy_on_completion_);
-  }
-
-  SpanType* ptr() { return get_array_elements_result_.ptr_; }
-
- protected:
-  const jarray array_;
-  const GetArrayElementsResult<SpanType> get_array_elements_result_;
-  const bool copy_on_completion_;
-};
-
-// This CTAD guide is required for materialising new ArrayViews from |Pin()|
-// calls as move and copy constructors are deleted.
-template <typename SpanType>
-ArrayView(ArrayView<SpanType>&&) -> ArrayView<SpanType>;
-
+// |SpanType| is primitive types like jint, jfloat, etc.
 template <typename SpanType, const auto& class_v_, const auto& class_loader_v_,
           const auto& jvm_v_>
-class ArrayRef : public RefBaseTag<jarray> {
+class ArrayRef : public RefBaseTag<RegularToArrayTypeMap_t<SpanType>>,
+                 ArrayRefPrimitiveTag<SpanType> {
  public:
-  using Base = RefBaseTag<jarray>;
+  using Base = RefBaseTag<RegularToArrayTypeMap_t<SpanType>>;
   using Base::Base;
 
   ArrayView<SpanType> Pin(bool copy_on_completion = true) {
@@ -2786,6 +2972,7 @@ class ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_>
 
 }  // namespace jni
 
+
 namespace jni::metaprogramming {
 
 // Builds a stable (i.e. first unique type is preserved) set of unique types
@@ -2827,51 +3014,6 @@ using UniqueSet_Tup = TupleUnroller_t<UniqueSet, Tup>;
 
 }  // namespace jni::metaprogramming
 
-#include <tuple>
-
-namespace jni::metaprogramming {
-
-// Maps types to other types.
-// Keys do not need to be unique, although queries only return the first entry.
-template <typename Tup1, typename Tup2>
-struct TypeToTypeMap {};
-
-template <typename... Keys, typename... Values>
-struct TypeToTypeMap<std::tuple<Keys...>, std::tuple<Values...>> {
-  static_assert(sizeof...(Keys) == sizeof...(Values),
-                "Keys must be an equal size to the value.");
-
-  using Invert = TypeToTypeMap<std::tuple<Values...>, std::tuple<Keys...>>;
-
-  template <typename Comparator>
-  using type =
-      TypeOfNthElement_t<FindIdxOfValWithComparator_idx<Comparator, Keys...>,
-                         Values...>;
-};
-
-// Metafunction to invert the map from keys->vals to vals->keys.
-// Note, keys do not need to be unique.
-template <typename TypeToTypeMap>
-using TypeToTypeMap_Invert = typename TypeToTypeMap::Invert;
-
-template <typename TypeToTypeMap, typename Query>
-using TypeToTypeMapQuery_t = typename TypeToTypeMap::template type<Same<Query>>;
-
-// Queries a type map using a custom comparator,
-// If multiple keys satisfy, the first is returned.
-template <typename TypeToTypeMap, typename Comparator>
-using TypeToTypeMapQueryWithComparator_t =
-    typename TypeToTypeMap::template type<Comparator>;
-
-// Builds a TypeToTypeMap from interleaved Keys and Values.
-template <typename... Ts>
-using TypeToTypeMapFromKeyValues_t = TypeToTypeMap<Even_t<Ts...>, Odd_t<Ts...>>;
-
-template <typename TupleOfKeyValuePairs>
-using TypeToTypeMapFromKeyValuesTup_t =
-    TupleToType_t<TupleOfKeyValuePairs, TypeToTypeMapFromKeyValues_t>;
-
-}  // namespace jni::metaprogramming
 
 #include <type_traits>
 #include <utility>
@@ -2896,6 +3038,7 @@ template <class DefaultType, std::size_t N>
 using TupleFromSize_t = decltype(TupleFromSize<DefaultType, N>());
 
 }  // namespace jni::metaprogramming
+
 
 #include <tuple>
 #include <type_traits>
@@ -2927,11 +3070,12 @@ struct Interleaved;
 
 template <typename... T0, typename... T1>
 struct Interleaved<std::tuple<T0...>, std::tuple<T1...>> {
-  using type = std::remove_pointer_t<
-      decltype(Interleave<std::tuple<T0...>, std::tuple<T1...>>())>;
+  using type = std::remove_pointer_t<decltype(
+      Interleave<std::tuple<T0...>, std::tuple<T1...>>())>;
 };
 
 }  // namespace jni::metaprogramming
+
 
 #include <tuple>
 
@@ -2971,6 +3115,7 @@ template <typename... Ts>
 using Flatten_t = typename Flatten::template type<Ts...>;
 
 }  // namespace jni::metaprogramming
+
 
 #include <tuple>
 #include <type_traits>
@@ -3049,6 +3194,7 @@ template <typename... Tups>
 using CartesianProduct_t = typename CartesianProduct::template type<Tups...>;
 
 }  // namespace jni::metaprogramming
+
 
 #include <string_view>
 
@@ -3147,6 +3293,7 @@ struct SelectorStaticInfo {
 
 }  // namespace jni
 
+
 namespace jni {
 
 // Represents and possibly builds a runtime Java String object.
@@ -3167,7 +3314,7 @@ class LocalString : public StringRefBase<LocalString> {
   LocalString(std::string_view str)
       : LocalString(JniHelper::NewLocalString(str.data())) {}
 
-  explicit LocalString(RefBaseTag<jstring>&& rhs)
+  explicit LocalString(RefBaseTag<jstring> &&rhs)
       : LocalString(static_cast<jstring>(rhs.Release())) {}
 
   // Returns a StringView which possibly performs an expensive pinning
@@ -3195,25 +3342,22 @@ class LocalObject;
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class GlobalObject;
 
-template <typename SpanType>
-struct LocalArrayTag {};
-
-// Represents a an array object (e.g. int[], Object[], etc).
+// Represents a an array object (e.g. int[], float[][], Object[], etc).
 // Currently GlobalArrays do not exist, as reasoning about the lifecycles of the
 // underlying objects is non-trivial, e.g. a GlobalArray taking a local object
 // would result in a possibly unexpected extension of lifetime.
-template <typename SpanType, const auto& class_v_ = kNoClassSpecified,
+template <typename SpanType, std::size_t kRank = 1,
+          const auto& class_v_ = kNoClassSpecified,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class LocalArray : public ArrayRef<SpanType, kNoClassSpecified,
-                                   kDefaultClassLoader, kDefaultJvm>,
-                   LocalArrayTag<ArrayStrip_t<SpanType>> {
+                                   kDefaultClassLoader, kDefaultJvm> {
  public:
   using Base =
       ArrayRef<SpanType, kNoClassSpecified, kDefaultClassLoader, kDefaultJvm>;
 
-  // Note: jintArray, jfloatArray, etc. are implicitly convertible to jarray.
-  LocalArray(jarray array) : Base(array) {}
+  LocalArray(RegularToArrayTypeMap_t<SpanType> array) : Base(array) {}
+  LocalArray(LocalArray<SpanType, kRank>&& rhs) : Base(rhs.Release()) {}
 
   ~LocalArray() {
     if (Base::object_ref_) {
@@ -3227,10 +3371,11 @@ class LocalArray : public ArrayRef<SpanType, kNoClassSpecified,
 };
 
 // For classes (only default class loaded objects supported).
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-class LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>
-    : public ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_>,
-      LocalArrayTag<jobject> {
+// TODO(b/406948932): Add span views for construction.
+template <std::size_t kRank_, const auto& class_v_, const auto& class_loader_v_,
+          const auto& jvm_v_>
+class LocalArray<jobject, kRank_, class_v_, class_loader_v_, jvm_v_>
+    : public ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_> {
  public:
   using Base = ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_>;
   using ObjectClassRefT = ClassRef_t<jvm_v_, class_loader_v_, class_v_>;
@@ -3238,11 +3383,22 @@ class LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>
   // Note: jintArray, jfloatArray, etc. are implicitly convertible to jarray.
   LocalArray(jobjectArray array) : Base(array) {}
 
-  // Same as above.
+  template <std::size_t kRank, const auto& class_v, const auto& class_loader_v,
+            const auto& jvm_v>
+  LocalArray(LocalArray<jobject, kRank, class_v, class_loader_v, jvm_v>&& rhs)
+      : Base(rhs.Release()) {
+    static_assert(kRank == kRank_ && class_v == class_v_ &&
+                  class_loader_v == class_loader_v_);
+  }
+
+  // Construct from LocalObject lvalue (object is used as template).
+  //
+  // e.g.
+  //  LocalArray arr { 5, LocalObject<kClass> {args...} };
+  //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
   template <template <const auto&, const auto&, const auto&>
             class ObjectContainer,
             const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  // TODO(b/406948932): Add span views for construction.
   LocalArray(
       std::size_t size,
       const ObjectContainer<class_v, class_loader_v, jvm_v>& local_object)
@@ -3252,11 +3408,7 @@ class LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>
                 static_cast<jobject>(local_object)),
             static_cast<jobject>(local_object))) {}
 
-  // Construct from LocalObject lvalue (object is used as template).
-  //
-  // e.g.
-  //  LocalArray arr { 5, LocalObject<kClass> {args...} };
-  //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
+  // Same as above.
   template <template <const auto&, const auto&, const auto&>
             class ObjectContainer>
   LocalArray(std::size_t size,
@@ -3277,17 +3429,17 @@ LocalArray(std::size_t,
 
 template <typename SpanType>
 LocalArray(std::size_t, SpanType)
-    -> LocalArray<SpanType, kNoClassSpecified, kDefaultClassLoader,
+    -> LocalArray<SpanType, 1, kNoClassSpecified, kDefaultClassLoader,
                   kDefaultJvm>;
 
-template <const auto& array_val>
-constexpr auto LocalArrayBuildFromArray() {
-  using SpanType = std::decay_t<decltype(array_val.raw_type_)>;
+template <const auto& kArrayVal>
+struct LocalArrayBuildFromArray_Helper {};
 
-  return LocalArray<SpanType, array_val>{jarray{nullptr}};
-}
+template <typename TUndecayed>
+struct ProxyHelper;
 
 }  // namespace jni
+
 
 namespace jni {
 
@@ -3296,7 +3448,7 @@ class GlobalString : public StringRefBase<GlobalString> {
   using ClassT = decltype(kJavaLangString);
   friend class StringRefBase<GlobalString>;
 
-  GlobalString(GlobalString&& local_string)
+  GlobalString(GlobalString &&local_string)
       : StringRefBase<GlobalString>(
             JniHelper::PromoteLocalToGlobalString(local_string.Release())) {}
 
@@ -3316,6 +3468,7 @@ class GlobalString : public StringRefBase<GlobalString> {
 };
 
 }  // namespace jni
+
 
 #include <string_view>
 #include <tuple>
@@ -3347,9 +3500,8 @@ class QueryableMapBase {};
 // The motivation for using inheritance as opposed to a simple member is that
 // the the const char cannot be propagated without losing its constexpr-ness,
 // and so the clang extension can no longer restrict function candidates.
-template <typename CrtpBase, const auto& tup_container_v,
-          std::size_t container_size, typename TupContainerT,
-          const auto TupContainerT::*nameable_member>
+template <typename CrtpBase, const auto& tup_container_v, std::size_t container_size,
+          typename TupContainerT, const auto TupContainerT::*nameable_member>
 class QueryableMap
     : public QueryableMapBase<CrtpBase, tup_container_v, TupContainerT,
                               nameable_member,
@@ -3359,8 +3511,8 @@ template <typename CrtpBase, const auto& tup_container_v,
           const auto std::decay_t<decltype(tup_container_v)>::*nameable_member>
 using QueryableMap_t =
     QueryableMap<CrtpBase, tup_container_v,
-                 std::tuple_size_v<std::decay_t<decltype((tup_container_v.*
-                                                          nameable_member))>>,
+                 std::tuple_size_v<std::decay_t<decltype(
+                     (tup_container_v.*nameable_member))>>,
                  std::decay_t<decltype(tup_container_v)>, nameable_member>;
 
 template <typename CrtpBase, const auto& tup_container_v,
@@ -3425,6 +3577,7 @@ class QueryableMapEntry {
 
 }  // namespace jni::metaprogramming
 
+
 #include <optional>
 #include <tuple>
 
@@ -3444,6 +3597,7 @@ template <typename... Ts>
 using OptionalTup_t = typename OptionalTup<Ts...>::type;
 
 }  // namespace jni::metaprogramming
+
 
 #include <string_view>
 #include <tuple>
@@ -3550,6 +3704,7 @@ class InvocableMap
               std::decay_t<decltype(tup_container_v.*nameable_member)>>>> {};
 
 }  // namespace jni::metaprogramming
+
 
 namespace jni {
 
@@ -3680,6 +3835,7 @@ inline void FieldHelper<jobject>::SetValue(const jobject object_ref,
 
 }  // namespace jni
 
+
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -3690,8 +3846,8 @@ namespace jni {
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class LocalObject;
 
-template <typename SpanType, const auto& class_v_, const auto& class_loader_v_,
-          const auto& jvm_v_>
+template <typename SpanType, std::size_t kRank, const auto& class_v_,
+          const auto& class_loader_v_, const auto& jvm_v_>
 class LocalArray;
 
 template <typename Overload>
@@ -3705,6 +3861,7 @@ template <typename Key_>
 struct ProxyBase {
   using Key = Key_;
 
+  template <typename = void>
   using CDecl = Key_;
 
   template <typename>
@@ -3742,12 +3899,6 @@ struct ProxyBase {
 //   |class_loader_v| which can allow for additional decoration.
 template <typename CDecl, typename Enable>
 struct Proxy : public ProxyBase<CDecl> {};
-
-static_assert(std::is_same_v<jboolean, unsigned char>);
-static_assert(std::is_same_v<jint, int>);
-static_assert(std::is_same_v<jfloat, float>);
-// static_assert(std::is_same_v<jlong, long>);  // not true on all platforms.
-static_assert(std::is_same_v<jdouble, double>);
 
 template <typename VoidType>
 struct Proxy<VoidType,
@@ -3847,18 +3998,20 @@ struct Proxy<JObject,
   };
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Array Proxy Definitions.
+////////////////////////////////////////////////////////////////////////////////
+
+// Proxy for arrays of arrays (e.g. Array{Array{int}}).
 template <typename JArrayType>
 struct Proxy<JArrayType,
              typename std::enable_if_t<std::is_same_v<JArrayType, jarray>>>
     : public ProxyBase<JArrayType> {
-  using AsDecl = std::tuple<ArrayTag>;
-  // TODO(b/143908983): Constrain input types to the correct array type.  This
-  // is overly permissive and will allow incorrect types to be passed.
-  using AsArg =
-      std::tuple<jarray, jbooleanArray, jbyteArray, jcharArray, jfloatArray,
-                 jintArray, jlongArray, ArrayTag, RefBaseTag<jarray>>;
+  using AsDecl = std::tuple<ArrayTag<jarray>>;
+  using AsArg = std::tuple<jarray, ArrayTag<jarray>, RefBaseTag<jarray>>;
 
-  using CDecl = jobject;
+  template <typename Overload>
+  using CDecl = typename ArrayHelper<Overload>::StrippedCDecl;
 
   template <typename Overload>
   using AsReturn = typename ArrayHelper<Overload>::AsReturn;
@@ -3877,14 +4030,53 @@ struct Proxy<JArrayType,
   };
 };
 
+template <typename SpanType>
+struct ArrayRefPrimitiveTag;
+
+// Primitive array like types such as jintArray, jfloatArray.
+template <typename JArrayType>
+struct Proxy<JArrayType,
+             typename std::enable_if_t<kIsPrimitiveArrayType<JArrayType>>>
+    : public ProxyBase<JArrayType> {
+  // Non-array primitive type (e.g. jintArray => jint).
+  using CDeclOfPrimitiveType = ArrayToRegularTypeMap_t<JArrayType>;
+
+  using AsDecl = std::tuple<ArrayTag<JArrayType>>;
+  using AsArg =
+      std::tuple<JArrayType, RefBaseTag<JArrayType>, ArrayTag<JArrayType>,
+                 ArrayRefPrimitiveTag<CDeclOfPrimitiveType>>;
+
+  template <typename = void>
+  using CDecl = RegularToArrayTypeMap_t<CDeclOfPrimitiveType>;
+
+  template <typename Overload>
+  using AsReturn = typename ArrayHelper<Overload>::AsReturn;
+
+  static JArrayType ProxyAsArg(JArrayType arr) { return arr; };
+
+  template <typename T>
+  static JArrayType ProxyAsArg(T& t) {
+    return JArrayType{t};
+  };
+
+  template <typename T, typename = std::enable_if_t<
+                            std::is_base_of_v<RefBaseTag<JArrayType>, T>>>
+  static JArrayType ProxyAsArg(T&& t) {
+    return t.Release();
+  };
+};
+
+// Arrays of objects.
 template <typename JObjectArrayType>
 struct Proxy<
     JObjectArrayType,
     typename std::enable_if_t<std::is_same_v<JObjectArrayType, jobjectArray>>>
     : public ProxyBase<JObjectArrayType> {
-  using AsDecl = std::tuple<ObjectArrayTag>;
-  using AsArg =
-      std::tuple<jobjectArray, ObjectArrayTag, RefBaseTag<jobjectArray>>;
+  using AsDecl = std::tuple<ArrayTag<jobjectArray>>;
+  using AsArg = std::tuple<jobjectArray, ArrayTag<jobjectArray>,
+                           RefBaseTag<jobjectArray>>;
+
+  template <typename = void>
   using CDecl = jobjectArray;
 
   template <typename Overload>
@@ -3907,13 +4099,37 @@ struct Proxy<
 // This must be defined outside of Proxy so implicit definition doesn't occur.
 template <typename Overload>
 struct ArrayHelper {
-  static constexpr Array kArray{Overload::GetReturn().raw_};
-  using FullRawReturnT = std::decay_t<decltype(kArray.raw_type_)>;
+  template <const auto& t>
+  struct Helper {
+    static constexpr auto val = FullArrayStripV(t.raw_type_);
 
-  using AsReturn = decltype(LocalArrayBuildFromArray<kArray>());
+    using StrippedCDecl = CDecl_t<std::decay_t<decltype(val)>>;
+    using ConvertedCDecl = RegularToArrayTypeMap_t<StrippedCDecl>;
+  };
+
+  template <const auto& array_val>
+  static constexpr auto LocalArrayBuildFromArray() {
+    using RawT = std::decay_t<ArrayStrip_t<decltype(array_val.raw_type_)>>;
+    constexpr std::size_t kRank =
+        Rankifier<decltype(array_val)>::Rank(array_val);
+
+    // TODO(b/143908983): Support multi-dimensional arrays.
+    if constexpr (!std::is_same_v<CDecl_t<RawT>, jobject>) {
+      return LocalArray<RawT, kRank, kNoClassSpecified>{nullptr};
+    } else {
+      return LocalArray<jobject, kRank, Helper<array_val>::val>{
+          jobjectArray{nullptr}};
+    }
+  }
+
+  static constexpr auto kVal{Overload::GetReturn().raw_};
+
+  using StrippedCDecl = typename Helper<kVal>::ConvertedCDecl;
+  using AsReturn = decltype(LocalArrayBuildFromArray<kVal>());
 };
 
 }  // namespace jni
+
 
 #include <string>
 #include <string_view>
@@ -3930,7 +4146,9 @@ struct Proxy;
 // being a different type (i.e. you can't accidentally widen).
 using AllKeys =
     std::tuple<void, jboolean, jbyte, jshort, jint, jfloat, jlong, jchar,
-               jdouble, jstring, jobject, jarray, jobjectArray>;
+               jdouble, jstring, jobject, jarray, jobjectArray, jintArray,
+               jbooleanArray, jbyteArray, jcharArray, jshortArray, jdoubleArray,
+               jfloatArray, jlongArray>;
 
 // Instead of directly searching for the type, convertible types are sought.
 // E.g. A string like "Foo" the type will be const char[4] not const char*.
@@ -3981,7 +4199,8 @@ struct ProxyHelper {
 
   using Proxy_t = Proxy<Index>;
 
-  using CDecl = typename Proxy_t::CDecl;
+  template <typename Overload = void>
+  using CDecl = typename Proxy_t::template CDecl<Overload>;
 
   template <typename Overload>
   using AsReturn_t = typename Proxy_t::template AsReturn<Overload>;
@@ -3999,8 +4218,8 @@ using Proxy_t = typename ProxyHelper<T>::Proxy_t;
 template <typename T>
 using Index_t = typename ProxyHelper<T>::Index;
 
-template <typename T>
-using CDecl_t = typename ProxyHelper<T>::CDecl;
+template <typename T, typename Overload = void>
+using CDecl_t = typename ProxyHelper<T>::template CDecl<Overload>;
 
 template <typename T, typename OverloadSelection>
 using Return_t =
@@ -4030,6 +4249,7 @@ struct ProxyAsDeclMetaFunc {
 
 // Consumers of Proxy *must* include proxy defininitions after proxy.h. This is
 // because Arrays define themselves using the proxies of other types.
+
 
 namespace jni {
 
@@ -4082,6 +4302,7 @@ struct FieldSelection {
 };
 
 }  // namespace jni
+
 
 #include <tuple>
 #include <type_traits>
@@ -4171,7 +4392,7 @@ struct OverloadRef {
 
 template <typename Method, typename Overload, typename Permutation>
 struct PermutationRef {
-  using ReturnProxied = typename Overload::ReturnProxied;
+  using ReturnProxied = typename Overload::AsReturn;
   using OverloadRef = OverloadRef<Method, Overload>;
 
   template <typename... Params>
@@ -4187,9 +4408,7 @@ struct PermutationRef {
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
       static constexpr bool is_array =
-          std::is_base_of_v<ArrayTag, decltype(Overload::GetReturn().raw_)> ||
-          std::is_base_of_v<ObjectArrayTag,
-                            decltype(Overload::GetReturn().raw_)>;
+          kIsArrayType<decltype(Overload::GetReturn().raw_)>;
 
       return {JniMethodInvoke<typename Overload::CDecl, is_array>::Invoke(
           object, OverloadRef::GetMethodID(clazz),
@@ -4216,6 +4435,7 @@ using MethodMap_t =
     typename MethodMapHelper<class_loader_v, class_v_, CrtpBase_>::type;
 
 }  // namespace jni
+
 
 #include <mutex>
 #include <string_view>
@@ -4290,6 +4510,7 @@ class FieldRef {
 
 }  // namespace jni
 
+
 #include <limits>
 #include <type_traits>
 #include <utility>
@@ -4308,13 +4529,12 @@ template <typename MethodSelectionT, size_t overload_idx>
 struct OverloadSelection;
 
 // Represents a permutation (e.g. jstring => {std::string, const char*, etc...}
-template <typename MethodSelectionT, typename OverloadSelectionT,
-          size_t permutation_idx>
+template <typename MethodSelectionT, typename OverloadSelectionT, size_t permutation_idx>
 struct Permutation;
 
 // Represents the exact selection of a specific parameter from a permutation.
-template <typename MethodSelectionT, typename OverloadSelectionT,
-          typename PermutationT, size_t param_idx>
+template <typename MethodSelectionT, typename OverloadSelectionT, typename PermutationT,
+          size_t param_idx>
 struct ParamSelection;
 
 // The the type of an exact selection parameter in a method as part of the class
@@ -4395,18 +4615,18 @@ struct MethodSelection {
   template <size_t... Is, typename... Ts>
   struct Helper<std::index_sequence<Is...>, Ts...> {
     static constexpr bool val =
-        (OverloadSelection<MethodSelection,
-                           Is>::template OverloadViable<Ts...>() ||
+        (OverloadSelection<MethodSelection, Is>::template OverloadViable<Ts...>() ||
          ...);
 
     // kNoSelection is the max of std::size_t, so, this essentially selects any
     // idx (if a valid one exists), or defaults to kNoSelection.
     static constexpr std::pair<std::size_t, std::size_t>
         overload_permutation_idx_if_valid{
-            std::min({OverloadSelection<MethodSelection, Is>::
-                          template OverloadIdxIfViable<Ts...>()...}),
-            std::min({OverloadSelection<MethodSelection, Is>::
-                          template PermutationIdxIfViable<Ts...>()...})};
+            std::min({OverloadSelection<MethodSelection,
+                               Is>::template OverloadIdxIfViable<Ts...>()...}),
+            std::min(
+                {OverloadSelection<MethodSelection,
+                          Is>::template PermutationIdxIfViable<Ts...>()...})};
   };
 
   template <typename... Ts>
@@ -4424,12 +4644,10 @@ struct MethodSelection {
   }
 
   template <typename... Ts>
-  using FindOverloadSelection =
-      OverloadSelection<MethodSelection, IdxPair<Ts...>().first>;
+  using FindOverloadSelection = OverloadSelection<MethodSelection, IdxPair<Ts...>().first>;
 
   template <typename... Ts>
-  using FindPermutation =
-      OverloadSelection<MethodSelection, IdxPair<Ts...>().second>;
+  using FindPermutation = OverloadSelection<MethodSelection, IdxPair<Ts...>().second>;
 };
 
 template <typename MethodSelectionT, typename OverloadSelectionT>
@@ -4489,10 +4707,11 @@ struct OverloadSelection {
   }
 
   // CDecl is the type used by the C API for a return type.
-  using CDecl = CDecl_t<Raw_t<std::decay_t<decltype(GetReturn())>>>;
+  using CDecl =
+      CDecl_t<Raw_t<std::decay_t<decltype(GetReturn())>>, OverloadSelection>;
 
   // Return type is the richly decorated type returned (e.g LocalArray).
-  using ReturnProxied =
+  using AsReturn =
       Return_t<Raw_t<std::decay_t<decltype(GetReturn())>>, OverloadSelection>;
 
   // Proxy every parameter argument as an argument that can be shown in a
@@ -4600,16 +4819,14 @@ struct OverloadSelection {
   }
 };
 
-template <typename MethodSelectionT, typename OverloadSelectionT,
-          size_t permutation_idx>
+template <typename MethodSelectionT, typename OverloadSelectionT, size_t permutation_idx>
 struct Permutation {
   using NBitSelection =
       metaprogramming::Increment_t<typename OverloadSelectionT::NBitSequence,
                                    permutation_idx>;
 
   template <size_t I>
-  using Param =
-      ParamSelection<MethodSelectionT, OverloadSelectionT, Permutation, I>;
+  using Param = ParamSelection<MethodSelectionT, OverloadSelectionT, Permutation, I>;
 
   template <typename Is, typename... Ts>
   struct Helper;
@@ -4630,8 +4847,8 @@ struct Permutation {
   }
 };
 
-template <typename MethodSelectionT, typename OverloadSelectionT,
-          typename PermutationT, size_t param_idx>
+template <typename MethodSelectionT, typename OverloadSelectionT, typename PermutationT,
+          size_t param_idx>
 struct ParamSelection {
   static constexpr size_t selection_idx =
       PermutationT::NBitSelection::template GetBit<param_idx>::value_;
@@ -4641,9 +4858,8 @@ struct ParamSelection {
   }
 
   using ParamT = metaprogramming::TypeOfNthTupleElement_t<
-      selection_idx,
-      metaprogramming::TypeOfNthTupleElement_t<
-          param_idx, typename OverloadSelectionT::ParamsProxied>>;
+      selection_idx, metaprogramming::TypeOfNthTupleElement_t<
+                         param_idx, typename OverloadSelectionT::ParamsProxied>>;
 
   template <typename T>
   static constexpr bool viable = ParamCompare<ParamSelection, T>::val;
@@ -4679,29 +4895,34 @@ struct ParamCompare {
         std::string_view(ParamSelectionT::GetParam().name_);
   };
 
-  // The partial specialisation to compare an Array.
-  template <template <typename, const auto&, const auto&, const auto&> class T,
-            typename SpanType, const auto& class_v, const auto& class_loader_v,
-            const auto& jvm_v>
+  // ArrayRef objects (i.e. lvalue and rvalues of |LocalArray|s).
+  template <
+      template <typename, std::size_t, const auto&, const auto&, const auto&>
+      class T,
+      typename SpanType, std::size_t kRank, const auto& class_v,
+      const auto& class_loader_v, const auto& jvm_v>
   struct Helper<
-      T<SpanType, class_v, class_loader_v, jvm_v>,
+      T<SpanType, kRank, class_v, class_loader_v, jvm_v>,
       std::enable_if_t<
-          std::is_base_of_v<RefBaseTag<jarray>,
-                            T<SpanType, class_v, class_loader_v, jvm_v>> &&
-          std::is_base_of_v<RefBaseTag<jarray>, ParamT>>> {
+          std::is_base_of_v<ArrayRefPrimitiveBaseTag,
+                            std::decay_t<T<SpanType, kRank, class_v,
+                                           class_loader_v, jvm_v>>> &&
+          std::is_base_of_v<ArrayRefPrimitiveTag<SpanType>, ParamT>>> {
     static constexpr bool val = true;
   };
 
   // The partial specialisation to compare an object Array.
-  template <template <typename, const auto&, const auto&, const auto&> class T,
-            typename SpanType, const auto& class_v, const auto& class_loader_v,
-            const auto& jvm_v>
+  template <
+      template <typename, std::size_t, const auto&, const auto&, const auto&>
+      class T,
+      typename SpanType, std::size_t kRank, const auto& class_v,
+      const auto& class_loader_v, const auto& jvm_v>
   struct Helper<
-      T<SpanType, class_v, class_loader_v, jvm_v>,
-      std::enable_if_t<
-          std::is_base_of_v<RefBaseTag<jobjectArray>,
-                            T<SpanType, class_v, class_loader_v, jvm_v>> &&
-          std::is_base_of_v<RefBaseTag<jobjectArray>, ParamT>>> {
+      T<SpanType, kRank, class_v, class_loader_v, jvm_v>,
+      std::enable_if_t<std::is_base_of_v<RefBaseTag<jobjectArray>,
+                                         T<SpanType, kRank, class_v,
+                                           class_loader_v, jvm_v>> &&
+                       std::is_base_of_v<RefBaseTag<jobjectArray>, ParamT>>> {
     static constexpr bool val =
         std::string_view(class_v.name_) ==
         std::string_view(ParamSelectionT::GetParam().raw_type_.name_);
@@ -4723,12 +4944,12 @@ struct PermutationSelectionForArgs {
   static constexpr bool kIsValidArgSet =
       MethodSelectionForArgs::template ArgSetViable<Args...>;
 
-  using PermutationRef =
-      PermutationRef<MethodSelectionForArgs, OverloadSelectionForArgs,
-                     PermutationForArgs>;
+  using PermutationRef = PermutationRef<MethodSelectionForArgs, OverloadSelectionForArgs,
+                                        PermutationForArgs>;
 };
 
 }  // namespace jni
+
 
 #include <atomic>
 #include <utility>
@@ -4921,6 +5142,7 @@ class JvmRef : public JvmRefBase {
 
 }  // namespace jni
 
+
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -5058,6 +5280,7 @@ using ObjectRefBuilder_t = ValidatorProxy<jvm_v_, class_v_, class_loader_v_>;
 
 }  // namespace jni
 
+
 #include <type_traits>
 
 namespace jni {
@@ -5096,6 +5319,7 @@ LocalObject(LocalObject<class_v_, class_loader_v_, jvm_v_>&&)
     -> LocalObject<class_v_, class_loader_v_, jvm_v_>;
 
 }  // namespace jni
+
 
 namespace jni {
 
@@ -5147,6 +5371,7 @@ GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&&)
     -> GlobalObject<class_v, class_loader_v, jvm_v>;
 
 }  // namespace jni
+
 
 #include <type_traits>
 
@@ -5245,6 +5470,7 @@ class LocalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
 
 }  // namespace jni
 
+
 namespace jni {
 
 template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
@@ -5269,6 +5495,7 @@ class GlobalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
 };
 
 }  // namespace jni
+
 
 namespace jni {
 
