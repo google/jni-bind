@@ -54,7 +54,7 @@ public class Clazz {
 ```cpp
 #include "jni_bind_release.h"
 
-static constexpr jni::class kClass {
+static constexpr jni::Class kClass {
   "com/project/clazz", jni::Method { "Foo", jni::Return<jint>{}, jni::Params<jfloat, jstring>{}},
 
 jni::LocalObject<kClass> obj { jobject_to_wrap };
