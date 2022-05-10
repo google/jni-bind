@@ -124,4 +124,16 @@ TEST(FunctionTraits, MemberFunctions) {
           int>);
 }
 
+TEST(FunctionTraits,
+     UseFunctionsSoCompilerDoesntEmitWarningsAboutDiscardingThem) {
+  VFoo();
+  VFoo_I(1);
+  VFoo_II(1, 2);
+  VFoo_III(1, 2, 3);
+
+  VFoo_F(1.f);
+  VFoo_FF(1.f, 2.f);
+  VFoo_FFF(1.f, 2.f, 3.f);
+}
+
 }  // namespace

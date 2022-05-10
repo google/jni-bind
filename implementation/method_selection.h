@@ -462,7 +462,7 @@ struct PermutationSelectionForArgs {
       typename MethodSelectionForArgs::template FindPermutation<Args...>;
 
   static constexpr bool kIsValidArgSet =
-      MethodSelectionForArgs::template ArgSetViable<Args...>;
+      MethodSelectionForArgs::template ArgSetViable<Args...>();
 
   using PermutationRef = PermutationRef<MethodSelectionForArgs, OverloadSelectionForArgs,
                                         PermutationForArgs>;
