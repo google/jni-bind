@@ -759,6 +759,20 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "unfurl_value",
+    hdrs = ["unfurl_value.h"],
+)
+
+cc_test(
+    name = "unfurl_value_test",
+    srcs = ["unfurl_value_test.cc"],
+    deps = [
+        ":unfurl_value",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_test(
     name = "zip_invoke_test",
     srcs = ["zip_invoke_test.cc"],
