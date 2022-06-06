@@ -511,6 +511,7 @@ cc_library(
         ":jvm",
         ":local_array",
         ":object",
+        ":proxy_convenience_aliases",
         ":ref_base",
         ":string_ref",
         "//:jni_dep",
@@ -528,6 +529,11 @@ cc_library(
         "//metaprogramming:unique_set",
         "//metaprogramming:unwrap",
     ],
+)
+
+cc_library(
+    name = "proxy_convenience_aliases",
+    hdrs = ["proxy_convenience_aliases.h"],
 )
 
 cc_test(

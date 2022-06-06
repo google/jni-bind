@@ -7,7 +7,11 @@ filegroup(
     name = "headers_for_export",
     srcs = glob(
         ["**/*.h"],
-        exclude = ["jni_bind_release.h"],
+        exclude = [
+            "jni_bind_release.h",
+            "jni_bind_release_for_testing.h",
+            ":jni_bind_release_target",
+        ],
     ),
 )
 
@@ -64,6 +68,7 @@ cc_library(
 ################################################################################
 # Testing Targets.
 ################################################################################
+
 cc_library(
     name = "jni_test",
     testonly = 1,
@@ -101,6 +106,28 @@ cc_library(
 # Release targets.
 ################################################################################
 
+# Copy of the release header (above) that uses a different filename.
+# Strangely, if a file is present with the same name as what's in outs blaze
+# will ignore the genrule and depend on the real header, but it will fail
+# because there is no cc_library providing the header.  jni_bind_release.h is
+# checked in, so the above *will* fail.
+genrule(
+    name = "gen_jni_bind_release_for_testing",
+    outs = ["jni_bind_release_for_testing.h"],
+    cmd = "./$(location build_jni_bind_release.sh) $(location jni_bind_release_input) jni_wrapper $(locations :jni_bind_decorative_text)>$@",
+    tools = [
+        ":build_jni_bind_release.sh",
+        ":headers_for_export",
+        ":jni_bind_decorative_text",
+        ":jni_bind_release_input",
+        "//class_defs:headers_for_export",
+        "//implementation:headers_for_export",
+        "//implementation/jni_helper:headers_for_export",
+        "//metaprogramming:headers_for_export",
+    ],
+    visibility = ["//visibility:private"],
+)
+
 filegroup(
     name = "jni_bind_decorative_text",
     srcs = [
@@ -116,6 +143,20 @@ filegroup(
 # Use :jni_bind, this is solely for build validation of the release header.
 cc_library(
     name = "jni_bind_release_target",
-    hdrs = ["jni_bind_release.h"],
+    hdrs = ["jni_bind_release_for_testing.h"],
     visibility = ["//visibility:private"],
+)
+
+cc_test(
+    name = "release_header_smoke_test",
+    srcs = [
+        "release_header_smoke_test.cc",
+        ":jni_bind_release_for_testing.h",
+    ],
+    copts = ["-DJNI_BIND_USE_FOR_TESTING_RELEASE_HEADER=1"],
+    deps = [
+        ":jni_test",
+        "//third_party/java/jdk:jni",
+        "@googletest//:gtest_main",
+    ],
 )

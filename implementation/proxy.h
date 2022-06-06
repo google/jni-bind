@@ -26,6 +26,7 @@
 #include "ref_base.h"
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
+#include "implementation/proxy_convenience_aliases.h"
 #include "jni_dep.h"
 #include "metaprogramming/cartesian_product.h"
 #include "metaprogramming/combine.h"
@@ -114,26 +115,6 @@ struct ProxyHelper {
 
   using AsDecl_t = typename Proxy_t::AsDecl;
 };
-
-// See jni::Proxy.
-template <typename T>
-using Proxy_t = typename ProxyHelper<T>::Proxy_t;
-
-template <typename T>
-using Index_t = typename ProxyHelper<T>::Index;
-
-template <typename T, typename Overload = void>
-using CDecl_t = typename ProxyHelper<T>::template CDecl<Overload>;
-
-template <typename T, typename OverloadSelection>
-using Return_t =
-    typename ProxyHelper<T>::template AsReturn_t<OverloadSelection>;
-
-template <typename T, typename ParamSelection>
-using Arg_t = typename ProxyHelper<T>::template AsArg_t<ParamSelection>;
-
-template <typename T>
-using AsDecl_t = typename ProxyHelper<T>::AsDecl_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 // MetaFunction Helpers.

@@ -2180,6 +2180,18 @@ inline constexpr Jvm kDefaultJvm{kDefaultClassLoader};
 
 }  // namespace jni
 
+namespace jni {
+
+template <typename SpanType>
+class ArrayView {
+ public:
+  ArrayView(ArrayView&&) = delete;
+  ArrayView(const ArrayView&) = delete;
+
+  ArrayView(jarray array, bool copy_on_completion)
+      : array_(array),
+        get_array_elements_result_(
+            JniArrayHelper<SpanType>::GetArrayElements(array)),
         copy_on_completion_(copy_on_completion) {}
 
   ~ArrayView() {
@@ -2201,7 +2213,6 @@ template <typename SpanType>
 ArrayView(ArrayView<SpanType>&&) -> ArrayView<SpanType>;
 
 }  // namespace jni
-
 
 #include <type_traits>
 
@@ -3296,6 +3307,33 @@ struct SelectorStaticInfo {
 
 namespace jni {
 
+template <typename TUndecayed>
+struct ProxyHelper;
+
+// See jni::Proxy.
+template <typename T>
+using Proxy_t = typename ProxyHelper<T>::Proxy_t;
+
+template <typename T>
+using Index_t = typename ProxyHelper<T>::Index;
+
+template <typename T, typename Overload = void>
+using CDecl_t = typename ProxyHelper<T>::template CDecl<Overload>;
+
+template <typename T, typename OverloadSelection>
+using Return_t =
+    typename ProxyHelper<T>::template AsReturn_t<OverloadSelection>;
+
+template <typename T, typename ParamSelection>
+using Arg_t = typename ProxyHelper<T>::template AsArg_t<ParamSelection>;
+
+template <typename T>
+using AsDecl_t = typename ProxyHelper<T>::AsDecl_t;
+
+}  // namespace jni
+
+namespace jni {
+
 // Represents and possibly builds a runtime Java String object.
 //
 // In order to use a string in memory (as opposed to only using it for function
@@ -4211,26 +4249,6 @@ struct ProxyHelper {
   using AsDecl_t = typename Proxy_t::AsDecl;
 };
 
-// See jni::Proxy.
-template <typename T>
-using Proxy_t = typename ProxyHelper<T>::Proxy_t;
-
-template <typename T>
-using Index_t = typename ProxyHelper<T>::Index;
-
-template <typename T, typename Overload = void>
-using CDecl_t = typename ProxyHelper<T>::template CDecl<Overload>;
-
-template <typename T, typename OverloadSelection>
-using Return_t =
-    typename ProxyHelper<T>::template AsReturn_t<OverloadSelection>;
-
-template <typename T, typename ParamSelection>
-using Arg_t = typename ProxyHelper<T>::template AsArg_t<ParamSelection>;
-
-template <typename T>
-using AsDecl_t = typename ProxyHelper<T>::AsDecl_t;
-
 ////////////////////////////////////////////////////////////////////////////////
 // MetaFunction Helpers.
 ////////////////////////////////////////////////////////////////////////////////
@@ -4942,7 +4960,7 @@ struct PermutationSelectionForArgs {
       typename MethodSelectionForArgs::template FindPermutation<Args...>;
 
   static constexpr bool kIsValidArgSet =
-      MethodSelectionForArgs::template ArgSetViable<Args...>;
+      MethodSelectionForArgs::template ArgSetViable<Args...>();
 
   using PermutationRef = PermutationRef<MethodSelectionForArgs, OverloadSelectionForArgs,
                                         PermutationForArgs>;

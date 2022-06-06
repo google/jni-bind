@@ -19,9 +19,14 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "jni_bind.h"
 #include "mock_jni_env.h"
 #include "mock_jvm.h"
+
+#ifdef JNI_BIND_USE_FOR_TESTING_RELEASE_HEADER
+#include "jni_bind_release_for_testing.h"
+#else
+#include "jni_bind.h"
+#endif
 
 namespace jni::test {
 
