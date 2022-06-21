@@ -145,18 +145,5 @@ cc_library(
     name = "jni_bind_release_target",
     hdrs = ["jni_bind_release_for_testing.h"],
     visibility = ["//visibility:private"],
-)
-
-cc_test(
-    name = "release_header_smoke_test",
-    srcs = [
-        "release_header_smoke_test.cc",
-        ":jni_bind_release_for_testing.h",
-    ],
-    copts = ["-DJNI_BIND_USE_FOR_TESTING_RELEASE_HEADER=1"],
-    deps = [
-        ":jni_test",
-        "//third_party/java/jdk:jni",
-        "@googletest//:gtest_main",
-    ],
+    deps = ["//third_party/java/jdk:jni"],
 )
