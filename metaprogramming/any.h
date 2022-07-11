@@ -37,6 +37,12 @@ using Any_t = typename Any<Func>::template type<Ts...>;
 template <typename Func, typename... Ts>
 static constexpr bool Any_v = Any_t<Func, Ts...>::value;
 
+template <typename Func, typename Ts>
+using Any_Tup = TupleUnroller_t<Any<Func>, Ts>;
+
+template <typename Func, typename Ts>
+static constexpr bool Any_Tup_v = TupleUnroller_t<Any<Func>, Ts>::value;
+
 }  // namespace jni::metaprogramming
 
 #endif  // JNI_BIND_METAPROGRAMMING_ANY_H_
