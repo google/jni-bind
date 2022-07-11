@@ -18,11 +18,11 @@
 
 namespace {
 
+using jni::Array;
 using jni::Class;
 using jni::Constructor;
 using jni::GlobalObject;
 using jni::kDefaultClassLoader;
-using jni::kNoSelection;
 using jni::LocalObject;
 using jni::Method;
 using jni::MethodSelection_t;
@@ -44,181 +44,175 @@ using GlobalObj1 = GlobalObject<kClass1>;
 using GlobalObj2 = GlobalObject<kClass2>;
 using GlobalInvalidObj = GlobalObject<kUnusedClass>;
 
-// Empty method.
-constexpr Method m0{"m_0", Return<void>{}, Params{}};
-
-// Single param methods, single overload.
-constexpr Method m1{"m_1", Return<void>{}, Params<int>{}};
-constexpr Method m2{"m_2", Return<void>{}, Params<float>{}};
-constexpr Method m3{"m_3", Return<void>{}, Params{kClass1}};
-
-// Multi param methods, single overload method.
-constexpr Method m4{"m_4", Return<void>{}, Params<int, int>{}};
-constexpr Method m5{"m_5", Return<void>{}, Params<float, float, float>{}};
-constexpr Method m6{"m_6", Return<void>{}, Params{int{}, float{}, kClass1}};
-constexpr Method m7{"m_7", Return<void>{}, Params{kClass1}};
-
-constexpr Class c1{"class_1", m0, m1, m2, m3, m4, m5, m6, m7};
+////////////////////////////////////////////////////////////////////////////////
+// Single argument to method.
+////////////////////////////////////////////////////////////////////////////////
+constexpr Class c1{"c1",
+                   Method{"0", Return<void>{}, Params{}},
+                   Method{"1", Return<void>{}, Params<jboolean>{}},
+                   Method{"2", Return<void>{}, Params<jchar>{}},
+                   Method{"3", Return<void>{}, Params<jshort>{}},
+                   Method{"4", Return<void>{}, Params<jint>{}},
+                   Method{"5", Return<void>{}, Params<jfloat>{}},
+                   Method{"6", Return<void>{}, Params<jdouble>{}},
+                   Method{"7", Return<void>{}, Params{jstring{}}},
+                   Method{"8", Return<void>{}, Params{kClass1}},
+                   Method{"9", Return<void>{}, Params{Array{int{}}}},
+                   Method{"10", Return<void>{}, Params{Array{Array{int{}}}}},
+                   Method{"11", Return<void>{}, Params{bool{}, Array{int{}}}}};
 
 template <const auto& class_v, bool is_constructor, size_t method_idx>
 using Sel_t =
     MethodSelection_t<kDefaultClassLoader, class_v, is_constructor, method_idx>;
 
 static_assert(Sel_t<c1, false, 0>::ArgSetViable<>());
+
 static_assert(!Sel_t<c1, false, 0>::ArgSetViable<int>());
 static_assert(!Sel_t<c1, false, 0>::ArgSetViable<int, float>());
 static_assert(!Sel_t<c1, false, 0>::ArgSetViable<LocalObj1>());
 
-static_assert(Sel_t<c1, false, 1>::ArgSetViable<int>());
-static_assert(!Sel_t<c1, false, 1>::ArgSetViable<float>());
-static_assert(!Sel_t<c1, false, 1>::ArgSetViable<double>());
-static_assert(!Sel_t<c1, false, 1>::ArgSetViable<LocalObj1>());
+static_assert(Sel_t<c1, false, 1>::ArgSetViable<jboolean>());
+static_assert(Sel_t<c1, false, 1>::ArgSetViable<bool>());
 
-static_assert(Sel_t<c1, false, 2>::ArgSetViable<float>());
-static_assert(!Sel_t<c1, false, 2>::ArgSetViable<int>());
-static_assert(!Sel_t<c1, false, 2>::ArgSetViable<double>());
-static_assert(!Sel_t<c1, false, 2>::ArgSetViable<LocalObj1>());
-static_assert(!Sel_t<c1, false, 2>::ArgSetViable<float, float>());
+static_assert(Sel_t<c1, false, 2>::ArgSetViable<jchar>());
+static_assert(Sel_t<c1, false, 2>::ArgSetViable<char>());
 
-static_assert(Sel_t<c1, false, 3>::ArgSetViable<LocalObj1>());
-static_assert(Sel_t<c1, false, 3>::ArgSetViable<GlobalObj1>());
-static_assert(!Sel_t<c1, false, 3>::ArgSetViable<int>());
-static_assert(!Sel_t<c1, false, 3>::ArgSetViable<double>());
-static_assert(!Sel_t<c1, false, 3>::ArgSetViable<LocalObj2>());
-static_assert(!Sel_t<c1, false, 3>::ArgSetViable<GlobalObj2>());
-static_assert(!Sel_t<c1, false, 3>::ArgSetViable<LocalObj1, LocalObj1>());
+static_assert(Sel_t<c1, false, 3>::ArgSetViable<jshort>());
+static_assert(Sel_t<c1, false, 3>::ArgSetViable<short>());
 
-static_assert(Sel_t<c1, false, 4>::ArgSetViable<int, int>());
-static_assert(!Sel_t<c1, false, 4>::ArgSetViable<int>());
-static_assert(!Sel_t<c1, false, 4>::ArgSetViable<int, int, int>());
-static_assert(!Sel_t<c1, false, 4>::ArgSetViable<double, double>());
-static_assert(!Sel_t<c1, false, 4>::ArgSetViable<LocalObj1, LocalObj1>());
+static_assert(Sel_t<c1, false, 4>::ArgSetViable<int>());
+static_assert(!Sel_t<c1, false, 4>::ArgSetViable<float>());
+static_assert(!Sel_t<c1, false, 4>::ArgSetViable<double>());
+static_assert(!Sel_t<c1, false, 4>::ArgSetViable<LocalObj1>());
 
-static_assert(Sel_t<c1, false, 5>::ArgSetViable<float, float, float>());
-static_assert(!Sel_t<c1, false, 5>::ArgSetViable<float>());
+static_assert(Sel_t<c1, false, 5>::ArgSetViable<float>());
+static_assert(!Sel_t<c1, false, 5>::ArgSetViable<int>());
+static_assert(!Sel_t<c1, false, 5>::ArgSetViable<double>());
+static_assert(!Sel_t<c1, false, 5>::ArgSetViable<LocalObj1>());
 static_assert(!Sel_t<c1, false, 5>::ArgSetViable<float, float>());
 
-static_assert(Sel_t<c1, false, 6>::ArgSetViable<int, float, LocalObj1>());
+static_assert(Sel_t<c1, false, 6>::ArgSetViable<jdouble>());
+static_assert(!Sel_t<c1, false, 6>::ArgSetViable<int>());
+static_assert(!Sel_t<c1, false, 6>::ArgSetViable<float>());
+static_assert(!Sel_t<c1, false, 6>::ArgSetViable<LocalObj1>());
+static_assert(!Sel_t<c1, false, 6>::ArgSetViable<float, float>());
 
-static_assert(Sel_t<c1, false, 7>::ArgSetViable<LocalObj1>());
-static_assert(Sel_t<c1, false, 7>::ArgSetViable<LocalObj1NoDefinition>());
-static_assert(!Sel_t<c1, false, 7>::ArgSetViable<LocalObj2>());
+static_assert(Sel_t<c1, false, 7>::ArgSetViable<std::string>());
+static_assert(Sel_t<c1, false, 7>::ArgSetViable<jstring>());
+static_assert(Sel_t<c1, false, 7>::ArgSetViable<const char*>());
+static_assert(Sel_t<c1, false, 7>::ArgSetViable<char[10]>());
+static_assert(Sel_t<c1, false, 7>::ArgSetViable<std::string_view>());
+static_assert(Sel_t<c1, false, 7>::ArgSetViable<const char (&)[18]>());
+
+static_assert(Sel_t<c1, false, 8>::ArgSetViable<jobject>());
+static_assert(Sel_t<c1, false, 8>::ArgSetViable<LocalObj1>());
+static_assert(Sel_t<c1, false, 8>::ArgSetViable<LocalObj1NoDefinition>());
+static_assert(!Sel_t<c1, false, 8>::ArgSetViable<LocalObj2>());
+static_assert(Sel_t<c1, false, 8>::ArgSetViable<LocalObj1>());
+static_assert(Sel_t<c1, false, 8>::ArgSetViable<GlobalObj1>());
+static_assert(!Sel_t<c1, false, 8>::ArgSetViable<int>());
+static_assert(!Sel_t<c1, false, 8>::ArgSetViable<double>());
+static_assert(!Sel_t<c1, false, 8>::ArgSetViable<LocalObj2>());
+static_assert(!Sel_t<c1, false, 8>::ArgSetViable<GlobalObj2>());
+static_assert(!Sel_t<c1, false, 8>::ArgSetViable<LocalObj1, LocalObj1>());
+
+static_assert(Sel_t<c1, false, 9>::ArgSetViable<jintArray>());
+static_assert(!Sel_t<c1, false, 9>::ArgSetViable<jfloatArray>());
 
 ////////////////////////////////////////////////////////////////////////////////
-// Method with multiple invocations
+// Multiple arguments per method.
 ////////////////////////////////////////////////////////////////////////////////
+constexpr Class c2{
+    "c2", Method{"0", Return<void>{}, Params<jint, jint>{}},
+    Method{"1", Return<void>{}, Params<jfloat, jfloat, jfloat>{}},
+    Method{"2", Return<void>{}, Params{jint{}, jfloat{}, kClass1}},
+    Method{"3", Return<void>{}, Params{jboolean{}, Array{int{}}}}};
 
-constexpr Method m_with_overloads{
-    Method{"method_with_overload_", Overload{Return<void>{}, Params{}},
-           Overload{Return<void>{}, Params<int>{}},
-           Overload{Return<void>{}, Params<int, int>{}},
-           Overload{Return<void>{}, Params<int, int, float, int>{}},
-           Overload{Return<void>{}, Params<jstring>{}},
-           Overload{Return<void>{}, Params<jstring, jstring>{}},
-           Overload{Return<void>{}, Params{kClass1}},
-           Overload{
-               Return<void>{},
-               Params{kClass2},
-           }}};
+static_assert(Sel_t<c2, false, 0>::ArgSetViable<int, int>());
+static_assert(!Sel_t<c2, false, 0>::ArgSetViable<int>());
+static_assert(!Sel_t<c2, false, 0>::ArgSetViable<int, int, int>());
+static_assert(!Sel_t<c2, false, 0>::ArgSetViable<double, double>());
+static_assert(!Sel_t<c2, false, 0>::ArgSetViable<LocalObj1, LocalObj1>());
 
-constexpr Class c2{"class_2", m_with_overloads};
-using Sel2 = Sel_t<c2, false, 0>;
+static_assert(Sel_t<c2, false, 1>::ArgSetViable<float, float, float>());
+static_assert(!Sel_t<c2, false, 1>::ArgSetViable<float>());
+static_assert(!Sel_t<c2, false, 1>::ArgSetViable<float, float>());
 
-using Idx = std::pair<std::size_t, std::size_t>;
+static_assert(Sel_t<c2, false, 2>::ArgSetViable<int, float, LocalObj1>());
 
-// These tests use "IdxPair" which reports not only the method idx of the viable
-// but also the permutation index as well.
-static_assert(Sel2::IdxPair<>() == Idx{0, 0});
-static_assert(Sel2::IdxPair<int>() == Idx{1, 0});
-static_assert(Sel2::IdxPair<int, int>() == Idx{2, 0});
-static_assert(Sel2::IdxPair<int, int, int>() ==
-              Idx{kNoSelection, kNoSelection});
-static_assert(Sel2::IdxPair<int, int, float>() ==
-              Idx{kNoSelection, kNoSelection});
-static_assert(Sel2::IdxPair<int, int, float, int>() == Idx{3, 0});
+static_assert(Sel_t<c2, false, 3>::ArgSetViable<jboolean, jintArray>());
 
-// Note, jstring has multiple valid "permutations".
-static_assert(Sel2::IdxPair<std::string>() == Idx{4, 0});
-static_assert(Sel2::IdxPair<jstring>() == Idx{4, 1});
-static_assert(Sel2::IdxPair<const char*>() == Idx{4, 2});
-static_assert(Sel2::IdxPair<std::string_view>() == Idx{4, 3});
+////////////////////////////////////////////////////////////////////////////////
+// Multi param methods, single overload method.
+////////////////////////////////////////////////////////////////////////////////
+constexpr Class c3{
+    "c3", Method{
+              "0",
+              Overload{Return<void>{}, Params{}},
+              Overload{Return<void>{}, Params<int>{}},
+              Overload{Return<void>{}, Params<int, int>{}},
+              Overload{Return<void>{}, Params<int, int, float, int>{}},
+              Overload{Return<void>{}, Params<jstring>{}},
+              Overload{Return<void>{}, Params<jstring, jstring>{}},
+              Overload{Return<void>{}, Params{kClass1}},
+              Overload{
+                  Return<void>{},
+                  Params{kClass2},
+              },
+              Overload{Return<void>{}, Params{jboolean{}, Array{int{}}}},
+          }};
 
-// Even when chained together, the permutations correctly index through all
-// possibilities, rolling over when all viable types are exhausted.
-static_assert(Sel2::IdxPair<std::string, std::string>() == Idx{5, 0});
-static_assert(Sel2::IdxPair<std::string, jstring>() == Idx{5, 1});
-static_assert(Sel2::IdxPair<std::string, const char*>() == Idx{5, 2});
-static_assert(Sel2::IdxPair<std::string, std::string_view>() == Idx{5, 3});
-static_assert(Sel2::IdxPair<jstring, std::string>() == Idx{5, 4});
+static_assert(Sel_t<c3, false, 0>::ArgSetViable<int, int>());
+static_assert(Sel_t<c3, false, 0>::ArgSetViable<int>());
+static_assert(Sel_t<c3, false, 0>::ArgSetViable<int, int, float, int>());
+static_assert(Sel_t<c3, false, 0>::ArgSetViable<char*>());
+static_assert(Sel_t<c3, false, 0>::ArgSetViable<std::string>());
+static_assert(Sel_t<c3, false, 0>::ArgSetViable<std::string_view>());
 
-// LocalObjects also have multiple viable types, but only objects of the same
-// name are permitted. Storage doesn't matter (e.g. Local or Global is fine).
-static_assert(Sel2::IdxPair<jobject>() == Idx{6, 0});
-static_assert(Sel2::IdxPair<LocalObj1>() == Idx{6, 1});
-static_assert(Sel2::IdxPair<GlobalObj1>() == Idx{6, 1});
+// TODO(b/143908983): The following is ambiguous because it could potentially
+// refer to multiple signatures. For now, it's viable, but it shouldn't be.
+static_assert(Sel_t<c3, false, 0>::ArgSetViable<jobject>());
 
-static_assert(Sel2::IdxPair<LocalInvalidObj>() ==
-              Idx{kNoSelection, kNoSelection});
-static_assert(Sel2::IdxPair<GlobalInvalidObj>() ==
-              Idx{kNoSelection, kNoSelection});
+static_assert(!Sel_t<c3, false, 0>::ArgSetViable<int, int, int>());
+static_assert(!Sel_t<c3, false, 0>::ArgSetViable<double, double>());
+static_assert(!Sel_t<c3, false, 0>::ArgSetViable<LocalObj1, LocalObj1>());
+static_assert(!Sel_t<c3, false, 0>::ArgSetViable<float>());
+static_assert(!Sel_t<c3, false, 0>::ArgSetViable<float, float>());
+static_assert(!Sel_t<c3, false, 0>::ArgSetViable<std::string*>());
+
+static_assert(Sel_t<c3, false, 0>::ArgSetViable<jboolean, jintArray>());
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor Method Tests
+// (Roughly same logic, so just smoking the code path ought be sufficient).
 ////////////////////////////////////////////////////////////////////////////////
+constexpr Class c5{"c5",
+                   Constructor{},
 
-// Empty method.
-constexpr Constructor ctor0{};
+                   Constructor{int{}},
+                   Constructor{float{}},
+                   Constructor{kClass1},
 
-// Single param methods, single overload.
-constexpr Constructor ctor1{int{}};
-constexpr Constructor ctor2{float{}};
-constexpr Constructor ctor3{kClass1};
+                   Constructor{int{}, int{}},
+                   Constructor{float{}, float{}, float{}},
+                   Constructor{int{}, float{}, kClass1},
+                   Constructor{kClass2}};
 
-// Multi param methodsctor single overload method.
-constexpr Constructor ctor4{int{}, int{}};
-constexpr Constructor ctor5{float{}, float{}, float{}};
-constexpr Constructor ctor6{int{}, float{}, kClass1};
-constexpr Constructor ctor7{kClass2};
+static_assert(Sel_t<c5, true, 0>::ArgSetViable<>());
 
-constexpr Class c_with_overloads{
-    "c_with_overloads", ctor0, ctor1, ctor2, ctor3, ctor4, ctor5, ctor6, ctor7};
+static_assert(Sel_t<c5, true, 0>::ArgSetViable<int>());
+static_assert(Sel_t<c5, true, 0>::ArgSetViable<float>());
+static_assert(Sel_t<c5, true, 0>::ArgSetViable<LocalObj1>());
 
-static_assert(Sel_t<c_with_overloads, true, 0>::ArgSetViable<>());
-
-static_assert(Sel_t<c_with_overloads, true, 0>::ArgSetViable<int>());
-static_assert(Sel_t<c_with_overloads, true, 0>::ArgSetViable<float>());
-static_assert(Sel_t<c_with_overloads, true, 0>::ArgSetViable<LocalObj1>());
-
-static_assert(Sel_t<c_with_overloads, true, 0>::ArgSetViable<int, int>());
-static_assert(
-    Sel_t<c_with_overloads, true, 0>::ArgSetViable<float, float, float>());
-static_assert(
-    Sel_t<c_with_overloads, true, 0>::ArgSetViable<int, float, LocalObj1>());
+static_assert(Sel_t<c5, true, 0>::ArgSetViable<int, int>());
+static_assert(Sel_t<c5, true, 0>::ArgSetViable<float, float, float>());
+static_assert(Sel_t<c5, true, 0>::ArgSetViable<int, float, LocalObj1>());
 
 // Impermissible arg sets (none of the constructors match.)
-static_assert(!Sel_t<c_with_overloads, true, 0>::ArgSetViable<int, float>());
-static_assert(
-    !Sel_t<c_with_overloads, true, 0>::ArgSetViable<int, float, float>());
-static_assert(
-    !Sel_t<c_with_overloads, true, 0>::ArgSetViable<int, float, LocalObj2>());
-static_assert(
-    !Sel_t<c_with_overloads, true, 0>::ArgSetViable<LocalInvalidObj>());
-static_assert(
-    !Sel_t<c_with_overloads, true, 0>::ArgSetViable<GlobalInvalidObj>());
-
-// IdxPairs work also.
-using SelCtor = Sel_t<c_with_overloads, true, 0>;
-static_assert(SelCtor::IdxPair<>() == Idx{0, 0});
-static_assert(SelCtor::IdxPair<int>() == Idx{1, 0});
-static_assert(SelCtor::IdxPair<float>() == Idx{2, 0});
-static_assert(SelCtor::IdxPair<jobject>() == Idx{3, 0});
-static_assert(SelCtor::IdxPair<LocalObj1>() == Idx{3, 1});
-static_assert(SelCtor::IdxPair<int, int>() == Idx{4, 0});
-static_assert(SelCtor::IdxPair<float, float, float>() == Idx{5, 0});
-static_assert(SelCtor::IdxPair<int, float, jobject>() == Idx{6, 0});
-static_assert(SelCtor::IdxPair<int, float, LocalObj1>() == Idx{6, 1});
-// TODO(b/174272629): Disallow ambiguous invocations (jobject viable for 3 & 7).
-static_assert(SelCtor::IdxPair<jobject>() == Idx{3, 0});
-static_assert(SelCtor::IdxPair<LocalObj2>() == Idx{7, 1});
+static_assert(!Sel_t<c5, true, 0>::ArgSetViable<int, float>());
+static_assert(!Sel_t<c5, true, 0>::ArgSetViable<int, float, float>());
+static_assert(!Sel_t<c5, true, 0>::ArgSetViable<int, float, LocalObj2>());
+static_assert(!Sel_t<c5, true, 0>::ArgSetViable<LocalInvalidObj>());
+static_assert(!Sel_t<c5, true, 0>::ArgSetViable<GlobalInvalidObj>());
 
 }  // namespace

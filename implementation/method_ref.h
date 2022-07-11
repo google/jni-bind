@@ -49,6 +49,8 @@ static inline auto& GetDefaultLoadedMethodList() {
 
 template <typename Method, typename Overload>
 struct OverloadRef {
+  using ReturnProxied = typename Overload::AsReturn;
+
   static constexpr std::string_view GetMethodSignature() {
     return Overload::GetOverloadSignature();
   }
@@ -66,12 +68,6 @@ struct OverloadRef {
 
     });
   }
-};
-
-template <typename Method, typename Overload, typename Permutation>
-struct PermutationRef {
-  using ReturnProxied = typename Overload::AsReturn;
-  using OverloadRef = OverloadRef<Method, Overload>;
 
   template <typename... Params>
   static ReturnProxied Invoke(jclass clazz, jobject object,

@@ -55,17 +55,6 @@ using AllKeys =
                jbooleanArray, jbyteArray, jcharArray, jshortArray, jdoubleArray,
                jfloatArray, jlongArray>;
 
-// Instead of directly searching for the type, convertible types are sought.
-// E.g. A string like "Foo" the type will be const char[4] not const char*.
-template <typename Query>
-struct IsConvertibleKey {
-  template <typename T>
-  static constexpr bool value =
-      std::is_same_v<Query, std::decay_t<T>> ||
-      std::is_base_of_v<std::decay_t<T>, std::decay_t<Query>> ||
-      std::is_base_of_v<std::decay_t<Query>, std::decay_t<T>>;
-};
-
 template <typename TUndecayed>
 struct ProxyHelper {
   using T = std::decay_t<TUndecayed>;

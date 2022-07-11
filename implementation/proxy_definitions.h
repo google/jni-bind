@@ -34,7 +34,6 @@
 #include "implementation/default_class_loader.h"
 #include "implementation/proxy.h"
 #include "jni_dep.h"
-#include "metaprogramming/contains.h"
 
 namespace jni {
 
@@ -69,6 +68,9 @@ struct ProxyBase {
   static auto ProxyAsArg(T&& t) {
     return std::forward<T>(t);
   }
+
+  template <typename InputParamSelectionT, std::size_t param_idx, typename T>
+  static constexpr bool kViable = IsConvertibleKey_v<Key_, T>;
 };
 
 // Proxy is a metafunction that gives useful conversions from
@@ -105,8 +107,11 @@ struct Proxy<CharType,
              typename std::enable_if_t<std::is_same_v<CharType, jchar>>>
     : public ProxyBase<jchar> {
   using AsArg = std::tuple<char, jchar>;
-
   using AsDecl = std::tuple<char, jchar>;
+
+  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  static constexpr bool kViable = IsConvertibleKey<T>::template value<char> ||
+                                  IsConvertibleKey<T>::template value<jchar>;
 };
 
 template <typename BooleanType>
@@ -115,6 +120,11 @@ struct Proxy<BooleanType,
     : public ProxyBase<jboolean> {
   using AsArg = std::tuple<jboolean, bool>;
   using AsDecl = std::tuple<jboolean, bool>;
+
+  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  static constexpr bool kViable =
+      IsConvertibleKey<T>::template value<jboolean> ||
+      IsConvertibleKey<T>::template value<bool>;
 };
 
 template <typename LongType>
@@ -123,6 +133,10 @@ struct Proxy<LongType,
     : public ProxyBase<jlong> {
   using AsArg = std::tuple<long, jlong>;
   using AsDecl = std::tuple<long, jlong>;
+
+  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  static constexpr bool kViable = IsConvertibleKey<T>::template value<long> ||
+                                  IsConvertibleKey<T>::template value<jlong>;
 
   static jlong ProxyAsArg(jlong val) { return val; }
 
@@ -140,10 +154,24 @@ template <typename JString>
 struct Proxy<JString,
              typename std::enable_if_t<std::is_same_v<JString, jstring>>>
     : public ProxyBase<JString> {
-  using AsArg = std::tuple<std::string, jstring, const char*, std::string_view>;
+  using AsArg =
+      std::tuple<std::string, jstring, char*, const char*, std::string_view>;
 
   template <typename Return>
   using AsReturn = LocalString;
+
+  template <typename T>
+  struct Helper {
+    static constexpr bool val = true;
+  };
+
+  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  static constexpr bool kViable =
+      IsConvertibleKey<T>::template value<std::string> ||
+      IsConvertibleKey<T>::template value<jstring> ||
+      IsConvertibleKey<T>::template value<char*> ||
+      IsConvertibleKey<T>::template value<const char*> ||
+      IsConvertibleKey<T>::template value<std::string_view>;
 
   // These leak local instances of strings.  Usually, RAII mechanisms would
   // correctly release local instances, but here we are stripping that so it can
@@ -163,6 +191,27 @@ struct Proxy<JObject,
     : public ProxyBase<jobject> {
   using AsDecl = std::tuple<Object>;
   using AsArg = std::tuple<jobject, RefBaseTag<jobject>>;
+
+  template <typename InputParamSelectionT, std::size_t param_idx, typename T>
+  struct ContextualViabilityHelper {
+    // TODO(b/143908983): This is overly permissive, see method_selection_test.
+    static constexpr bool kViable = std::is_same_v<T, jobject>;
+  };
+
+  template <typename InputParamSelectionT, std::size_t param_idx,
+            template <const auto&, const auto&, const auto&> class Container,
+            const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  struct ContextualViabilityHelper<InputParamSelectionT, param_idx,
+                                   Container<class_v, class_loader_v, jvm_v>> {
+    // TODO(b/174272629): Exclude objects loaded by invalid loaders.
+    static constexpr bool kViable =
+        std::string_view(class_v.name_) ==
+        std::string_view(InputParamSelectionT::Val().name_);
+  };
+
+  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  static constexpr bool kViable =
+      ContextualViabilityHelper<OverloadSelection, param_idx, T>::kViable;
 
   template <typename OverloadT>
   struct Helper {
@@ -205,6 +254,10 @@ struct Proxy<JArrayType,
   using AsDecl = std::tuple<ArrayTag<jarray>>;
   using AsArg = std::tuple<jarray, ArrayTag<jarray>, RefBaseTag<jarray>>;
 
+  // TODO(b/143908983): Restrict permissiveness of arrays.
+  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  static constexpr bool kViable = true;
+
   template <typename Overload>
   using CDecl = typename ArrayHelper<Overload>::StrippedCDecl;
 
@@ -235,6 +288,24 @@ struct Proxy<JArrayType,
     : public ProxyBase<JArrayType> {
   // Non-array primitive type (e.g. jintArray => jint).
   using CDeclOfPrimitiveType = ArrayToRegularTypeMap_t<JArrayType>;
+
+  template <typename T, typename Enable = void>
+  struct Helper {
+    static constexpr bool val = std::is_same_v<T, JArrayType>;
+  };
+
+  // LocalArray or GlobalArray.
+  template <typename SpanType, std::size_t kRank, const auto& class_v_,
+            const auto& class_loader_v_, const auto& jvm_v_>
+  struct Helper<
+      LocalArray<SpanType, kRank, class_v_, class_loader_v_, jvm_v_>> {
+    static constexpr bool val =
+        std::is_same_v<RegularToArrayTypeMap_t<SpanType>, JArrayType>;
+  };
+
+  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  static constexpr bool kViable =
+      std::is_same_v<T, JArrayType> || Helper<T>::val;
 
   using AsDecl = std::tuple<ArrayTag<JArrayType>>;
   using AsArg =
@@ -270,6 +341,10 @@ struct Proxy<
   using AsDecl = std::tuple<ArrayTag<jobjectArray>>;
   using AsArg = std::tuple<jobjectArray, ArrayTag<jobjectArray>,
                            RefBaseTag<jobjectArray>>;
+
+  // TODO(b/174272629): Object arrays aren't constrained yet.
+  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  static constexpr bool kViable = true;
 
   template <typename = void>
   using CDecl = jobjectArray;

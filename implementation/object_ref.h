@@ -78,14 +78,13 @@ class ObjectRef
   // Invoked through CRTP from InvocableMap.
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
-    using PermutationForArgs =
-        PermutationSelectionForArgs_t<class_loader_v_, class_v_, false, I,
-                                      Args...>;
+    using MethodSelectionForArgs =
+        MethodSelectionForArgs_t<class_loader_v_, class_v_, false, I, Args...>;
 
-    static_assert(PermutationForArgs::kIsValidArgSet,
+    static_assert(MethodSelectionForArgs::kIsValidArgSet,
                   "JNI Error: Invalid argument set.");
 
-    return PermutationForArgs::PermutationRef::Invoke(
+    return MethodSelectionForArgs::OverloadRef::Invoke(
         GetJClass(), *RefBase::object_ref_, std::forward<Args>(args)...);
   }
 
@@ -120,8 +119,8 @@ class ConstructorValidator
   template <typename... Args>
   struct Helper {
     // 0 is (always) used to represent the constructor.
-    using type = PermutationSelectionForArgs_t<class_loader_v_, class_v_, true,
-                                               0, Args...>;
+    using type =
+        MethodSelectionForArgs_t<class_loader_v_, class_v_, true, 0, Args...>;
   };
 
   template <typename... Args>
@@ -130,7 +129,7 @@ class ConstructorValidator
   template <typename... Args,
             typename std::enable_if<sizeof...(Args) != 0, int>::type = 0>
   ConstructorValidator(Args&&... args)
-      : Base(Permutation_t<Args...>::PermutationRef::Invoke(
+      : Base(Permutation_t<Args...>::OverloadRef::Invoke(
                  Base::GetJClass(), *Base::object_ref_,
                  std::forward<Args>(args)...)
                  .Release()) {
@@ -139,8 +138,8 @@ class ConstructorValidator
   }
 
   ConstructorValidator()
-      : Base(Permutation_t<>::PermutationRef::Invoke(Base::GetJClass(),
-                                                     *Base::object_ref_)
+      : Base(Permutation_t<>::OverloadRef::Invoke(Base::GetJClass(),
+                                                  *Base::object_ref_)
                  .Release()) {
     static_assert(
         kNumConstructors != 0,

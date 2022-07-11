@@ -84,7 +84,6 @@ void Foo() {
 // So much of array logic for proxies is exercised in :array_test that it's not
 // worth replicating here as these tests often rely on full permuation info.
 ////////////////////////////////////////////////////////////////////////////////
-
 static_assert(std::is_same_v<Index_t<jarray>, jarray>);
 static_assert(std::is_same_v<Index_t<jbooleanArray>, jbooleanArray>);
 static_assert(std::is_same_v<Index_t<jintArray>, jintArray>);

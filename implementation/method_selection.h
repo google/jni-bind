@@ -39,43 +39,28 @@ namespace jni {
 
 static constexpr std::size_t kNoSelection = std::numeric_limits<size_t>::max();
 
+// The the type of an exact selection parameter in a method as part of the class
+// specification (vs. the selection of a parameter in some generated candidate).
+template <typename OverloadSelectionT, size_t param_idx>
+struct InputParamSelection;
+
 // Represents an indexing into a specific class and method.
 template <const auto& class_loader_v_, const auto& class_v_,
           bool is_constructor, size_t method_idx>
 struct MethodSelection;
 
-// Represents an overload which itself may be a set of permutations.
+// Represents a specific overload selection.
 template <typename MethodSelectionT, size_t overload_idx>
 struct OverloadSelection;
 
-// Represents a permutation (e.g. jstring => {std::string, const char*, etc...}
-template <typename MethodSelectionT, typename OverloadSelectionT, size_t permutation_idx>
-struct Permutation;
-
-// Represents the exact selection of a specific parameter from a permutation.
-template <typename MethodSelectionT, typename OverloadSelectionT, typename PermutationT,
-          size_t param_idx>
-struct ParamSelection;
-
-// The the type of an exact selection parameter in a method as part of the class
-// specification (vs. the selection of a parameter in some generated candidate).
-template <typename MethodSelectionT, typename OverloadSelectionT,
-          size_t param_idx>
-struct InputParamSelection;
-
-// Compares a ParamSelection (the type associated with an exact parameter of an
-// exact permutation) and exposes a value if they are equal.
-template <typename ParamSelectionT, typename Query>
-struct ParamCompare;
+// Helper to find overloads for a given arg set.
+template <const auto& class_loader_v_, const auto& class_v_,
+          bool is_constructor, size_t method_idx, typename... Args>
+struct OverloadSelectionForArgsImpl;
 
 // The type correlating to the selection of a return type of a method.
 template <typename MethodSelectionT, typename OverloadSelectionT>
 struct ReturnSelection;
-
-// Represents the exact permutation selection for a set of arguments.
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx, typename... Args>
-struct PermutationSelectionForArgs;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helper Aliases.
@@ -87,9 +72,9 @@ using MethodSelection_t =
 
 template <const auto& class_loader_v_, const auto& class_v_,
           bool is_constructor, size_t method_idx, typename... Args>
-using PermutationSelectionForArgs_t =
-    PermutationSelectionForArgs<class_loader_v_, class_v_, is_constructor,
-                                method_idx, Args...>;
+using MethodSelectionForArgs_t =
+    OverloadSelectionForArgsImpl<class_loader_v_, class_v_, is_constructor,
+                                 method_idx, Args...>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation Details.
@@ -140,13 +125,9 @@ struct MethodSelection {
 
     // kNoSelection is the max of std::size_t, so, this essentially selects any
     // idx (if a valid one exists), or defaults to kNoSelection.
-    static constexpr std::pair<std::size_t, std::size_t>
-        overload_permutation_idx_if_valid{
-            std::min({OverloadSelection<MethodSelection,
-                               Is>::template OverloadIdxIfViable<Ts...>()...}),
-            std::min(
-                {OverloadSelection<MethodSelection,
-                          Is>::template PermutationIdxIfViable<Ts...>()...})};
+    static constexpr std::size_t overload_idx_if_valid{std::min(
+        {OverloadSelection<MethodSelection,
+                           Is>::template OverloadIdxIfViable<Ts...>()...})};
   };
 
   template <typename... Ts>
@@ -155,19 +136,16 @@ struct MethodSelection {
                   std::decay_t<Ts>...>::val;
   }
 
-  // The method and permutation overload that is viable for a set of args, or
-  // {kNoSelection, kNoSelection} if no permutation is valid.
+  // The overload that is viable for a set of args, or |kNoSelection|.
   template <typename... Ts>
-  static constexpr std::pair<size_t, size_t> IdxPair() {
+  static constexpr std::size_t IdxForArgs() {
     return Helper<std::make_index_sequence<NumOverloads()>,
-                  std::decay_t<Ts>...>::overload_permutation_idx_if_valid;
+                  std::decay_t<Ts>...>::overload_idx_if_valid;
   }
 
   template <typename... Ts>
-  using FindOverloadSelection = OverloadSelection<MethodSelection, IdxPair<Ts...>().first>;
-
-  template <typename... Ts>
-  using FindPermutation = OverloadSelection<MethodSelection, IdxPair<Ts...>().second>;
+  using FindOverloadSelection =
+      OverloadSelection<MethodSelection, IdxForArgs<Ts...>()>;
 };
 
 template <typename MethodSelectionT, typename OverloadSelectionT>
@@ -190,17 +168,44 @@ struct ReturnSelection {
   }
 };
 
-template <typename MethodSelectionT, typename OverloadSelectionT,
-          size_t param_idx>
+template <typename OverloadSelectionT, size_t param_idx>
 struct InputParamSelection {
   static constexpr inline const auto& Val() {
     return std::get<param_idx>(OverloadSelectionT::GetParams().values_);
   }
 
   using RawValT = ArrayStrip_t<std::decay_t<decltype(Val())>>;
+  using UnstrippedRawVal = std::decay_t<decltype(Val())>;
 
   static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(
       std::get<param_idx>(OverloadSelectionT::GetParams().values_));
+
+  // Find the appropriate proxy logic for the given argument, and see if that
+  // parameter is contextually correct given the arguments.
+  template <typename... Ts>
+  static constexpr bool kValid = Proxy_t<UnstrippedRawVal>::template kViable<
+      InputParamSelection, param_idx,
+      metaprogramming::TypeOfNthElement_t<param_idx, Ts...>>;
+};
+
+template <typename OverloadSelectionT>
+struct ArgumentValidate {
+  template <bool kSameSize, typename T, typename... Ts>
+  struct Helper {
+    static constexpr bool kValid = false;
+  };
+
+  template <std::size_t... Is, typename... Ts>
+  struct Helper<true, std::index_sequence<Is...>, Ts...> {
+    static constexpr bool kValid =
+        (InputParamSelection<OverloadSelectionT, Is>::template kValid<Ts...> &&
+         ...);
+  };
+
+  template <typename... Ts>
+  static constexpr bool kValid =
+      Helper<(sizeof...(Ts) == OverloadSelectionT::kNumParams),
+             std::make_index_sequence<sizeof...(Ts)>, Ts...>::kValid;
 };
 
 template <typename MethodSelectionT, size_t overload_idx>
@@ -234,62 +239,12 @@ struct OverloadSelection {
   using AsReturn =
       Return_t<Raw_t<std::decay_t<decltype(GetReturn())>>, OverloadSelection>;
 
-  // Proxy every parameter argument as an argument that can be shown in a
-  // function prototype.
-  //
-  // A void function generates no arguments, so we generate an empty tuple.
-  using ParamsRaw = typename std::decay_t<decltype(GetParams())>::ParamsRawTup;
-  using ParamsProxiedTemp =
-      metaprogramming::InvokePerTupArg_t<ProxyAsArgMetaFunc, ParamsRaw>;
-  using ParamsProxied =
-      std::conditional_t<std::is_same_v<ParamsProxiedTemp, std::tuple<>>,
-                         std::tuple<std::tuple<>>, ParamsProxiedTemp>;
-
-  // Lastly, we create a sequence to iterate all viable permutations.
-  using NBitSequence = metaprogramming::TupleUnroller_t<
-      metaprogramming::GenerateBitSequenceFromTupSetsFunc, ParamsProxied>;
-
-  static constexpr const size_t permutation_count =
-      (NBitSequence::max_representable_size_ == 0
-           ? 1
-           : NBitSequence::max_representable_size_);
-
-  template <typename Is, typename... Ts>
-  struct Helper;
-
-  // Iterator for Permutation
-  template <size_t... Is, typename... Ts>
-  struct Helper<std::index_sequence<Is...>, Ts...> {
-    static_assert(sizeof...(Is) == permutation_count);
-
-    static constexpr bool val =
-        (Permutation<MethodSelectionT, OverloadSelection,
-                     Is>::template PermutationViable<Ts...>() ||
-         ...);
-
-    static constexpr size_t first_valid_permutation = std::min(
-        {Permutation<MethodSelectionT, OverloadSelection,
-                     Is>::template PermutationIdxIfViable<Ts...>()...});
-  };
-
   static constexpr size_t kNumParams =
       std::tuple_size_v<decltype(GetParams().values_)>;
 
   template <typename... Ts>
-  static constexpr size_t PermutationIdxIfViable() {
-    constexpr size_t num_params =
-        std::tuple_size_v<decltype(GetParams().values_)>;
-    if constexpr (sizeof...(Ts) != num_params) {
-      return kNoSelection;
-    } else {
-      return Helper<std::make_index_sequence<permutation_count>,
-                    Ts...>::first_valid_permutation;
-    }
-  }
-
-  template <typename... Ts>
   static constexpr bool OverloadViable() {
-    return PermutationIdxIfViable<Ts...>() != kNoSelection;
+    return ArgumentValidate<OverloadSelection>::template kValid<Ts...>;
   }
 
   template <typename... Ts>
@@ -311,9 +266,8 @@ struct OverloadSelection {
   template <size_t... Is>
   struct ParamHelper<std::index_sequence<Is...>> {
     static constexpr std::string_view val =
-        metaprogramming::StringConcatenate_v<
-            SelectorStaticInfo<InputParamSelection<
-                MethodSelectionT, OverloadSelection, Is>>::kTypeName...>;
+        metaprogramming::StringConcatenate_v<SelectorStaticInfo<
+            InputParamSelection<OverloadSelection, Is>>::kTypeName...>;
   };
 
   static constexpr std::string_view kParamSignature =
@@ -339,133 +293,18 @@ struct OverloadSelection {
   }
 };
 
-template <typename MethodSelectionT, typename OverloadSelectionT, size_t permutation_idx>
-struct Permutation {
-  using NBitSelection =
-      metaprogramming::Increment_t<typename OverloadSelectionT::NBitSequence,
-                                   permutation_idx>;
-
-  template <size_t I>
-  using Param = ParamSelection<MethodSelectionT, OverloadSelectionT, Permutation, I>;
-
-  template <typename Is, typename... Ts>
-  struct Helper;
-
-  template <size_t... Is, typename... Ts>
-  struct Helper<std::index_sequence<Is...>, Ts...> {
-    static constexpr bool val = (Param<Is>::template viable<Ts> && ...);
-  };
-
-  template <typename... Ts>
-  static constexpr bool PermutationViable() {
-    return Helper<std::index_sequence_for<Ts...>, Ts...>::val;
-  }
-
-  template <typename... Ts>
-  static constexpr size_t PermutationIdxIfViable() {
-    return PermutationViable<Ts...>() ? permutation_idx : kNoSelection;
-  }
-};
-
-template <typename MethodSelectionT, typename OverloadSelectionT, typename PermutationT,
-          size_t param_idx>
-struct ParamSelection {
-  static constexpr size_t selection_idx =
-      PermutationT::NBitSelection::template GetBit<param_idx>::value_;
-
-  constexpr static auto& GetParam() {
-    return std::get<param_idx>(OverloadSelectionT::GetParams().values_);
-  }
-
-  using ParamT = metaprogramming::TypeOfNthTupleElement_t<
-      selection_idx, metaprogramming::TypeOfNthTupleElement_t<
-                         param_idx, typename OverloadSelectionT::ParamsProxied>>;
-
-  template <typename T>
-  static constexpr bool viable = ParamCompare<ParamSelection, T>::val;
-};
-
-template <typename ParamSelectionT, typename Query>
-struct ParamCompare {
-  using ParamT = typename ParamSelectionT::ParamT;
-
-  template <typename, typename Enable = void>
-  struct Helper {
-    static constexpr bool val = false;
-  };
-
-  template <typename T>
-  struct Helper<T, std::enable_if_t<std::is_same_v<std::remove_cv_t<T>,
-                                                   std::remove_cv_t<ParamT>>>> {
-    static constexpr bool val = true;
-  };
-
-  // The partial specialisation to compare a Local or Global object
-  // against the specific selected permutation.
-  template <template <const auto&, const auto&, const auto&> class T,
-            const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  struct Helper<
-      T<class_v, class_loader_v, jvm_v>,
-      std::enable_if_t<std::is_base_of_v<RefBaseTag<jobject>, ParamT> &&
-                       std::is_base_of_v<RefBaseTag<jobject>,
-                                         T<class_v, class_loader_v, jvm_v>>>> {
-    // TODO(b/174272629): Exclude objects loaded by invalid loaders.
-    static constexpr bool val =
-        std::string_view(class_v.name_) ==
-        std::string_view(ParamSelectionT::GetParam().name_);
-  };
-
-  // ArrayRef objects (i.e. lvalue and rvalues of |LocalArray|s).
-  template <
-      template <typename, std::size_t, const auto&, const auto&, const auto&>
-      class T,
-      typename SpanType, std::size_t kRank, const auto& class_v,
-      const auto& class_loader_v, const auto& jvm_v>
-  struct Helper<
-      T<SpanType, kRank, class_v, class_loader_v, jvm_v>,
-      std::enable_if_t<
-          std::is_base_of_v<ArrayRefPrimitiveBaseTag,
-                            std::decay_t<T<SpanType, kRank, class_v,
-                                           class_loader_v, jvm_v>>> &&
-          std::is_base_of_v<ArrayRefPrimitiveTag<SpanType>, ParamT>>> {
-    static constexpr bool val = true;
-  };
-
-  // The partial specialisation to compare an object Array.
-  template <
-      template <typename, std::size_t, const auto&, const auto&, const auto&>
-      class T,
-      typename SpanType, std::size_t kRank, const auto& class_v,
-      const auto& class_loader_v, const auto& jvm_v>
-  struct Helper<
-      T<SpanType, kRank, class_v, class_loader_v, jvm_v>,
-      std::enable_if_t<std::is_base_of_v<RefBaseTag<jobjectArray>,
-                                         T<SpanType, kRank, class_v,
-                                           class_loader_v, jvm_v>> &&
-                       std::is_base_of_v<RefBaseTag<jobjectArray>, ParamT>>> {
-    static constexpr bool val =
-        std::string_view(class_v.name_) ==
-        std::string_view(ParamSelectionT::GetParam().raw_type_.name_);
-  };
-
-  static constexpr bool val = Helper<Query>::val;
-};
-
 template <const auto& class_loader_v_, const auto& class_v_,
           bool is_constructor, size_t method_idx, typename... Args>
-struct PermutationSelectionForArgs {
+struct OverloadSelectionForArgsImpl {
   using MethodSelectionForArgs =
       MethodSelection_t<class_loader_v_, class_v_, is_constructor, method_idx>;
   using OverloadSelectionForArgs =
       typename MethodSelectionForArgs::template FindOverloadSelection<Args...>;
-  using PermutationForArgs =
-      typename MethodSelectionForArgs::template FindPermutation<Args...>;
+  using OverloadRef =
+      OverloadRef<MethodSelectionForArgs, OverloadSelectionForArgs>;
 
   static constexpr bool kIsValidArgSet =
       MethodSelectionForArgs::template ArgSetViable<Args...>();
-
-  using PermutationRef = PermutationRef<MethodSelectionForArgs, OverloadSelectionForArgs,
-                                        PermutationForArgs>;
 };
 
 }  // namespace jni

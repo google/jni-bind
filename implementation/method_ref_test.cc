@@ -24,11 +24,9 @@ using jni::Class;
 using jni::kDefaultClassLoader;
 using jni::Method;
 using jni::MethodSelection_t;
+using jni::OverloadRef;
 using jni::OverloadSelection;
 using jni::Params;
-using jni::Permutation;
-using jni::PermutationRef;
-using jni::PermutationSelectionForArgs_t;
 using jni::test::JniTest;
 using testing::_;
 using testing::Eq;
@@ -40,10 +38,8 @@ struct FirstOverloadFirstPermutation {
   using IthMethodSelection =
       MethodSelection_t<class_loader_v, class_v, false, I>;
   using FirstOverload = OverloadSelection<IthMethodSelection, 0>;
-  using FirstPermutation = Permutation<IthMethodSelection, FirstOverload, 0>;
 
-  using type =
-      PermutationRef<IthMethodSelection, FirstOverload, FirstPermutation>;
+  using type = OverloadRef<IthMethodSelection, FirstOverload>;
 };
 
 template <const auto& class_loader_v, const auto& class_v, size_t I>

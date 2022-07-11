@@ -518,7 +518,6 @@ cc_library(
         "//metaprogramming:cartesian_product",
         "//metaprogramming:combine",
         "//metaprogramming:concatenate",
-        "//metaprogramming:contains",
         "//metaprogramming:flatten",
         "//metaprogramming:invoke",
         "//metaprogramming:per_element",
