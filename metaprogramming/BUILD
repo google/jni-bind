@@ -281,6 +281,21 @@ cc_test(
 )
 
 cc_library(
+    name = "index",
+    hdrs = ["index.h"],
+    deps = [":tuple_manipulation"],
+)
+
+cc_test(
+    name = "index_test",
+    srcs = ["index_test.cc"],
+    deps = [
+        ":index",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "interleave",
     hdrs = ["interleave.h"],
 )
