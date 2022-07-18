@@ -121,7 +121,7 @@ cc_library(
 There are easy to lift samples in [javatests/com/jnibind/test/](javatests/com/jnibind/test/). If you want try building these samples (or to copy the BUILD configuration) you can clone *this* repo.
 
 ```bash
-cd /tmp
+cd ~
 git clone https://github.com/google/jni-bind.git
 cd jni-bind
 bazel test  --cxxopt='-std=c++17' --repo_env=CC=clang ...
