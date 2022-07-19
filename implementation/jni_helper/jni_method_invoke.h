@@ -177,6 +177,17 @@ struct JniMethodInvoke<jlongArray, true> {
 };
 
 template <>
+struct JniMethodInvoke<jarray, true> {
+  // Arrays of arrays (which this invoke represents) return object arrays
+  // (arrays themselves are objects, ergo object arrays).
+  template <typename... Ts>
+  static jobjectArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {
+    return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
+        object, method_id, std::forward<Ts>(ts)...));
+  }
+};
+
+template <>
 struct JniMethodInvoke<jobjectArray, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jmethodID method_id, Ts&&... ts) {

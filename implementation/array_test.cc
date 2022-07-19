@@ -63,20 +63,6 @@ static_assert(arr4 == arr5);
 static_assert(arr3 != arr4);
 
 ////////////////////////////////////////////////////////////////////////////////
-// Primality Tests.
-////////////////////////////////////////////////////////////////////////////////
-
-static_assert(jni::kIsPrimitiveArrayType<jbooleanArray>);
-static_assert(jni::kIsPrimitiveArrayType<jbyteArray>);
-static_assert(jni::kIsPrimitiveArrayType<jcharArray>);
-static_assert(jni::kIsPrimitiveArrayType<jshortArray>);
-static_assert(jni::kIsPrimitiveArrayType<jintArray>);
-static_assert(jni::kIsPrimitiveArrayType<jfloatArray>);
-static_assert(jni::kIsPrimitiveArrayType<jlongArray>);
-
-static_assert(!jni::kIsPrimitiveArrayType<jobjectArray>);
-
-////////////////////////////////////////////////////////////////////////////////
 // Rank Tests.
 ////////////////////////////////////////////////////////////////////////////////
 static constexpr jint kArrRank0{0};

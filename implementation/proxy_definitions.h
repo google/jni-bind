@@ -185,6 +185,10 @@ struct Proxy<JString,
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Object Proxy Definitions.
+////////////////////////////////////////////////////////////////////////////////
+
 template <typename JObject>
 struct Proxy<JObject,
              typename std::enable_if_t<std::is_same_v<JObject, jobject>>>
@@ -246,45 +250,12 @@ struct Proxy<JObject,
 // Array Proxy Definitions.
 ////////////////////////////////////////////////////////////////////////////////
 
-// Proxy for arrays of arrays (e.g. Array{Array{int}}).
-template <typename JArrayType>
-struct Proxy<JArrayType,
-             typename std::enable_if_t<std::is_same_v<JArrayType, jarray>>>
-    : public ProxyBase<JArrayType> {
-  using AsDecl = std::tuple<ArrayTag<jarray>>;
-  using AsArg = std::tuple<jarray, ArrayTag<jarray>, RefBaseTag<jarray>>;
-
-  // TODO(b/143908983): Restrict permissiveness of arrays.
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
-  static constexpr bool kViable = true;
-
-  template <typename Overload>
-  using CDecl = typename ArrayHelper<Overload>::StrippedCDecl;
-
-  template <typename Overload>
-  using AsReturn = typename ArrayHelper<Overload>::AsReturn;
-
-  static jarray ProxyAsArg(jarray arr) { return arr; };
-
-  template <typename T>
-  static jarray ProxyAsArg(T& t) {
-    return jarray{t};
-  };
-
-  template <typename T, typename = std::enable_if_t<
-                            std::is_base_of_v<RefBaseTag<jarray>, T>>>
-  static jarray ProxyAsArg(T&& t) {
-    return t.Release();
-  };
-};
-
 template <typename SpanType>
 struct ArrayRefPrimitiveTag;
 
-// Primitive array like types such as jintArray, jfloatArray.
 template <typename JArrayType>
-struct Proxy<JArrayType,
-             typename std::enable_if_t<kIsPrimitiveArrayType<JArrayType>>>
+struct Proxy<JArrayType, typename std::enable_if_t<
+                             std::is_convertible_v<JArrayType, jarray>>>
     : public ProxyBase<JArrayType> {
   // Non-array primitive type (e.g. jintArray => jint).
   using CDeclOfPrimitiveType = ArrayToRegularTypeMap_t<JArrayType>;
@@ -328,40 +299,6 @@ struct Proxy<JArrayType,
   template <typename T, typename = std::enable_if_t<
                             std::is_base_of_v<RefBaseTag<JArrayType>, T>>>
   static JArrayType ProxyAsArg(T&& t) {
-    return t.Release();
-  };
-};
-
-// Arrays of objects.
-template <typename JObjectArrayType>
-struct Proxy<
-    JObjectArrayType,
-    typename std::enable_if_t<std::is_same_v<JObjectArrayType, jobjectArray>>>
-    : public ProxyBase<JObjectArrayType> {
-  using AsDecl = std::tuple<ArrayTag<jobjectArray>>;
-  using AsArg = std::tuple<jobjectArray, ArrayTag<jobjectArray>,
-                           RefBaseTag<jobjectArray>>;
-
-  // TODO(b/174272629): Object arrays aren't constrained yet.
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
-  static constexpr bool kViable = true;
-
-  template <typename = void>
-  using CDecl = jobjectArray;
-
-  template <typename Overload>
-  using AsReturn = typename ArrayHelper<Overload>::AsReturn;
-
-  static jobjectArray ProxyAsArg(jobjectArray arr) { return arr; };
-
-  template <typename T>
-  static jobjectArray ProxyAsArg(T& t) {
-    return jobjectArray{t};
-  };
-
-  template <typename T, typename = std::enable_if_t<
-                            std::is_base_of_v<RefBaseTag<jobjectArray>, T>>>
-  static jobjectArray ProxyAsArg(T&& t) {
     return t.Release();
   };
 };

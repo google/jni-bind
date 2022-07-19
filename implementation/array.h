@@ -48,10 +48,6 @@ using PrimitiveKeys =
     std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
                jfloatArray, jdoubleArray, jbooleanArray>;
 
-template <typename T>
-static constexpr bool kIsPrimitiveArrayType =
-    metaprogramming::TupContains_v<T, PrimitiveKeys>;
-
 // Simple type for proxying types used in the API (e.g. jint) to their
 // corresponding array type (e.g. jintarray). Only use the former type when
 // using JNI Bind (e.g. LocalArray<jint>, not LocalArray<jintArray>).

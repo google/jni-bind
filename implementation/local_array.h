@@ -55,6 +55,12 @@ class LocalArray : public ArrayRef<SpanType, kNoClassSpecified,
   using Base =
       ArrayRef<SpanType, kNoClassSpecified, kDefaultClassLoader, kDefaultJvm>;
 
+  // TODO(b/143908983): Local arrays only support logic for rank 1.
+  // This signature exists to satisfy proxy logic returning higher rank arrays.
+  template <typename = std::enable_if<std::is_same_v<SpanType, jobject> &&
+                                      (kRank > 1)>>
+  LocalArray(jobjectArray array) : Base(nullptr) {}
+
   LocalArray(RegularToArrayTypeMap_t<SpanType> array) : Base(array) {}
   LocalArray(LocalArray<SpanType, kRank>&& rhs) : Base(rhs.Release()) {}
 
