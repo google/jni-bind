@@ -1,14 +1,14 @@
 #include "jni_bind.h"
 
-using jni::Array;
-using jni::Class;
-using jni::InputParamSelection;
-using jni::Method;
-using jni::MethodSelection_t;
-using jni::Overload;
-using jni::Params;
-using jni::ReturnSelection;
-using jni::SelectorStaticInfo;
+using ::jni::Array;
+using ::jni::Class;
+using ::jni::InputParamSelection;
+using ::jni::kIsReturnIdx;
+using ::jni::Method;
+using ::jni::MethodSelection_t;
+using ::jni::Overload;
+using ::jni::Params;
+using ::jni::SelectorStaticInfo;
 
 namespace {
 
@@ -51,24 +51,27 @@ using FooOverload = jni::OverloadSelection<FooMethodT, overload_idx>;
 ////////////////////////////////////////////////////////////////////////////////
 // Return signature tests.
 ////////////////////////////////////////////////////////////////////////////////
-static_assert(SelectorStaticInfo<
-                  ReturnSelection<FooMethodT, FooOverload<0>>>::kTypeName ==
-              "I");
-static_assert(SelectorStaticInfo<
-                  ReturnSelection<FooMethodT, FooOverload<1>>>::kTypeName ==
-              "F");
-static_assert(SelectorStaticInfo<
-                  ReturnSelection<FooMethodT, FooOverload<2>>>::kTypeName ==
-              "LkClass2;");
-static_assert(SelectorStaticInfo<
-                  ReturnSelection<FooMethodT, FooOverload<3>>>::kTypeName ==
-              "LkClass2;");
-static_assert(SelectorStaticInfo<
-                  ReturnSelection<FooMethodT, FooOverload<4>>>::kTypeName ==
-              "[I");
-static_assert(SelectorStaticInfo<
-                  ReturnSelection<FooMethodT, FooOverload<5>>>::kTypeName ==
-              "[LkClass3;");
+static_assert(
+    SelectorStaticInfo<
+        InputParamSelection<FooOverload<0>, kIsReturnIdx>>::kTypeName == "I");
+static_assert(
+    SelectorStaticInfo<
+        InputParamSelection<FooOverload<1>, kIsReturnIdx>>::kTypeName == "F");
+static_assert(
+    SelectorStaticInfo<
+        InputParamSelection<FooOverload<2>, kIsReturnIdx>>::kTypeName ==
+    "LkClass2;");
+static_assert(
+    SelectorStaticInfo<
+        InputParamSelection<FooOverload<3>, kIsReturnIdx>>::kTypeName ==
+    "LkClass2;");
+static_assert(
+    SelectorStaticInfo<
+        InputParamSelection<FooOverload<4>, kIsReturnIdx>>::kTypeName == "[I");
+static_assert(
+    SelectorStaticInfo<
+        InputParamSelection<FooOverload<5>, kIsReturnIdx>>::kTypeName ==
+    "[LkClass3;");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Param Index Signature Tests.

@@ -24,6 +24,7 @@
 #include "implementation/name_constants.h"
 #include "implementation/object.h"
 #include "implementation/return.h"
+#include "implementation/void.h"
 #include "metaprogramming/string_concatenate.h"
 
 namespace jni {
@@ -70,6 +71,7 @@ struct SelectorStaticInfo {
   using RawValT = typename Selector::RawValT;
 
   static constexpr inline bool kIsObject = std::is_base_of_v<Object, RawValT>;
+  static constexpr inline bool kIsVoid = std::is_same_v<Void, RawValT>;
   static constexpr std::size_t kRank = Selector::kRank;
 
   static constexpr std::string_view TypeNameOrNothingIfNotAnObject() {
@@ -103,6 +105,8 @@ struct SelectorStaticInfo {
     if constexpr (kIsObject) {
       return metaprogramming::StringConcatenate_v<
           kLetterL, kTypeNameOrNothingIfNotAnObject, kSemiColon>;
+    } else if constexpr (kIsVoid) {
+      return JavaTypeToString<void>();
     } else {
       return JavaTypeToString<RawValT>();
     }

@@ -58,10 +58,6 @@ template <const auto& class_loader_v_, const auto& class_v_,
           bool is_constructor, size_t method_idx, typename... Args>
 struct OverloadSelectionForArgsImpl;
 
-// The type correlating to the selection of a return type of a method.
-template <typename MethodSelectionT, typename OverloadSelectionT>
-struct ReturnSelection;
-
 ////////////////////////////////////////////////////////////////////////////////
 // Helper Aliases.
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,37 +144,27 @@ struct MethodSelection {
       OverloadSelection<MethodSelection, IdxForArgs<Ts...>()>;
 };
 
-template <typename MethodSelectionT, typename OverloadSelectionT>
-struct ReturnSelection {
-  using RawValT = ArrayStrip_t<
-      Raw_t<std::decay_t<decltype(OverloadSelectionT::GetReturn())>>>;
-
-  static inline constexpr std::size_t ComputeRank() {
-    if constexpr (Rankifier<RawValT>::kComputableRank) {
-      return Rankifier<RawValT>::Rank(OverloadSelectionT::GetReturn().raw_);
-    } else {
-      return 0;
-    }
-  }
-
-  static constexpr std::size_t kRank = ComputeRank();
-
-  static constexpr inline auto& Val() {
-    return OverloadSelectionT::GetReturn().raw_;
-  }
-};
+// Represents a return value index for |InputParamSelection|.
+static constexpr std::size_t kIsReturnIdx =
+    std::numeric_limits<std::size_t>::max();
 
 template <typename OverloadSelectionT, size_t param_idx>
 struct InputParamSelection {
+  // If |param_idx| is kIsReturnIdx, this is the return value.
+  static constexpr bool kIsReturn = (param_idx == kIsReturnIdx);
+
   static constexpr inline const auto& Val() {
-    return std::get<param_idx>(OverloadSelectionT::GetParams().values_);
+    if constexpr (kIsReturn) {
+      return OverloadSelectionT::GetReturn().raw_;
+    } else {
+      return std::get<param_idx>(OverloadSelectionT::GetParams().values_);
+    }
   }
 
   using RawValT = ArrayStrip_t<std::decay_t<decltype(Val())>>;
   using UnstrippedRawVal = std::decay_t<decltype(Val())>;
 
-  static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(
-      std::get<param_idx>(OverloadSelectionT::GetParams().values_));
+  static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(Val());
 
   // Find the appropriate proxy logic for the given argument, and see if that
   // parameter is contextually correct given the arguments.
@@ -281,7 +267,7 @@ struct OverloadSelection {
       return "V";
     } else {
       return SelectorStaticInfo<
-          ReturnSelection<MethodSelectionT, OverloadSelection>>::kTypeName;
+          InputParamSelection<OverloadSelection, kIsReturnIdx>>::kTypeName;
     }
   }
 

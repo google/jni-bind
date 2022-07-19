@@ -19,6 +19,8 @@
 
 #include <string_view>
 
+#include "implementation/void.h"
+
 namespace jni {
 
 template <typename Raw_>
@@ -36,6 +38,7 @@ struct Return {
 template <>
 struct Return<void> {
   using Raw = void;
+  const Void raw_{};
 
   constexpr Return() = default;
 };

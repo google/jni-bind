@@ -559,6 +559,7 @@ cc_library(
 cc_library(
     name = "return",
     hdrs = ["return.h"],
+    deps = [":void"],
 )
 
 cc_library(
@@ -581,6 +582,7 @@ cc_library(
         ":name_constants",
         ":object",
         ":return",
+        ":void",
         "//implementation/jni_helper:jni_typename_to_string",
         "//metaprogramming:string_concatenate",
     ],
@@ -626,4 +628,9 @@ cc_library(
         ":class",
         "//metaprogramming:all_unique",
     ],
+)
+
+cc_library(
+    name = "void",
+    hdrs = ["void.h"],
 )
