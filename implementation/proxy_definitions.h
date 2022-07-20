@@ -71,6 +71,9 @@ struct ProxyBase {
 
   template <typename InputParamSelectionT, std::size_t param_idx, typename T>
   static constexpr bool kViable = IsConvertibleKey_v<Key_, T>;
+
+  template <typename Overload>
+  static constexpr std::size_t kRank = 1;
 };
 
 // Proxy is a metafunction that gives useful conversions from
@@ -258,7 +261,8 @@ struct Proxy<JArrayType, typename std::enable_if_t<
                              std::is_convertible_v<JArrayType, jarray>>>
     : public ProxyBase<JArrayType> {
   // Non-array primitive type (e.g. jintArray => jint).
-  using CDeclOfPrimitiveType = ArrayToRegularTypeMap_t<JArrayType>;
+  template <typename = void>
+  using CDecl = ArrayToRegularTypeMap_t<JArrayType>;
 
   template <typename T, typename Enable = void>
   struct Helper {
@@ -281,13 +285,13 @@ struct Proxy<JArrayType, typename std::enable_if_t<
   using AsDecl = std::tuple<ArrayTag<JArrayType>>;
   using AsArg =
       std::tuple<JArrayType, RefBaseTag<JArrayType>, ArrayTag<JArrayType>,
-                 ArrayRefPrimitiveTag<CDeclOfPrimitiveType>>;
-
-  template <typename = void>
-  using CDecl = RegularToArrayTypeMap_t<CDeclOfPrimitiveType>;
+                 ArrayRefPrimitiveTag<CDecl<void>>>;
 
   template <typename Overload>
   using AsReturn = typename ArrayHelper<Overload>::AsReturn;
+
+  template <typename Overload>
+  static constexpr std::size_t kRank = ArrayHelper<Overload>::kRank;
 
   static JArrayType ProxyAsArg(JArrayType arr) { return arr; };
 
@@ -314,26 +318,25 @@ struct ArrayHelper {
     using ConvertedCDecl = RegularToArrayTypeMap_t<StrippedCDecl>;
   };
 
-  template <const auto& array_val>
+  static constexpr auto kVal{Overload::GetReturn().raw_};
+
   static constexpr auto LocalArrayBuildFromArray() {
-    using RawT = std::decay_t<ArrayStrip_t<decltype(array_val.raw_type_)>>;
-    constexpr std::size_t kRank =
-        Rankifier<decltype(array_val)>::Rank(array_val);
+    using RawT = std::decay_t<ArrayStrip_t<decltype(kVal.raw_type_)>>;
+
+    constexpr std::size_t kRank = Rankifier<decltype(kVal)>::Rank(kVal);
 
     // TODO(b/143908983): Support multi-dimensional arrays.
     if constexpr (!std::is_same_v<CDecl_t<RawT>, jobject>) {
       return LocalArray<RawT, kRank, kNoClassSpecified>{nullptr};
     } else {
-      return LocalArray<jobject, kRank, Helper<array_val>::val>{
+      return LocalArray<jobject, kRank, Helper<kVal>::val>{
           jobjectArray{nullptr}};
     }
   }
 
-  static constexpr auto kVal{Overload::GetReturn().raw_};
-
   using StrippedCDecl = typename Helper<kVal>::StrippedCDecl;
   using ConvertedCDecl = typename Helper<kVal>::ConvertedCDecl;
-  using AsReturn = decltype(LocalArrayBuildFromArray<kVal>());
+  using AsReturn = decltype(LocalArrayBuildFromArray());
 };
 
 }  // namespace jni

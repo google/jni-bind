@@ -23,6 +23,7 @@
 
 #include "implementation/class_loader.h"
 #include "implementation/class_ref.h"
+#include "implementation/input_param_selection.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/jni_method_invoke.h"
@@ -76,19 +77,20 @@ struct OverloadRef {
       JniMethodInvoke<void, 0>::Invoke(
           object, OverloadRef::GetMethodID(clazz),
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
+
     } else if constexpr (Method::kIsConstructor) {
       return {JniHelper::NewLocalObject(
           clazz, OverloadRef::GetMethodID(clazz),
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
-      static constexpr bool is_array =
-          kIsArrayType<decltype(Overload::GetReturn().raw_)>;
+      static constexpr std::size_t kRank =
+          InputParamSelection<Overload, kIsReturnIdx>::kRank;
 
-      return {JniMethodInvoke < typename Overload::CDecl,
-              is_array ? 2
-                       : 1 > ::Invoke(object, OverloadRef::GetMethodID(clazz),
-                                      Proxy_t<Params>::ProxyAsArg(
-                                          std::forward<Params>(params))...)};
+      // For now, adding +1 because the rest of the type system behaves as if
+      // a type is rank 0, and JniMethodInvoke behaves as if void is rank 0.
+      return {JniMethodInvoke<typename Overload::CDecl, kRank + 1>::Invoke(
+          object, OverloadRef::GetMethodID(clazz),
+          Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     }
   }
 };

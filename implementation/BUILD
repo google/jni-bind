@@ -385,6 +385,7 @@ cc_library(
     deps = [
         ":class_loader",
         ":class_ref",
+        ":input_param_selection",
         ":method",
         ":params",
         ":proxy",
