@@ -24,6 +24,7 @@
 #include "implementation/array.h"
 #include "implementation/array_ref.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/input_param_selection.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
 #include "implementation/method_ref.h"
 #include "implementation/proxy.h"
@@ -142,36 +143,6 @@ struct MethodSelection {
   template <typename... Ts>
   using FindOverloadSelection =
       OverloadSelection<MethodSelection, IdxForArgs<Ts...>()>;
-};
-
-// Represents a return value index for |InputParamSelection|.
-static constexpr std::size_t kIsReturnIdx =
-    std::numeric_limits<std::size_t>::max();
-
-template <typename OverloadSelectionT, size_t param_idx>
-struct InputParamSelection {
-  // If |param_idx| is kIsReturnIdx, this is the return value.
-  static constexpr bool kIsReturn = (param_idx == kIsReturnIdx);
-
-  static constexpr inline const auto& Val() {
-    if constexpr (kIsReturn) {
-      return OverloadSelectionT::GetReturn().raw_;
-    } else {
-      return std::get<param_idx>(OverloadSelectionT::GetParams().values_);
-    }
-  }
-
-  using RawValT = ArrayStrip_t<std::decay_t<decltype(Val())>>;
-  using UnstrippedRawVal = std::decay_t<decltype(Val())>;
-
-  static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(Val());
-
-  // Find the appropriate proxy logic for the given argument, and see if that
-  // parameter is contextually correct given the arguments.
-  template <typename... Ts>
-  static constexpr bool kValid = Proxy_t<UnstrippedRawVal>::template kViable<
-      InputParamSelection, param_idx,
-      metaprogramming::TypeOfNthElement_t<param_idx, Ts...>>;
 };
 
 template <typename OverloadSelectionT>

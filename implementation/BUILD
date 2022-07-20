@@ -279,6 +279,15 @@ cc_test(
 )
 
 cc_library(
+    name = "input_param_selection",
+    hdrs = ["input_param_selection.h"],
+    deps = [
+        ":array",
+        ":proxy",
+    ],
+)
+
+cc_library(
     name = "jvm",
     hdrs = ["jvm.h"],
     deps = [
@@ -411,6 +420,7 @@ cc_library(
         ":array",
         ":array_ref",
         ":default_class_loader",
+        ":input_param_selection",
         ":method_ref",
         ":proxy",
         ":selector_static_info",
