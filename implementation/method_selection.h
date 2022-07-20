@@ -217,16 +217,16 @@ struct OverloadSelection {
     }
   }
 
+  using ReturnT = std::decay_t<decltype(GetReturn())>;
+  using ParamsT = std::decay_t<decltype(GetParams().values_)>;
+
   // CDecl is the type used by the C API for a return type.
-  using CDecl =
-      CDecl_t<Raw_t<std::decay_t<decltype(GetReturn())>>, OverloadSelection>;
+  using CDecl = CDecl_t<Raw_t<ReturnT>, OverloadSelection>;
 
   // Return type is the richly decorated type returned (e.g LocalArray).
-  using AsReturn =
-      Return_t<Raw_t<std::decay_t<decltype(GetReturn())>>, OverloadSelection>;
+  using AsReturn = Return_t<Raw_t<ReturnT>, OverloadSelection>;
 
-  static constexpr size_t kNumParams =
-      std::tuple_size_v<decltype(GetParams().values_)>;
+  static constexpr size_t kNumParams = std::tuple_size_v<ParamsT>;
 
   template <typename... Ts>
   static constexpr bool OverloadViable() {

@@ -73,7 +73,7 @@ struct OverloadRef {
   static ReturnProxied Invoke(jclass clazz, jobject object,
                               Params&&... params) {
     if constexpr (std::is_same_v<ReturnProxied, void>) {
-      JniMethodInvoke<void>::Invoke(
+      JniMethodInvoke<void, 0>::Invoke(
           object, OverloadRef::GetMethodID(clazz),
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
     } else if constexpr (Method::kIsConstructor) {
@@ -84,9 +84,11 @@ struct OverloadRef {
       static constexpr bool is_array =
           kIsArrayType<decltype(Overload::GetReturn().raw_)>;
 
-      return {JniMethodInvoke<typename Overload::CDecl, is_array>::Invoke(
-          object, OverloadRef::GetMethodID(clazz),
-          Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
+      return {JniMethodInvoke < typename Overload::CDecl,
+              is_array ? 2
+                       : 1 > ::Invoke(object, OverloadRef::GetMethodID(clazz),
+                                      Proxy_t<Params>::ProxyAsArg(
+                                          std::forward<Params>(params))...)};
     }
   }
 };

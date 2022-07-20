@@ -331,7 +331,8 @@ struct ArrayHelper {
 
   static constexpr auto kVal{Overload::GetReturn().raw_};
 
-  using StrippedCDecl = typename Helper<kVal>::ConvertedCDecl;
+  using StrippedCDecl = typename Helper<kVal>::StrippedCDecl;
+  using ConvertedCDecl = typename Helper<kVal>::ConvertedCDecl;
   using AsReturn = decltype(LocalArrayBuildFromArray<kVal>());
 };
 

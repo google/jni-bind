@@ -33,9 +33,9 @@ TEST_F(JniTest, JniMethodInvoke_InvokesVoidMethod) {
   static const jmethodID method{reinterpret_cast<jmethodID>(0XBBBBBB)};
   EXPECT_CALL(*env_, CallVoidMethodV(object, method, _)).Times(3);
 
-  JniMethodInvoke<void>::Invoke(object, method, 1);
-  JniMethodInvoke<void>::Invoke(object, method, 1, 2);
-  JniMethodInvoke<void>::Invoke(object, method, 1, 2, 3);
+  JniMethodInvoke<void, 0>::Invoke(object, method, 1);
+  JniMethodInvoke<void, 0>::Invoke(object, method, 1, 2);
+  JniMethodInvoke<void, 0>::Invoke(object, method, 1, 2, 3);
 }
 
 TEST_F(JniTest, JniMethodInvoke_InvokesBooleanMethod) {
