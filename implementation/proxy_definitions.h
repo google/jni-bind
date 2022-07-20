@@ -55,7 +55,6 @@ template <typename Key_>
 struct ProxyBase {
   using Key = Key_;
 
-  template <typename = void>
   using CDecl = Key_;
 
   template <typename>
@@ -261,7 +260,6 @@ struct Proxy<JArrayType, typename std::enable_if_t<
                              std::is_convertible_v<JArrayType, jarray>>>
     : public ProxyBase<JArrayType> {
   // Non-array primitive type (e.g. jintArray => jint).
-  template <typename = void>
   using CDecl = ArrayToRegularTypeMap_t<JArrayType>;
 
   template <typename T, typename Enable = void>
@@ -283,9 +281,8 @@ struct Proxy<JArrayType, typename std::enable_if_t<
       std::is_same_v<T, JArrayType> || Helper<T>::val;
 
   using AsDecl = std::tuple<ArrayTag<JArrayType>>;
-  using AsArg =
-      std::tuple<JArrayType, RefBaseTag<JArrayType>, ArrayTag<JArrayType>,
-                 ArrayRefPrimitiveTag<CDecl<void>>>;
+  using AsArg = std::tuple<JArrayType, RefBaseTag<JArrayType>,
+                           ArrayTag<JArrayType>, ArrayRefPrimitiveTag<CDecl>>;
 
   template <typename Overload>
   using AsReturn = typename ArrayHelper<Overload>::AsReturn;

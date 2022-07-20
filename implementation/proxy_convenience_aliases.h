@@ -31,8 +31,8 @@ using Proxy_t = typename ProxyHelper<T>::Proxy_t;
 template <typename T>
 using Index_t = typename ProxyHelper<T>::Index;
 
-template <typename T, typename Overload = void>
-using CDecl_t = typename ProxyHelper<T>::template CDecl<Overload>;
+template <typename T>
+using CDecl_t = typename ProxyHelper<T>::CDecl;
 
 template <typename T, typename OverloadSelection>
 using Return_t =

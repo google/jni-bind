@@ -192,7 +192,7 @@ struct OverloadSelection {
   using ParamsT = std::decay_t<decltype(GetParams().values_)>;
 
   // CDecl is the type used by the C API for a return type.
-  using CDecl = CDecl_t<Raw_t<ReturnT>, OverloadSelection>;
+  using CDecl = CDecl_t<Raw_t<ReturnT>>;
 
   // Return type is the richly decorated type returned (e.g LocalArray).
   using AsReturn = Return_t<Raw_t<ReturnT>, OverloadSelection>;
