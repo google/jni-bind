@@ -32,6 +32,7 @@
 #include "ref_base.h"
 #include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/name_constants.h"
 #include "implementation/proxy.h"
 #include "jni_dep.h"
 
@@ -262,23 +263,32 @@ struct Proxy<JArrayType, typename std::enable_if_t<
   // Non-array primitive type (e.g. jintArray => jint).
   using CDecl = ArrayToRegularTypeMap_t<JArrayType>;
 
-  template <typename T, typename Enable = void>
+  // Primitive Array Types (e.g. if JArrayType is jintarray and T is too).
+  template <typename ParamSelection, typename T, typename Enable = void>
   struct Helper {
-    static constexpr bool val = std::is_same_v<T, JArrayType>;
-  };
-
-  // LocalArray or GlobalArray.
-  template <typename SpanType, std::size_t kRank, const auto& class_v_,
-            const auto& class_loader_v_, const auto& jvm_v_>
-  struct Helper<
-      LocalArray<SpanType, kRank, class_v_, class_loader_v_, jvm_v_>> {
     static constexpr bool val =
-        std::is_same_v<RegularToArrayTypeMap_t<SpanType>, JArrayType>;
+        (std::is_same_v<T, JArrayType> && ParamSelection::kRank == 1) ||
+        (std::is_same_v<T, jobjectArray> && ParamSelection::kRank >= 2);
   };
 
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
-  static constexpr bool kViable =
-      std::is_same_v<T, JArrayType> || Helper<T>::val;
+  // LocalArray.
+  template <typename ParamSelection, typename SpanType, std::size_t kRank,
+            const auto& class_v_, const auto& class_loader_v_,
+            const auto& jvm_v_>
+  struct Helper<ParamSelection, LocalArray<SpanType, kRank, class_v_,
+                                           class_loader_v_, jvm_v_>> {
+    static constexpr auto param_copy = FullArrayStripV(ParamSelection::Val());
+
+    static constexpr bool val =
+        (kRank == ParamSelection::kRank) &&
+        (std::is_same_v<SpanType, typename ParamSelection::RawValT> ||
+         (std::is_same_v<SpanType, jobjectArray> &&
+          ParamSelection::kRank >= 2) ||
+         (std::string_view{class_v_.name_} == NameOrNothing_v<param_copy>));
+  };
+
+  template <typename ParamSelection, std::size_t param_idx, typename T>
+  static constexpr bool kViable = Helper<ParamSelection, T>::val;
 
   using AsDecl = std::tuple<ArrayTag<JArrayType>>;
   using AsArg = std::tuple<JArrayType, RefBaseTag<JArrayType>,

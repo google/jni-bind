@@ -461,6 +461,15 @@ cc_library(
     hdrs = ["name_constants.h"],
 )
 
+cc_test(
+    name = "name_constants_test",
+    srcs = ["name_constants_test.cc"],
+    deps = [
+        "//:jni_bind",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "object",
     hdrs = ["object.h"],
@@ -521,6 +530,7 @@ cc_library(
         ":default_class_loader",
         ":jvm",
         ":local_array",
+        ":name_constants",
         ":object",
         ":proxy_convenience_aliases",
         ":ref_base",

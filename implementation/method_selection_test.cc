@@ -23,6 +23,7 @@ using jni::Class;
 using jni::Constructor;
 using jni::GlobalObject;
 using jni::kDefaultClassLoader;
+using jni::LocalArray;
 using jni::LocalObject;
 using jni::Method;
 using jni::MethodSelection_t;
@@ -47,19 +48,23 @@ using GlobalInvalidObj = GlobalObject<kUnusedClass>;
 ////////////////////////////////////////////////////////////////////////////////
 // Single argument to method.
 ////////////////////////////////////////////////////////////////////////////////
-constexpr Class c1{"c1",
-                   Method{"0", Return<void>{}, Params{}},
-                   Method{"1", Return<void>{}, Params<jboolean>{}},
-                   Method{"2", Return<void>{}, Params<jchar>{}},
-                   Method{"3", Return<void>{}, Params<jshort>{}},
-                   Method{"4", Return<void>{}, Params<jint>{}},
-                   Method{"5", Return<void>{}, Params<jfloat>{}},
-                   Method{"6", Return<void>{}, Params<jdouble>{}},
-                   Method{"7", Return<void>{}, Params{jstring{}}},
-                   Method{"8", Return<void>{}, Params{kClass1}},
-                   Method{"9", Return<void>{}, Params{Array{int{}}}},
-                   Method{"10", Return<void>{}, Params{Array{Array{int{}}}}},
-                   Method{"11", Return<void>{}, Params{bool{}, Array{int{}}}}};
+constexpr Class c1{
+    "c1",
+    Method{"0", Return<void>{}, Params{}},
+    Method{"1", Return<void>{}, Params<jboolean>{}},
+    Method{"2", Return<void>{}, Params<jchar>{}},
+    Method{"3", Return<void>{}, Params<jshort>{}},
+    Method{"4", Return<void>{}, Params<jint>{}},
+    Method{"5", Return<void>{}, Params<jfloat>{}},
+    Method{"6", Return<void>{}, Params<jdouble>{}},
+    Method{"7", Return<void>{}, Params{jstring{}}},
+    Method{"8", Return<void>{}, Params{kClass1}},
+    Method{"9", Return<void>{}, Params{Array{int{}}}},
+    Method{"10", Return<void>{}, Params{Array{Array{int{}}}}},
+    Method{"11", Return<void>{}, Params{Array{Array{Array{float{}}}}}},
+    Method{"12", Return<void>{}, Params{Array{kClass1}}},
+    Method{"13", Return<void>{}, Params{Array{Array{kClass1}}}},
+    Method{"14", Return<void>{}, Params{Array{Array{Array{kClass1}}}}}};
 
 template <const auto& class_v, bool is_constructor, size_t method_idx>
 using Sel_t =
@@ -116,8 +121,59 @@ static_assert(!Sel_t<c1, false, 8>::ArgSetViable<LocalObj2>());
 static_assert(!Sel_t<c1, false, 8>::ArgSetViable<GlobalObj2>());
 static_assert(!Sel_t<c1, false, 8>::ArgSetViable<LocalObj1, LocalObj1>());
 
+// Rank 1 Arrays.
 static_assert(Sel_t<c1, false, 9>::ArgSetViable<jintArray>());
+static_assert(Sel_t<c1, false, 9>::ArgSetViable<LocalArray<jint>>());
 static_assert(!Sel_t<c1, false, 9>::ArgSetViable<jfloatArray>());
+
+// Rank 2 Arrays.
+static_assert(Sel_t<c1, false, 10>::ArgSetViable<jobjectArray>());
+static_assert(Sel_t<c1, false, 10>::ArgSetViable<LocalArray<jint, 2>>());
+static_assert(!Sel_t<c1, false, 10>::ArgSetViable<jintArray>());
+static_assert(!Sel_t<c1, false, 10>::ArgSetViable<jfloatArray>());
+
+// Rank 3 Arrays.
+static_assert(Sel_t<c1, false, 11>::ArgSetViable<jobjectArray>());
+static_assert(Sel_t<c1, false, 11>::ArgSetViable<LocalArray<jfloat, 3>>());
+static_assert(!Sel_t<c1, false, 11>::ArgSetViable<jintArray>());
+static_assert(
+    !Sel_t<c1, false, 11>::ArgSetViable<LocalArray<jfloatArray, 2>>());
+static_assert(
+    !Sel_t<c1, false, 11>::ArgSetViable<LocalArray<jfloatArray, 4>>());
+static_assert(!Sel_t<c1, false, 10>::ArgSetViable<jfloatArray>());
+
+// Rank 1 Arrays of Objects.
+static_assert(Sel_t<c1, false, 12>::ArgSetViable<jobjectArray>());
+static_assert(
+    Sel_t<c1, false, 12>::ArgSetViable<LocalArray<jobject, 1, kClass1>>());
+static_assert(
+    !Sel_t<c1, false, 12>::ArgSetViable<LocalArray<jobject, 2, kClass1>>());
+static_assert(!Sel_t<c1, false, 12>::ArgSetViable<jint>());
+static_assert(!Sel_t<c1, false, 12>::ArgSetViable<jintArray>());
+
+// Rank 2 Arrays of Objects.
+static_assert(Sel_t<c1, false, 13>::ArgSetViable<jobjectArray>());
+static_assert(
+    Sel_t<c1, false, 13>::ArgSetViable<LocalArray<jobject, 2, kClass1>>());
+static_assert(
+    !Sel_t<c1, false, 13>::ArgSetViable<LocalArray<jobject, 1, kClass1>>());
+static_assert(
+    !Sel_t<c1, false, 13>::ArgSetViable<LocalArray<jobject, 3, kClass1>>());
+static_assert(!Sel_t<c1, false, 13>::ArgSetViable<jint>());
+static_assert(!Sel_t<c1, false, 13>::ArgSetViable<jintArray>());
+
+// Rank 3 Arrays of Objects.
+static_assert(Sel_t<c1, false, 14>::ArgSetViable<jobjectArray>());
+static_assert(
+    Sel_t<c1, false, 14>::ArgSetViable<LocalArray<jobject, 3, kClass1>>());
+static_assert(
+    !Sel_t<c1, false, 14>::ArgSetViable<LocalArray<jobject, 1, kClass1>>());
+static_assert(
+    !Sel_t<c1, false, 14>::ArgSetViable<LocalArray<jobject, 2, kClass1>>());
+static_assert(
+    !Sel_t<c1, false, 14>::ArgSetViable<LocalArray<jobject, 4, kClass1>>());
+static_assert(!Sel_t<c1, false, 14>::ArgSetViable<jint>());
+static_assert(!Sel_t<c1, false, 14>::ArgSetViable<jintArray>());
 
 ////////////////////////////////////////////////////////////////////////////////
 // Multiple arguments per method.
@@ -181,6 +237,7 @@ static_assert(!Sel_t<c3, false, 0>::ArgSetViable<float, float>());
 static_assert(!Sel_t<c3, false, 0>::ArgSetViable<std::string*>());
 
 static_assert(Sel_t<c3, false, 0>::ArgSetViable<jboolean, jintArray>());
+static_assert(Sel_t<c3, false, 0>::ArgSetViable<jboolean, LocalArray<jint>>());
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor Method Tests

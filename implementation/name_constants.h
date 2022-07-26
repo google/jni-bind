@@ -18,8 +18,24 @@
 #define JNI_BIND_NAME_CONSTANTS_H_
 
 #include <string_view>
+#include <type_traits>
 
 namespace jni {
+
+// Metafunction that returns either "" if a member called |name_| isn't
+// present, or a constexpr std::string_view of the name if it is.
+template <const auto&, typename Enable = void>
+struct NameOrNothing {
+  static constexpr std::string_view val{""};
+};
+
+template <const auto& val_>
+struct NameOrNothing<val_, std::void_t<decltype(val_.name_)>> {
+  static constexpr std::string_view val{val_.name_};
+};
+
+template <const auto& val>
+static constexpr auto NameOrNothing_v = NameOrNothing<val>::val;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constants for signature generation.

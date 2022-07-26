@@ -92,6 +92,7 @@ static_assert(std::is_same_v<Index_t<jfloatArray>, jfloatArray>);
 static_assert(std::is_same_v<Index_t<jdoubleArray>, jdoubleArray>);
 static_assert(std::is_same_v<Index_t<jlongArray>, jlongArray>);
 static_assert(std::is_same_v<Index_t<jbooleanArray>, jbooleanArray>);
+static_assert(std::is_same_v<Index_t<jobjectArray>, jobjectArray>);
 static_assert(std::is_same_v<Index_t<jarray>, jarray>);
 
 // Rank 1 decorated declarations.
@@ -104,6 +105,8 @@ static_assert(std::is_same_v<Index_t<Array<jdouble>>, jdoubleArray>);
 static_assert(std::is_same_v<Index_t<Array<jlong>>, jlongArray>);
 static_assert(std::is_same_v<Index_t<Array<jboolean>>, jbooleanArray>);
 static_assert(std::is_same_v<Index_t<Array<jarray>>, jarray>);
+static_assert(std::is_same_v<Index_t<Array<std::decay_t<decltype(kClass)>>>,
+                             jobjectArray>);
 
 // Rank 1 decorated arguments.
 static_assert(std::is_same_v<Index_t<RefBaseTag<jbyteArray>>, jbyteArray>);
@@ -116,6 +119,7 @@ static_assert(std::is_same_v<Index_t<RefBaseTag<jlongArray>>, jlongArray>);
 static_assert(
     std::is_same_v<Index_t<RefBaseTag<jbooleanArray>>, jbooleanArray>);
 static_assert(std::is_same_v<Index_t<RefBaseTag<jarray>>, jarray>);
+static_assert(std::is_same_v<Index_t<RefBaseTag<jobjectArray>>, jobjectArray>);
 
 // Rank 2 decorated declarations.
 static_assert(std::is_same_v<Index_t<Array<Array<jbyte>>>, jarray>);
@@ -127,6 +131,7 @@ static_assert(std::is_same_v<Index_t<Array<Array<jdouble>>>, jarray>);
 static_assert(std::is_same_v<Index_t<Array<Array<jlong>>>, jarray>);
 static_assert(std::is_same_v<Index_t<Array<Array<jboolean>>>, jarray>);
 static_assert(std::is_same_v<Index_t<Array<Array<jarray>>>, jarray>);
+static_assert(std::is_same_v<Index_t<Array<Array<jobject>>>, jarray>);
 
 // Rank 3 decorated declarations.
 static_assert(std::is_same_v<Index_t<Array<Array<Array<jbyte>>>>, jarray>);
@@ -138,6 +143,7 @@ static_assert(std::is_same_v<Index_t<Array<Array<Array<jdouble>>>>, jarray>);
 static_assert(std::is_same_v<Index_t<Array<Array<Array<jlong>>>>, jarray>);
 static_assert(std::is_same_v<Index_t<Array<Array<Array<jboolean>>>>, jarray>);
 static_assert(std::is_same_v<Index_t<Array<Array<Array<jarray>>>>, jarray>);
+static_assert(std::is_same_v<Index_t<Array<Array<Array<jobject>>>>, jarray>);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Types as declarations.
