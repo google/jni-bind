@@ -50,7 +50,7 @@ struct InputParamSelection {
   // parameter is contextually correct given the arguments.
   template <typename... Ts>
   static constexpr bool kValid = Proxy_t<UnstrippedRawVal>::template kViable<
-      InputParamSelection, param_idx,
+      InputParamSelection,
       metaprogramming::TypeOfNthElement_t<param_idx, Ts...>>;
 };
 

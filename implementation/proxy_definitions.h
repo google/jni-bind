@@ -69,7 +69,7 @@ struct ProxyBase {
     return std::forward<T>(t);
   }
 
-  template <typename InputParamSelectionT, std::size_t param_idx, typename T>
+  template <typename InputParamSelectionT, typename T>
   static constexpr bool kViable = IsConvertibleKey_v<Key_, T>;
 
   template <typename Overload>
@@ -112,7 +112,7 @@ struct Proxy<CharType,
   using AsArg = std::tuple<char, jchar>;
   using AsDecl = std::tuple<char, jchar>;
 
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  template <typename OverloadSelection, typename T>
   static constexpr bool kViable = IsConvertibleKey<T>::template value<char> ||
                                   IsConvertibleKey<T>::template value<jchar>;
 };
@@ -124,7 +124,7 @@ struct Proxy<BooleanType,
   using AsArg = std::tuple<jboolean, bool>;
   using AsDecl = std::tuple<jboolean, bool>;
 
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  template <typename OverloadSelection, typename T>
   static constexpr bool kViable =
       IsConvertibleKey<T>::template value<jboolean> ||
       IsConvertibleKey<T>::template value<bool>;
@@ -137,7 +137,7 @@ struct Proxy<LongType,
   using AsArg = std::tuple<long, jlong>;
   using AsDecl = std::tuple<long, jlong>;
 
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  template <typename OverloadSelection, typename T>
   static constexpr bool kViable = IsConvertibleKey<T>::template value<long> ||
                                   IsConvertibleKey<T>::template value<jlong>;
 
@@ -168,7 +168,7 @@ struct Proxy<JString,
     static constexpr bool val = true;
   };
 
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  template <typename OverloadSelection, typename T>
   static constexpr bool kViable =
       IsConvertibleKey<T>::template value<std::string> ||
       IsConvertibleKey<T>::template value<jstring> ||
@@ -199,16 +199,16 @@ struct Proxy<JObject,
   using AsDecl = std::tuple<Object>;
   using AsArg = std::tuple<jobject, RefBaseTag<jobject>>;
 
-  template <typename InputParamSelectionT, std::size_t param_idx, typename T>
+  template <typename InputParamSelectionT, typename T>
   struct ContextualViabilityHelper {
     // TODO(b/143908983): This is overly permissive, see method_selection_test.
     static constexpr bool kViable = std::is_same_v<T, jobject>;
   };
 
-  template <typename InputParamSelectionT, std::size_t param_idx,
+  template <typename InputParamSelectionT,
             template <const auto&, const auto&, const auto&> class Container,
             const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  struct ContextualViabilityHelper<InputParamSelectionT, param_idx,
+  struct ContextualViabilityHelper<InputParamSelectionT,
                                    Container<class_v, class_loader_v, jvm_v>> {
     // TODO(b/174272629): Exclude objects loaded by invalid loaders.
     static constexpr bool kViable =
@@ -216,9 +216,9 @@ struct Proxy<JObject,
         std::string_view(InputParamSelectionT::Val().name_);
   };
 
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  template <typename OverloadSelection, typename T>
   static constexpr bool kViable =
-      ContextualViabilityHelper<OverloadSelection, param_idx, T>::kViable;
+      ContextualViabilityHelper<OverloadSelection, T>::kViable;
 
   template <typename OverloadT>
   struct Helper {
@@ -287,7 +287,7 @@ struct Proxy<JArrayType, typename std::enable_if_t<
          (std::string_view{class_v_.name_} == NameOrNothing_v<param_copy>));
   };
 
-  template <typename ParamSelection, std::size_t param_idx, typename T>
+  template <typename ParamSelection, typename T>
   static constexpr bool kViable = Helper<ParamSelection, T>::val;
 
   using AsDecl = std::tuple<ArrayTag<JArrayType>>;
