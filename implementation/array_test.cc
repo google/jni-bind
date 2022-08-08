@@ -402,30 +402,45 @@ TEST_F(JniTest, Array_LooksUpCorrectSignaturesForInputParams) {
   obj("ObjectArray", jobjectArray{nullptr});
 }
 
-// TODO(b/143908983): Handle multi dimensional values.
-/*
-TEST_F(JniTest, Array_HandlesMultipleMultiDimensionalValues) {
-  static constexpr Class kClass2{"kClass2"};
+static constexpr Class kClass2{"kClass2"};
 
-  static constexpr Class kClass{
-      "ArrayMultiTest",
-      Method{"Foo", jni::Return{Array{jint{}}}, Params{Array{Array{jint{}}}}},
-      Method{"Baz", jni::Return{Array{kClass2}},
-             Params{Array{Array{Array{jint{}}}}}},
-      Method{"Bar", jni::Return{Array{Array{Class{"kClass3"}}}},
-             Params{Array{Array{Array{jint{}}}}, Array{jint{}}}},
-  };
+static constexpr Class kArrClass{
+    "ArrClass",
+    Method{"Foo", jni::Return{Array{jint{}}}, Params{Array{Array{jint{}}}}},
+    Method{"Baz", jni::Return{Array{kClass2}},
+           Params{Array{Array{Array{jint{}}}}}},
+    Method{"Bar", jni::Return{Array{Array{Class{"kClass3"}}}},
+           Params{Array{Array{Array{jint{}}}}, Array{double{}}}},
+};
 
+TEST_F(JniTest, Array_HandlesMultipleMultiDimensionalValues_1) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([[I)[I")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Baz"), StrEq("([[[I)[LkClass2;")));
-  EXPECT_CALL(*env_,
-              GetMethodID(_, StrEq("Bar"), StrEq("([[[I[I)[[LkClass3;")));
-
-  LocalObject<kClass> obj{jobject{nullptr}};
-  obj("Foo", jintArray{nullptr});
-  obj("Baz", jintArray{nullptr});
-  obj("Bar", jintArray{nullptr}, jintArray{nullptr});
+  LocalObject<kArrClass> obj{jobject{nullptr}};
+  LocalArray<jint, 1> ret = obj("Foo", jobjectArray{nullptr});
 }
-*/
+
+TEST_F(JniTest, Array_HandlesMultipleMultiDimensionalValues_2) {
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Baz"), StrEq("([[[I)[LkClass2;")));
+
+  LocalObject<kArrClass> obj{jobject{nullptr}};
+
+  // The compiler complains of unused variable here. This would be worth digging
+  // into to understand the underlying cause (i.e. only the following fails).
+  // LocalArray<jobject, 1, kClass2> ret = obj("Baz", jobjectArray{nullptr});
+
+  // TODO(b/143908983): CTAD is failing.
+  // LocalArray ret = obj("Baz", jobjectArray{nullptr});
+
+  LocalArray<jobject, 1, kClass2> ret = obj("Baz", jobjectArray{nullptr});
+  static_assert(std::is_same_v<decltype(ret), LocalArray<jobject, 1, kClass2>>);
+}
+
+TEST_F(JniTest, Array_HandlesMultipleMultiDimensionalValues_3) {
+  EXPECT_CALL(*env_,
+              GetMethodID(_, StrEq("Bar"), StrEq("([[[I[D)[[LkClass3;")));
+
+  LocalObject<kArrClass> obj{jobject{nullptr}};
+  obj("Bar", jobjectArray{nullptr}, jdoubleArray{nullptr});
+}
 
 }  // namespace
