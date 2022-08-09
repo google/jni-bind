@@ -144,6 +144,7 @@ cc_library(
         ":class",
         ":class_loader",
         ":global_object",
+        ":jni_type",
         ":jvm_ref",
         ":local_object",
         ":method",
@@ -354,6 +355,7 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
+        ":jni_type",
         ":jvm",
         ":jvm_ref",
         ":object_ref",
@@ -485,6 +487,7 @@ cc_library(
         ":constructor",
         ":default_class_loader",
         ":field_ref",
+        ":jni_type",
         ":jvm_ref",
         ":method_ref",
         ":method_selection",
@@ -659,11 +662,6 @@ cc_library(
 cc_library(
     name = "jni_type",
     hdrs = ["jni_type.h"],
-    deps = [
-        ":class",
-        ":class_loader",
-        ":jvm",
-    ],
 )
 
 cc_test(

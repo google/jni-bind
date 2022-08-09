@@ -19,15 +19,16 @@
 
 #include <type_traits>
 
-#include "implementation/class.h"
-#include "implementation/class_loader.h"
-#include "implementation/jvm.h"
-
 namespace jni {
 
 template <typename SpanType_, const auto& class_v_, const auto& class_loader_v_,
           const auto& jvm_v_>
 struct JniType {
+  using SpanType = SpanType_;
+  static constexpr decltype(class_v_) class_v = class_v_;
+  static constexpr decltype(class_loader_v_) class_loader_v = class_loader_v_;
+  static constexpr decltype(jvm_v_) jvm_v = jvm_v_;
+
   template <typename T>
   struct Helper {
     static constexpr bool val = false;

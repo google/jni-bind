@@ -40,7 +40,7 @@ class LocalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
   }
 
  private:
-  template <const auto&, const auto&, const auto&>
+  template <typename>
   friend class ObjectRef;
 };
 

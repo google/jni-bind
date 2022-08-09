@@ -32,6 +32,7 @@
 #include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/jni_env.h"
+#include "implementation/jni_type.h"
 #include "implementation/jvm_ref.h"
 #include "implementation/method_selection.h"
 #include "jni_dep.h"
@@ -48,19 +49,20 @@ namespace jni {
 //
 // To call methods on the object, use the  operator(), to access fields, use
 // operator[].
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
+template <typename JniTypeT>
 class ObjectRef
-    : public MethodMap_t<class_loader_v_, class_v_,
-                         ObjectRef<jvm_v_, class_v_, class_loader_v_>>,
+    : public MethodMap_t<JniTypeT::class_loader_v, JniTypeT::class_v,
+                         ObjectRef<JniTypeT>>,
       public metaprogramming::QueryableMap_t<
-          ObjectRef<jvm_v_, class_v_, class_loader_v_>, class_v_,
-          &std::decay_t<decltype(class_v_)>::fields_>,
-      public RefBase<jobject, class_v_, class_loader_v_> {
+          ObjectRef<JniTypeT>, JniTypeT::class_v,
+          &std::decay_t<decltype(JniTypeT::class_v)>::fields_>,
+      public RefBase<jobject, JniTypeT::class_v, JniTypeT::class_loader_v> {
  protected:
   static_assert(
-      class_loader_v_.template SupportedDirectlyOrIndirectly<class_v_>(),
+      JniTypeT::class_loader_v
+          .template SupportedDirectlyOrIndirectly<JniTypeT::class_v>(),
       "This class is not directly or indirectly supported by this loader.");
-  using RefBase = RefBase<jobject, class_v_, class_loader_v_>;
+  using RefBase = RefBase<jobject, JniTypeT::class_v, JniTypeT::class_loader_v>;
 
   ObjectRef() = delete;
   explicit ObjectRef(ObjectRef&& rhs) = default;
@@ -68,8 +70,9 @@ class ObjectRef
   ObjectRef& operator=(const ObjectRef& rhs) = delete;
 
   jclass GetJClass() const {
-    return ClassRef_t<jvm_v_, class_loader_v_,
-                      class_v_>::GetAndMaybeLoadClassRef(*RefBase::object_ref_);
+    return ClassRef_t<
+        JniTypeT::jvm_v, JniTypeT::class_loader_v,
+        JniTypeT::class_v>::GetAndMaybeLoadClassRef(*RefBase::object_ref_);
   }
 
  public:
@@ -79,7 +82,8 @@ class ObjectRef
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
     using MethodSelectionForArgs =
-        MethodSelectionForArgs_t<class_loader_v_, class_v_, false, I, Args...>;
+        MethodSelectionForArgs_t<JniTypeT::class_loader_v, JniTypeT::class_v,
+                                 false, I, Args...>;
 
     static_assert(MethodSelectionForArgs::kIsValidArgSet,
                   "JNI Error: Invalid argument set.");
@@ -91,19 +95,18 @@ class ObjectRef
   // Invoked through CRTP from QueryableMap.
   template <size_t I>
   auto QueryableMapCall(const char* key) const {
-    return FieldRef<class_loader_v_, class_v_, I>{GetJClass(),
-                                                  *RefBase::object_ref_};
+    return FieldRef<JniTypeT::class_loader_v, JniTypeT::class_v, I>{
+        GetJClass(), *RefBase::object_ref_};
   }
 };
 
 // Imbues constructors for ObjectRefs and handles calling the correct
 // intermediate constructors.  Access to this class is constrainted for non
 // default classloaders (see |ValidatorProxy|).
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
-class ConstructorValidator
-    : public ObjectRef<jvm_v_, class_v_, class_loader_v_> {
+template <typename JniTypeT>
+class ConstructorValidator : public ObjectRef<JniTypeT> {
  public:
-  using Base = ObjectRef<jvm_v_, class_v_, class_loader_v_>;
+  using Base = ObjectRef<JniTypeT>;
   using Base::Base;
 
   // Objects can still be wrapped.  This could happen if a classloaded object
@@ -114,13 +117,13 @@ class ConstructorValidator
   friend class ClassLoaderRef;
 
   static constexpr std::size_t kNumConstructors =
-      std::tuple_size_v<decltype(class_v_.constructors_)>;
+      std::tuple_size_v<decltype(JniTypeT::class_v.constructors_)>;
 
   template <typename... Args>
   struct Helper {
     // 0 is (always) used to represent the constructor.
-    using type =
-        MethodSelectionForArgs_t<class_loader_v_, class_v_, true, 0, Args...>;
+    using type = MethodSelectionForArgs_t<JniTypeT::class_loader_v,
+                                          JniTypeT::class_v, true, 0, Args...>;
   };
 
   template <typename... Args>
@@ -149,25 +152,15 @@ class ConstructorValidator
   }
 };
 
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
-struct ValidatorProxy
-    : public ConstructorValidator<jvm_v_, class_v_, class_loader_v_> {
-  ValidatorProxy(jobject obj) : Base(obj) {}
-
- protected:
-  using Base = ConstructorValidator<jvm_v_, class_v_, class_loader_v_>;
-  using Base::Base;
-};
-
-template <const auto& jvm_v_, const auto& class_v_>
-struct ValidatorProxy<jvm_v_, kDefaultClassLoader, class_v_>
-    : public ConstructorValidator<jvm_v_, class_v_, kDefaultClassLoader> {
-  using Base = ConstructorValidator<jvm_v_, class_v_, kDefaultClassLoader>;
+template <typename JniTypeT>
+struct ValidatorProxy : public ConstructorValidator<JniTypeT> {
+  using Base = ConstructorValidator<JniTypeT>;
   using Base::Base;
 };
 
 template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
-using ObjectRefBuilder_t = ValidatorProxy<jvm_v_, class_v_, class_loader_v_>;
+using ObjectRefBuilder_t =
+    ValidatorProxy<JniType<jobject, class_v_, class_loader_v_, jvm_v_>>;
 
 }  // namespace jni
 
