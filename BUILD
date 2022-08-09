@@ -37,6 +37,7 @@ cc_library(
         "//implementation:field",
         "//implementation:global_class_loader",
         "//implementation:global_object",
+        "//implementation:jni_type",
         "//implementation:jvm",
         "//implementation:jvm_ref",
         "//implementation:local_array",

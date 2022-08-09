@@ -655,3 +655,23 @@ cc_library(
     name = "void",
     hdrs = ["void.h"],
 )
+
+cc_library(
+    name = "jni_type",
+    hdrs = ["jni_type.h"],
+    deps = [
+        ":class",
+        ":class_loader",
+        ":jvm",
+    ],
+)
+
+cc_test(
+    name = "jni_type_test",
+    srcs = ["jni_type_test.cc"],
+    deps = [
+        ":jni_type",
+        "//:jni_bind",
+        "@googletest//:gtest_main",
+    ],
+)

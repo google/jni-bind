@@ -25,6 +25,7 @@
 #include "implementation/class_loader.h"
 #include "implementation/constructor.h"
 #include "implementation/field.h"
+#include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/method.h"
 #include "implementation/params.h"
