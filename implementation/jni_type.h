@@ -19,15 +19,23 @@
 
 #include <type_traits>
 
+#include "implementation/array_type_conversion.h"
+
 namespace jni {
 
 template <typename SpanType_, const auto& class_v_, const auto& class_loader_v_,
-          const auto& jvm_v_>
+          const auto& jvm_v_, std::size_t kRank = 0>
 struct JniType {
-  using SpanType = SpanType_;
   static constexpr decltype(class_v_) class_v = class_v_;
   static constexpr decltype(class_loader_v_) class_loader_v = class_loader_v_;
   static constexpr decltype(jvm_v_) jvm_v = jvm_v_;
+
+  using SpanType = SpanType_;
+  using StorageType = typename StorageHelper<SpanType_, kRank>::type;
+
+  using ClassT = std::decay_t<decltype(class_v)>;
+  using ClassLoaderT = std::decay_t<decltype(class_loader_v)>;
+  using JvmT = std::decay_t<decltype(jvm_v)>;
 
   template <typename T>
   struct Helper {

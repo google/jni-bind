@@ -21,10 +21,14 @@
 #include <string>
 #include <string_view>
 
-#include "class.h"
 #include "jni_helper/jni_helper.h"
-#include "ref_base.h"
+#include "implementation/class.h"
+#include "implementation/class_loader.h"
+#include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/jni_env.h"
+#include "implementation/jni_type.h"
+#include "implementation/jvm.h"
+#include "implementation/ref_base.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -32,10 +36,14 @@ namespace jni {
 static constexpr Class kJavaLangString{"java/lang/String"};
 
 template <typename CrtpBase>
-class StringRefBase : public RefBase<jstring, kJavaLangString> {
+class StringRefBase
+    : public RefBase<
+          JniType<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>> {
  public:
-  using RefBaseT = RefBase<jstring>;
-  StringRefBase(jstring object) : RefBase<jstring, kJavaLangString>(object) {}
+  using JniTypeT =
+      JniType<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>;
+  using RefBaseT = RefBase<JniTypeT>;
+  StringRefBase(jstring object) : RefBase<JniTypeT>(object) {}
 
   ~StringRefBase() {
     if (object_ref_) {

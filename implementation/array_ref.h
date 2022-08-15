@@ -21,6 +21,7 @@
 #include "implementation/class.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/jni_array_helper.h"
+#include "implementation/jni_type.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
 
@@ -29,16 +30,16 @@ namespace jni {
 struct ArrayRefPrimitiveBaseTag {};
 
 // Tag for non object array ref like tags (e.g. jintArray but not jobjectArray).
-template <typename SpanType>
+template <typename JniTypeT>
 struct ArrayRefPrimitiveTag : ArrayRefPrimitiveBaseTag {};
 
 // |SpanType| is primitive types like jint, jfloat, etc.
-template <typename SpanType, const auto& class_v_, const auto& class_loader_v_,
-          const auto& jvm_v_>
-class ArrayRef : public RefBaseTag<RegularToArrayTypeMap_t<SpanType>>,
-                 ArrayRefPrimitiveTag<SpanType> {
+template <typename JniTypeT, typename Enable = void>
+class ArrayRef : public RefBase<JniTypeT>,
+                 ArrayRefPrimitiveTag<typename JniTypeT::SpanType> {
  public:
-  using Base = RefBaseTag<RegularToArrayTypeMap_t<SpanType>>;
+  using SpanType = typename JniTypeT::SpanType;
+  using Base = RefBase<JniTypeT>;
   using Base::Base;
 
   ArrayView<SpanType> Pin(bool copy_on_completion = true) {
@@ -53,18 +54,22 @@ class ArrayRef : public RefBaseTag<RegularToArrayTypeMap_t<SpanType>>,
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class LocalObject;
 
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-class ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_>
-    : public RefBaseTag<jobjectArray> {
+template <typename JniTypeT>
+class ArrayRef<
+    JniTypeT,
+    std::enable_if_t<std::is_same_v<typename JniTypeT::SpanType, jobject>>>
+    : public RefBase<JniTypeT> {
  public:
-  using Base = RefBaseTag<jobjectArray>;
+  using SpanType = typename JniTypeT::SpanType;
+  using Base = RefBase<JniTypeT>;
   using Base::Base;
 
   std::size_t Length() {
     return JniArrayHelper<jobject>::GetLength(*Base::object_ref_);
   }
 
-  LocalObject<class_v_, class_loader_v_, jvm_v_> Get(std::size_t idx) {
+  LocalObject<JniTypeT::class_v, JniTypeT::class_loader_v, JniTypeT::jvm_v> Get(
+      std::size_t idx) {
     return {JniArrayHelper<jobject>::GetArrayElement(*Base::object_ref_, idx)};
   }
 
@@ -74,7 +79,8 @@ class ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_>
   // TODO(b/406948932): Permit lvalues of locals and globals as technically
   // they're both viable (the scope will be extended as expected).
   void Set(std::size_t idx,
-           LocalObject<class_v_, class_loader_v_, jvm_v_>&& val) {
+           LocalObject<JniTypeT::class_v, JniTypeT::class_loader_v,
+                       JniTypeT::jvm_v>&& val) {
     return JniArrayHelper<jobject>::SetArrayElement(*Base::object_ref_, idx,
                                                     val.Release());
   }

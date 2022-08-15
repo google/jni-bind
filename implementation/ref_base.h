@@ -28,19 +28,19 @@ namespace jni {
 // Used to detect RefBase in type proxying.
 // This is useful, e.g. when you want to say "an object that might be passed"
 // but the object's type (i.e. full name + loader information) is unknown.
-template <typename NativeJavaType_>
+template <typename StorageType>
 class RefBaseTag {
  public:
-  RefBaseTag(NativeJavaType_ object) : object_ref_(object) {}
+  RefBaseTag(StorageType object) : object_ref_(object) {}
   RefBaseTag(RefBaseTag&& rhs) : object_ref_(rhs.Release()) {}
 
-  NativeJavaType_ Release() {
-    NativeJavaType_ return_value = *object_ref_;
+  StorageType Release() {
+    StorageType return_value = *object_ref_;
     object_ref_ = std::nullopt;
     return return_value;
   }
 
-  explicit operator NativeJavaType_() const {
+  explicit operator StorageType() const {
     if (object_ref_) {
       return *object_ref_;
     }
@@ -48,7 +48,7 @@ class RefBaseTag {
   }
 
  protected:
-  std::optional<NativeJavaType_> object_ref_;
+  std::optional<StorageType> object_ref_;
 };
 
 // Represents a runtime object with only Name information.  It is ephemeral and
@@ -58,17 +58,17 @@ class RefBaseTag {
 // This can also be used as a temporary when passed into a function that accepts
 // objects.  This ensures type correctness (names must match) but doesn't
 // require the full class description be used when describing the function.
-template <typename NativeJavaType_, const auto& class_v_ = kNoClassSpecified,
-          const auto& loader_v_ = kDefaultClassLoader>
-class RefBase : public RefBaseTag<NativeJavaType_> {
+template <typename JniTypeT>
+class RefBase : public RefBaseTag<typename JniTypeT::StorageType> {
  public:
-  static inline const char* name_ = class_v_.name_;
+  using StorageType = typename JniTypeT::StorageType;
+  using RefBaseTag<StorageType>::RefBaseTag;
+  using RefBaseTag<StorageType>::operator typename JniTypeT::StorageType;
 
-  using RefBaseTag<NativeJavaType_>::RefBaseTag;
-  using RefBaseTag<NativeJavaType_>::operator NativeJavaType_;
+  static inline const char* name_ = JniTypeT::class_v.name_;
 
-  RefBase(RefBaseTag<NativeJavaType_>&& rhs)
-      : RefBaseTag<NativeJavaType_>(std::move(rhs)) {}
+  RefBase(RefBaseTag<StorageType>&& rhs)
+      : RefBaseTag<StorageType>(std::move(rhs)) {}
   RefBase(RefBase&&) = default;
 };
 

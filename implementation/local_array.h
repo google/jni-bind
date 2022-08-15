@@ -30,6 +30,7 @@
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/jni_array_helper.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "jni_dep.h"
 
@@ -49,19 +50,15 @@ template <typename SpanType, std::size_t kRank = 1,
           const auto& class_v_ = kNoClassSpecified,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
-class LocalArray : public ArrayRef<SpanType, kNoClassSpecified,
-                                   kDefaultClassLoader, kDefaultJvm> {
+class LocalArray
+    : public ArrayRef<JniType<SpanType, kNoClassSpecified, kDefaultClassLoader,
+                              kDefaultJvm, kRank>> {
  public:
-  using Base =
-      ArrayRef<SpanType, kNoClassSpecified, kDefaultClassLoader, kDefaultJvm>;
+  using Base = ArrayRef<JniType<SpanType, kNoClassSpecified,
+                                kDefaultClassLoader, kDefaultJvm, kRank>>;
 
-  // TODO(b/143908983): Local arrays only support logic for rank 1.
-  // This signature exists to satisfy proxy logic returning higher rank arrays.
-  template <typename = std::enable_if<std::is_same_v<SpanType, jobject> &&
-                                      (kRank > 1)>>
-  LocalArray(jobjectArray array) : Base(nullptr) {}
+  using Base::Base;
 
-  LocalArray(RegularToArrayTypeMap_t<SpanType> array) : Base(array) {}
   LocalArray(LocalArray<SpanType, kRank>&& rhs) : Base(rhs.Release()) {}
 
   ~LocalArray() {
@@ -80,12 +77,13 @@ class LocalArray : public ArrayRef<SpanType, kNoClassSpecified,
 template <std::size_t kRank_, const auto& class_v_, const auto& class_loader_v_,
           const auto& jvm_v_>
 class LocalArray<jobject, kRank_, class_v_, class_loader_v_, jvm_v_>
-    : public ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_> {
+    : public ArrayRef<
+          JniType<jobject, class_v_, class_loader_v_, jvm_v_, kRank_>> {
  public:
-  using Base = ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_>;
+  using Base =
+      ArrayRef<JniType<jobject, class_v_, class_loader_v_, jvm_v_, kRank_>>;
   using ObjectClassRefT = ClassRef_t<jvm_v_, class_loader_v_, class_v_>;
 
-  // Note: jintArray, jfloatArray, etc. are implicitly convertible to jarray.
   LocalArray(jobjectArray array) : Base(array) {}
 
   template <std::size_t kRank, const auto& class_v, const auto& class_loader_v,

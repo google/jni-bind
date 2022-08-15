@@ -19,12 +19,12 @@
 
 #include <type_traits>
 
-#include "class.h"
-#include "jvm.h"
-#include "jvm_ref.h"
-#include "object_ref.h"
+#include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jvm.h"
+#include "implementation/jvm_ref.h"
+#include "implementation/object_ref.h"
 #include "jni_dep.h"
 
 namespace jni {

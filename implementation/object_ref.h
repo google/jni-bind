@@ -50,19 +50,17 @@ namespace jni {
 // To call methods on the object, use the  operator(), to access fields, use
 // operator[].
 template <typename JniTypeT>
-class ObjectRef
-    : public MethodMap_t<JniTypeT::class_loader_v, JniTypeT::class_v,
-                         ObjectRef<JniTypeT>>,
-      public metaprogramming::QueryableMap_t<
-          ObjectRef<JniTypeT>, JniTypeT::class_v,
-          &std::decay_t<decltype(JniTypeT::class_v)>::fields_>,
-      public RefBase<jobject, JniTypeT::class_v, JniTypeT::class_loader_v> {
+class ObjectRef : public MethodMap_t<JniTypeT, ObjectRef<JniTypeT>>,
+                  public metaprogramming::QueryableMap_t<
+                      ObjectRef<JniTypeT>, JniTypeT::class_v,
+                      &std::decay_t<decltype(JniTypeT::class_v)>::fields_>,
+                  public RefBase<JniTypeT> {
  protected:
   static_assert(
       JniTypeT::class_loader_v
           .template SupportedDirectlyOrIndirectly<JniTypeT::class_v>(),
       "This class is not directly or indirectly supported by this loader.");
-  using RefBase = RefBase<jobject, JniTypeT::class_v, JniTypeT::class_loader_v>;
+  using RefBase = RefBase<JniTypeT>;
 
   ObjectRef() = delete;
   explicit ObjectRef(ObjectRef&& rhs) = default;

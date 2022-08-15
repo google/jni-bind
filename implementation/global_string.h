@@ -20,6 +20,7 @@
 #include "local_string.h"
 #include "ref_base.h"
 #include "string.h"
+#include "implementation/string.h"
 #include "jni_dep.h"
 
 namespace jni {

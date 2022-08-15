@@ -264,9 +264,6 @@ TEST_F(JniTest, Array_HandlesSingle2DIntAsReturnT) {
   obj("I");
 }
 
-/*
-// TODO(143908983): In order for the return to have higher dimensional rank all
-// of the proxy must be overloadable.
 TEST_F(JniTest, Array_HandlesSingle2DIntAsParamWithRankfulReturnT) {
   static constexpr Class kClass{
       "ClassThatReturnsArrays",
@@ -275,9 +272,10 @@ TEST_F(JniTest, Array_HandlesSingle2DIntAsParamWithRankfulReturnT) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("I"), StrEq("([[I)I")));
 
   LocalObject<kClass> obj{jobject{nullptr}};
-  obj("I", jintArray{nullptr});
+  // obj("I", jintArray{nullptr}); // doesn't compile (good).
+  obj("I", jobjectArray{nullptr});
+  obj("I", LocalArray<jint, 2>{nullptr});
 }
-*/
 
 TEST_F(JniTest, Array_HandlesSingle2DClassAsReturn) {
   static constexpr Class kClass2{"kClass2"};

@@ -27,6 +27,7 @@
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/jni_method_invoke.h"
+#include "implementation/jni_type.h"
 #include "implementation/method.h"
 #include "implementation/params.h"
 #include "implementation/proxy.h"
@@ -99,18 +100,17 @@ struct OverloadRef {
 // Helper class for ObjectRef to inherit from.
 // Inheriting from MethodMapHelper::type exposes an operator() which keys on
 // method names.
-template <const auto& class_loader_v, const auto& class_v_, typename CrtpBase_>
+template <typename JniTypeT, typename CrtpBase_>
 struct MethodMapHelper {
-  using MethodTup = std::decay_t<decltype(class_v_.methods_)>;
-  using ClassTDecayed = std::decay_t<decltype(class_v_)>;
+  using MethodTup = std::decay_t<decltype(JniTypeT::class_v.methods_)>;
 
-  using type = metaprogramming::InvocableMap<CrtpBase_, class_v_, ClassTDecayed,
-                                             &ClassTDecayed::methods_>;
+  using type = metaprogramming::InvocableMap<CrtpBase_, JniTypeT::class_v,
+                                             typename JniTypeT::ClassT,
+                                             &JniTypeT::ClassT::methods_>;
 };
 
-template <const auto& class_loader_v, const auto& class_v_, typename CrtpBase_>
-using MethodMap_t =
-    typename MethodMapHelper<class_loader_v, class_v_, CrtpBase_>::type;
+template <typename JniTypeT, typename CrtpBase_>
+using MethodMap_t = typename MethodMapHelper<JniTypeT, CrtpBase_>::type;
 
 }  // namespace jni
 
