@@ -93,8 +93,7 @@ class ObjectRef : public MethodMap_t<JniTypeT, ObjectRef<JniTypeT>>,
   // Invoked through CRTP from QueryableMap.
   template <size_t I>
   auto QueryableMapCall(const char* key) const {
-    return FieldRef<JniTypeT::class_loader_v, JniTypeT::class_v, I>{
-        GetJClass(), *RefBase::object_ref_};
+    return FieldRef<JniTypeT, I>{GetJClass(), *RefBase::object_ref_};
   }
 };
 

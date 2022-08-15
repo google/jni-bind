@@ -45,11 +45,12 @@ static inline auto& GetDefaultLoadedFieldList() {
 //
 // Note, this class performs no cleanup on destruction.  jFieldIDs are static
 // throughout the duration of a JVM's life, see JvmRef for teardown.
-template <const auto& class_loader_v_, const auto& class_v_, size_t I>
+template <typename JniTypeT, std::size_t I>
 class FieldRef {
  public:
-  using Raw = Raw_t<std::decay_t<decltype(std::get<I>(class_v_.fields_))>>;
-  using FieldSelectionT = FieldSelection<class_loader_v_, class_v_, I>;
+  using Raw =
+      Raw_t<std::decay_t<decltype(std::get<I>(JniTypeT::class_v.fields_))>>;
+  using FieldSelectionT = FieldSelection<JniTypeT, I>;
 
   explicit FieldRef(jclass class_ref, jobject object_ref)
       : class_ref_(class_ref), object_ref_(object_ref) {}
@@ -58,10 +59,12 @@ class FieldRef {
   FieldRef(const FieldRef&&) = delete;
   void operator=(const FieldRef&) = delete;
 
-  static constexpr auto& GetField() { return std::get<I>(class_v_.fields_); }
+  static constexpr auto& GetField() {
+    return std::get<I>(JniTypeT::class_v.fields_);
+  }
 
   static constexpr std::string_view GetFieldSignature() {
-    return FieldSelection<class_loader_v_, class_v_, I>::GetSignature();
+    return FieldSelection<JniTypeT, I>::GetSignature();
   }
 
   // This method is thread safe.
@@ -69,7 +72,7 @@ class FieldRef {
     static jni::metaprogramming::DoubleLockedValue<jfieldID> return_value;
 
     return return_value.LoadAndMaybeInit([=]() {
-      if constexpr (class_loader_v_ == kDefaultClassLoader) {
+      if constexpr (JniTypeT::class_loader_v == kDefaultClassLoader) {
         GetDefaultLoadedFieldList().push_back(&return_value);
       }
 

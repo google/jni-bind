@@ -25,20 +25,17 @@
 
 namespace jni {
 
-template <const auto& class_loader_v_, const auto& class_v_, size_t field_idx_>
+template <typename JniTypeT, size_t field_idx_>
 struct FieldSelection {
-  static constexpr const auto& GetClass() { return class_v_; }
-  static constexpr const auto& GetClassLoader() { return class_loader_v_; }
-
   static constexpr auto& GetField() {
-    return std::get<field_idx_>(class_v_.fields_);
+    return std::get<field_idx_>(JniTypeT::class_v.fields_);
   }
   static constexpr auto& Val() {
-    return std::get<field_idx_>(class_v_.fields_);
+    return std::get<field_idx_>(JniTypeT::class_v.fields_);
   }
 
   static constexpr auto& GetReturn() {
-    return std::get<field_idx_>(class_v_.fields_);
+    return std::get<field_idx_>(JniTypeT::class_v.fields_);
   }
 
   using FieldT = std::decay_t<decltype(GetField().raw_)>;
