@@ -764,6 +764,26 @@ cc_test(
 )
 
 cc_library(
+    name = "vals",
+    hdrs = ["vals.h"],
+)
+
+cc_library(
+    name = "vals_equal",
+    hdrs = ["vals_equal.h"],
+)
+
+cc_test(
+    name = "vals_equal_test",
+    srcs = ["vals_equal_test.cc"],
+    deps = [
+        ":vals",
+        ":vals_equal",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "zip_invoke",
     hdrs = ["zip_invoke.h"],
     deps = [
