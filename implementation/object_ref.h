@@ -156,7 +156,7 @@ struct ValidatorProxy : public ConstructorValidator<JniTypeT> {
   using Base::Base;
 };
 
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 using ObjectRefBuilder_t =
     ValidatorProxy<JniType<jobject, class_v_, class_loader_v_, jvm_v_>>;
 

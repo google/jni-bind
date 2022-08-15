@@ -29,9 +29,9 @@ template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class GlobalObject
-    : public ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_> {
+    : public ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_> {
  public:
-  using ObjectRefT = ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_>;
+  using ObjectRefT = ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>;
   using ObjectRefT::ObjectRefT;
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
