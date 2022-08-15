@@ -33,6 +33,8 @@ namespace jni {
 
 static constexpr struct NoClass {
   const char* name_ = "__JNI_BIND__NO_CLASS__";
+  const std::tuple<> methods_{};
+  const std::tuple<> fields_{};
 } kNoClassSpecified;
 
 template <typename Constructors_, typename Fields_, typename Methods_>

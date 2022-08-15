@@ -46,45 +46,25 @@ class GlobalObject;
 // Currently GlobalArrays do not exist, as reasoning about the lifecycles of the
 // underlying objects is non-trivial, e.g. a GlobalArray taking a local object
 // would result in a possibly unexpected extension of lifetime.
-template <typename SpanType, std::size_t kRank = 1,
+// TODO(b/406948932): Add span views for construction.
+template <typename SpanType, std::size_t kRank_ = 1,
           const auto& class_v_ = kNoClassSpecified,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class LocalArray
-    : public ArrayRef<JniType<SpanType, kNoClassSpecified, kDefaultClassLoader,
-                              kDefaultJvm, kRank>> {
- public:
-  using Base = ArrayRef<JniType<SpanType, kNoClassSpecified,
-                                kDefaultClassLoader, kDefaultJvm, kRank>>;
-
-  using Base::Base;
-
-  LocalArray(LocalArray<SpanType, kRank>&& rhs) : Base(rhs.Release()) {}
-
-  ~LocalArray() {
-    if (Base::object_ref_) {
-      JniHelper::DeleteLocalObject(*Base::object_ref_);
-    }
-  }
-
-  // TODO(b/406948932): Add span views for construction.
-  LocalArray(std::size_t size)
-      : Base(JniArrayHelper<SpanType>::NewArray(size)) {}
-};
-
-// For classes (only default class loaded objects supported).
-// TODO(b/406948932): Add span views for construction.
-template <std::size_t kRank_, const auto& class_v_, const auto& class_loader_v_,
-          const auto& jvm_v_>
-class LocalArray<jobject, kRank_, class_v_, class_loader_v_, jvm_v_>
     : public ArrayRef<
-          JniType<jobject, class_v_, class_loader_v_, jvm_v_, kRank_>> {
+          JniType<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>> {
  public:
-  using Base =
-      ArrayRef<JniType<jobject, class_v_, class_loader_v_, jvm_v_, kRank_>>;
   using ObjectClassRefT = ClassRef_t<jvm_v_, class_loader_v_, class_v_>;
 
-  LocalArray(jobjectArray array) : Base(array) {}
+  using Base =
+      ArrayRef<JniType<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
+  using Base::Base;
+
+  LocalArray(std::size_t size)
+      : Base(JniArrayHelper<SpanType>::NewArray(size)) {}
+
+  LocalArray(LocalArray<SpanType, kRank_>&& rhs) : Base(rhs.Release()) {}
 
   template <std::size_t kRank, const auto& class_v, const auto& class_loader_v,
             const auto& jvm_v>
@@ -111,16 +91,11 @@ class LocalArray<jobject, kRank_, class_v_, class_loader_v_, jvm_v_>
                 static_cast<jobject>(local_object)),
             static_cast<jobject>(local_object))) {}
 
-  // Same as above.
-  template <template <const auto&, const auto&, const auto&>
-            class ObjectContainer>
-  LocalArray(std::size_t size,
-             ObjectContainer<class_v_, class_loader_v_, jvm_v_>&& local_object)
-      : Base(JniArrayHelper<jobject>::NewArray(
-            size,
-            ObjectClassRefT::GetAndMaybeLoadClassRef(
-                static_cast<jobject>(local_object)),
-            local_object.Release())) {}
+  ~LocalArray() {
+    if (Base::object_ref_) {
+      JniHelper::DeleteLocalObject(*Base::object_ref_);
+    }
+  }
 };
 
 template <template <const auto&, const auto&, const auto&>
