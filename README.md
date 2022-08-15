@@ -79,8 +79,8 @@ If you're already using Bazel add the following to your WORKSPACE:
 ```starlark
 http_archive(
   name = "jni-bind",
-  urls = ["https://github.com/google/jni-bind/archive/refs/tags/Release-0.1.0-alpha.zip"],
-  strip_prefix = "jni-bind-Release-0.1.0-alpha",
+  urls = ["https://github.com/google/jni-bind/archive/refs/tags/Release-0.5.0-alpha.zip"],
+  strip_prefix = "jni-bind-Release-0.5.0-alpha",
 )
 ```
 
