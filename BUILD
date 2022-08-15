@@ -31,6 +31,7 @@ cc_library(
         "//class_defs:java_lang_classes",
         "//class_defs:java_util_classes",
         "//implementation:array",
+        "//implementation:array_type_conversion",
         "//implementation:class",
         "//implementation:class_loader",
         "//implementation:constructor",

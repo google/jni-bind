@@ -19,6 +19,7 @@
 
 #include <type_traits>
 
+#include "implementation/array_type_conversion.h"
 #include "implementation/object.h"
 #include "implementation/return.h"
 #include "jni_dep.h"
@@ -26,45 +27,6 @@
 #include "metaprogramming/type_to_type_map.h"
 
 namespace jni {
-
-template <typename T>
-struct ArrayTag {};
-
-template <typename T>
-static constexpr bool kIsArrayType =
-    std::is_base_of_v<ArrayTag<jbyteArray>, T> ||
-    std::is_base_of_v<ArrayTag<jcharArray>, T> ||
-    std::is_base_of_v<ArrayTag<jshortArray>, T> ||
-    std::is_base_of_v<ArrayTag<jintArray>, T> ||
-    std::is_base_of_v<ArrayTag<jfloatArray>, T> ||
-    std::is_base_of_v<ArrayTag<jdoubleArray>, T> ||
-    std::is_base_of_v<ArrayTag<jlongArray>, T> ||
-    std::is_base_of_v<ArrayTag<jbooleanArray>, T> ||
-    std::is_base_of_v<ArrayTag<jobjectArray>, T> ||
-    std::is_base_of_v<ArrayTag<jarray>, T>;
-
-// Primitive Keys.
-using PrimitiveKeys =
-    std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
-               jfloatArray, jdoubleArray, jbooleanArray>;
-
-// Simple type for proxying types used in the API (e.g. jint) to their
-// corresponding array type (e.g. jintarray). Only use the former type when
-// using JNI Bind (e.g. LocalArray<jint>, not LocalArray<jintArray>).
-using RegularToArrayTypeMap = metaprogramming::TypeToTypeMap<
-    std::tuple<jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jboolean,
-               jobject, jarray>,
-    std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
-               jfloatArray, jdoubleArray, jbooleanArray, jobjectArray, jarray>>;
-
-// Given a type, returns the corresponding array type (e.g. jint => jintArray).
-template <typename T>
-using RegularToArrayTypeMap_t =
-    metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap, T>;
-
-template <typename T>
-using ArrayToRegularTypeMap_t =
-    metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap::Invert, T>;
 
 template <typename RawType>
 struct Array;

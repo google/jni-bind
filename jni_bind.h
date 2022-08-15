@@ -21,6 +21,7 @@
 
 // Headers for static definitions.
 #include "implementation/array.h"
+#include "implementation/array_type_conversion.h"
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/constructor.h"

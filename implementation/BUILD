@@ -12,6 +12,7 @@ cc_library(
     name = "array",
     hdrs = ["array.h"],
     deps = [
+        ":array_type_conversion",
         ":object",
         ":return",
         "//:jni_dep",
@@ -31,6 +32,24 @@ cc_library(
         ":ref_base",
         "//:jni_dep",
         "//implementation/jni_helper:jni_array_helper",
+    ],
+)
+
+cc_library(
+    name = "array_type_conversion",
+    hdrs = ["array_type_conversion.h"],
+    deps = [
+        "//:jni_dep",
+        "//metaprogramming:type_to_type_map",
+    ],
+)
+
+cc_test(
+    name = "array_type_conversion_test",
+    srcs = ["array_type_conversion_test.cc"],
+    deps = [
+        "//:jni_bind",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -662,6 +681,7 @@ cc_library(
 cc_library(
     name = "jni_type",
     hdrs = ["jni_type.h"],
+    deps = [":array_type_conversion"],
 )
 
 cc_test(
