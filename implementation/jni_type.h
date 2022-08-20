@@ -20,6 +20,7 @@
 #include <type_traits>
 
 #include "implementation/array_type_conversion.h"
+#include "metaprogramming/vals_equal.h"
 
 namespace jni {
 
@@ -36,32 +37,28 @@ struct JniType {
   using ClassT = std::decay_t<decltype(class_v)>;
   using ClassLoaderT = std::decay_t<decltype(class_loader_v)>;
   using JvmT = std::decay_t<decltype(jvm_v)>;
-
-  template <typename T>
-  struct Helper {
-    static constexpr bool val = false;
-  };
-
-  template <typename SpanType, const auto& class_v, const auto& class_loader_v,
-            const auto& jvm_v>
-  struct Helper<JniType<SpanType, class_v, class_loader_v, jvm_v>> {
-    static constexpr bool val =
-        std::is_same_v<SpanType_, SpanType> && (class_v_ == class_v) &&
-        (class_loader_v_ == class_loader_v) && (jvm_v_ == jvm_v);
-  };
-
-  constexpr JniType() = default;
-
-  template <typename T>
-  constexpr bool operator==(T&& rhs) const {
-    return Helper<std::decay_t<T>>::val;
-  }
-
-  template <typename T>
-  constexpr bool operator!=(T&& rhs) const {
-    return !(*this == rhs);
-  }
 };
+
+template <typename T1, typename T2>
+struct JniTypeEqual {
+  static constexpr bool val = false;
+};
+
+template <typename SpanType1, const auto& class_v_1,
+          const auto& class_loader_v_1, const auto& jvm_v_1, typename SpanType2,
+          const auto& class_v_2, const auto& class_loader_v_2,
+          const auto& jvm_v_2>
+struct JniTypeEqual<JniType<SpanType1, class_v_1, class_loader_v_1, jvm_v_1>,
+                    JniType<SpanType2, class_v_2, class_loader_v_2, jvm_v_2> > {
+  static constexpr bool val =
+      std::is_same_v<SpanType1, SpanType2> &&
+      metaprogramming::ValsEqual_cr_v<class_v_1, class_v_2> &&
+      metaprogramming::ValsEqual_cr_v<class_loader_v_1, class_loader_v_2> &&
+      metaprogramming::ValsEqual_cr_v<jvm_v_1, jvm_v_2>;
+};
+
+template <typename T1, typename T2>
+constexpr bool JniTypeEqual_v = JniTypeEqual<T1, T2>::val;
 
 }  // namespace jni
 

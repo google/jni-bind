@@ -20,6 +20,8 @@
 #include <cstddef>
 #include <utility>
 
+#include "metaprogramming/vals.h"
+
 namespace jni::metaprogramming {
 
 // Performs a deep equality comparison of T, but is leniant about containers.
@@ -70,6 +72,18 @@ struct ValsEqual {
 
 template <typename T1, typename T2>
 static constexpr bool ValsEqual_v = ValsEqual<T1>::template val<T2>;
+
+template <auto V1, auto V2>
+static constexpr bool ValsEqual_v_v =
+    ValsEqual<Vals<V1>>::template val<Vals<V2>>;
+
+template <auto& V1, auto& V2>
+static constexpr bool ValsEqual_r_v =
+    ValsEqual<ValsRef<V1>>::template val<ValsRef<V2>>;
+
+template <const auto& V1, const auto& V2>
+static constexpr bool ValsEqual_cr_v =
+    ValsEqual<ValsConstRef<V1>>::template val<ValsConstRef<V2>>;
 
 }  // namespace jni::metaprogramming
 

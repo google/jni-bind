@@ -690,7 +690,10 @@ cc_library(
 cc_library(
     name = "jni_type",
     hdrs = ["jni_type.h"],
-    deps = [":array_type_conversion"],
+    deps = [
+        ":array_type_conversion",
+        "//metaprogramming:vals_equal",
+    ],
 )
 
 cc_test(

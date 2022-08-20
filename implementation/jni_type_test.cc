@@ -22,12 +22,15 @@ namespace {
 using ::jni::Class;
 using ::jni::ClassLoader;
 using ::jni::JniType;
+using ::jni::JniTypeEqual_v;
 using ::jni::Jvm;
 using ::jni::kNullClassLoader;
 using ::jni::SupportedClassSet;
 
-constexpr Class kClass1{"kClass"};
+constexpr Class kClass1{"kClass1"};
+constexpr Class kClass1Prime{"kClass1"};
 constexpr Class kClass2{"kClass2"};
+constexpr Class kClass2Prime{"kClass2"};
 
 constexpr ClassLoader kLoader1{kNullClassLoader, SupportedClassSet{kClass1}};
 constexpr ClassLoader kLoader2{kNullClassLoader, SupportedClassSet{kClass2}};
@@ -35,10 +38,16 @@ constexpr ClassLoader kLoader2{kNullClassLoader, SupportedClassSet{kClass2}};
 constexpr Jvm kJvm1{kLoader1};
 constexpr Jvm kJvm2{kLoader1};
 
-static constexpr JniType<jobject, kClass1, kLoader1, kJvm1> kJniType1;
-static constexpr JniType<jobject, kClass2, kLoader2, kJvm2> kJniType2;
+using T1 = JniType<jobject, kClass1, kLoader1, kJvm1>;
+using T1_Prime = JniType<jobject, kClass1Prime, kLoader1, kJvm1>;
+using T2 = JniType<jobject, kClass2, kLoader2, kJvm2>;
+using T2_Prime = JniType<jobject, kClass2Prime, kLoader2, kJvm2>;
 
-static_assert(kJniType1 == kJniType1);
-static_assert(kJniType1 != kJniType2);
+static_assert(JniTypeEqual_v<T1, T1>);
+static_assert(!JniTypeEqual_v<T1, T2>);
+static_assert(JniTypeEqual_v<T1, T1_Prime>);
+static_assert(JniTypeEqual_v<T2, T2_Prime>);
+static_assert(!JniTypeEqual_v<T1_Prime, T2>);
+static_assert(!JniTypeEqual_v<T1_Prime, T2_Prime>);
 
 }  // namespace

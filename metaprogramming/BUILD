@@ -771,6 +771,7 @@ cc_library(
 cc_library(
     name = "vals_equal",
     hdrs = ["vals_equal.h"],
+    deps = [":vals"],
 )
 
 cc_test(
