@@ -104,20 +104,6 @@ struct ProxyHelper {
   using AsDecl_t = typename Proxy_t::AsDecl;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// MetaFunction Helpers.
-////////////////////////////////////////////////////////////////////////////////
-struct ProxyAsArgMetaFunc {
-  template <typename T>
-  using type = Arg_t<T, void>;
-};
-
-template <const auto& loader, const auto& class_v>
-struct ProxyAsDeclMetaFunc {
-  template <typename T>
-  using type = AsDecl_t<T>;
-};
-
 }  // namespace jni
 
 // Consumers of Proxy *must* include proxy defininitions after proxy.h. This is
