@@ -46,8 +46,7 @@ template <typename OverloadSelectionT, size_t param_idx>
 struct InputParamSelection;
 
 // Represents an indexing into a specific class and method.
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx>
+template <typename JniType, bool is_constructor, size_t method_idx>
 struct MethodSelection;
 
 // Represents a specific overload selection.
@@ -55,43 +54,41 @@ template <typename MethodSelectionT, size_t overload_idx>
 struct OverloadSelection;
 
 // Helper to find overloads for a given arg set.
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx, typename... Args>
+template <typename JniType, bool is_constructor, size_t method_idx,
+          typename... Args>
 struct OverloadSelectionForArgsImpl;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helper Aliases.
 ////////////////////////////////////////////////////////////////////////////////
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx>
-using MethodSelection_t =
-    MethodSelection<class_loader_v_, class_v_, is_constructor, method_idx>;
+template <typename JniType, bool is_constructor, size_t method_idx>
+using MethodSelection_t = MethodSelection<JniType, is_constructor, method_idx>;
 
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx, typename... Args>
+template <typename JniType, bool is_constructor, size_t method_idx,
+          typename... Args>
 using MethodSelectionForArgs_t =
-    OverloadSelectionForArgsImpl<class_loader_v_, class_v_, is_constructor,
-                                 method_idx, Args...>;
+    OverloadSelectionForArgsImpl<JniType, is_constructor, method_idx, Args...>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation Details.
 ////////////////////////////////////////////////////////////////////////////////
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx>
+template <typename JniType, bool is_constructor, size_t method_idx>
 struct MethodSelection {
   static constexpr bool kIsConstructor = is_constructor;
 
-  static constexpr const auto& GetClass() { return class_v_; }
-  static constexpr const auto& GetClassLoader() { return class_loader_v_; }
+  static constexpr const auto& GetClass() { return JniType::class_v; }
+  static constexpr const auto& GetClassLoader() {
+    return JniType::class_loader_v;
+  }
 
   static constexpr const auto& GetMethod() {
     if constexpr (is_constructor) {
       static_assert(method_idx == 0,
                     "If using MethodSelection for a constructor, there is only "
                     "ever one method (\"<init>\"), set method_idx to 0.");
-      return class_v_.constructors_;
+      return JniType::class_v.constructors_;
     } else {
-      return std::get<method_idx>(class_v_.methods_);
+      return std::get<method_idx>(JniType::class_v.methods_);
     }
   }
 
@@ -99,13 +96,13 @@ struct MethodSelection {
     if constexpr (is_constructor) {
       return "<init>";
     } else {
-      return std::get<method_idx>(class_v_.methods_).name_;
+      return std::get<method_idx>(JniType::class_v.methods_).name_;
     }
   }
 
   static constexpr std::size_t NumOverloads() {
     if constexpr (is_constructor) {
-      return std::tuple_size<decltype(class_v_.constructors_)>();
+      return std::tuple_size<decltype(JniType::class_v.constructors_)>();
     } else {
       return std::tuple_size<decltype(GetMethod().invocations_)>();
     }
@@ -250,11 +247,11 @@ struct OverloadSelection {
   }
 };
 
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx, typename... Args>
+template <typename JniType, bool is_constructor, size_t method_idx,
+          typename... Args>
 struct OverloadSelectionForArgsImpl {
   using MethodSelectionForArgs =
-      MethodSelection_t<class_loader_v_, class_v_, is_constructor, method_idx>;
+      MethodSelection_t<JniType, is_constructor, method_idx>;
   using OverloadSelectionForArgs =
       typename MethodSelectionForArgs::template FindOverloadSelection<Args...>;
   using OverloadRef =

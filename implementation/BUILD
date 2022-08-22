@@ -692,6 +692,8 @@ cc_library(
     hdrs = ["jni_type.h"],
     deps = [
         ":array_type_conversion",
+        ":default_class_loader",
+        ":jvm",
         "//metaprogramming:vals_equal",
     ],
 )

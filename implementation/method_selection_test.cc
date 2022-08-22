@@ -22,6 +22,7 @@ using jni::Array;
 using jni::Class;
 using jni::Constructor;
 using jni::GlobalObject;
+using jni::JniType;
 using jni::kDefaultClassLoader;
 using jni::LocalArray;
 using jni::LocalObject;
@@ -68,7 +69,7 @@ constexpr Class c1{
 
 template <const auto& class_v, bool is_constructor, size_t method_idx>
 using Sel_t =
-    MethodSelection_t<kDefaultClassLoader, class_v, is_constructor, method_idx>;
+    MethodSelection_t<JniType<jobject, class_v>, is_constructor, method_idx>;
 
 static_assert(Sel_t<c1, false, 0>::ArgSetViable<>());
 

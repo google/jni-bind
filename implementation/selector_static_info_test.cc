@@ -18,6 +18,7 @@
 using ::jni::Array;
 using ::jni::Class;
 using ::jni::InputParamSelection;
+using ::jni::JniType;
 using ::jni::kIsReturnIdx;
 using ::jni::Method;
 using ::jni::MethodSelection_t;
@@ -54,8 +55,9 @@ static constexpr jni::Class kClass{
     }};
 
 template <const auto& class_v, bool is_constructor, size_t method_idx>
-using MethodSelection_t = MethodSelection_t<jni::kDefaultClassLoader, class_v,
-                                            is_constructor, method_idx>;
+using MethodSelection_t =
+    MethodSelection_t<JniType<jobject, class_v, jni::kDefaultClassLoader>,
+                      is_constructor, method_idx>;
 
 using FooMethodT = MethodSelection_t<kClass, false, 0>;
 

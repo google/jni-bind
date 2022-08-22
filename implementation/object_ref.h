@@ -80,8 +80,7 @@ class ObjectRef : public MethodMap_t<JniTypeT, ObjectRef<JniTypeT>>,
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
     using MethodSelectionForArgs =
-        MethodSelectionForArgs_t<JniTypeT::class_loader_v, JniTypeT::class_v,
-                                 false, I, Args...>;
+        MethodSelectionForArgs_t<JniTypeT, false, I, Args...>;
 
     static_assert(MethodSelectionForArgs::kIsValidArgSet,
                   "JNI Error: Invalid argument set.");
@@ -119,8 +118,7 @@ class ConstructorValidator : public ObjectRef<JniTypeT> {
   template <typename... Args>
   struct Helper {
     // 0 is (always) used to represent the constructor.
-    using type = MethodSelectionForArgs_t<JniTypeT::class_loader_v,
-                                          JniTypeT::class_v, true, 0, Args...>;
+    using type = MethodSelectionForArgs_t<JniTypeT, true, 0, Args...>;
   };
 
   template <typename... Args>

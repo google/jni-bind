@@ -20,12 +20,16 @@
 #include <type_traits>
 
 #include "implementation/array_type_conversion.h"
+#include "implementation/default_class_loader.h"
+#include "implementation/jvm.h"
 #include "metaprogramming/vals_equal.h"
 
 namespace jni {
 
-template <typename SpanType_, const auto& class_v_, const auto& class_loader_v_,
-          const auto& jvm_v_, std::size_t kRank = 0>
+template <typename SpanType_, const auto& class_v_,
+          // const auto& class_loader_v_,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm, std::size_t kRank = 0>
 struct JniType {
   static constexpr decltype(class_v_) class_v = class_v_;
   static constexpr decltype(class_loader_v_) class_loader_v = class_loader_v_;
