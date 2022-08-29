@@ -18,8 +18,11 @@
 #define JNI_BIND_IMPLEMENTATION_JNI_TYPE_H_
 
 #include <type_traits>
+#include <variant>
 
 #include "implementation/array_type_conversion.h"
+#include "implementation/class.h"
+#include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jvm.h"
 #include "metaprogramming/vals_equal.h"
@@ -27,19 +30,36 @@
 namespace jni {
 
 template <typename SpanType_, const auto& class_v_,
-          // const auto& class_loader_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm, std::size_t kRank = 0>
+          const auto& jvm_v_ = kDefaultJvm, std::size_t kRank = 0,
+          std::size_t class_idx_ = kNoClassSpecifiedIdx,
+          std::size_t class_loader_idx_ = kNoClassLoaderSpecifiedIdx>
 struct JniType {
-  static constexpr decltype(class_v_) class_v = class_v_;
-  static constexpr decltype(class_loader_v_) class_loader_v = class_loader_v_;
+  static constexpr const auto& GetClassLoader() {
+    if constexpr (class_loader_idx_ != kNoClassLoaderSpecifiedIdx) {
+      return std::get<class_loader_idx_>(jvm_v_.class_loaders_);
+    } else {
+      return class_loader_v_;
+    }
+  }
+
+  static constexpr const auto& GetClass() {
+    if constexpr (class_idx_ != kNoClassSpecifiedIdx) {
+      return std::get<class_idx_>(GetClassLoader().supported_classes_);
+    } else {
+      return class_v_;
+    }
+  }
+
+  static constexpr decltype(GetClass()) class_v = GetClass();
+  static constexpr decltype(GetClassLoader()) class_loader_v = GetClassLoader();
   static constexpr decltype(jvm_v_) jvm_v = jvm_v_;
 
   using SpanType = SpanType_;
   using StorageType = typename StorageHelper<SpanType_, kRank>::type;
 
-  using ClassT = std::decay_t<decltype(class_v)>;
-  using ClassLoaderT = std::decay_t<decltype(class_loader_v)>;
+  using ClassT = std::decay_t<decltype(GetClass())>;
+  using ClassLoaderT = std::decay_t<decltype(GetClassLoader())>;
   using JvmT = std::decay_t<decltype(jvm_v)>;
 };
 

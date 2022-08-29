@@ -20,9 +20,12 @@
 #include <atomic>
 #include <utility>
 
+#include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/class_ref.h"
+#include "implementation/default_class_loader.h"
 #include "implementation/field_ref.h"
+#include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/method_ref.h"
 #include "jni_dep.h"
@@ -137,7 +140,11 @@ class JvmRef : public JvmRefBase {
     template <size_t... Is>
     static constexpr void TeardownClass(
         std::index_sequence<Is...> index_sequence) {
-      (ClassRef<jvm_v_, ClassLoaderIdx, Is>::MaybeReleaseClassRef(), ...);
+      (ClassRef<JniType<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_,
+                        0, Is, ClassLoaderIdx>
+
+                >::MaybeReleaseClassRef(),
+       ...);
     }
   };
 

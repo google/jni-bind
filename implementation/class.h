@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_CLASS_H_
 #define JNI_BIND_CLASS_H_
 
+#include <limits>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
@@ -36,6 +37,9 @@ static constexpr struct NoClass {
   const std::tuple<> methods_{};
   const std::tuple<> fields_{};
 } kNoClassSpecified;
+
+static constexpr std::size_t kNoClassSpecifiedIdx =
+    std::numeric_limits<std::size_t>::max();
 
 template <typename Constructors_, typename Fields_, typename Methods_>
 struct Class {};

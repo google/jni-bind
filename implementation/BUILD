@@ -111,6 +111,7 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
+        ":jni_type",
         ":jvm",
         ":method",
         "//:jni_dep",
@@ -324,9 +325,12 @@ cc_library(
     name = "jvm_ref",
     hdrs = ["jvm_ref.h"],
     deps = [
+        ":class",
         ":class_loader",
         ":class_ref",
+        ":default_class_loader",
         ":field_ref",
+        ":jni_type",
         ":jvm",
         ":method_ref",
         "//:jni_dep",
@@ -692,6 +696,8 @@ cc_library(
     hdrs = ["jni_type.h"],
     deps = [
         ":array_type_conversion",
+        ":class",
+        ":class_loader",
         ":default_class_loader",
         ":jvm",
         "//metaprogramming:vals_equal",

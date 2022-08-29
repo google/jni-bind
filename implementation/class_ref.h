@@ -26,6 +26,7 @@
 #include "implementation/class_loader.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/jni_method_invoke.h"
+#include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/method.h"
 #include "jni_dep.h"
@@ -46,18 +47,15 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref);
 // Represents a fully specified class and class loader pair for a given Jvm.
 // Because this is fully specified, classes associated with this type of loader
 // can be programmatically torn down.
-template <const auto& jvm_v_, size_t class_loader_idx_, size_t class_idx_>
+template <typename JniType>
 class ClassRef {
  public:
-  static_assert(kDefaultJvm != jvm_v_, "For default Jvm use DefaultClassRef.");
+  static_assert(kDefaultJvm != JniType::jvm_v,
+                "For default Jvm use DefaultClassRef.");
 
-  static const auto& GetClassLoader() {
-    return std::get<class_loader_idx_>(jvm_v_.class_loaders_);
-  }
+  static const auto& GetClassLoader() { return JniType::GetClassLoader(); }
 
-  static const auto& GetClass() {
-    return std::get<class_idx_>(GetClassLoader().supported_classes_);
-  }
+  static const auto& GetClass() { return JniType::GetClass(); }
 
   template <typename Lambda>
   static void PrimeJClassFromClassLoader(Lambda lambda) {
@@ -195,8 +193,11 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref) {
 template <const auto& jvm_v_, const auto& class_loader_v_, const auto& class_v_>
 struct ClassRefSelector {
   using type =
-      ClassRef<jvm_v_, jvm_v_.template IdxOfClassLoader<class_loader_v_>(),
-               class_loader_v_.template IdxOfClass<class_v_>()>;
+      ClassRef<JniType<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_,
+                       0, class_loader_v_.template IdxOfClass<class_v_>(),
+                       jvm_v_.template IdxOfClassLoader<class_loader_v_>()
+
+                       >>;
 };
 
 template <const auto& class_loader_v_, const auto& class_v_>
