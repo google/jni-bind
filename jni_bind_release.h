@@ -1025,7 +1025,7 @@ constexpr std::size_t ModifiedMax(
 
 }  // namespace jni::metaprogramming
 
-
+#include <limits>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
@@ -1033,7 +1033,13 @@ constexpr std::size_t ModifiedMax(
 namespace jni {
 
 static constexpr struct NoClass {
+  const char* name_ = "__JNI_BIND__NO_CLASS__";
+  const std::tuple<> methods_{};
+  const std::tuple<> fields_{};
 } kNoClassSpecified;
+
+static constexpr std::size_t kNoClassSpecifiedIdx =
+    std::numeric_limits<std::size_t>::max();
 
 template <typename Constructors_, typename Fields_, typename Methods_>
 struct Class {};
@@ -1337,6 +1343,37 @@ inline constexpr Method kGetClassLoaderMethod{
 
 }  // namespace jni
 
+#include <array>
+#include <cstddef>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+// Wrapper to convert a sequence of values into a type.
+template <auto... Vs>
+struct Vals {
+  static constexpr std::array val{Vs...};
+};
+
+// Wrapper to convert a sequence of const values into a type.
+template <const auto... Vs>
+struct ValsConst {
+  static constexpr std::array val{Vs...};
+};
+
+// Wrapper to convert a sequence of ref values into a type.
+template <auto&... Vs>
+struct ValsRef {
+  static constexpr std::array val{Vs...};
+};
+
+// Wrapper to convert a sequence of const ref values into a type.
+template <const auto&... Vs>
+struct ValsConstRef {
+  static constexpr std::array val{Vs...};
+};
+
+}  // namespace jni::metaprogramming
 
 #include <tuple>
 
@@ -1389,6 +1426,213 @@ using TypeToTypeMapFromKeyValues_t = TypeToTypeMap<Even_t<Ts...>, Odd_t<Ts...>>;
 template <typename TupleOfKeyValuePairs>
 using TypeToTypeMapFromKeyValuesTup_t =
     TupleToType_t<TupleOfKeyValuePairs, TypeToTypeMapFromKeyValues_t>;
+
+}  // namespace jni::metaprogramming
+
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+namespace jni {
+
+inline constexpr struct NoClassLoader {
+} kNoClassLoaderSpecified;
+
+static constexpr std::size_t kNoClassLoaderSpecifiedIdx =
+    std::numeric_limits<std::size_t>::max();
+
+// Represents the compile time info we have about a class loader. In general,
+// this is just the list of classes we expect to be loadable from a class loader
+// and its parent loader.
+//
+// Classes from different loaders are typically incompatible, but Class loaders
+// delegate classes that they cannot directly load to their parent loaders, so
+// classes attached to two different class loaders will still be compatible if
+// they were loaded by a shared parent loader.
+template <typename ParentLoader_, typename... SupportedClasses_>
+class ClassLoader {
+ public:
+  const ParentLoader_ parent_loader_;
+  const std::tuple<SupportedClasses_...> supported_classes_;
+
+  // TODO (b/143908983): Loaders should not be able to supply classes that their
+  // parents do.
+  explicit constexpr ClassLoader(
+      ParentLoader_ parent_loader,
+      SupportedClassSet<SupportedClasses_...> supported_class_set)
+      : parent_loader_(parent_loader),
+        supported_classes_(supported_class_set.supported_classes_) {}
+
+  explicit constexpr ClassLoader(
+      SupportedClassSet<SupportedClasses_...> supported_class_set)
+      : parent_loader_(kDefaultClassLoader),
+        supported_classes_(supported_class_set.supported_classes_) {}
+
+  bool constexpr operator==(
+      const ClassLoader<ParentLoader_, SupportedClasses_...>& rhs) const {
+    return (*this).parent_loader_ == rhs.parent_loader_ &&
+           (*this).supported_classes_ == rhs.supported_classes_;
+  }
+  template <typename T>
+  bool constexpr operator==(const T& rhs) const {
+    return false;
+  }
+  template <typename T>
+  bool constexpr operator!=(const T& rhs) const {
+    return !(*this == rhs);
+  }
+
+  template <const auto& class_v, std::size_t... Is>
+  constexpr std::size_t IdxOfClassHelper(
+      std::integer_sequence<std::size_t, Is...>) const {
+    // std::max appears to be missing the initializer list overload in Bazel's
+    // implementation of clang.  This should simply be std::max.
+    return metaprogramming::ModifiedMax(
+        {((std::get<Is>(supported_classes_) == class_v)
+              ? std::size_t{Is}
+              : metaprogramming::kNegativeOne)...,
+         metaprogramming::kNegativeOne});
+  }
+
+  // Returns the index for a given class within this set (any given class ref is
+  // defined by this index).
+  template <const auto& class_v>
+  constexpr std::size_t IdxOfClass() const {
+    return IdxOfClassHelper<class_v>(
+        std::make_integer_sequence<std::size_t,
+                                   sizeof...(SupportedClasses_)>());
+  }
+
+  // Tests if a class is supported by this class loader (not ancestors).
+  template <const auto& possibly_supported_class>
+  constexpr bool SupportedByThisSet() const {
+    return IdxOfClass<possibly_supported_class>() != kClassNotInLoaderSetIdx;
+  }
+
+  // Tests if a class is supported by this class loader (ancestors included).
+  template <const auto& possibly_supported_class,
+            bool ignore_default_loader = false>
+  constexpr bool SupportedDirectlyOrIndirectly() const {
+    return parent_loader_.template SupportedDirectlyOrIndirectly<
+               possibly_supported_class>() ||
+           SupportedByThisSet<possibly_supported_class>();
+  }
+
+  // Returns the index for parent-most ancestor that supports a given class.
+  template <const auto& possibly_supported_class>
+  constexpr std::size_t IdxOfAncestor(std::size_t cur_idx = 0) const {
+    if (SupportedByThisSet<possibly_supported_class>() &&
+        !parent_loader_.template SupportedDirectlyOrIndirectly<
+            possibly_supported_class, true>()) {
+      return cur_idx;
+    }
+    return parent_loader_.template IdxOfAncestor<possibly_supported_class>(
+        cur_idx + 1);
+  }
+};
+
+template <typename ParentLoader_, typename... SupportedClasses_>
+ClassLoader(ParentLoader_ parent_loader,
+            SupportedClassSet<SupportedClasses_...> supported_classes)
+    -> ClassLoader<ParentLoader_, SupportedClasses_...>;
+
+template <typename... SupportedClasses_>
+ClassLoader(SupportedClassSet<SupportedClasses_...>)
+    -> ClassLoader<DefaultClassLoader, SupportedClasses_...>;
+
+template <typename T, std::size_t I>
+constexpr auto& GetAncestor(const T& loader) {
+  if constexpr (I == 0) {
+    return loader;
+  } else {
+    return GetAncestor<decltype(loader.parent_loader_), I - 1>(
+        loader.parent_loader_);
+  }
+}
+
+template <const auto& loader, const auto& possibly_supported_class>
+constexpr const auto& ParentLoaderForClass() {
+  if constexpr (!loader.template SupportedDirectlyOrIndirectly<
+                    possibly_supported_class>()) {
+    return kNullClassLoader;
+  } else if constexpr (loader.template IdxOfAncestor<
+                           possibly_supported_class>() !=
+                       kClassNotInLoaderSetIdx) {
+    return GetAncestor<
+        decltype(loader),
+        loader.template IdxOfAncestor<possibly_supported_class>()>(loader);
+  } else {
+    return kDefaultClassLoader;
+  }
+}
+
+}  // namespace jni
+
+#include <cstddef>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+// Performs a deep equality comparison of T, but is leniant about containers.
+// Returns true iff types are equal or both types are containers and their
+// non-type template parameters are equal.
+template <typename T>
+struct ValsEqual {
+  template <typename T1, typename T2, typename Enable = void>
+  struct Helper {
+    static constexpr bool val = std::is_same_v<T1, T2>;
+  };
+
+  // Value comparison.
+  template <template <const auto...> class Container1, const auto... V1s_,
+            template <const auto...> class Container2, const auto... V2s_>
+  struct Helper<Container1<V1s_...>, Container2<V2s_...>,
+                std::enable_if_t<((V1s_ == V2s_) && ...)>> {
+    static constexpr bool val = true;
+  };
+
+  // LHS l-reference, RHS value.
+  template <template <const auto&...> class Container1, const auto&... V1s_,
+            template <const auto...> class Container2, const auto... V2s_>
+  struct Helper<Container1<V1s_...>, Container2<V2s_...>,
+                std::enable_if_t<((V1s_ == V2s_) && ...)>> {
+    static constexpr bool val = true;
+  };
+
+  // LHS value, RHS l-reference.
+  template <template <const auto...> class Container1, const auto... V1s_,
+            template <const auto&...> class Container2, const auto&... V2s_>
+  struct Helper<Container1<V1s_...>, Container2<V2s_...>,
+                std::enable_if_t<((V1s_ == V2s_) && ...)>> {
+    static constexpr bool val = true;
+  };
+
+  // RHS l-reference, RHS l-reference.
+  template <template <const auto&...> class Container1, const auto&... V1s_,
+            template <const auto&...> class Container2, const auto&... V2s_>
+  struct Helper<Container1<V1s_...>, Container2<V2s_...>,
+                std::enable_if_t<((V1s_ == V2s_) && ...)>> {
+    static constexpr bool val = true;
+  };
+
+  template <typename T2>
+  static constexpr bool val = Helper<T, T2>::val;
+};
+
+template <typename T1, typename T2>
+static constexpr bool ValsEqual_v = ValsEqual<T1>::template val<T2>;
+
+template <auto V1, auto V2>
+static constexpr bool ValsEqual_v_v =
+    ValsEqual<Vals<V1>>::template val<Vals<V2>>;
+
+template <auto& V1, auto& V2>
+static constexpr bool ValsEqual_r_v =
+    ValsEqual<ValsRef<V1>>::template val<ValsRef<V2>>;
+
+template <const auto& V1, const auto& V2>
+static constexpr bool ValsEqual_cr_v =
+    ValsEqual<ValsConstRef<V1>>::template val<ValsConstRef<V2>>;
 
 }  // namespace jni::metaprogramming
 
@@ -1629,136 +1873,124 @@ struct JniArrayHelper<jobject> : public JniArrayHelperBase {
 
 namespace jni {
 
-inline constexpr struct NoClassLoader {
-} kNoClassLoaderSpecified;
-
-// Represents the compile time info we have about a class loader. In general,
-// this is just the list of classes we expect to be loadable from a class loader
-// and its parent loader.
-//
-// Classes from different loaders are typically incompatible, but Class loaders
-// delegate classes that they cannot directly load to their parent loaders, so
-// classes attached to two different class loaders will still be compatible if
-// they were loaded by a shared parent loader.
-template <typename ParentLoader_, typename... SupportedClasses_>
-class ClassLoader {
+template <typename... ClassLoaderTs>
+class Jvm {
  public:
-  const ParentLoader_ parent_loader_;
-  const std::tuple<SupportedClasses_...> supported_classes_;
+  const std::tuple<ClassLoaderTs...> class_loaders_;
 
-  // TODO (b/143908983): Loaders should not be able to supply classes that their
-  // parents do.
-  explicit constexpr ClassLoader(
-      ParentLoader_ parent_loader,
-      SupportedClassSet<SupportedClasses_...> supported_class_set)
-      : parent_loader_(parent_loader),
-        supported_classes_(supported_class_set.supported_classes_) {}
+  constexpr Jvm(ClassLoaderTs... class_loaders)
+      : class_loaders_(class_loaders...) {}
 
-  explicit constexpr ClassLoader(
-      SupportedClassSet<SupportedClasses_...> supported_class_set)
-      : parent_loader_(kDefaultClassLoader),
-        supported_classes_(supported_class_set.supported_classes_) {}
-
-  bool constexpr operator==(
-      const ClassLoader<ParentLoader_, SupportedClasses_...>& rhs) const {
-    return (*this).parent_loader_ == rhs.parent_loader_ &&
-           (*this).supported_classes_ == rhs.supported_classes_;
+  template <const auto& class_loader_v, std::size_t... Is>
+  constexpr size_t IdxOfClassLoaderHelper(
+      std::integer_sequence<std::size_t, Is...>) const {
+    return metaprogramming::ModifiedMax(
+        {((std::get<Is>(class_loaders_) == class_loader_v) ? Is : -1)...});
   }
+
+  // Returns the index for a given classloader within this set (any given class
+  // ref is defined by this index).
+  template <const auto& class_loader_v>
+  constexpr size_t IdxOfClassLoader() const {
+    return IdxOfClassLoaderHelper<class_loader_v>(
+        std::make_integer_sequence<std::size_t, sizeof...(ClassLoaderTs)>());
+  }
+
   template <typename T>
   bool constexpr operator==(const T& rhs) const {
     return false;
   }
+  bool constexpr operator==(const Jvm&) const { return true; }
+
   template <typename T>
   bool constexpr operator!=(const T& rhs) const {
     return !(*this == rhs);
   }
-
-  template <const auto& class_v, std::size_t... Is>
-  constexpr std::size_t IdxOfClassHelper(
-      std::integer_sequence<std::size_t, Is...>) const {
-    // std::max appears to be missing the initializer list overload in Bazel's
-    // implementation of clang.  This should simply be std::max.
-    return metaprogramming::ModifiedMax(
-        {((std::get<Is>(supported_classes_) == class_v)
-              ? std::size_t{Is}
-              : metaprogramming::kNegativeOne)...,
-         metaprogramming::kNegativeOne});
-  }
-
-  // Returns the index for a given class within this set (any given class ref is
-  // defined by this index).
-  template <const auto& class_v>
-  constexpr std::size_t IdxOfClass() const {
-    return IdxOfClassHelper<class_v>(
-        std::make_integer_sequence<std::size_t,
-                                   sizeof...(SupportedClasses_)>());
-  }
-
-  // Tests if a class is supported by this class loader (not ancestors).
-  template <const auto& possibly_supported_class>
-  constexpr bool SupportedByThisSet() const {
-    return IdxOfClass<possibly_supported_class>() != kClassNotInLoaderSetIdx;
-  }
-
-  // Tests if a class is supported by this class loader (ancestors included).
-  template <const auto& possibly_supported_class,
-            bool ignore_default_loader = false>
-  constexpr bool SupportedDirectlyOrIndirectly() const {
-    return parent_loader_.template SupportedDirectlyOrIndirectly<
-               possibly_supported_class>() ||
-           SupportedByThisSet<possibly_supported_class>();
-  }
-
-  // Returns the index for parent-most ancestor that supports a given class.
-  template <const auto& possibly_supported_class>
-  constexpr std::size_t IdxOfAncestor(std::size_t cur_idx = 0) const {
-    if (SupportedByThisSet<possibly_supported_class>() &&
-        !parent_loader_.template SupportedDirectlyOrIndirectly<
-            possibly_supported_class, true>()) {
-      return cur_idx;
-    }
-    return parent_loader_.template IdxOfAncestor<possibly_supported_class>(
-        cur_idx + 1);
-  }
 };
 
-template <typename ParentLoader_, typename... SupportedClasses_>
-ClassLoader(ParentLoader_ parent_loader,
-            SupportedClassSet<SupportedClasses_...> supported_classes)
-    -> ClassLoader<ParentLoader_, SupportedClasses_...>;
+template <typename... ClassLoaderTs>
+Jvm(ClassLoaderTs...) -> Jvm<ClassLoaderTs...>;
 
-template <typename... SupportedClasses_>
-ClassLoader(SupportedClassSet<SupportedClasses_...>)
-    -> ClassLoader<DefaultClassLoader, SupportedClasses_...>;
-
-template <typename T, std::size_t I>
-constexpr auto& GetAncestor(const T& loader) {
-  if constexpr (I == 0) {
-    return loader;
-  } else {
-    return GetAncestor<decltype(loader.parent_loader_), I - 1>(
-        loader.parent_loader_);
-  }
-}
-
-template <const auto& loader, const auto& possibly_supported_class>
-constexpr const auto& ParentLoaderForClass() {
-  if constexpr (!loader.template SupportedDirectlyOrIndirectly<
-                    possibly_supported_class>()) {
-    return kNullClassLoader;
-  } else if constexpr (loader.template IdxOfAncestor<
-                           possibly_supported_class>() !=
-                       kClassNotInLoaderSetIdx) {
-    return GetAncestor<
-        decltype(loader),
-        loader.template IdxOfAncestor<possibly_supported_class>()>(loader);
-  } else {
-    return kDefaultClassLoader;
-  }
-}
+// Convenience Jvm definition.
+// Compatible with default class loader or specified loaders.
+inline constexpr Jvm kDefaultJvm{kDefaultClassLoader};
 
 }  // namespace jni
 
+namespace jni {
+
+template <typename T>
+struct ArrayTag {};
+
+template <typename T>
+static constexpr bool kIsArrayType =
+    std::is_base_of_v<ArrayTag<jbyteArray>, T> ||
+    std::is_base_of_v<ArrayTag<jcharArray>, T> ||
+    std::is_base_of_v<ArrayTag<jshortArray>, T> ||
+    std::is_base_of_v<ArrayTag<jintArray>, T> ||
+    std::is_base_of_v<ArrayTag<jfloatArray>, T> ||
+    std::is_base_of_v<ArrayTag<jdoubleArray>, T> ||
+    std::is_base_of_v<ArrayTag<jlongArray>, T> ||
+    std::is_base_of_v<ArrayTag<jbooleanArray>, T> ||
+    std::is_base_of_v<ArrayTag<jobjectArray>, T> ||
+    std::is_base_of_v<ArrayTag<jarray>, T>;
+
+// Primitive Keys.
+using PrimitiveKeys =
+    std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
+               jfloatArray, jdoubleArray, jbooleanArray>;
+
+// Simple type for proxying types used in the API (e.g. jint) to their
+// corresponding array type (e.g. jintarray). Only use the former type when
+// using JNI Bind (e.g. LocalArray<jint>, not LocalArray<jintArray>).
+using RegularToArrayTypeMap = metaprogramming::TypeToTypeMap<
+    std::tuple<jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jboolean,
+               jobject, jarray>,
+    std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
+               jfloatArray, jdoubleArray, jbooleanArray, jobjectArray, jarray>>;
+
+// Given a type, returns the corresponding array type (e.g. jint => jintArray).
+template <typename T>
+using RegularToArrayTypeMap_t =
+    metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap, T>;
+
+template <typename T>
+using ArrayToRegularTypeMap_t =
+    metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap::Invert, T>;
+
+////////////////////////////////////////////////////////////////////////////////
+// Storage Helper Metafunction.
+////////////////////////////////////////////////////////////////////////////////
+
+// Figures out the underlying physical opaque handle used to store a type.
+// e.g. A rank two int is a jobjectarray.
+template <typename T, std::size_t kRank>
+struct StorageHelper {
+  using type = jobjectArray;
+};
+
+// HACK: jstring has its own type despite just being a jobject. To make the
+// lookup tables above function, this is handled separately. This will hopefully
+// be removed in the future.
+template <>
+struct StorageHelper<jstring, 1> {
+  using type = jobjectArray;
+};
+
+template <typename T>
+struct StorageHelper<T, 1> {
+  using type = RegularToArrayTypeMap_t<T>;
+};
+
+template <typename T>
+struct StorageHelper<T, 0> {
+  using type = T;
+};
+
+template <typename T, std::size_t kRank>
+using StorageHelper_t = typename StorageHelper<T, kRank>::type;
+
+}  // namespace jni
 
 #include <tuple>
 #include <utility>
@@ -2204,19 +2436,19 @@ namespace jni {
 // Used to detect RefBase in type proxying.
 // This is useful, e.g. when you want to say "an object that might be passed"
 // but the object's type (i.e. full name + loader information) is unknown.
-template <typename NativeJavaType_>
+template <typename StorageType>
 class RefBaseTag {
  public:
-  RefBaseTag(NativeJavaType_ object) : object_ref_(object) {}
+  RefBaseTag(StorageType object) : object_ref_(object) {}
   RefBaseTag(RefBaseTag&& rhs) : object_ref_(rhs.Release()) {}
 
-  NativeJavaType_ Release() {
-    NativeJavaType_ return_value = *object_ref_;
+  StorageType Release() {
+    StorageType return_value = *object_ref_;
     object_ref_ = std::nullopt;
     return return_value;
   }
 
-  explicit operator NativeJavaType_() const {
+  explicit operator StorageType() const {
     if (object_ref_) {
       return *object_ref_;
     }
@@ -2224,7 +2456,7 @@ class RefBaseTag {
   }
 
  protected:
-  std::optional<NativeJavaType_> object_ref_;
+  std::optional<StorageType> object_ref_;
 };
 
 // Represents a runtime object with only Name information.  It is ephemeral and
@@ -2234,17 +2466,17 @@ class RefBaseTag {
 // This can also be used as a temporary when passed into a function that accepts
 // objects.  This ensures type correctness (names must match) but doesn't
 // require the full class description be used when describing the function.
-template <typename NativeJavaType_, const auto& class_v_ = kNoClassSpecified,
-          const auto& loader_v_ = kDefaultClassLoader>
-class RefBase : public RefBaseTag<NativeJavaType_> {
+template <typename JniTypeT>
+class RefBase : public RefBaseTag<typename JniTypeT::StorageType> {
  public:
-  static inline const char* name_ = class_v_.name_;
+  using StorageType = typename JniTypeT::StorageType;
+  using RefBaseTag<StorageType>::RefBaseTag;
+  using RefBaseTag<StorageType>::operator typename JniTypeT::StorageType;
 
-  using RefBaseTag<NativeJavaType_>::RefBaseTag;
-  using RefBaseTag<NativeJavaType_>::operator NativeJavaType_;
+  static inline const char* name_ = JniTypeT::class_v.name_;
 
-  RefBase(RefBaseTag<NativeJavaType_>&& rhs)
-      : RefBaseTag<NativeJavaType_>(std::move(rhs)) {}
+  RefBase(RefBaseTag<StorageType>&& rhs)
+      : RefBaseTag<StorageType>(std::move(rhs)) {}
   RefBase(RefBase&&) = default;
 };
 
@@ -2255,53 +2487,65 @@ using RefBaseT_t = typename T::RefBaseT;
 }  // namespace jni
 
 
-#include <tuple>
 #include <type_traits>
-#include <utility>
+#include <variant>
 
 namespace jni {
 
-template <typename... ClassLoaderTs>
-class Jvm {
- public:
-  const std::tuple<ClassLoaderTs...> class_loaders_;
-
-  constexpr Jvm(ClassLoaderTs... class_loaders)
-      : class_loaders_(class_loaders...) {}
-
-  template <const auto& class_loader_v, std::size_t... Is>
-  constexpr size_t IdxOfClassLoaderHelper(
-      std::integer_sequence<std::size_t, Is...>) const {
-    return metaprogramming::ModifiedMax(
-        {((std::get<Is>(class_loaders_) == class_loader_v) ? Is : -1)...});
+template <typename SpanType_, const auto& class_v_,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm, std::size_t kRank = 0,
+          std::size_t class_idx_ = kNoClassSpecifiedIdx,
+          std::size_t class_loader_idx_ = kNoClassLoaderSpecifiedIdx>
+struct JniType {
+  static constexpr const auto& GetClassLoader() {
+    if constexpr (class_loader_idx_ != kNoClassLoaderSpecifiedIdx) {
+      return std::get<class_loader_idx_>(jvm_v_.class_loaders_);
+    } else {
+      return class_loader_v_;
+    }
   }
 
-  // Returns the index for a given classloader within this set (any given class
-  // ref is defined by this index).
-  template <const auto& class_loader_v>
-  constexpr size_t IdxOfClassLoader() const {
-    return IdxOfClassLoaderHelper<class_loader_v>(
-        std::make_integer_sequence<std::size_t, sizeof...(ClassLoaderTs)>());
+  static constexpr const auto& GetClass() {
+    if constexpr (class_idx_ != kNoClassSpecifiedIdx) {
+      return std::get<class_idx_>(GetClassLoader().supported_classes_);
+    } else {
+      return class_v_;
+    }
   }
 
-  template <typename T>
-  bool constexpr operator==(const T& rhs) const {
-    return false;
-  }
-  bool constexpr operator==(const Jvm&) const { return true; }
+  static constexpr decltype(GetClass()) class_v = GetClass();
+  static constexpr decltype(GetClassLoader()) class_loader_v = GetClassLoader();
+  static constexpr decltype(jvm_v_) jvm_v = jvm_v_;
 
-  template <typename T>
-  bool constexpr operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
+  using SpanType = SpanType_;
+  using StorageType = typename StorageHelper<SpanType_, kRank>::type;
+
+  using ClassT = std::decay_t<decltype(GetClass())>;
+  using ClassLoaderT = std::decay_t<decltype(GetClassLoader())>;
+  using JvmT = std::decay_t<decltype(jvm_v)>;
 };
 
-template <typename... ClassLoaderTs>
-Jvm(ClassLoaderTs...) -> Jvm<ClassLoaderTs...>;
+template <typename T1, typename T2>
+struct JniTypeEqual {
+  static constexpr bool val = false;
+};
 
-// Convenience Jvm definition.
-// Compatible with default class loader or specified loaders.
-inline constexpr Jvm kDefaultJvm{kDefaultClassLoader};
+template <typename SpanType1, const auto& class_v_1,
+          const auto& class_loader_v_1, const auto& jvm_v_1, typename SpanType2,
+          const auto& class_v_2, const auto& class_loader_v_2,
+          const auto& jvm_v_2>
+struct JniTypeEqual<JniType<SpanType1, class_v_1, class_loader_v_1, jvm_v_1>,
+                    JniType<SpanType2, class_v_2, class_loader_v_2, jvm_v_2>> {
+  static constexpr bool val =
+      std::is_same_v<SpanType1, SpanType2> &&
+      metaprogramming::ValsEqual_cr_v<class_v_1, class_v_2> &&
+      metaprogramming::ValsEqual_cr_v<class_loader_v_1, class_loader_v_2> &&
+      metaprogramming::ValsEqual_cr_v<jvm_v_1, jvm_v_2>;
+};
+
+template <typename T1, typename T2>
+constexpr bool JniTypeEqual_v = JniTypeEqual<T1, T2>::val;
 
 }  // namespace jni
 
@@ -2342,45 +2586,6 @@ ArrayView(ArrayView<SpanType>&&) -> ArrayView<SpanType>;
 #include <type_traits>
 
 namespace jni {
-
-template <typename T>
-struct ArrayTag {};
-
-template <typename T>
-static constexpr bool kIsArrayType =
-    std::is_base_of_v<ArrayTag<jbyteArray>, T> ||
-    std::is_base_of_v<ArrayTag<jcharArray>, T> ||
-    std::is_base_of_v<ArrayTag<jshortArray>, T> ||
-    std::is_base_of_v<ArrayTag<jintArray>, T> ||
-    std::is_base_of_v<ArrayTag<jfloatArray>, T> ||
-    std::is_base_of_v<ArrayTag<jdoubleArray>, T> ||
-    std::is_base_of_v<ArrayTag<jlongArray>, T> ||
-    std::is_base_of_v<ArrayTag<jbooleanArray>, T> ||
-    std::is_base_of_v<ArrayTag<jobjectArray>, T> ||
-    std::is_base_of_v<ArrayTag<jarray>, T>;
-
-// Primitive Keys.
-using PrimitiveKeys =
-    std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
-               jfloatArray, jdoubleArray, jbooleanArray>;
-
-// Simple type for proxying types used in the API (e.g. jint) to their
-// corresponding array type (e.g. jintarray). Only use the former type when
-// using JNI Bind (e.g. LocalArray<jint>, not LocalArray<jintArray>).
-using RegularToArrayTypeMap = metaprogramming::TypeToTypeMap<
-    std::tuple<jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jboolean,
-               jobject, jarray>,
-    std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
-               jfloatArray, jdoubleArray, jbooleanArray, jobjectArray, jarray>>;
-
-// Given a type, returns the corresponding array type (e.g. jint => jintArray).
-template <typename T>
-using RegularToArrayTypeMap_t =
-    metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap, T>;
-
-template <typename T>
-using ArrayToRegularTypeMap_t =
-    metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap::Invert, T>;
 
 template <typename RawType>
 struct Array;
@@ -2657,10 +2862,14 @@ namespace jni {
 static constexpr Class kJavaLangString{"java/lang/String"};
 
 template <typename CrtpBase>
-class StringRefBase : public RefBase<jstring, kJavaLangString> {
+class StringRefBase
+    : public RefBase<
+          JniType<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>> {
  public:
-  using RefBaseT = RefBase<jstring>;
-  StringRefBase(jstring object) : RefBase<jstring, kJavaLangString>(object) {}
+  using JniTypeT =
+      JniType<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>;
+  using RefBaseT = RefBase<JniTypeT>;
+  StringRefBase(jstring object) : RefBase<JniTypeT>(object) {}
 
   ~StringRefBase() {
     if (object_ref_) {
@@ -2725,18 +2934,15 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref);
 // Represents a fully specified class and class loader pair for a given Jvm.
 // Because this is fully specified, classes associated with this type of loader
 // can be programmatically torn down.
-template <const auto& jvm_v_, size_t class_loader_idx_, size_t class_idx_>
+template <typename JniType>
 class ClassRef {
  public:
-  static_assert(kDefaultJvm != jvm_v_, "For default Jvm use DefaultClassRef.");
+  static_assert(kDefaultJvm != JniType::jvm_v,
+                "For default Jvm use DefaultClassRef.");
 
-  static const auto& GetClassLoader() {
-    return std::get<class_loader_idx_>(jvm_v_.class_loaders_);
-  }
+  static const auto& GetClassLoader() { return JniType::GetClassLoader(); }
 
-  static const auto& GetClass() {
-    return std::get<class_idx_>(GetClassLoader().supported_classes_);
-  }
+  static const auto& GetClass() { return JniType::GetClass(); }
 
   template <typename Lambda>
   static void PrimeJClassFromClassLoader(Lambda lambda) {
@@ -2874,8 +3080,11 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref) {
 template <const auto& jvm_v_, const auto& class_loader_v_, const auto& class_v_>
 struct ClassRefSelector {
   using type =
-      ClassRef<jvm_v_, jvm_v_.template IdxOfClassLoader<class_loader_v_>(),
-               class_loader_v_.template IdxOfClass<class_v_>()>;
+      ClassRef<JniType<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_,
+                       0, class_loader_v_.template IdxOfClass<class_v_>(),
+                       jvm_v_.template IdxOfClassLoader<class_loader_v_>()
+
+                       >>;
 };
 
 template <const auto& class_loader_v_, const auto& class_v_>
@@ -2905,16 +3114,16 @@ namespace jni {
 struct ArrayRefPrimitiveBaseTag {};
 
 // Tag for non object array ref like tags (e.g. jintArray but not jobjectArray).
-template <typename SpanType>
+template <typename JniTypeT>
 struct ArrayRefPrimitiveTag : ArrayRefPrimitiveBaseTag {};
 
 // |SpanType| is primitive types like jint, jfloat, etc.
-template <typename SpanType, const auto& class_v_, const auto& class_loader_v_,
-          const auto& jvm_v_>
-class ArrayRef : public RefBaseTag<RegularToArrayTypeMap_t<SpanType>>,
-                 ArrayRefPrimitiveTag<SpanType> {
+template <typename JniTypeT, typename Enable = void>
+class ArrayRef : public RefBase<JniTypeT>,
+                 ArrayRefPrimitiveTag<typename JniTypeT::SpanType> {
  public:
-  using Base = RefBaseTag<RegularToArrayTypeMap_t<SpanType>>;
+  using SpanType = typename JniTypeT::SpanType;
+  using Base = RefBase<JniTypeT>;
   using Base::Base;
 
   ArrayView<SpanType> Pin(bool copy_on_completion = true) {
@@ -2929,18 +3138,22 @@ class ArrayRef : public RefBaseTag<RegularToArrayTypeMap_t<SpanType>>,
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class LocalObject;
 
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-class ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_>
-    : public RefBaseTag<jobjectArray> {
+template <typename JniTypeT>
+class ArrayRef<
+    JniTypeT,
+    std::enable_if_t<std::is_same_v<typename JniTypeT::SpanType, jobject>>>
+    : public RefBase<JniTypeT> {
  public:
-  using Base = RefBaseTag<jobjectArray>;
+  using SpanType = typename JniTypeT::SpanType;
+  using Base = RefBase<JniTypeT>;
   using Base::Base;
 
   std::size_t Length() {
     return JniArrayHelper<jobject>::GetLength(*Base::object_ref_);
   }
 
-  LocalObject<class_v_, class_loader_v_, jvm_v_> Get(std::size_t idx) {
+  LocalObject<JniTypeT::class_v, JniTypeT::class_loader_v, JniTypeT::jvm_v> Get(
+      std::size_t idx) {
     return {JniArrayHelper<jobject>::GetArrayElement(*Base::object_ref_, idx)};
   }
 
@@ -2950,7 +3163,8 @@ class ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_>
   // TODO(b/406948932): Permit lvalues of locals and globals as technically
   // they're both viable (the scope will be extended as expected).
   void Set(std::size_t idx,
-           LocalObject<class_v_, class_loader_v_, jvm_v_>&& val) {
+           LocalObject<JniTypeT::class_v, JniTypeT::class_loader_v,
+                       JniTypeT::jvm_v>&& val) {
     return JniArrayHelper<jobject>::SetArrayElement(*Base::object_ref_, idx,
                                                     val.Release());
   }
@@ -3289,8 +3503,24 @@ static constexpr bool IsConvertibleKey_v =
 }  // namespace jni
 
 #include <string_view>
+#include <type_traits>
 
 namespace jni {
+
+// Metafunction that returns either "" if a member called |name_| isn't
+// present, or a constexpr std::string_view of the name if it is.
+template <const auto&, typename Enable = void>
+struct NameOrNothing {
+  static constexpr std::string_view val{""};
+};
+
+template <const auto& val_>
+struct NameOrNothing<val_, std::void_t<decltype(val_.name_)>> {
+  static constexpr std::string_view val{val_.name_};
+};
+
+template <const auto& val>
+static constexpr auto NameOrNothing_v = NameOrNothing<val>::val;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constants for signature generation.
@@ -3359,48 +3589,25 @@ class GlobalObject;
 // Currently GlobalArrays do not exist, as reasoning about the lifecycles of the
 // underlying objects is non-trivial, e.g. a GlobalArray taking a local object
 // would result in a possibly unexpected extension of lifetime.
-template <typename SpanType, std::size_t kRank = 1,
+// TODO(b/406948932): Add span views for construction.
+template <typename SpanType, std::size_t kRank_ = 1,
           const auto& class_v_ = kNoClassSpecified,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
-class LocalArray : public ArrayRef<SpanType, kNoClassSpecified,
-                                   kDefaultClassLoader, kDefaultJvm> {
+class LocalArray
+    : public ArrayRef<
+          JniType<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>> {
  public:
-  using Base =
-      ArrayRef<SpanType, kNoClassSpecified, kDefaultClassLoader, kDefaultJvm>;
-
-  // TODO(b/143908983): Local arrays only support logic for rank 1.
-  // This signature exists to satisfy proxy logic returning higher rank arrays.
-  template <typename = std::enable_if<std::is_same_v<SpanType, jobject> &&
-                                      (kRank > 1)>>
-  LocalArray(jobjectArray array) : Base(nullptr) {}
-
-  LocalArray(RegularToArrayTypeMap_t<SpanType> array) : Base(array) {}
-  LocalArray(LocalArray<SpanType, kRank>&& rhs) : Base(rhs.Release()) {}
-
-  ~LocalArray() {
-    if (Base::object_ref_) {
-      JniHelper::DeleteLocalObject(*Base::object_ref_);
-    }
-  }
-
-  // TODO(b/406948932): Add span views for construction.
-  LocalArray(std::size_t size)
-      : Base(JniArrayHelper<SpanType>::NewArray(size)) {}
-};
-
-// For classes (only default class loaded objects supported).
-// TODO(b/406948932): Add span views for construction.
-template <std::size_t kRank_, const auto& class_v_, const auto& class_loader_v_,
-          const auto& jvm_v_>
-class LocalArray<jobject, kRank_, class_v_, class_loader_v_, jvm_v_>
-    : public ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_> {
- public:
-  using Base = ArrayRef<jobject, class_v_, class_loader_v_, jvm_v_>;
   using ObjectClassRefT = ClassRef_t<jvm_v_, class_loader_v_, class_v_>;
 
-  // Note: jintArray, jfloatArray, etc. are implicitly convertible to jarray.
-  LocalArray(jobjectArray array) : Base(array) {}
+  using Base =
+      ArrayRef<JniType<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
+  using Base::Base;
+
+  LocalArray(std::size_t size)
+      : Base(JniArrayHelper<SpanType>::NewArray(size)) {}
+
+  LocalArray(LocalArray<SpanType, kRank_>&& rhs) : Base(rhs.Release()) {}
 
   template <std::size_t kRank, const auto& class_v, const auto& class_loader_v,
             const auto& jvm_v>
@@ -3427,16 +3634,11 @@ class LocalArray<jobject, kRank_, class_v_, class_loader_v_, jvm_v_>
                 static_cast<jobject>(local_object)),
             static_cast<jobject>(local_object))) {}
 
-  // Same as above.
-  template <template <const auto&, const auto&, const auto&>
-            class ObjectContainer>
-  LocalArray(std::size_t size,
-             ObjectContainer<class_v_, class_loader_v_, jvm_v_>&& local_object)
-      : Base(JniArrayHelper<jobject>::NewArray(
-            size,
-            ObjectClassRefT::GetAndMaybeLoadClassRef(
-                static_cast<jobject>(local_object)),
-            local_object.Release())) {}
+  ~LocalArray() {
+    if (Base::object_ref_) {
+      JniHelper::DeleteLocalObject(*Base::object_ref_);
+    }
+  }
 };
 
 template <template <const auto&, const auto&, const auto&>
@@ -3686,7 +3888,7 @@ struct ProxyBase {
     return std::forward<T>(t);
   }
 
-  template <typename InputParamSelectionT, std::size_t param_idx, typename T>
+  template <typename InputParamSelectionT, typename T>
   static constexpr bool kViable = IsConvertibleKey_v<Key_, T>;
 
   template <typename Overload>
@@ -3729,7 +3931,7 @@ struct Proxy<CharType,
   using AsArg = std::tuple<char, jchar>;
   using AsDecl = std::tuple<char, jchar>;
 
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  template <typename OverloadSelection, typename T>
   static constexpr bool kViable = IsConvertibleKey<T>::template value<char> ||
                                   IsConvertibleKey<T>::template value<jchar>;
 };
@@ -3741,7 +3943,7 @@ struct Proxy<BooleanType,
   using AsArg = std::tuple<jboolean, bool>;
   using AsDecl = std::tuple<jboolean, bool>;
 
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  template <typename OverloadSelection, typename T>
   static constexpr bool kViable =
       IsConvertibleKey<T>::template value<jboolean> ||
       IsConvertibleKey<T>::template value<bool>;
@@ -3754,7 +3956,7 @@ struct Proxy<LongType,
   using AsArg = std::tuple<long, jlong>;
   using AsDecl = std::tuple<long, jlong>;
 
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  template <typename OverloadSelection, typename T>
   static constexpr bool kViable = IsConvertibleKey<T>::template value<long> ||
                                   IsConvertibleKey<T>::template value<jlong>;
 
@@ -3785,7 +3987,7 @@ struct Proxy<JString,
     static constexpr bool val = true;
   };
 
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  template <typename OverloadSelection, typename T>
   static constexpr bool kViable =
       IsConvertibleKey<T>::template value<std::string> ||
       IsConvertibleKey<T>::template value<jstring> ||
@@ -3816,16 +4018,16 @@ struct Proxy<JObject,
   using AsDecl = std::tuple<Object>;
   using AsArg = std::tuple<jobject, RefBaseTag<jobject>>;
 
-  template <typename InputParamSelectionT, std::size_t param_idx, typename T>
+  template <typename InputParamSelectionT, typename T>
   struct ContextualViabilityHelper {
     // TODO(b/143908983): This is overly permissive, see method_selection_test.
     static constexpr bool kViable = std::is_same_v<T, jobject>;
   };
 
-  template <typename InputParamSelectionT, std::size_t param_idx,
+  template <typename InputParamSelectionT,
             template <const auto&, const auto&, const auto&> class Container,
             const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  struct ContextualViabilityHelper<InputParamSelectionT, param_idx,
+  struct ContextualViabilityHelper<InputParamSelectionT,
                                    Container<class_v, class_loader_v, jvm_v>> {
     // TODO(b/174272629): Exclude objects loaded by invalid loaders.
     static constexpr bool kViable =
@@ -3833,9 +4035,9 @@ struct Proxy<JObject,
         std::string_view(InputParamSelectionT::Val().name_);
   };
 
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
+  template <typename OverloadSelection, typename T>
   static constexpr bool kViable =
-      ContextualViabilityHelper<OverloadSelection, param_idx, T>::kViable;
+      ContextualViabilityHelper<OverloadSelection, T>::kViable;
 
   template <typename OverloadT>
   struct Helper {
@@ -3880,23 +4082,32 @@ struct Proxy<JArrayType, typename std::enable_if_t<
   // Non-array primitive type (e.g. jintArray => jint).
   using CDecl = ArrayToRegularTypeMap_t<JArrayType>;
 
-  template <typename T, typename Enable = void>
+  // Primitive Array Types (e.g. if JArrayType is jintarray and T is too).
+  template <typename ParamSelection, typename T, typename Enable = void>
   struct Helper {
-    static constexpr bool val = std::is_same_v<T, JArrayType>;
-  };
-
-  // LocalArray or GlobalArray.
-  template <typename SpanType, std::size_t kRank, const auto& class_v_,
-            const auto& class_loader_v_, const auto& jvm_v_>
-  struct Helper<
-      LocalArray<SpanType, kRank, class_v_, class_loader_v_, jvm_v_>> {
     static constexpr bool val =
-        std::is_same_v<RegularToArrayTypeMap_t<SpanType>, JArrayType>;
+        (std::is_same_v<T, JArrayType> && ParamSelection::kRank == 1) ||
+        (std::is_same_v<T, jobjectArray> && ParamSelection::kRank >= 2);
   };
 
-  template <typename OverloadSelection, std::size_t param_idx, typename T>
-  static constexpr bool kViable =
-      std::is_same_v<T, JArrayType> || Helper<T>::val;
+  // LocalArray.
+  template <typename ParamSelection, typename SpanType, std::size_t kRank,
+            const auto& class_v_, const auto& class_loader_v_,
+            const auto& jvm_v_>
+  struct Helper<ParamSelection, LocalArray<SpanType, kRank, class_v_,
+                                           class_loader_v_, jvm_v_>> {
+    static constexpr auto param_copy = FullArrayStripV(ParamSelection::Val());
+
+    static constexpr bool val =
+        (kRank == ParamSelection::kRank) &&
+        (std::is_same_v<SpanType, typename ParamSelection::RawValT> ||
+         (std::is_same_v<SpanType, jobjectArray> &&
+          ParamSelection::kRank >= 2) ||
+         (std::string_view{class_v_.name_} == NameOrNothing_v<param_copy>));
+  };
+
+  template <typename ParamSelection, typename T>
+  static constexpr bool kViable = Helper<ParamSelection, T>::val;
 
   using AsDecl = std::tuple<ArrayTag<JArrayType>>;
   using AsArg = std::tuple<JArrayType, RefBaseTag<JArrayType>,
@@ -4022,20 +4233,6 @@ struct ProxyHelper {
   using AsArg_t = typename Proxy_t::AsArg;
 
   using AsDecl_t = typename Proxy_t::AsDecl;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// MetaFunction Helpers.
-////////////////////////////////////////////////////////////////////////////////
-struct ProxyAsArgMetaFunc {
-  template <typename T>
-  using type = Arg_t<T, void>;
-};
-
-template <const auto& loader, const auto& class_v>
-struct ProxyAsDeclMetaFunc {
-  template <typename T>
-  using type = AsDecl_t<T>;
 };
 
 }  // namespace jni
@@ -4439,7 +4636,7 @@ struct InputParamSelection {
   // parameter is contextually correct given the arguments.
   template <typename... Ts>
   static constexpr bool kValid = Proxy_t<UnstrippedRawVal>::template kViable<
-      InputParamSelection, param_idx,
+      InputParamSelection,
       metaprogramming::TypeOfNthElement_t<param_idx, Ts...>>;
 };
 
@@ -4448,20 +4645,17 @@ struct InputParamSelection {
 
 namespace jni {
 
-template <const auto& class_loader_v_, const auto& class_v_, size_t field_idx_>
+template <typename JniTypeT, size_t field_idx_>
 struct FieldSelection {
-  static constexpr const auto& GetClass() { return class_v_; }
-  static constexpr const auto& GetClassLoader() { return class_loader_v_; }
-
   static constexpr auto& GetField() {
-    return std::get<field_idx_>(class_v_.fields_);
+    return std::get<field_idx_>(JniTypeT::class_v.fields_);
   }
   static constexpr auto& Val() {
-    return std::get<field_idx_>(class_v_.fields_);
+    return std::get<field_idx_>(JniTypeT::class_v.fields_);
   }
 
   static constexpr auto& GetReturn() {
-    return std::get<field_idx_>(class_v_.fields_);
+    return std::get<field_idx_>(JniTypeT::class_v.fields_);
   }
 
   using FieldT = std::decay_t<decltype(GetField().raw_)>;
@@ -4615,18 +4809,17 @@ struct OverloadRef {
 // Helper class for ObjectRef to inherit from.
 // Inheriting from MethodMapHelper::type exposes an operator() which keys on
 // method names.
-template <const auto& class_loader_v, const auto& class_v_, typename CrtpBase_>
+template <typename JniTypeT, typename CrtpBase_>
 struct MethodMapHelper {
-  using MethodTup = std::decay_t<decltype(class_v_.methods_)>;
-  using ClassTDecayed = std::decay_t<decltype(class_v_)>;
+  using MethodTup = std::decay_t<decltype(JniTypeT::class_v.methods_)>;
 
-  using type = metaprogramming::InvocableMap<CrtpBase_, class_v_, ClassTDecayed,
-                                             &ClassTDecayed::methods_>;
+  using type = metaprogramming::InvocableMap<CrtpBase_, JniTypeT::class_v,
+                                             typename JniTypeT::ClassT,
+                                             &JniTypeT::ClassT::methods_>;
 };
 
-template <const auto& class_loader_v, const auto& class_v_, typename CrtpBase_>
-using MethodMap_t =
-    typename MethodMapHelper<class_loader_v, class_v_, CrtpBase_>::type;
+template <typename JniTypeT, typename CrtpBase_>
+using MethodMap_t = typename MethodMapHelper<JniTypeT, CrtpBase_>::type;
 
 }  // namespace jni
 
@@ -4649,11 +4842,12 @@ static inline auto& GetDefaultLoadedFieldList() {
 //
 // Note, this class performs no cleanup on destruction.  jFieldIDs are static
 // throughout the duration of a JVM's life, see JvmRef for teardown.
-template <const auto& class_loader_v_, const auto& class_v_, size_t I>
+template <typename JniTypeT, std::size_t I>
 class FieldRef {
  public:
-  using Raw = Raw_t<std::decay_t<decltype(std::get<I>(class_v_.fields_))>>;
-  using FieldSelectionT = FieldSelection<class_loader_v_, class_v_, I>;
+  using Raw =
+      Raw_t<std::decay_t<decltype(std::get<I>(JniTypeT::class_v.fields_))>>;
+  using FieldSelectionT = FieldSelection<JniTypeT, I>;
 
   explicit FieldRef(jclass class_ref, jobject object_ref)
       : class_ref_(class_ref), object_ref_(object_ref) {}
@@ -4662,10 +4856,12 @@ class FieldRef {
   FieldRef(const FieldRef&&) = delete;
   void operator=(const FieldRef&) = delete;
 
-  static constexpr auto& GetField() { return std::get<I>(class_v_.fields_); }
+  static constexpr auto& GetField() {
+    return std::get<I>(JniTypeT::class_v.fields_);
+  }
 
   static constexpr std::string_view GetFieldSignature() {
-    return FieldSelection<class_loader_v_, class_v_, I>::GetSignature();
+    return FieldSelection<JniTypeT, I>::GetSignature();
   }
 
   // This method is thread safe.
@@ -4673,7 +4869,7 @@ class FieldRef {
     static jni::metaprogramming::DoubleLockedValue<jfieldID> return_value;
 
     return return_value.LoadAndMaybeInit([=]() {
-      if constexpr (class_loader_v_ == kDefaultClassLoader) {
+      if constexpr (JniTypeT::class_loader_v == kDefaultClassLoader) {
         GetDefaultLoadedFieldList().push_back(&return_value);
       }
 
@@ -4719,8 +4915,7 @@ template <typename OverloadSelectionT, size_t param_idx>
 struct InputParamSelection;
 
 // Represents an indexing into a specific class and method.
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx>
+template <typename JniType, bool is_constructor, size_t method_idx>
 struct MethodSelection;
 
 // Represents a specific overload selection.
@@ -4728,43 +4923,41 @@ template <typename MethodSelectionT, size_t overload_idx>
 struct OverloadSelection;
 
 // Helper to find overloads for a given arg set.
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx, typename... Args>
+template <typename JniType, bool is_constructor, size_t method_idx,
+          typename... Args>
 struct OverloadSelectionForArgsImpl;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helper Aliases.
 ////////////////////////////////////////////////////////////////////////////////
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx>
-using MethodSelection_t =
-    MethodSelection<class_loader_v_, class_v_, is_constructor, method_idx>;
+template <typename JniType, bool is_constructor, size_t method_idx>
+using MethodSelection_t = MethodSelection<JniType, is_constructor, method_idx>;
 
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx, typename... Args>
+template <typename JniType, bool is_constructor, size_t method_idx,
+          typename... Args>
 using MethodSelectionForArgs_t =
-    OverloadSelectionForArgsImpl<class_loader_v_, class_v_, is_constructor,
-                                 method_idx, Args...>;
+    OverloadSelectionForArgsImpl<JniType, is_constructor, method_idx, Args...>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation Details.
 ////////////////////////////////////////////////////////////////////////////////
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx>
+template <typename JniType, bool is_constructor, size_t method_idx>
 struct MethodSelection {
   static constexpr bool kIsConstructor = is_constructor;
 
-  static constexpr const auto& GetClass() { return class_v_; }
-  static constexpr const auto& GetClassLoader() { return class_loader_v_; }
+  static constexpr const auto& GetClass() { return JniType::class_v; }
+  static constexpr const auto& GetClassLoader() {
+    return JniType::class_loader_v;
+  }
 
   static constexpr const auto& GetMethod() {
     if constexpr (is_constructor) {
       static_assert(method_idx == 0,
                     "If using MethodSelection for a constructor, there is only "
                     "ever one method (\"<init>\"), set method_idx to 0.");
-      return class_v_.constructors_;
+      return JniType::class_v.constructors_;
     } else {
-      return std::get<method_idx>(class_v_.methods_);
+      return std::get<method_idx>(JniType::class_v.methods_);
     }
   }
 
@@ -4772,13 +4965,13 @@ struct MethodSelection {
     if constexpr (is_constructor) {
       return "<init>";
     } else {
-      return std::get<method_idx>(class_v_.methods_).name_;
+      return std::get<method_idx>(JniType::class_v.methods_).name_;
     }
   }
 
   static constexpr std::size_t NumOverloads() {
     if constexpr (is_constructor) {
-      return std::tuple_size<decltype(class_v_.constructors_)>();
+      return std::tuple_size<decltype(JniType::class_v.constructors_)>();
     } else {
       return std::tuple_size<decltype(GetMethod().invocations_)>();
     }
@@ -4923,11 +5116,11 @@ struct OverloadSelection {
   }
 };
 
-template <const auto& class_loader_v_, const auto& class_v_,
-          bool is_constructor, size_t method_idx, typename... Args>
+template <typename JniType, bool is_constructor, size_t method_idx,
+          typename... Args>
 struct OverloadSelectionForArgsImpl {
   using MethodSelectionForArgs =
-      MethodSelection_t<class_loader_v_, class_v_, is_constructor, method_idx>;
+      MethodSelection_t<JniType, is_constructor, method_idx>;
   using OverloadSelectionForArgs =
       typename MethodSelectionForArgs::template FindOverloadSelection<Args...>;
   using OverloadRef =
@@ -5051,7 +5244,11 @@ class JvmRef : public JvmRefBase {
     template <size_t... Is>
     static constexpr void TeardownClass(
         std::index_sequence<Is...> index_sequence) {
-      (ClassRef<jvm_v_, ClassLoaderIdx, Is>::MaybeReleaseClassRef(), ...);
+      (ClassRef<JniType<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_,
+                        0, Is, ClassLoaderIdx>
+
+                >::MaybeReleaseClassRef(),
+       ...);
     }
   };
 
@@ -5145,19 +5342,18 @@ namespace jni {
 //
 // To call methods on the object, use the  operator(), to access fields, use
 // operator[].
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
-class ObjectRef
-    : public MethodMap_t<class_loader_v_, class_v_,
-                         ObjectRef<jvm_v_, class_v_, class_loader_v_>>,
-      public metaprogramming::QueryableMap_t<
-          ObjectRef<jvm_v_, class_v_, class_loader_v_>, class_v_,
-          &std::decay_t<decltype(class_v_)>::fields_>,
-      public RefBase<jobject, class_v_, class_loader_v_> {
+template <typename JniTypeT>
+class ObjectRef : public MethodMap_t<JniTypeT, ObjectRef<JniTypeT>>,
+                  public metaprogramming::QueryableMap_t<
+                      ObjectRef<JniTypeT>, JniTypeT::class_v,
+                      &std::decay_t<decltype(JniTypeT::class_v)>::fields_>,
+                  public RefBase<JniTypeT> {
  protected:
   static_assert(
-      class_loader_v_.template SupportedDirectlyOrIndirectly<class_v_>(),
+      JniTypeT::class_loader_v
+          .template SupportedDirectlyOrIndirectly<JniTypeT::class_v>(),
       "This class is not directly or indirectly supported by this loader.");
-  using RefBase = RefBase<jobject, class_v_, class_loader_v_>;
+  using RefBase = RefBase<JniTypeT>;
 
   ObjectRef() = delete;
   explicit ObjectRef(ObjectRef&& rhs) = default;
@@ -5165,8 +5361,9 @@ class ObjectRef
   ObjectRef& operator=(const ObjectRef& rhs) = delete;
 
   jclass GetJClass() const {
-    return ClassRef_t<jvm_v_, class_loader_v_,
-                      class_v_>::GetAndMaybeLoadClassRef(*RefBase::object_ref_);
+    return ClassRef_t<
+        JniTypeT::jvm_v, JniTypeT::class_loader_v,
+        JniTypeT::class_v>::GetAndMaybeLoadClassRef(*RefBase::object_ref_);
   }
 
  public:
@@ -5176,7 +5373,7 @@ class ObjectRef
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
     using MethodSelectionForArgs =
-        MethodSelectionForArgs_t<class_loader_v_, class_v_, false, I, Args...>;
+        MethodSelectionForArgs_t<JniTypeT, false, I, Args...>;
 
     static_assert(MethodSelectionForArgs::kIsValidArgSet,
                   "JNI Error: Invalid argument set.");
@@ -5188,19 +5385,17 @@ class ObjectRef
   // Invoked through CRTP from QueryableMap.
   template <size_t I>
   auto QueryableMapCall(const char* key) const {
-    return FieldRef<class_loader_v_, class_v_, I>{GetJClass(),
-                                                  *RefBase::object_ref_};
+    return FieldRef<JniTypeT, I>{GetJClass(), *RefBase::object_ref_};
   }
 };
 
 // Imbues constructors for ObjectRefs and handles calling the correct
 // intermediate constructors.  Access to this class is constrainted for non
 // default classloaders (see |ValidatorProxy|).
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
-class ConstructorValidator
-    : public ObjectRef<jvm_v_, class_v_, class_loader_v_> {
+template <typename JniTypeT>
+class ConstructorValidator : public ObjectRef<JniTypeT> {
  public:
-  using Base = ObjectRef<jvm_v_, class_v_, class_loader_v_>;
+  using Base = ObjectRef<JniTypeT>;
   using Base::Base;
 
   // Objects can still be wrapped.  This could happen if a classloaded object
@@ -5211,13 +5406,12 @@ class ConstructorValidator
   friend class ClassLoaderRef;
 
   static constexpr std::size_t kNumConstructors =
-      std::tuple_size_v<decltype(class_v_.constructors_)>;
+      std::tuple_size_v<decltype(JniTypeT::class_v.constructors_)>;
 
   template <typename... Args>
   struct Helper {
     // 0 is (always) used to represent the constructor.
-    using type =
-        MethodSelectionForArgs_t<class_loader_v_, class_v_, true, 0, Args...>;
+    using type = MethodSelectionForArgs_t<JniTypeT, true, 0, Args...>;
   };
 
   template <typename... Args>
@@ -5246,25 +5440,15 @@ class ConstructorValidator
   }
 };
 
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
-struct ValidatorProxy
-    : public ConstructorValidator<jvm_v_, class_v_, class_loader_v_> {
-  ValidatorProxy(jobject obj) : Base(obj) {}
-
- protected:
-  using Base = ConstructorValidator<jvm_v_, class_v_, class_loader_v_>;
+template <typename JniTypeT>
+struct ValidatorProxy : public ConstructorValidator<JniTypeT> {
+  using Base = ConstructorValidator<JniTypeT>;
   using Base::Base;
 };
 
-template <const auto& jvm_v_, const auto& class_v_>
-struct ValidatorProxy<jvm_v_, kDefaultClassLoader, class_v_>
-    : public ConstructorValidator<jvm_v_, class_v_, kDefaultClassLoader> {
-  using Base = ConstructorValidator<jvm_v_, class_v_, kDefaultClassLoader>;
-  using Base::Base;
-};
-
-template <const auto& jvm_v_, const auto& class_v_, const auto& class_loader_v_>
-using ObjectRefBuilder_t = ValidatorProxy<jvm_v_, class_v_, class_loader_v_>;
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+using ObjectRefBuilder_t =
+    ValidatorProxy<JniType<jobject, class_v_, class_loader_v_, jvm_v_>>;
 
 }  // namespace jni
 
@@ -5279,9 +5463,9 @@ template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class LocalObject
-    : public ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_> {
+    : public ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_> {
  public:
-  using ObjectRefT = ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_>;
+  using ObjectRefT = ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>;
   using ObjectRefT::ObjectRefT;
 
   LocalObject(jobject object) : ObjectRefT(object) {}
@@ -5315,9 +5499,9 @@ template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class GlobalObject
-    : public ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_> {
+    : public ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_> {
  public:
-  using ObjectRefT = ObjectRefBuilder_t<jvm_v_, class_v_, class_loader_v_>;
+  using ObjectRefT = ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>;
   using ObjectRefT::ObjectRefT;
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
@@ -5367,7 +5551,8 @@ namespace jni {
 
 template <const auto& jvm_v_, const auto& class_loader_v_>
 class ClassLoaderRef
-    : public ObjectRef<kDefaultJvm, kJavaLangClassLoader, kDefaultClassLoader> {
+    : public ObjectRef<JniType<jobject, kJavaLangClassLoader,
+                               kDefaultClassLoader, kDefaultJvm>> {
  private:
   // Returns kDefaultJvm for default class loaded objects, otherwise returns the
   // jvm associated with this loader.  Default loaders do not use indexing,
@@ -5384,8 +5569,8 @@ class ClassLoaderRef
 
  public:
   ClassLoaderRef(jobject class_loader)
-      : ObjectRef<kDefaultJvm, kJavaLangClassLoader, kDefaultClassLoader>(
-            class_loader) {}
+      : ObjectRef<JniType<jobject, kJavaLangClassLoader, kDefaultClassLoader,
+                          kDefaultJvm>>(class_loader) {}
 
   static_assert(class_loader_v_ != kDefaultClassLoader,
                 "Custom class loaders should not use the default class loader,"
@@ -5452,7 +5637,7 @@ class LocalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
   }
 
  private:
-  template <const auto&, const auto&, const auto&>
+  template <typename>
   friend class ObjectRef;
 };
 
