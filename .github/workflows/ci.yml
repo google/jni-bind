@@ -1,0 +1,16 @@
+name: JNI Bind CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: test
+      run: bazel test --cxxopt='-std=c++17' --repo_env=CC=clang ...
