@@ -1,5 +1,7 @@
 # JNI Bind
 
+![Ubuntu Build](https://github.com/google/jni-bind/actions/workflows/ci.yml/badge.svg)
+
 `JNI Bind` is a new metaprogramming library that provides syntactic sugar for `C++` => `Java/Kotlin`.  It is header only and provides sophisticated type conversion with compile time validation of method calls and field accesses.
 
 It requires clang enabled at C++17 or later, is compatible with Android, and is unit / E2E tested on `x86`/`ARM` toolchains.

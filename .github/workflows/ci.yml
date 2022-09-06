@@ -1,4 +1,4 @@
-name: JNI Bind CI
+name: JNI Bind Build/Test Status
 
 on:
   push:
