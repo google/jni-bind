@@ -37,8 +37,6 @@ It requires clang enabled at C++17 or later, is compatible with Android, and is 
 - [Upcoming Features](#upcoming-features)
 - [License](#license)
 
-https://github.com/google/jni-bind/actions/workflows/ci.yml/badge.svg
-
 <a name="quick-intro"></a>
 ## Quick Intro
 

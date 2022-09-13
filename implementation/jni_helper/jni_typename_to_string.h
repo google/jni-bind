@@ -33,7 +33,7 @@ namespace jni {
 // Additionally, Android will obnoxiously fail to compile the standard looking:
 //    static constexpr char kStr[] = "SomeString";
 //
-// Because it is against style to import have a using declaration header wide,
+// Because it is against style to import a using declaration header wide,
 // but these are also template definitions, they must remain in this header, and
 // so there are goofy looking "using literal" declarations throughout.
 //

@@ -24,6 +24,7 @@
 #include "implementation/array.h"
 #include "implementation/array_ref.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/id.h"
 #include "implementation/input_param_selection.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
 #include "implementation/method_ref.h"
@@ -74,6 +75,10 @@ using MethodSelectionForArgs_t =
 ////////////////////////////////////////////////////////////////////////////////
 template <typename JniType, bool is_constructor, size_t method_idx>
 struct MethodSelection {
+  static constexpr IdType kIdType =
+      is_constructor ? IdType::CONSTRUCTOR : IdType::OVERLOAD_SET;
+  using IdT = Id<JniType, JniType::class_v, kIdType, method_idx>;
+
   static constexpr bool kIsConstructor = is_constructor;
 
   static constexpr const auto& GetClass() { return JniType::class_v; }
@@ -92,13 +97,7 @@ struct MethodSelection {
     }
   }
 
-  static constexpr const auto& Name() {
-    if constexpr (is_constructor) {
-      return "<init>";
-    } else {
-      return std::get<method_idx>(JniType::class_v.methods_).name_;
-    }
-  }
+  static constexpr const char* Name() { return IdT::Name(); }
 
   static constexpr std::size_t NumOverloads() {
     if constexpr (is_constructor) {

@@ -1,0 +1,120 @@
+/*
+ * Copyright 2022 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <string_view>
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include "jni_bind.h"
+
+namespace {
+
+using ::jni::Class;
+using ::jni::Constructor;
+using ::jni::Field;
+using ::jni::Id;
+using ::jni::IdType;
+using ::jni::JniType;
+using ::jni::kNoIdxSpecified;
+using ::jni::Method;
+using ::jni::Overload;
+using ::jni::Params;
+using ::jni::Return;
+
+static constexpr Class kClass1{
+    "kClass1", Constructor{}, Constructor{jint{}},
+    Constructor{jfloat{}, jboolean{}},
+    Method{"m0", jni::Return<void>{}, Params{}},
+    Method{"m1", jni::Return<jshort>{}, Params<jint>{}},
+    Method{"m2", jni::Return{Class{"kClass2"}}, Params<jfloat, jboolean>{}},
+    Method{
+        "m3",
+        Overload{jni::Return<void>{}, Params{}},
+        Overload{jni::Return<jint>{}, Params<jboolean>{}},
+        Overload{jni::Return<jfloat>{}, Params<jshort, jdouble>{}},
+    },
+    // Currently unimplemented.
+    Field("f1", int{})};
+
+using JT = JniType<jobject, kClass1>;
+
+////////////////////////////////////////////////////////////////////////////////
+// Constructors
+////////////////////////////////////////////////////////////////////////////////
+using kCtor0 = Id<JT, kClass1, IdType::CONSTRUCTOR, 0>;
+using kCtor1 = Id<JT, kClass1, IdType::CONSTRUCTOR, 1>;
+using kCtor2 = Id<JT, kClass1, IdType::CONSTRUCTOR, 2>;
+
+static_assert(kCtor0::NumParams() == 0);
+static_assert(kCtor1::NumParams() == 1);
+static_assert(kCtor2::NumParams() == 2);
+
+static_assert(std::string_view{"I"} ==
+              Id<JT, kClass1, IdType::CONSTRUCTOR_PARAM, 1, 0>::Signature());
+static_assert(std::string_view{"F"} ==
+              Id<JT, kClass1, IdType::CONSTRUCTOR_PARAM, 2, 0>::Signature());
+static_assert(std::string_view{"Z"} ==
+              Id<JT, kClass1, IdType::CONSTRUCTOR_PARAM, 2, 1>::Signature());
+
+static_assert(std::string_view{"()V"} == kCtor0::Signature());
+static_assert(std::string_view{"(I)V"} == kCtor1::Signature());
+static_assert(std::string_view{"(FZ)V"} == kCtor2::Signature());
+
+////////////////////////////////////////////////////////////////////////////////
+// Methods (Overload sets with only one overload)
+////////////////////////////////////////////////////////////////////////////////
+using kMethod0 = Id<JT, kClass1, IdType::OVERLOAD, 0, 0>;
+using kMethod1 = Id<JT, kClass1, IdType::OVERLOAD, 1, 0>;
+using kMethod2 = Id<JT, kClass1, IdType::OVERLOAD, 2, 0>;
+
+static_assert(kMethod0::NumParams() == 0);
+static_assert(kMethod1::NumParams() == 1);
+static_assert(kMethod2::NumParams() == 2);
+
+static_assert(std::string_view{"V"} ==
+              Id<JT, kClass1, IdType::OVERLOAD_PARAM, 0, 0>::Signature());
+static_assert(std::string_view{"S"} ==
+              Id<JT, kClass1, IdType::OVERLOAD_PARAM, 1, 0>::Signature());
+static_assert(std::string_view{"I"} ==
+              Id<JT, kClass1, IdType::OVERLOAD_PARAM, 1, 0, 0>::Signature());
+static_assert(std::string_view{"LkClass2;"} ==
+              Id<JT, kClass1, IdType::OVERLOAD_PARAM, 2, 0,
+                 kNoIdxSpecified>::Signature());
+static_assert(std::string_view{"F"} ==
+              Id<JT, kClass1, IdType::OVERLOAD_PARAM, 2, 0, 0>::Signature());
+static_assert(std::string_view{"Z"} ==
+              Id<JT, kClass1, IdType::OVERLOAD_PARAM, 2, 0, 1>::Signature());
+
+static_assert(std::string_view{"()V"} == kMethod0::Signature());
+static_assert(std::string_view{"(I)S"} == kMethod1::Signature());
+static_assert(std::string_view{"(FZ)LkClass2;"} == kMethod2::Signature());
+
+////////////////////////////////////////////////////////////////////////////////
+// Overloaded Method (smoke test, they should behave the same).
+////////////////////////////////////////////////////////////////////////////////
+using kMethod3Overload0 = Id<JT, kClass1, IdType::OVERLOAD, 3, 0>;
+using kMethod3Overload1 = Id<JT, kClass1, IdType::OVERLOAD, 3, 1>;
+using kMethod3Overload2 = Id<JT, kClass1, IdType::OVERLOAD, 3, 2>;
+
+static_assert(kMethod3Overload0::NumParams() == 0);
+static_assert(kMethod3Overload1::NumParams() == 1);
+static_assert(kMethod3Overload2::NumParams() == 2);
+
+static_assert(std::string_view{"()V"} == kMethod3Overload0::Signature());
+static_assert(std::string_view{"(Z)I"} == kMethod3Overload1::Signature());
+static_assert(std::string_view{"(SD)F"} == kMethod3Overload2::Signature());
+
+}  // namespace

@@ -49,6 +49,7 @@ static constexpr std::string_view kInit{"<init>"};
 static constexpr std::string_view kComma{","};
 static constexpr std::string_view kSemiColon{";"};
 static constexpr std::string_view kLetterL{"L"};
+static constexpr std::string_view kLetterV{"V"};
 
 }  // namespace jni
 

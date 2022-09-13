@@ -26,11 +26,13 @@
 #include "implementation/class_loader.h"
 #include "implementation/constructor.h"
 #include "implementation/field.h"
+#include "implementation/id.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/method.h"
 #include "implementation/params.h"
 #include "implementation/return.h"
+#include "implementation/selector_static_info.h"
 #include "implementation/string.h"
 #include "implementation/supported_class_set.h"
 

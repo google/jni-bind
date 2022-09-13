@@ -302,6 +302,25 @@ cc_test(
 )
 
 cc_library(
+    name = "id",
+    hdrs = ["id.h"],
+    deps = [
+        ":array",
+        ":name_constants",
+        ":selector_static_info",
+    ],
+)
+
+cc_test(
+    name = "id_test",
+    srcs = ["id_test.cc"],
+    deps = [
+        "//:jni_bind",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "input_param_selection",
     hdrs = ["input_param_selection.h"],
     deps = [
@@ -449,6 +468,7 @@ cc_library(
         ":array",
         ":array_ref",
         ":default_class_loader",
+        ":id",
         ":input_param_selection",
         ":method_ref",
         ":proxy",
