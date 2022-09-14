@@ -111,36 +111,21 @@ struct Id {
           : (kIdType == IdType::OVERLOAD ? IdType::OVERLOAD_PARAM
                                          : IdType::CLASS);
 
-  // This can be further generalised to accept a container which will be a
-  // useful refactor in the future.
-  // Note, in order to represent void, the |NumParams()|+1 is passed.
+  // Helper to generate signature for body of prototype.
+  // Note, in order to represent void, the |NumParams()|+1 is passed. An index
+  // must be present for every index, so void parameters and the the final
+  // parameter share logic.
   template <typename IdxPack, std::size_t iterator_idx_>
   struct Helper;
 
   template <std::size_t... Is, std::size_t iterator_idx_>
   struct Helper<std::index_sequence<Is...>, iterator_idx_> {
-    // All parameters from 2 onward (note the leading ",").
     template <std::size_t I>
     struct Val {
       static constexpr std::string_view kVal =
-          Id<JniType, root, kChildIdType, (iterator_idx_ == 0 ? (I - 1) : idx),
-             (iterator_idx_ == 1 ? (I - 1) : secondary_idx),
-             (iterator_idx_ == 2 ? (I - 1) : tertiary_idx)>::Signature();
-    };
-
-    // First paramater (if one exists).  Note, no leading comma.
-    template <>
-    struct Val<1> {
-      static constexpr std::string_view kVal =
-          Id<JniType, root, kChildIdType, (iterator_idx_ == 0 ? 0 : idx),
-             (iterator_idx_ == 1 ? 0 : secondary_idx),
-             (iterator_idx_ == 2 ? 0 : tertiary_idx)>::Signature();
-    };
-
-    // Void function (note, this will be mutually exclusive with the above).
-    template <>
-    struct Val<0> {
-      static constexpr std::string_view kVal = "";
+          Id<JniType, root, kChildIdType, (iterator_idx_ == 0 ? I : idx),
+             (iterator_idx_ == 1 ? I : secondary_idx),
+             (iterator_idx_ == 2 ? I : tertiary_idx)>::Signature();
     };
 
     static constexpr std::string_view kVal =
@@ -155,7 +140,7 @@ struct Id {
 
   // Generates the body of the signature for methods and constructors.
   static constexpr std::string_view SignatureBodyHelper() {
-    using Idxs = std::make_index_sequence<NumParams() + 1>;
+    using Idxs = std::make_index_sequence<NumParams()>;
 
     if constexpr (kIdType == IdType::CONSTRUCTOR) {
       return metaprogramming::StringConcatenate_v<
