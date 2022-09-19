@@ -35,7 +35,9 @@ using ::jni::Params;
 using ::jni::Return;
 
 static constexpr Class kClass1{
-    "kClass1", Constructor{}, Constructor{jint{}},
+    "kClass1",
+    Constructor{},
+    Constructor{jint{}},
     Constructor{jfloat{}, jboolean{}},
     Method{"m0", jni::Return<void>{}, Params{}},
     Method{"m1", jni::Return<jshort>{}, Params<jint>{}},
@@ -46,8 +48,8 @@ static constexpr Class kClass1{
         Overload{jni::Return<jint>{}, Params<jboolean>{}},
         Overload{jni::Return<jfloat>{}, Params<jshort, jdouble>{}},
     },
-    // Currently unimplemented.
-    Field("f1", int{})};
+    Field{"f0", int{}},
+    Field{"f1", Class{"kClass2"}}};
 
 using JT = JniType<jobject, kClass1>;
 
@@ -61,6 +63,10 @@ using kCtor2 = Id<JT, kClass1, IdType::CONSTRUCTOR, 2>;
 static_assert(kCtor0::NumParams() == 0);
 static_assert(kCtor1::NumParams() == 1);
 static_assert(kCtor2::NumParams() == 2);
+
+static_assert(kCtor0::Name() == std::string_view{"<init>"});
+static_assert(kCtor1::Name() == std::string_view{"<init>"});
+static_assert(kCtor2::Name() == std::string_view{"<init>"});
 
 static_assert(std::string_view{"I"} ==
               Id<JT, kClass1, IdType::CONSTRUCTOR_PARAM, 1, 0>::Signature());
@@ -76,13 +82,22 @@ static_assert(std::string_view{"(FZ)V"} == kCtor2::Signature());
 ////////////////////////////////////////////////////////////////////////////////
 // Methods (Overload sets with only one overload)
 ////////////////////////////////////////////////////////////////////////////////
-using kMethod0 = Id<JT, kClass1, IdType::OVERLOAD, 0, 0>;
-using kMethod1 = Id<JT, kClass1, IdType::OVERLOAD, 1, 0>;
-using kMethod2 = Id<JT, kClass1, IdType::OVERLOAD, 2, 0>;
 
-static_assert(kMethod0::NumParams() == 0);
-static_assert(kMethod1::NumParams() == 1);
-static_assert(kMethod2::NumParams() == 2);
+using kMethod0 = Id<JT, kClass1, IdType::OVERLOAD_SET, 0>;
+using kMethod1 = Id<JT, kClass1, IdType::OVERLOAD_SET, 1>;
+using kMethod2 = Id<JT, kClass1, IdType::OVERLOAD_SET, 2>;
+
+static_assert(kMethod0::Name() == std::string_view{"m0"});
+static_assert(kMethod1::Name() == std::string_view{"m1"});
+static_assert(kMethod2::Name() == std::string_view{"m2"});
+
+using kMethod0Overload0 = Id<JT, kClass1, IdType::OVERLOAD, 0, 0>;
+using kMethod1Overload0 = Id<JT, kClass1, IdType::OVERLOAD, 1, 0>;
+using kMethod2Overload0 = Id<JT, kClass1, IdType::OVERLOAD, 2, 0>;
+
+static_assert(kMethod0Overload0::NumParams() == 0);
+static_assert(kMethod1Overload0::NumParams() == 1);
+static_assert(kMethod2Overload0::NumParams() == 2);
 
 static_assert(std::string_view{"V"} ==
               Id<JT, kClass1, IdType::OVERLOAD_PARAM, 0, 0>::Signature());
@@ -98,9 +113,10 @@ static_assert(std::string_view{"F"} ==
 static_assert(std::string_view{"Z"} ==
               Id<JT, kClass1, IdType::OVERLOAD_PARAM, 2, 0, 1>::Signature());
 
-static_assert(std::string_view{"()V"} == kMethod0::Signature());
-static_assert(std::string_view{"(I)S"} == kMethod1::Signature());
-static_assert(std::string_view{"(FZ)LkClass2;"} == kMethod2::Signature());
+static_assert(std::string_view{"()V"} == kMethod0Overload0::Signature());
+static_assert(std::string_view{"(I)S"} == kMethod1Overload0::Signature());
+static_assert(std::string_view{"(FZ)LkClass2;"} ==
+              kMethod2Overload0::Signature());
 
 ////////////////////////////////////////////////////////////////////////////////
 // Overloaded Method (smoke test, they should behave the same).
@@ -116,5 +132,17 @@ static_assert(kMethod3Overload2::NumParams() == 2);
 static_assert(std::string_view{"()V"} == kMethod3Overload0::Signature());
 static_assert(std::string_view{"(Z)I"} == kMethod3Overload1::Signature());
 static_assert(std::string_view{"(SD)F"} == kMethod3Overload2::Signature());
+
+////////////////////////////////////////////////////////////////////////////////
+// Fields (Overload sets with only one overload)
+////////////////////////////////////////////////////////////////////////////////
+using kField0 = Id<JT, kClass1, IdType::FIELD, 0>;
+using kField1 = Id<JT, kClass1, IdType::FIELD, 1>;
+
+static_assert(std::string_view{"f0"} == kField0::Name());
+static_assert(std::string_view{"f1"} == kField1::Name());
+
+static_assert(std::string_view{"I"} == kField0::Signature());
+static_assert(std::string_view{"LkClass2;"} == kField1::Signature());
 
 }  // namespace

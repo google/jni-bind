@@ -58,7 +58,7 @@ struct Id {
       return std::get<secondary_idx>(
           std::get<idx>(root.constructors_).params_.values_);
     } else if constexpr (kIdType == IdType::FIELD) {
-      return std::get<idx>(root.fields_);
+      return std::get<idx>(root.fields_).raw_;
     } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
       return std::get<idx>(root.methods_);
     } else if constexpr (kIdType == IdType::OVERLOAD) {
@@ -77,13 +77,18 @@ struct Id {
   }
 
   using RawValT = std::decay_t<decltype(Val())>;
+
   static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(Val());
 
   static constexpr const char* Name() {
     if constexpr (kIdType == IdType::CONSTRUCTOR) {
       return "<init>";
-    } else {
+    } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
       return Val().name_;
+    } else if constexpr (kIdType == IdType::FIELD) {
+      return std::get<idx>(root.fields_).name_;
+    } else {
+      "NO_NAME";
     }
   }
 
@@ -145,10 +150,12 @@ struct Id {
     if constexpr (kIdType == IdType::CONSTRUCTOR) {
       return metaprogramming::StringConcatenate_v<
           kLeftParenthesis, Helper<Idxs, 1>::kVal, kRightParenthesis, kLetterV>;
-    } else {
+    } else if constexpr (kIdType == IdType::OVERLOAD) {
       return metaprogramming::StringConcatenate_v<
           kLeftParenthesis, Helper<Idxs, 2>::kVal, kRightParenthesis,
           ReturnHelper::kVal>;
+    } else {
+      return "NOT_IMPLEMENTED";
     }
   }
 
@@ -159,6 +166,10 @@ struct Id {
       return SignatureBodyHelper();
     } else if constexpr (kIdType == IdType::CONSTRUCTOR_PARAM) {
       return SelectorStaticInfo<Id>::TypeName();
+    } else if constexpr (kIdType == IdType::FIELD) {
+      return SelectorStaticInfo<Id>::TypeName();
+    } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
+      return "NOT_IMPLEMENTED";
     } else if constexpr (kIdType == IdType::OVERLOAD) {
       return SignatureBodyHelper();
     } else if constexpr (kIdType == IdType::OVERLOAD_PARAM) {
