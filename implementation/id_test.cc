@@ -22,6 +22,7 @@
 
 namespace {
 
+using ::jni::Array;
 using ::jni::Class;
 using ::jni::Constructor;
 using ::jni::Field;
@@ -47,6 +48,14 @@ static constexpr Class kClass1{
         Overload{jni::Return<void>{}, Params{}},
         Overload{jni::Return<jint>{}, Params<jboolean>{}},
         Overload{jni::Return<jfloat>{}, Params<jshort, jdouble>{}},
+    },
+    Method{
+        "m4",
+        Overload{jni::Return{Array{jboolean{}}}, Params{Array{jint{}}}},
+        Overload{jni::Return{Array{Array{jboolean{}}}},
+                 Params{Array{Array{jfloat{}}}}},
+        Overload{jni::Return{Array{Array{Array{jboolean{}}}}},
+                 Params{Array{Array{Array{jshort{}}}}}},
     },
     Field{"f0", int{}},
     Field{"f1", Class{"kClass2"}}};
@@ -86,6 +95,7 @@ static_assert(std::string_view{"(FZ)V"} == kCtor2::Signature());
 using kMethod0 = Id<JT, kClass1, IdType::OVERLOAD_SET, 0>;
 using kMethod1 = Id<JT, kClass1, IdType::OVERLOAD_SET, 1>;
 using kMethod2 = Id<JT, kClass1, IdType::OVERLOAD_SET, 2>;
+using kMethod3 = Id<JT, kClass1, IdType::OVERLOAD_SET, 3>;
 
 static_assert(kMethod0::Name() == std::string_view{"m0"});
 static_assert(kMethod1::Name() == std::string_view{"m1"});
@@ -125,6 +135,10 @@ using kMethod3Overload0 = Id<JT, kClass1, IdType::OVERLOAD, 3, 0>;
 using kMethod3Overload1 = Id<JT, kClass1, IdType::OVERLOAD, 3, 1>;
 using kMethod3Overload2 = Id<JT, kClass1, IdType::OVERLOAD, 3, 2>;
 
+using kMethod4Overload0 = Id<JT, kClass1, IdType::OVERLOAD, 4, 0>;
+using kMethod4Overload1 = Id<JT, kClass1, IdType::OVERLOAD, 4, 1>;
+using kMethod4Overload2 = Id<JT, kClass1, IdType::OVERLOAD, 4, 2>;
+
 static_assert(kMethod3Overload0::NumParams() == 0);
 static_assert(kMethod3Overload1::NumParams() == 1);
 static_assert(kMethod3Overload2::NumParams() == 2);
@@ -132,6 +146,10 @@ static_assert(kMethod3Overload2::NumParams() == 2);
 static_assert(std::string_view{"()V"} == kMethod3Overload0::Signature());
 static_assert(std::string_view{"(Z)I"} == kMethod3Overload1::Signature());
 static_assert(std::string_view{"(SD)F"} == kMethod3Overload2::Signature());
+
+static_assert(std::string_view{"([I)[Z"} == kMethod4Overload0::Signature());
+static_assert(std::string_view{"([[F)[[Z"} == kMethod4Overload1::Signature());
+static_assert(std::string_view{"([[[S)[[[Z"} == kMethod4Overload2::Signature());
 
 ////////////////////////////////////////////////////////////////////////////////
 // Fields (Overload sets with only one overload)
