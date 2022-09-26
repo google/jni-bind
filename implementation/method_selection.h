@@ -216,45 +216,6 @@ struct OverloadSelection {
   static constexpr size_t OverloadIdxIfViable() {
     return OverloadViable<Ts...>() ? overload_idx : kNoSelection;
   }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  // Static Signature Generation.
-  ////////////////////////////////////////////////////////////////////////////////
-  template <typename Is>
-  struct ParamHelper;
-
-  template <>
-  struct ParamHelper<std::index_sequence<>> {
-    static constexpr std::string_view val = "";
-  };
-
-  template <size_t... Is>
-  struct ParamHelper<std::index_sequence<Is...>> {
-    static constexpr std::string_view val =
-        metaprogramming::StringConcatenate_v<SelectorStaticInfo<
-            InputParamSelection<OverloadSelection, Is>>::kTypeName...>;
-  };
-
-  static constexpr std::string_view kParamSignature =
-      metaprogramming::StringConcatenate_v<
-          kLeftParenthesis,
-          ParamHelper<std::make_index_sequence<kNumParams>>::val,
-          kRightParenthesis>;
-
-  static constexpr std::string_view GetReturnSignature() {
-    if constexpr (MethodSelectionT::kIsConstructor) {
-      return "V";
-    } else {
-      return SelectorStaticInfo<
-          InputParamSelection<OverloadSelection, kIsReturnIdx>>::kTypeName;
-    }
-  }
-
-  static constexpr std::string_view kReturnSignature = GetReturnSignature();
-
-  static constexpr std::string_view GetOverloadSignature() {
-    return IdT::Signature();
-  }
 };
 
 template <typename JniType, bool is_constructor, size_t method_idx,

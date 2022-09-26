@@ -54,7 +54,7 @@ struct OverloadRef {
   using ReturnProxied = typename Overload::AsReturn;
 
   static constexpr std::string_view GetMethodSignature() {
-    return Overload::GetOverloadSignature();
+    return Overload::IdT::Signature();
   }
 
   static jmethodID GetMethodID(jclass clazz) {

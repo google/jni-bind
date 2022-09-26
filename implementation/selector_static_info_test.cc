@@ -109,17 +109,4 @@ static_assert(
     SelectorStaticInfo<InputParamSelection<FooOverload<6>, 0>>::kTypeName ==
     "[I");
 
-////////////////////////////////////////////////////////////////////////////////
-// Overload Signature Generation.
-////////////////////////////////////////////////////////////////////////////////
-static_assert(FooOverload<0>::GetOverloadSignature() == "()I");
-static_assert(FooOverload<1>::GetOverloadSignature() == "()F");
-static_assert(FooOverload<2>::GetOverloadSignature() == "()LkClass2;");
-static_assert(FooOverload<3>::GetOverloadSignature() ==
-              "(IFLkClass2;)LkClass2;");
-
-static_assert(FooOverload<6>::GetOverloadSignature() == "([I)V");
-static_assert(FooOverload<7>::GetOverloadSignature() ==
-              "([I[LkClass2;)[LkClass2;");
-
 }  // namespace
