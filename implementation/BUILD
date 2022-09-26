@@ -259,6 +259,7 @@ cc_library(
     name = "field_selection",
     hdrs = ["field_selection.h"],
     deps = [
+        ":id",
         ":name_constants",
         ":object",
         ":selector_static_info",

@@ -64,7 +64,7 @@ class FieldRef {
   }
 
   static constexpr std::string_view GetFieldSignature() {
-    return FieldSelection<JniTypeT, I>::GetSignature();
+    return FieldSelection<JniTypeT, I>::IdT::Signature();
   }
 
   // This method is thread safe.

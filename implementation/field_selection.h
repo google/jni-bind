@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_FIELD_SELECTION_H_
 #define JNI_BIND_FIELD_SELECTION_H_
 
+#include "implementation/id.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
 #include "implementation/name_constants.h"
 #include "implementation/object.h"
@@ -27,6 +28,8 @@ namespace jni {
 
 template <typename JniTypeT, size_t field_idx_>
 struct FieldSelection {
+  using IdT = Id<JniTypeT, JniTypeT::class_v, IdType::FIELD, field_idx_>;
+
   static constexpr auto& GetField() {
     return std::get<field_idx_>(JniTypeT::class_v.fields_);
   }
@@ -40,34 +43,6 @@ struct FieldSelection {
 
   using FieldT = std::decay_t<decltype(GetField().raw_)>;
   using RawValT = std::decay_t<decltype(GetField().raw_)>;
-
-  static constexpr bool kIsObject = std::is_base_of_v<Object, FieldT>;
-  static constexpr std::size_t kRank = 1;
-
-  static constexpr std::string_view NameOrNothingIfNotAnObject() {
-    if constexpr (kIsObject) {
-      return SelectorStaticInfo<
-          FieldSelection>::TypeNameOrNothingIfNotAnObject();
-    } else {
-      return "";
-    }
-  }
-
-  static constexpr std::string_view kNameOrNothingIfNotAnObject =
-      NameOrNothingIfNotAnObject();
-
-  static constexpr std::string_view FieldTypeName() {
-    if constexpr (kIsObject) {
-      return metaprogramming::StringConcatenate_v<
-          kLetterL, kNameOrNothingIfNotAnObject, kSemiColon>;
-    } else {
-      return JavaTypeToString<FieldT>();
-    }
-  }
-
-  static constexpr std::string_view kName = FieldTypeName();
-
-  static constexpr std::string_view GetSignature() { return kName; }
 };
 
 }  // namespace jni
