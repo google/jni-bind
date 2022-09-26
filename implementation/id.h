@@ -51,12 +51,14 @@ struct Id {
     if constexpr (kIdType == IdType::CLASS) {
       return root;
     } else if constexpr (kIdType == IdType::CONSTRUCTOR) {
-      return std::get<idx>(root.constructors_);
+      static_assert(idx == kNoIdxSpecified);
+      return std::get<secondary_idx>(root.constructors_);
     } else if constexpr (kIdType == IdType::CONSTRUCTOR_SET) {
       return root.constructors_;
     } else if constexpr (kIdType == IdType::CONSTRUCTOR_PARAM) {
-      return std::get<secondary_idx>(
-          std::get<idx>(root.constructors_).params_.values_);
+      static_assert(idx == kNoIdxSpecified);
+      return std::get<tertiary_idx>(
+          std::get<secondary_idx>(root.constructors_).params_.values_);
     } else if constexpr (kIdType == IdType::FIELD) {
       return std::get<idx>(root.fields_).raw_;
     } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
@@ -94,8 +96,8 @@ struct Id {
 
   static constexpr std::size_t NumParams() {
     if constexpr (kIdType == IdType::CONSTRUCTOR) {
-      static_assert(idx != kNoIdxSpecified &&
-                    secondary_idx == kNoIdxSpecified &&
+      static_assert(idx == kNoIdxSpecified &&
+                    secondary_idx != kNoIdxSpecified &&
                     tertiary_idx == kNoIdxSpecified);
       return std::tuple_size_v<decltype(Val().params_.values_)>;
     } else if (kIdType == IdType::OVERLOAD) {
@@ -140,7 +142,7 @@ struct Id {
   struct ReturnHelper {
     static constexpr std::string_view kVal =
         Id<JniType, root, kChildIdType, idx, secondary_idx,
-           kNoIdxSpecified>::Signature();
+           tertiary_idx>::Signature();
   };
 
   // Generates the body of the signature for methods and constructors.
@@ -149,7 +151,7 @@ struct Id {
 
     if constexpr (kIdType == IdType::CONSTRUCTOR) {
       return metaprogramming::StringConcatenate_v<
-          kLeftParenthesis, Helper<Idxs, 1>::kVal, kRightParenthesis, kLetterV>;
+          kLeftParenthesis, Helper<Idxs, 2>::kVal, kRightParenthesis, kLetterV>;
     } else if constexpr (kIdType == IdType::OVERLOAD) {
       return metaprogramming::StringConcatenate_v<
           kLeftParenthesis, Helper<Idxs, 2>::kVal, kRightParenthesis,

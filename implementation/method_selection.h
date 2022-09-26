@@ -51,7 +51,7 @@ template <typename JniType, bool is_constructor, size_t method_idx>
 struct MethodSelection;
 
 // Represents a specific overload selection.
-template <typename MethodSelectionT, size_t overload_idx>
+template <typename JniType, typename MethodSelectionT, size_t overload_idx>
 struct OverloadSelection;
 
 // Helper to find overloads for a given arg set.
@@ -77,7 +77,12 @@ template <typename JniType, bool is_constructor, size_t method_idx>
 struct MethodSelection {
   static constexpr IdType kIdType =
       is_constructor ? IdType::CONSTRUCTOR : IdType::OVERLOAD_SET;
-  using IdT = Id<JniType, JniType::class_v, kIdType, method_idx>;
+
+  static constexpr std::size_t kMethodIdx =
+      is_constructor ? kNoIdxSpecified : method_idx;
+
+  using IdT = Id<JniType, JniType::class_v, kIdType, kMethodIdx,
+                 is_constructor ? method_idx : kNoIdxSpecified>;
 
   static constexpr bool kIsConstructor = is_constructor;
 
@@ -113,13 +118,14 @@ struct MethodSelection {
   template <size_t... Is, typename... Ts>
   struct Helper<std::index_sequence<Is...>, Ts...> {
     static constexpr bool val =
-        (OverloadSelection<MethodSelection, Is>::template OverloadViable<Ts...>() ||
+        (OverloadSelection<JniType, MethodSelection,
+                           Is>::template OverloadViable<Ts...>() ||
          ...);
 
     // kNoSelection is the max of std::size_t, so, this essentially selects any
     // idx (if a valid one exists), or defaults to kNoSelection.
     static constexpr std::size_t overload_idx_if_valid{std::min(
-        {OverloadSelection<MethodSelection,
+        {OverloadSelection<JniType, MethodSelection,
                            Is>::template OverloadIdxIfViable<Ts...>()...})};
   };
 
@@ -138,7 +144,7 @@ struct MethodSelection {
 
   template <typename... Ts>
   using FindOverloadSelection =
-      OverloadSelection<MethodSelection, IdxForArgs<Ts...>()>;
+      OverloadSelection<JniType, MethodSelection, IdxForArgs<Ts...>()>;
 };
 
 template <typename OverloadSelectionT>
@@ -161,8 +167,14 @@ struct ArgumentValidate {
              std::make_index_sequence<sizeof...(Ts)>, Ts...>::kValid;
 };
 
-template <typename MethodSelectionT, size_t overload_idx>
+template <typename JniType, typename MethodSelectionT, size_t overload_idx>
 struct OverloadSelection {
+  ;
+  using IdT = Id<JniType, JniType::class_v,
+                 MethodSelectionT::kIsConstructor ? IdType::CONSTRUCTOR
+                                                  : IdType::OVERLOAD,
+                 MethodSelectionT::kMethodIdx, overload_idx>;
+
   static constexpr Return kObjectWhenConstructed{
       Class{MethodSelectionT::GetClass().name_}};
 
@@ -241,8 +253,7 @@ struct OverloadSelection {
   static constexpr std::string_view kReturnSignature = GetReturnSignature();
 
   static constexpr std::string_view GetOverloadSignature() {
-    return metaprogramming::StringConcatenate_v<kParamSignature,
-                                                kReturnSignature>;
+    return IdT::Signature();
   }
 };
 

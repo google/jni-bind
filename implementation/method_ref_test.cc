@@ -38,7 +38,8 @@ template <const auto& class_loader_v, const auto& class_v, size_t I>
 struct FirstOverloadFirstPermutation {
   using IthMethodSelection =
       MethodSelection_t<JniType<jobject, class_v, class_loader_v>, false, I>;
-  using FirstOverload = OverloadSelection<IthMethodSelection, 0>;
+  using JniTypeT = JniType<jobject, class_v, class_loader_v>;
+  using FirstOverload = OverloadSelection<JniTypeT, IthMethodSelection, 0>;
 
   using type = OverloadRef<IthMethodSelection, FirstOverload>;
 };

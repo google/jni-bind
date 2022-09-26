@@ -65,9 +65,9 @@ using JT = JniType<jobject, kClass1>;
 ////////////////////////////////////////////////////////////////////////////////
 // Constructors
 ////////////////////////////////////////////////////////////////////////////////
-using kCtor0 = Id<JT, kClass1, IdType::CONSTRUCTOR, 0>;
-using kCtor1 = Id<JT, kClass1, IdType::CONSTRUCTOR, 1>;
-using kCtor2 = Id<JT, kClass1, IdType::CONSTRUCTOR, 2>;
+using kCtor0 = Id<JT, kClass1, IdType::CONSTRUCTOR, kNoIdxSpecified, 0>;
+using kCtor1 = Id<JT, kClass1, IdType::CONSTRUCTOR, kNoIdxSpecified, 1>;
+using kCtor2 = Id<JT, kClass1, IdType::CONSTRUCTOR, kNoIdxSpecified, 2>;
 
 static_assert(kCtor0::NumParams() == 0);
 static_assert(kCtor1::NumParams() == 1);
@@ -78,11 +78,14 @@ static_assert(kCtor1::Name() == std::string_view{"<init>"});
 static_assert(kCtor2::Name() == std::string_view{"<init>"});
 
 static_assert(std::string_view{"I"} ==
-              Id<JT, kClass1, IdType::CONSTRUCTOR_PARAM, 1, 0>::Signature());
+              Id<JT, kClass1, IdType::CONSTRUCTOR_PARAM, kNoIdxSpecified, 1,
+                 0>::Signature());
 static_assert(std::string_view{"F"} ==
-              Id<JT, kClass1, IdType::CONSTRUCTOR_PARAM, 2, 0>::Signature());
+              Id<JT, kClass1, IdType::CONSTRUCTOR_PARAM, kNoIdxSpecified, 2,
+                 0>::Signature());
 static_assert(std::string_view{"Z"} ==
-              Id<JT, kClass1, IdType::CONSTRUCTOR_PARAM, 2, 1>::Signature());
+              Id<JT, kClass1, IdType::CONSTRUCTOR_PARAM, kNoIdxSpecified, 2,
+                 1>::Signature());
 
 static_assert(std::string_view{"()V"} == kCtor0::Signature());
 static_assert(std::string_view{"(I)V"} == kCtor1::Signature());

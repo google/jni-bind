@@ -61,9 +61,11 @@ using MethodSelection_t =
 
 using FooMethodT = MethodSelection_t<kClass, false, 0>;
 
+using JniTt = JniType<jobject, kClass>;
+
 // Helper for tests.
 template <size_t overload_idx>
-using FooOverload = jni::OverloadSelection<FooMethodT, overload_idx>;
+using FooOverload = jni::OverloadSelection<JniTt, FooMethodT, overload_idx>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Return signature tests.
