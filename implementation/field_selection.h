@@ -30,19 +30,9 @@ template <typename JniTypeT, size_t field_idx_>
 struct FieldSelection {
   using IdT = Id<JniTypeT, IdType::FIELD, field_idx_>;
 
-  static constexpr auto& GetField() {
-    return std::get<field_idx_>(JniTypeT::class_v.fields_);
-  }
-  static constexpr auto& Val() {
-    return std::get<field_idx_>(JniTypeT::class_v.fields_);
-  }
-
   static constexpr auto& GetReturn() {
     return std::get<field_idx_>(JniTypeT::class_v.fields_);
   }
-
-  using FieldT = std::decay_t<decltype(GetField().raw_)>;
-  using RawValT = std::decay_t<decltype(GetField().raw_)>;
 };
 
 }  // namespace jni

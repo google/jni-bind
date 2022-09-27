@@ -24,6 +24,7 @@
 
 #include "implementation/class_ref.h"
 #include "implementation/field_selection.h"
+#include "implementation/id.h"
 #include "implementation/jni_helper/field_value.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/proxy.h"
@@ -48,8 +49,7 @@ static inline auto& GetDefaultLoadedFieldList() {
 template <typename JniTypeT, std::size_t I>
 class FieldRef {
  public:
-  using Raw =
-      Raw_t<std::decay_t<decltype(std::get<I>(JniTypeT::class_v.fields_))>>;
+  using IdT = Id<JniTypeT, IdType::FIELD, I>;
   using FieldSelectionT = FieldSelection<JniTypeT, I>;
 
   explicit FieldRef(jclass class_ref, jobject object_ref)
@@ -58,14 +58,6 @@ class FieldRef {
   FieldRef(const FieldRef&) = delete;
   FieldRef(const FieldRef&&) = delete;
   void operator=(const FieldRef&) = delete;
-
-  static constexpr auto& GetField() {
-    return std::get<I>(JniTypeT::class_v.fields_);
-  }
-
-  static constexpr std::string_view GetFieldSignature() {
-    return FieldSelection<JniTypeT, I>::IdT::Signature();
-  }
 
   // This method is thread safe.
   static jfieldID GetFieldID(jclass clazz) {
@@ -76,22 +68,22 @@ class FieldRef {
         GetDefaultLoadedFieldList().push_back(&return_value);
       }
 
-      return jni::JniHelper::GetFieldID(clazz, GetField().name_,
-                                        GetFieldSignature().data());
+      return jni::JniHelper::GetFieldID(clazz, IdT::Name(),
+                                        IdT::Signature().data());
     });
   }
 
-  using ProxyForField = Proxy_t<Raw>;
-  using CDeclForField = CDecl_t<Raw>;
+  using ProxyForField = Proxy_t<typename IdT::RawValT>;
+  using CDeclForField = CDecl_t<typename IdT::RawValT>;
 
-  Return_t<Raw, FieldSelectionT> Get() {
+  Return_t<typename IdT::RawValT, FieldSelectionT> Get() {
     return FieldHelper<CDeclForField>::GetValue(object_ref_,
                                                 GetFieldID(class_ref_));
   }
 
   template <typename T>
   void Set(T&& value) {
-    FieldHelper<CDecl_t<Raw>>::SetValue(
+    FieldHelper<CDecl_t<typename IdT::RawValT>>::SetValue(
         object_ref_, GetFieldID(class_ref_),
         ProxyForField::ProxyAsArg(std::forward<T>(value)));
   }

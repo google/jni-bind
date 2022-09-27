@@ -234,6 +234,7 @@ cc_library(
     deps = [
         ":class_ref",
         ":field_selection",
+        ":id",
         ":proxy",
         "//:jni_dep",
         "//implementation/jni_helper",
