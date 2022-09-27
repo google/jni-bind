@@ -30,9 +30,6 @@ namespace jni {
 
 enum class IdType {
   CLASS,
-  CONSTRUCTOR_SET,
-  CONSTRUCTOR,
-  CONSTRUCTOR_PARAM,
   FIELD,
   OVERLOAD_SET,
   OVERLOAD,
@@ -51,30 +48,45 @@ struct Id {
   static constexpr const auto& Val() {
     if constexpr (kIdType == IdType::CLASS) {
       return root;
-    } else if constexpr (kIdType == IdType::CONSTRUCTOR) {
-      static_assert(idx == kNoIdxSpecified);
-      return std::get<secondary_idx>(root.constructors_);
-    } else if constexpr (kIdType == IdType::CONSTRUCTOR_SET) {
-      return root.constructors_;
-    } else if constexpr (kIdType == IdType::CONSTRUCTOR_PARAM) {
-      static_assert(idx == kNoIdxSpecified);
-      return std::get<tertiary_idx>(
-          std::get<secondary_idx>(root.constructors_).params_.values_);
     } else if constexpr (kIdType == IdType::FIELD) {
       return std::get<idx>(root.fields_).raw_;
     } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
-      return std::get<idx>(root.methods_);
-    } else if constexpr (kIdType == IdType::OVERLOAD) {
-      return std::get<secondary_idx>(std::get<idx>(root.methods_).invocations_);
-    } else if constexpr (kIdType == IdType::OVERLOAD_PARAM) {
-      if constexpr (tertiary_idx == kNoIdxSpecified) {
-        return std::get<secondary_idx>(
-                   std::get<idx>(root.methods_).invocations_)
-            .return_.raw_;
+      if constexpr (idx == kNoIdxSpecified) {
+        return root.constructors_;
       } else {
-        return std::get<tertiary_idx>(
-            std::get<secondary_idx>(std::get<idx>(root.methods_).invocations_)
-                .params_.values_);
+        return std::get<idx>(root.methods_);
+      }
+    } else if constexpr (kIdType == IdType::OVERLOAD) {
+      if constexpr (idx == kNoIdxSpecified) {
+        // Constructor.
+        return std::get<secondary_idx>(root.constructors_);
+      } else {
+        // Overload.
+        return std::get<secondary_idx>(
+            std::get<idx>(root.methods_).invocations_);
+      }
+    } else if constexpr (kIdType == IdType::OVERLOAD_PARAM) {
+      if constexpr (idx == kNoIdxSpecified) {
+        // Constructor.
+        if constexpr (tertiary_idx == kNoIdxSpecified) {
+          // Return.
+          return Void{};
+        } else {
+          return std::get<tertiary_idx>(
+              std::get<secondary_idx>(root.constructors_).params_.values_);
+        }
+      } else {
+        // Overload.
+        if constexpr (tertiary_idx == kNoIdxSpecified) {
+          // Return.
+          return std::get<secondary_idx>(
+                     std::get<idx>(root.methods_).invocations_)
+              .return_.raw_;
+        } else {
+          return std::get<tertiary_idx>(
+              std::get<secondary_idx>(std::get<idx>(root.methods_).invocations_)
+                  .params_.values_);
+        }
       }
     }
   }
@@ -84,56 +96,38 @@ struct Id {
   static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(Val());
 
   static constexpr const char* Name() {
-    if constexpr (kIdType == IdType::CONSTRUCTOR) {
+    if constexpr (kIdType == IdType::OVERLOAD_SET && idx == kNoIdxSpecified) {
       return "<init>";
     } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
       return Val().name_;
+    } else if constexpr (kIdType == IdType::OVERLOAD) {
+      return Id<JniType, IdType::OVERLOAD_SET, idx, secondary_idx>::Name();
     } else if constexpr (kIdType == IdType::FIELD) {
       return std::get<idx>(root.fields_).name_;
     } else {
-      "NO_NAME";
+      return "NO_NAME";
     }
   }
 
   static constexpr std::size_t NumParams() {
-    if constexpr (kIdType == IdType::CONSTRUCTOR) {
-      static_assert(idx == kNoIdxSpecified &&
-                    secondary_idx != kNoIdxSpecified &&
-                    tertiary_idx == kNoIdxSpecified);
+    if constexpr (kIdType == IdType::OVERLOAD) {
       return std::tuple_size_v<decltype(Val().params_.values_)>;
-    } else if (kIdType == IdType::OVERLOAD) {
-      static_assert(idx != kNoIdxSpecified &&
-                    secondary_idx != kNoIdxSpecified &&
-                    tertiary_idx == kNoIdxSpecified);
-      return std::tuple_size_v<decltype(Val().params_.values_)>;
+    } else {
+      // Other types don't have meaningful use of this.
+      return 1;
     }
-
-    // Other types don't have meaningful use of this.
-    return 1;
   }
 
-  // Represents the IdType for the natural sub-object (if any), else CLASS.
-  static constexpr IdType kChildIdType =
-      kIdType == IdType::CONSTRUCTOR
-          ? IdType::CONSTRUCTOR_PARAM
-          : (kIdType == IdType::OVERLOAD ? IdType::OVERLOAD_PARAM
-                                         : IdType::CLASS);
-
-  // Helper to generate signature for body of prototype.
-  // Note, in order to represent void, the |NumParams()|+1 is passed. An index
-  // must be present for every index, so void parameters and the the final
-  // parameter share logic.
-  template <typename IdxPack, std::size_t iterator_idx_>
+  template <typename IdxPack>
   struct Helper;
 
-  template <std::size_t... Is, std::size_t iterator_idx_>
-  struct Helper<std::index_sequence<Is...>, iterator_idx_> {
+  template <std::size_t... Is>
+  struct Helper<std::index_sequence<Is...>> {
     template <std::size_t I>
     struct Val {
       static constexpr std::string_view kVal =
-          Id<JniType, kChildIdType, (iterator_idx_ == 0 ? I : idx),
-             (iterator_idx_ == 1 ? I : secondary_idx),
-             (iterator_idx_ == 2 ? I : tertiary_idx)>::Signature();
+          Id<JniType, IdType::OVERLOAD_PARAM, idx, secondary_idx,
+             I>::Signature();
     };
 
     static constexpr std::string_view kVal =
@@ -142,39 +136,21 @@ struct Id {
 
   struct ReturnHelper {
     static constexpr std::string_view kVal =
-        Id<JniType, kChildIdType, idx, secondary_idx,
-           tertiary_idx>::Signature();
+        Id<JniType, IdType::OVERLOAD_PARAM, idx, secondary_idx>::Signature();
   };
-
-  // Generates the body of the signature for methods and constructors.
-  static constexpr std::string_view SignatureBodyHelper() {
-    using Idxs = std::make_index_sequence<NumParams()>;
-
-    if constexpr (kIdType == IdType::CONSTRUCTOR) {
-      return metaprogramming::StringConcatenate_v<
-          kLeftParenthesis, Helper<Idxs, 2>::kVal, kRightParenthesis, kLetterV>;
-    } else if constexpr (kIdType == IdType::OVERLOAD) {
-      return metaprogramming::StringConcatenate_v<
-          kLeftParenthesis, Helper<Idxs, 2>::kVal, kRightParenthesis,
-          ReturnHelper::kVal>;
-    } else {
-      return "NOT_IMPLEMENTED";
-    }
-  }
 
   // For methods and ctors generates the signature, e.g. "(II)LClass1;".
   // For parameters, emits just a type name.
   static constexpr std::string_view Signature() {
-    if constexpr (kIdType == IdType::CONSTRUCTOR) {
-      return SignatureBodyHelper();
-    } else if constexpr (kIdType == IdType::CONSTRUCTOR_PARAM) {
-      return SelectorStaticInfo<Id>::TypeName();
-    } else if constexpr (kIdType == IdType::FIELD) {
+    if constexpr (kIdType == IdType::FIELD) {
       return SelectorStaticInfo<Id>::TypeName();
     } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
       return "NOT_IMPLEMENTED";
     } else if constexpr (kIdType == IdType::OVERLOAD) {
-      return SignatureBodyHelper();
+      using Idxs = std::make_index_sequence<NumParams()>;
+      return metaprogramming::StringConcatenate_v<
+          kLeftParenthesis, Helper<Idxs>::kVal, kRightParenthesis,
+          ReturnHelper::kVal>;
     } else if constexpr (kIdType == IdType::OVERLOAD_PARAM) {
       return SelectorStaticInfo<Id>::TypeName();
     }

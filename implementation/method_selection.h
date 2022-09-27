@@ -75,8 +75,7 @@ using MethodSelectionForArgs_t =
 ////////////////////////////////////////////////////////////////////////////////
 template <typename JniType, bool is_constructor, size_t method_idx>
 struct MethodSelection {
-  static constexpr IdType kIdType =
-      is_constructor ? IdType::CONSTRUCTOR : IdType::OVERLOAD_SET;
+  static constexpr IdType kIdType = IdType::OVERLOAD_SET;
 
   static constexpr std::size_t kMethodIdx =
       is_constructor ? kNoIdxSpecified : method_idx;
@@ -169,10 +168,8 @@ struct ArgumentValidate {
 
 template <typename JniType, typename MethodSelectionT, size_t overload_idx>
 struct OverloadSelection {
-  using IdT = Id<JniType,
-                 MethodSelectionT::kIsConstructor ? IdType::CONSTRUCTOR
-                                                  : IdType::OVERLOAD,
-                 MethodSelectionT::kMethodIdx, overload_idx>;
+  using IdT =
+      Id<JniType, IdType::OVERLOAD, MethodSelectionT::kMethodIdx, overload_idx>;
 
   static constexpr Return kObjectWhenConstructed{
       Class{MethodSelectionT::GetClass().name_}};
