@@ -49,7 +49,7 @@ static inline auto& GetDefaultLoadedMethodList() {
   return *ret_val;
 }
 
-template <typename Method, typename Overload>
+template <typename JniType, typename Method, typename Overload>
 struct OverloadRef {
   using ReturnProxied = typename Overload::AsReturn;
 

@@ -81,7 +81,7 @@ struct MethodSelection {
   static constexpr std::size_t kMethodIdx =
       is_constructor ? kNoIdxSpecified : method_idx;
 
-  using IdT = Id<JniType, JniType::class_v, kIdType, kMethodIdx,
+  using IdT = Id<JniType, kIdType, kMethodIdx,
                  is_constructor ? method_idx : kNoIdxSpecified>;
 
   static constexpr bool kIsConstructor = is_constructor;
@@ -169,8 +169,7 @@ struct ArgumentValidate {
 
 template <typename JniType, typename MethodSelectionT, size_t overload_idx>
 struct OverloadSelection {
-  ;
-  using IdT = Id<JniType, JniType::class_v,
+  using IdT = Id<JniType,
                  MethodSelectionT::kIsConstructor ? IdType::CONSTRUCTOR
                                                   : IdType::OVERLOAD,
                  MethodSelectionT::kMethodIdx, overload_idx>;
@@ -225,8 +224,9 @@ struct OverloadSelectionForArgsImpl {
       MethodSelection_t<JniType, is_constructor, method_idx>;
   using OverloadSelectionForArgs =
       typename MethodSelectionForArgs::template FindOverloadSelection<Args...>;
+
   using OverloadRef =
-      OverloadRef<MethodSelectionForArgs, OverloadSelectionForArgs>;
+      OverloadRef<JniType, MethodSelectionForArgs, OverloadSelectionForArgs>;
 
   static constexpr bool kIsValidArgSet =
       MethodSelectionForArgs::template ArgSetViable<Args...>();

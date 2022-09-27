@@ -42,11 +42,12 @@ enum class IdType {
 static constexpr std::size_t kNoIdxSpecified{
     std::numeric_limits<std::size_t>::max()};
 
-template <typename JniType, const auto& root, IdType kIdType,
-          std::size_t idx = kNoIdxSpecified,
+template <typename JniType, IdType kIdType, std::size_t idx = kNoIdxSpecified,
           std::size_t secondary_idx = kNoIdxSpecified,
           std::size_t tertiary_idx = kNoIdxSpecified>
 struct Id {
+  static constexpr auto& root = JniType::GetClass();
+
   static constexpr const auto& Val() {
     if constexpr (kIdType == IdType::CLASS) {
       return root;
@@ -130,7 +131,7 @@ struct Id {
     template <std::size_t I>
     struct Val {
       static constexpr std::string_view kVal =
-          Id<JniType, root, kChildIdType, (iterator_idx_ == 0 ? I : idx),
+          Id<JniType, kChildIdType, (iterator_idx_ == 0 ? I : idx),
              (iterator_idx_ == 1 ? I : secondary_idx),
              (iterator_idx_ == 2 ? I : tertiary_idx)>::Signature();
     };
@@ -141,7 +142,7 @@ struct Id {
 
   struct ReturnHelper {
     static constexpr std::string_view kVal =
-        Id<JniType, root, kChildIdType, idx, secondary_idx,
+        Id<JniType, kChildIdType, idx, secondary_idx,
            tertiary_idx>::Signature();
   };
 

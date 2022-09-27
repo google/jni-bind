@@ -1,17 +1,18 @@
-// Copyright 2021 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "jni_bind.h"
@@ -19,20 +20,20 @@
 
 namespace {
 
-using jni::Array;
-using jni::Class;
-using jni::JniType;
-using jni::kDefaultClassLoader;
-using jni::Method;
-using jni::MethodSelection_t;
-using jni::OverloadRef;
-using jni::OverloadSelection;
-using jni::Params;
-using jni::test::JniTest;
-using testing::_;
-using testing::Eq;
-using testing::InSequence;
-using testing::StrEq;
+using ::jni::Array;
+using ::jni::Class;
+using ::jni::JniType;
+using ::jni::kDefaultClassLoader;
+using ::jni::Method;
+using ::jni::MethodSelection_t;
+using ::jni::OverloadRef;
+using ::jni::OverloadSelection;
+using ::jni::Params;
+using ::jni::test::JniTest;
+using ::testing::_;
+using ::testing::Eq;
+using ::testing::InSequence;
+using ::testing::StrEq;
 
 template <const auto& class_loader_v, const auto& class_v, size_t I>
 struct FirstOverloadFirstPermutation {
@@ -41,7 +42,7 @@ struct FirstOverloadFirstPermutation {
   using JniTypeT = JniType<jobject, class_v, class_loader_v>;
   using FirstOverload = OverloadSelection<JniTypeT, IthMethodSelection, 0>;
 
-  using type = OverloadRef<IthMethodSelection, FirstOverload>;
+  using type = OverloadRef<JniTypeT, IthMethodSelection, FirstOverload>;
 };
 
 template <const auto& class_loader_v, const auto& class_v, size_t I>
