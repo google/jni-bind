@@ -26,6 +26,7 @@
 #include "field.h"
 #include "object.h"
 #include "implementation/method.h"
+#include "implementation/no_idx.h"
 #include "jni_dep.h"
 #include "metaprogramming/all_unique.h"
 #include "metaprogramming/base_filter.h"
@@ -37,9 +38,6 @@ static constexpr struct NoClass {
   const std::tuple<> methods_{};
   const std::tuple<> fields_{};
 } kNoClassSpecified;
-
-static constexpr std::size_t kNoClassSpecifiedIdx =
-    std::numeric_limits<std::size_t>::max();
 
 template <typename Constructors_, typename Fields_, typename Methods_>
 struct Class {};

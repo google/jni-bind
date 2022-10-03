@@ -46,6 +46,7 @@ cc_library(
         "//implementation:local_class_loader",
         "//implementation:local_object",
         "//implementation:method",
+        "//implementation:no_idx",
         "//implementation:params",
         "//implementation:return",
         "//implementation:selector_static_info",

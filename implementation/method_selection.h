@@ -28,6 +28,7 @@
 #include "implementation/input_param_selection.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
 #include "implementation/method_ref.h"
+#include "implementation/no_idx.h"
 #include "implementation/proxy.h"
 #include "implementation/selector_static_info.h"
 #include "metaprogramming/concatenate.h"
@@ -38,8 +39,6 @@
 #include "metaprogramming/type_of_nth_element.h"
 
 namespace jni {
-
-static constexpr std::size_t kNoSelection = std::numeric_limits<size_t>::max();
 
 // The the type of an exact selection parameter in a method as part of the class
 // specification (vs. the selection of a parameter in some generated candidate).
@@ -121,8 +120,8 @@ struct MethodSelection {
                            Is>::template OverloadViable<Ts...>() ||
          ...);
 
-    // kNoSelection is the max of std::size_t, so, this essentially selects any
-    // idx (if a valid one exists), or defaults to kNoSelection.
+    // kNoIdx is the max of std::size_t, so, this essentially selects any
+    // idx (if a valid one exists), or defaults to kNoIdx.
     static constexpr std::size_t overload_idx_if_valid{std::min(
         {OverloadSelection<JniType, MethodSelection,
                            Is>::template OverloadIdxIfViable<Ts...>()...})};
@@ -134,7 +133,7 @@ struct MethodSelection {
                   std::decay_t<Ts>...>::val;
   }
 
-  // The overload that is viable for a set of args, or |kNoSelection|.
+  // The overload that is viable for a set of args, or |kNoIdx|.
   template <typename... Ts>
   static constexpr std::size_t IdxForArgs() {
     return Helper<std::make_index_sequence<NumOverloads()>,
@@ -210,7 +209,7 @@ struct OverloadSelection {
 
   template <typename... Ts>
   static constexpr size_t OverloadIdxIfViable() {
-    return OverloadViable<Ts...>() ? overload_idx : kNoSelection;
+    return OverloadViable<Ts...>() ? overload_idx : kNoIdx;
   }
 };
 

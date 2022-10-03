@@ -21,18 +21,15 @@
 
 #include "implementation/array.h"
 #include "implementation/id.h"
+#include "implementation/no_idx.h"
 #include "implementation/proxy.h"
 
 namespace jni {
 
-// Represents a return value index for |InputParamSelection|.
-static constexpr std::size_t kIsReturnIdx =
-    std::numeric_limits<std::size_t>::max();
-
 template <typename OverloadSelectionT, size_t param_idx>
 struct InputParamSelection {
-  // If |param_idx| is kIsReturnIdx, this is the return value.
-  static constexpr bool kIsReturn = (param_idx == kIsReturnIdx);
+  // If |param_idx| is kNoIdx, this is the return value.
+  static constexpr bool kIsReturn = (param_idx == kNoIdx);
 
   using IdTParamType = typename OverloadSelectionT::IdT::template ChangeIdType<
       IdType::OVERLOAD_PARAM>;

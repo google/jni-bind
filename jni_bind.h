@@ -30,6 +30,7 @@
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/method.h"
+#include "implementation/no_idx.h"
 #include "implementation/params.h"
 #include "implementation/return.h"
 #include "implementation/selector_static_info.h"

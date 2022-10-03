@@ -19,7 +19,7 @@ using ::jni::Array;
 using ::jni::Class;
 using ::jni::InputParamSelection;
 using ::jni::JniType;
-using ::jni::kIsReturnIdx;
+using ::jni::kNoIdx;
 using ::jni::Method;
 using ::jni::MethodSelection_t;
 using ::jni::Overload;
@@ -70,27 +70,24 @@ using FooOverload = jni::OverloadSelection<JniTt, FooMethodT, overload_idx>;
 ////////////////////////////////////////////////////////////////////////////////
 // Return signature tests.
 ////////////////////////////////////////////////////////////////////////////////
-static_assert(
-    SelectorStaticInfo<
-        InputParamSelection<FooOverload<0>, kIsReturnIdx>>::kTypeName == "I");
-static_assert(
-    SelectorStaticInfo<
-        InputParamSelection<FooOverload<1>, kIsReturnIdx>>::kTypeName == "F");
-static_assert(
-    SelectorStaticInfo<
-        InputParamSelection<FooOverload<2>, kIsReturnIdx>>::kTypeName ==
-    "LkClass2;");
-static_assert(
-    SelectorStaticInfo<
-        InputParamSelection<FooOverload<3>, kIsReturnIdx>>::kTypeName ==
-    "LkClass2;");
-static_assert(
-    SelectorStaticInfo<
-        InputParamSelection<FooOverload<4>, kIsReturnIdx>>::kTypeName == "[I");
-static_assert(
-    SelectorStaticInfo<
-        InputParamSelection<FooOverload<5>, kIsReturnIdx>>::kTypeName ==
-    "[LkClass3;");
+static_assert(SelectorStaticInfo<
+                  InputParamSelection<FooOverload<0>, kNoIdx>>::kTypeName ==
+              "I");
+static_assert(SelectorStaticInfo<
+                  InputParamSelection<FooOverload<1>, kNoIdx>>::kTypeName ==
+              "F");
+static_assert(SelectorStaticInfo<
+                  InputParamSelection<FooOverload<2>, kNoIdx>>::kTypeName ==
+              "LkClass2;");
+static_assert(SelectorStaticInfo<
+                  InputParamSelection<FooOverload<3>, kNoIdx>>::kTypeName ==
+              "LkClass2;");
+static_assert(SelectorStaticInfo<
+                  InputParamSelection<FooOverload<4>, kNoIdx>>::kTypeName ==
+              "[I");
+static_assert(SelectorStaticInfo<
+                  InputParamSelection<FooOverload<5>, kNoIdx>>::kTypeName ==
+              "[LkClass3;");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Param Index Signature Tests.

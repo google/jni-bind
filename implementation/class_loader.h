@@ -24,6 +24,7 @@
 #include "class_defs/java_lang_classes.h"
 #include "implementation/class.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/no_idx.h"
 #include "implementation/supported_class_set.h"
 #include "metaprogramming/all_unique.h"
 #include "metaprogramming/base_filter.h"
@@ -33,9 +34,6 @@ namespace jni {
 
 inline constexpr struct NoClassLoader {
 } kNoClassLoaderSpecified;
-
-static constexpr std::size_t kNoClassLoaderSpecifiedIdx =
-    std::numeric_limits<std::size_t>::max();
 
 // Represents the compile time info we have about a class loader. In general,
 // this is just the list of classes we expect to be loadable from a class loader

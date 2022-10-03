@@ -98,6 +98,7 @@ cc_library(
         ":constructor",
         ":field",
         ":method",
+        ":no_idx",
         ":object",
         "//:jni_dep",
         "//metaprogramming:all_unique",
@@ -139,6 +140,7 @@ cc_library(
     deps = [
         ":class",
         ":default_class_loader",
+        ":no_idx",
         ":supported_class_set",
         "//class_defs:java_lang_classes",
         "//metaprogramming:all_unique",
@@ -309,6 +311,7 @@ cc_library(
     deps = [
         ":array",
         ":name_constants",
+        ":no_idx",
         ":selector_static_info",
     ],
 )
@@ -328,7 +331,31 @@ cc_library(
     deps = [
         ":array",
         ":id",
+        ":no_idx",
         ":proxy",
+    ],
+)
+
+cc_library(
+    name = "jni_type",
+    hdrs = ["jni_type.h"],
+    deps = [
+        ":array_type_conversion",
+        ":class",
+        ":class_loader",
+        ":default_class_loader",
+        ":jvm",
+        "//metaprogramming:vals_equal",
+    ],
+)
+
+cc_test(
+    name = "jni_type_test",
+    srcs = ["jni_type_test.cc"],
+    deps = [
+        ":jni_type",
+        "//:jni_bind",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -474,6 +501,7 @@ cc_library(
         ":id",
         ":input_param_selection",
         ":method_ref",
+        ":no_idx",
         ":proxy",
         ":selector_static_info",
         "//implementation/jni_helper:jni_typename_to_string",
@@ -519,6 +547,11 @@ cc_test(
         "//:jni_bind",
         "@googletest//:gtest_main",
     ],
+)
+
+cc_library(
+    name = "no_idx",
+    hdrs = ["no_idx.h"],
 )
 
 cc_library(
@@ -712,27 +745,4 @@ cc_library(
 cc_library(
     name = "void",
     hdrs = ["void.h"],
-)
-
-cc_library(
-    name = "jni_type",
-    hdrs = ["jni_type.h"],
-    deps = [
-        ":array_type_conversion",
-        ":class",
-        ":class_loader",
-        ":default_class_loader",
-        ":jvm",
-        "//metaprogramming:vals_equal",
-    ],
-)
-
-cc_test(
-    name = "jni_type_test",
-    srcs = ["jni_type_test.cc"],
-    deps = [
-        ":jni_type",
-        "//:jni_bind",
-        "@googletest//:gtest_main",
-    ],
 )
