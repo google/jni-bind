@@ -43,6 +43,14 @@ template <typename JniType, IdType kIdType, std::size_t idx = kNoIdx,
 struct Id {
   static constexpr auto& root = JniType::GetClass();
 
+  template <IdType new_id_type>
+  using ChangeIdType =
+      Id<JniType, new_id_type, idx, secondary_idx, tertiary_idx>;
+
+  template <std::size_t kIdxToChange, std::size_t kNewValue>
+  using ChangeIdx = Id<JniType, kIdType, (kIdxToChange == 0 ? kNewValue : idx),
+                       (kIdxToChange == 1 ? kNewValue : secondary_idx),
+                       (kIdxToChange == 2 ? kNewValue : tertiary_idx)>;
   static constexpr const auto& Val() {
     if constexpr (kIdType == IdType::CLASS) {
       return root;

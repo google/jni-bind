@@ -84,8 +84,9 @@ struct OverloadRef {
           clazz, OverloadRef::GetMethodID(clazz),
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
-      static constexpr std::size_t kRank =
-          InputParamSelection<Overload, kIsReturnIdx>::kRank;
+      using IdReturnT =
+          typename Overload::IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
+      static constexpr std::size_t kRank = IdReturnT::kRank;
 
       // For now, adding +1 because the rest of the type system behaves as if
       // a type is rank 0, and JniMethodInvoke behaves as if void is rank 0.

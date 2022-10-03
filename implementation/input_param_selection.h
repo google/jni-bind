@@ -20,6 +20,7 @@
 #include <limits>
 
 #include "implementation/array.h"
+#include "implementation/id.h"
 #include "implementation/proxy.h"
 
 namespace jni {
@@ -32,6 +33,10 @@ template <typename OverloadSelectionT, size_t param_idx>
 struct InputParamSelection {
   // If |param_idx| is kIsReturnIdx, this is the return value.
   static constexpr bool kIsReturn = (param_idx == kIsReturnIdx);
+
+  using IdTParamType = typename OverloadSelectionT::IdT::template ChangeIdType<
+      IdType::OVERLOAD_PARAM>;
+  using IdT = typename IdTParamType::template ChangeIdx<2, param_idx>;
 
   static constexpr inline const auto& Val() {
     if constexpr (kIsReturn) {

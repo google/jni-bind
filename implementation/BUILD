@@ -327,6 +327,7 @@ cc_library(
     hdrs = ["input_param_selection.h"],
     deps = [
         ":array",
+        ":id",
         ":proxy",
     ],
 )
