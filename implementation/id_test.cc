@@ -40,6 +40,7 @@ static constexpr Class kClass1{
     Constructor{},
     Constructor{jint{}},
     Constructor{jfloat{}, jboolean{}},
+    Constructor{Array{jint{}}},
     Method{"m0", jni::Return<void>{}, Params{}},
     Method{"m1", jni::Return<jshort>{}, Params<jint>{}},
     Method{"m2", jni::Return{Class{"kClass2"}}, Params<jfloat, jboolean>{}},
@@ -68,14 +69,27 @@ using JT = JniType<jobject, kClass1>;
 using kCtor0 = Id<JT, IdType::OVERLOAD, kNoIdxSpecified, 0>;
 using kCtor1 = Id<JT, IdType::OVERLOAD, kNoIdxSpecified, 1>;
 using kCtor2 = Id<JT, IdType::OVERLOAD, kNoIdxSpecified, 2>;
+using kCtor3 = Id<JT, IdType::OVERLOAD, kNoIdxSpecified, 3>;
+using kCtor4 = Id<JT, IdType::OVERLOAD, kNoIdxSpecified, 4>;
 
 static_assert(kCtor0::NumParams() == 0);
 static_assert(kCtor1::NumParams() == 1);
 static_assert(kCtor2::NumParams() == 2);
+static_assert(kCtor3::NumParams() == 1);
 
 static_assert(kCtor0::Name() == std::string_view{"<init>"});
 static_assert(kCtor1::Name() == std::string_view{"<init>"});
 static_assert(kCtor2::Name() == std::string_view{"<init>"});
+static_assert(kCtor3::Name() == std::string_view{"<init>"});
+
+static_assert(0 ==
+              Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 1, 0>::kRank);
+static_assert(0 ==
+              Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 2, 0>::kRank);
+static_assert(0 ==
+              Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 2, 0>::kRank);
+static_assert(1 ==
+              Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 3, 0>::kRank);
 
 static_assert(
     std::string_view{"I"} ==
@@ -86,6 +100,9 @@ static_assert(
 static_assert(
     std::string_view{"Z"} ==
     Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 2, 1>::Signature());
+static_assert(
+    std::string_view{"[I"} ==
+    Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 3, 0>::Signature());
 
 static_assert(std::string_view{"()V"} == kCtor0::Signature());
 static_assert(std::string_view{"(I)V"} == kCtor1::Signature());
@@ -102,14 +119,34 @@ using kMethod3 = Id<JT, IdType::OVERLOAD_SET, 3>;
 static_assert(kMethod0::Name() == std::string_view{"m0"});
 static_assert(kMethod1::Name() == std::string_view{"m1"});
 static_assert(kMethod2::Name() == std::string_view{"m2"});
+static_assert(kMethod3::Name() == std::string_view{"m3"});
 
 using kMethod0Overload0 = Id<JT, IdType::OVERLOAD, 0, 0>;
 using kMethod1Overload0 = Id<JT, IdType::OVERLOAD, 1, 0>;
 using kMethod2Overload0 = Id<JT, IdType::OVERLOAD, 2, 0>;
+using kMethod3Overload0 = Id<JT, IdType::OVERLOAD, 3, 0>;
 
 static_assert(kMethod0Overload0::NumParams() == 0);
 static_assert(kMethod1Overload0::NumParams() == 1);
 static_assert(kMethod2Overload0::NumParams() == 2);
+
+static_assert(0 == Id<JT, IdType::OVERLOAD_PARAM, 0, 0>::kRank);
+static_assert(0 == Id<JT, IdType::OVERLOAD_PARAM, 1, 0>::kRank);
+static_assert(0 == Id<JT, IdType::OVERLOAD_PARAM, 1, 0, 0>::kRank);
+static_assert(0 == Id<JT, IdType::OVERLOAD_PARAM, 2, 0, 0>::kRank);
+static_assert(0 == Id<JT, IdType::OVERLOAD_PARAM, 2, 0, 1>::kRank);
+
+static_assert(std::string_view{"S"} ==
+              Id<JT, IdType::OVERLOAD_PARAM, 1, 0>::Signature());
+static_assert(std::string_view{"I"} ==
+              Id<JT, IdType::OVERLOAD_PARAM, 1, 0, 0>::Signature());
+static_assert(
+    std::string_view{"LkClass2;"} ==
+    Id<JT, IdType::OVERLOAD_PARAM, 2, 0, kNoIdxSpecified>::Signature());
+static_assert(std::string_view{"F"} ==
+              Id<JT, IdType::OVERLOAD_PARAM, 2, 0, 0>::Signature());
+static_assert(std::string_view{"Z"} ==
+              Id<JT, IdType::OVERLOAD_PARAM, 2, 0, 1>::Signature());
 
 static_assert(std::string_view{"V"} ==
               Id<JT, IdType::OVERLOAD_PARAM, 0, 0>::Signature());
@@ -144,6 +181,27 @@ using kMethod4Overload2 = Id<JT, IdType::OVERLOAD, 4, 2>;
 static_assert(kMethod3Overload0::NumParams() == 0);
 static_assert(kMethod3Overload1::NumParams() == 1);
 static_assert(kMethod3Overload2::NumParams() == 2);
+
+static_assert(std::string_view{"m3"} == kMethod3Overload0::Name());
+static_assert(std::string_view{"m4"} == kMethod4Overload0::Name());
+
+using kMethod4Overload0Return = Id<JT, IdType::OVERLOAD_PARAM, 4, 0>;
+using kMethod4Overload0Param0 = Id<JT, IdType::OVERLOAD_PARAM, 4, 0, 0>;
+
+using kMethod4Overload1Return = Id<JT, IdType::OVERLOAD_PARAM, 4, 1>;
+using kMethod4Overload1Param0 = Id<JT, IdType::OVERLOAD_PARAM, 4, 1, 0>;
+
+using kMethod4Overload2Return = Id<JT, IdType::OVERLOAD_PARAM, 4, 2>;
+using kMethod4Overload2Param0 = Id<JT, IdType::OVERLOAD_PARAM, 4, 2, 0>;
+
+static_assert(1 == kMethod4Overload0Param0::kRank);
+static_assert(1 == kMethod4Overload0Return::kRank);
+
+static_assert(2 == kMethod4Overload1Param0::kRank);
+static_assert(2 == kMethod4Overload1Return::kRank);
+
+static_assert(3 == kMethod4Overload2Param0::kRank);
+static_assert(3 == kMethod4Overload2Return::kRank);
 
 static_assert(std::string_view{"()V"} == kMethod3Overload0::Signature());
 static_assert(std::string_view{"(Z)I"} == kMethod3Overload1::Signature());
