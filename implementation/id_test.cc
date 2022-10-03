@@ -29,7 +29,7 @@ using ::jni::Field;
 using ::jni::Id;
 using ::jni::IdType;
 using ::jni::JniType;
-using ::jni::kNoIdxSpecified;
+using ::jni::kNoIdx;
 using ::jni::Method;
 using ::jni::Overload;
 using ::jni::Params;
@@ -66,11 +66,11 @@ using JT = JniType<jobject, kClass1>;
 ////////////////////////////////////////////////////////////////////////////////
 // Constructors
 ////////////////////////////////////////////////////////////////////////////////
-using kCtor0 = Id<JT, IdType::OVERLOAD, kNoIdxSpecified, 0>;
-using kCtor1 = Id<JT, IdType::OVERLOAD, kNoIdxSpecified, 1>;
-using kCtor2 = Id<JT, IdType::OVERLOAD, kNoIdxSpecified, 2>;
-using kCtor3 = Id<JT, IdType::OVERLOAD, kNoIdxSpecified, 3>;
-using kCtor4 = Id<JT, IdType::OVERLOAD, kNoIdxSpecified, 4>;
+using kCtor0 = Id<JT, IdType::OVERLOAD, kNoIdx, 0>;
+using kCtor1 = Id<JT, IdType::OVERLOAD, kNoIdx, 1>;
+using kCtor2 = Id<JT, IdType::OVERLOAD, kNoIdx, 2>;
+using kCtor3 = Id<JT, IdType::OVERLOAD, kNoIdx, 3>;
+using kCtor4 = Id<JT, IdType::OVERLOAD, kNoIdx, 4>;
 
 static_assert(kCtor0::NumParams() == 0);
 static_assert(kCtor1::NumParams() == 1);
@@ -82,27 +82,19 @@ static_assert(kCtor1::Name() == std::string_view{"<init>"});
 static_assert(kCtor2::Name() == std::string_view{"<init>"});
 static_assert(kCtor3::Name() == std::string_view{"<init>"});
 
-static_assert(0 ==
-              Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 1, 0>::kRank);
-static_assert(0 ==
-              Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 2, 0>::kRank);
-static_assert(0 ==
-              Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 2, 0>::kRank);
-static_assert(1 ==
-              Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 3, 0>::kRank);
+static_assert(0 == Id<JT, IdType::OVERLOAD_PARAM, kNoIdx, 1, 0>::kRank);
+static_assert(0 == Id<JT, IdType::OVERLOAD_PARAM, kNoIdx, 2, 0>::kRank);
+static_assert(0 == Id<JT, IdType::OVERLOAD_PARAM, kNoIdx, 2, 0>::kRank);
+static_assert(1 == Id<JT, IdType::OVERLOAD_PARAM, kNoIdx, 3, 0>::kRank);
 
-static_assert(
-    std::string_view{"I"} ==
-    Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 1, 0>::Signature());
-static_assert(
-    std::string_view{"F"} ==
-    Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 2, 0>::Signature());
-static_assert(
-    std::string_view{"Z"} ==
-    Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 2, 1>::Signature());
-static_assert(
-    std::string_view{"[I"} ==
-    Id<JT, IdType::OVERLOAD_PARAM, kNoIdxSpecified, 3, 0>::Signature());
+static_assert(std::string_view{"I"} ==
+              Id<JT, IdType::OVERLOAD_PARAM, kNoIdx, 1, 0>::Signature());
+static_assert(std::string_view{"F"} ==
+              Id<JT, IdType::OVERLOAD_PARAM, kNoIdx, 2, 0>::Signature());
+static_assert(std::string_view{"Z"} ==
+              Id<JT, IdType::OVERLOAD_PARAM, kNoIdx, 2, 1>::Signature());
+static_assert(std::string_view{"[I"} ==
+              Id<JT, IdType::OVERLOAD_PARAM, kNoIdx, 3, 0>::Signature());
 
 static_assert(std::string_view{"()V"} == kCtor0::Signature());
 static_assert(std::string_view{"(I)V"} == kCtor1::Signature());
@@ -140,9 +132,8 @@ static_assert(std::string_view{"S"} ==
               Id<JT, IdType::OVERLOAD_PARAM, 1, 0>::Signature());
 static_assert(std::string_view{"I"} ==
               Id<JT, IdType::OVERLOAD_PARAM, 1, 0, 0>::Signature());
-static_assert(
-    std::string_view{"LkClass2;"} ==
-    Id<JT, IdType::OVERLOAD_PARAM, 2, 0, kNoIdxSpecified>::Signature());
+static_assert(std::string_view{"LkClass2;"} ==
+              Id<JT, IdType::OVERLOAD_PARAM, 2, 0, kNoIdx>::Signature());
 static_assert(std::string_view{"F"} ==
               Id<JT, IdType::OVERLOAD_PARAM, 2, 0, 0>::Signature());
 static_assert(std::string_view{"Z"} ==
@@ -154,9 +145,8 @@ static_assert(std::string_view{"S"} ==
               Id<JT, IdType::OVERLOAD_PARAM, 1, 0>::Signature());
 static_assert(std::string_view{"I"} ==
               Id<JT, IdType::OVERLOAD_PARAM, 1, 0, 0>::Signature());
-static_assert(
-    std::string_view{"LkClass2;"} ==
-    Id<JT, IdType::OVERLOAD_PARAM, 2, 0, kNoIdxSpecified>::Signature());
+static_assert(std::string_view{"LkClass2;"} ==
+              Id<JT, IdType::OVERLOAD_PARAM, 2, 0, kNoIdx>::Signature());
 static_assert(std::string_view{"F"} ==
               Id<JT, IdType::OVERLOAD_PARAM, 2, 0, 0>::Signature());
 static_assert(std::string_view{"Z"} ==

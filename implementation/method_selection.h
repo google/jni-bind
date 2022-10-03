@@ -78,10 +78,10 @@ struct MethodSelection {
   static constexpr IdType kIdType = IdType::OVERLOAD_SET;
 
   static constexpr std::size_t kMethodIdx =
-      is_constructor ? kNoIdxSpecified : method_idx;
+      is_constructor ? kNoIdx : method_idx;
 
-  using IdT = Id<JniType, kIdType, kMethodIdx,
-                 is_constructor ? method_idx : kNoIdxSpecified>;
+  using IdT =
+      Id<JniType, kIdType, kMethodIdx, is_constructor ? method_idx : kNoIdx>;
 
   static constexpr bool kIsConstructor = is_constructor;
 

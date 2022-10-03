@@ -36,12 +36,10 @@ enum class IdType {
   OVERLOAD_PARAM,
 };
 
-static constexpr std::size_t kNoIdxSpecified{
-    std::numeric_limits<std::size_t>::max()};
+static constexpr std::size_t kNoIdx{std::numeric_limits<std::size_t>::max()};
 
-template <typename JniType, IdType kIdType, std::size_t idx = kNoIdxSpecified,
-          std::size_t secondary_idx = kNoIdxSpecified,
-          std::size_t tertiary_idx = kNoIdxSpecified>
+template <typename JniType, IdType kIdType, std::size_t idx = kNoIdx,
+          std::size_t secondary_idx = kNoIdx, std::size_t tertiary_idx = kNoIdx>
 struct Id {
   static constexpr auto& root = JniType::GetClass();
 
@@ -51,13 +49,15 @@ struct Id {
     } else if constexpr (kIdType == IdType::FIELD) {
       return std::get<idx>(root.fields_).raw_;
     } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
-      if constexpr (idx == kNoIdxSpecified) {
+      if constexpr (idx == kNoIdx) {
+        // Constructor.
         return root.constructors_;
       } else {
+        // Overload.
         return std::get<idx>(root.methods_);
       }
     } else if constexpr (kIdType == IdType::OVERLOAD) {
-      if constexpr (idx == kNoIdxSpecified) {
+      if constexpr (idx == kNoIdx) {
         // Constructor.
         return std::get<secondary_idx>(root.constructors_);
       } else {
@@ -66,9 +66,9 @@ struct Id {
             std::get<idx>(root.methods_).invocations_);
       }
     } else if constexpr (kIdType == IdType::OVERLOAD_PARAM) {
-      if constexpr (idx == kNoIdxSpecified) {
+      if constexpr (idx == kNoIdx) {
         // Constructor.
-        if constexpr (tertiary_idx == kNoIdxSpecified) {
+        if constexpr (tertiary_idx == kNoIdx) {
           // Return.
           return Void{};
         } else {
@@ -77,7 +77,7 @@ struct Id {
         }
       } else {
         // Overload.
-        if constexpr (tertiary_idx == kNoIdxSpecified) {
+        if constexpr (tertiary_idx == kNoIdx) {
           // Return.
           return std::get<secondary_idx>(
                      std::get<idx>(root.methods_).invocations_)
@@ -96,7 +96,7 @@ struct Id {
   static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(Val());
 
   static constexpr const char* Name() {
-    if constexpr (kIdType == IdType::OVERLOAD_SET && idx == kNoIdxSpecified) {
+    if constexpr (kIdType == IdType::OVERLOAD_SET && idx == kNoIdx) {
       return "<init>";
     } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
       return Val().name_;
