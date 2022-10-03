@@ -22,18 +22,18 @@
 #include <tuple>
 #include <type_traits>
 
-#include "array.h"
-#include "class.h"
-#include "class_loader.h"
-#include "jvm.h"
-#include "local_array.h"
-#include "local_string.h"
-#include "object.h"
-#include "ref_base.h"
+#include "implementation/array.h"
+#include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/id.h"
+#include "implementation/jvm.h"
+#include "implementation/local_array.h"
+#include "implementation/local_string.h"
 #include "implementation/name_constants.h"
+#include "implementation/object.h"
 #include "implementation/proxy.h"
+#include "implementation/ref_base.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -212,8 +212,8 @@ struct Proxy<JObject,
                                    Container<class_v, class_loader_v, jvm_v>> {
     // TODO(b/174272629): Exclude objects loaded by invalid loaders.
     static constexpr bool kViable =
-        std::string_view(class_v.name_) ==
-        std::string_view(InputParamSelectionT::Val().name_);
+        std::string_view{class_v.name_} ==
+        std::string_view{InputParamSelectionT::IdT::Val().name_};
   };
 
   template <typename OverloadSelection, typename T>

@@ -172,7 +172,7 @@ struct OverloadSelection {
       Id<JniType, IdType::OVERLOAD, MethodSelectionT::kMethodIdx, overload_idx>;
 
   static constexpr Return kObjectWhenConstructed{
-      Class{MethodSelectionT::GetClass().name_}};
+      Class{JniType::GetClass().name_}};
 
   static constexpr const auto& GetReturn() {
     if constexpr (MethodSelectionT::kIsConstructor) {

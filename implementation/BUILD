@@ -576,10 +576,10 @@ cc_library(
     ],
     deps = [
         ":array",
-        ":array_ref",
         ":class",
         ":class_loader",
         ":default_class_loader",
+        ":id",
         ":jvm",
         ":local_array",
         ":name_constants",

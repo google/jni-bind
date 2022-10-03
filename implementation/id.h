@@ -38,9 +38,10 @@ enum class IdType {
 
 static constexpr std::size_t kNoIdx{std::numeric_limits<std::size_t>::max()};
 
-template <typename JniType, IdType kIdType, std::size_t idx = kNoIdx,
+template <typename JniType_, IdType kIdType, std::size_t idx = kNoIdx,
           std::size_t secondary_idx = kNoIdx, std::size_t tertiary_idx = kNoIdx>
 struct Id {
+  using JniType = JniType_;
   static constexpr auto& root = JniType::GetClass();
 
   template <IdType new_id_type>
@@ -80,6 +81,7 @@ struct Id {
           // Return.
           return Void{};
         } else {
+          // Overload return.
           return std::get<tertiary_idx>(
               std::get<secondary_idx>(root.constructors_).params_.values_);
         }

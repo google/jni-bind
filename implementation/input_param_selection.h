@@ -38,18 +38,12 @@ struct InputParamSelection {
       IdType::OVERLOAD_PARAM>;
   using IdT = typename IdTParamType::template ChangeIdx<2, param_idx>;
 
-  static constexpr inline const auto& Val() {
-    if constexpr (kIsReturn) {
-      return OverloadSelectionT::GetReturn().raw_;
-    } else {
-      return std::get<param_idx>(OverloadSelectionT::GetParams().values_);
-    }
-  }
+  static constexpr inline const auto& Val() { return IdT::Val(); }
 
-  using RawValT = ArrayStrip_t<std::decay_t<decltype(Val())>>;
-  using UnstrippedRawVal = std::decay_t<decltype(Val())>;
+  using RawValT = ArrayStrip_t<std::decay_t<decltype(IdT::Val())>>;
+  using UnstrippedRawVal = std::decay_t<decltype(IdT::Val())>;
 
-  static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(Val());
+  static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(IdT::Val());
 
   // Find the appropriate proxy logic for the given argument, and see if that
   // parameter is contextually correct given the arguments.
