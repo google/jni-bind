@@ -101,6 +101,7 @@ struct Id {
   }
 
   using RawValT = ArrayStrip_t<std::decay_t<decltype(Val())>>;
+  using UnstrippedRawVal = std::decay_t<decltype(Val())>;
 
   static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(Val());
 

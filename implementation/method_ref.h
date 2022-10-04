@@ -23,7 +23,6 @@
 
 #include "implementation/class_loader.h"
 #include "implementation/class_ref.h"
-#include "implementation/input_param_selection.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/jni_method_invoke.h"

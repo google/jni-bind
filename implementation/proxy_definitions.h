@@ -205,20 +205,18 @@ struct Proxy<JObject,
     static constexpr bool kViable = std::is_same_v<T, jobject>;
   };
 
-  template <typename InputParamSelectionT,
+  template <typename IdT,
             template <const auto&, const auto&, const auto&> class Container,
             const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  struct ContextualViabilityHelper<InputParamSelectionT,
+  struct ContextualViabilityHelper<IdT,
                                    Container<class_v, class_loader_v, jvm_v>> {
     // TODO(b/174272629): Exclude objects loaded by invalid loaders.
     static constexpr bool kViable =
-        std::string_view{class_v.name_} ==
-        std::string_view{InputParamSelectionT::IdT::Val().name_};
+        std::string_view{class_v.name_} == std::string_view{IdT::Val().name_};
   };
 
-  template <typename OverloadSelection, typename T>
-  static constexpr bool kViable =
-      ContextualViabilityHelper<OverloadSelection, T>::kViable;
+  template <typename IdT, typename T>
+  static constexpr bool kViable = ContextualViabilityHelper<IdT, T>::kViable;
 
   template <typename OverloadT>
   struct Helper {

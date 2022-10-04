@@ -25,7 +25,6 @@
 #include "implementation/array_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/id.h"
-#include "implementation/input_param_selection.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
 #include "implementation/method_ref.h"
 #include "implementation/no_idx.h"
@@ -39,11 +38,6 @@
 #include "metaprogramming/type_of_nth_element.h"
 
 namespace jni {
-
-// The the type of an exact selection parameter in a method as part of the class
-// specification (vs. the selection of a parameter in some generated candidate).
-template <typename OverloadSelectionT, size_t param_idx>
-struct InputParamSelection;
 
 // Represents an indexing into a specific class and method.
 template <typename JniType, bool is_constructor, size_t method_idx>
@@ -154,8 +148,16 @@ struct ArgumentValidate {
 
   template <std::size_t... Is, typename... Ts>
   struct Helper<true, std::index_sequence<Is...>, Ts...> {
+    using IdTmp = typename OverloadSelectionT::IdT::template ChangeIdType<
+        IdType::OVERLOAD_PARAM>;
+
+    template <std::size_t I>
+    using IdTParamType = typename IdTmp::template ChangeIdx<2, I>;
+
     static constexpr bool kValid =
-        (InputParamSelection<OverloadSelectionT, Is>::template kValid<Ts...> &&
+        (Proxy_t<typename IdTParamType<Is>::UnstrippedRawVal>::template kViable<
+             IdTParamType<Is>,
+             metaprogramming::TypeOfNthElement_t<Is, Ts...>> &&
          ...);
   };
 

@@ -326,17 +326,6 @@ cc_test(
 )
 
 cc_library(
-    name = "input_param_selection",
-    hdrs = ["input_param_selection.h"],
-    deps = [
-        ":array",
-        ":id",
-        ":no_idx",
-        ":proxy",
-    ],
-)
-
-cc_library(
     name = "jni_type",
     hdrs = ["jni_type.h"],
     deps = [
@@ -461,7 +450,6 @@ cc_library(
     deps = [
         ":class_loader",
         ":class_ref",
-        ":input_param_selection",
         ":jni_type",
         ":method",
         ":params",
@@ -499,7 +487,6 @@ cc_library(
         ":array_ref",
         ":default_class_loader",
         ":id",
-        ":input_param_selection",
         ":method_ref",
         ":no_idx",
         ":proxy",
@@ -695,15 +682,6 @@ cc_library(
         ":void",
         "//implementation/jni_helper:jni_typename_to_string",
         "//metaprogramming:string_concatenate",
-    ],
-)
-
-cc_test(
-    name = "selector_static_info_test",
-    srcs = ["selector_static_info_test.cc"],
-    deps = [
-        "//:jni_bind",
-        "@googletest//:gtest_main",
     ],
 )
 
