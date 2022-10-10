@@ -71,9 +71,6 @@ struct ProxyBase {
 
   template <typename InputParamSelectionT, typename T>
   static constexpr bool kViable = IsConvertibleKey_v<Key_, T>;
-
-  template <typename Overload>
-  static constexpr std::size_t kRank = 1;
 };
 
 // Proxy is a metafunction that gives useful conversions from
@@ -223,7 +220,11 @@ struct Proxy<JObject,
     // It's illegal to initialise this type with a sub-object of another,
     // however, we can construct types with enough validation to guarantee
     // correctness.
-    static constexpr Class kClass{OverloadT::GetReturn().raw_.name_};
+    using OvIdT = typename OverloadT::IdT;
+    using OvRetIdT =
+        typename OvIdT::template ChangeIdType<OverloadT::kRetTypeId>;
+
+    static constexpr auto kClass{OvRetIdT::Materialize()};
 
     // TODO(b/174272629): Class loaders should also be enforced.
     using type = LocalObject<kClass, kDefaultClassLoader, kDefaultJvm>;
@@ -295,8 +296,6 @@ struct Proxy<JArrayType, typename std::enable_if_t<
   template <typename Overload>
   using AsReturn = typename ArrayHelper<Overload>::AsReturn;
 
-  template <typename Overload>
-  static constexpr std::size_t kRank = ArrayHelper<Overload>::kRank;
 
   static JArrayType ProxyAsArg(JArrayType arr) { return arr; };
 

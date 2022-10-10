@@ -23,6 +23,8 @@
 #include <utility>
 
 #include "implementation/array.h"
+#include "implementation/class.h"
+#include "implementation/field.h"
 #include "implementation/name_constants.h"
 #include "implementation/no_idx.h"
 #include "implementation/selector_static_info.h"
@@ -37,11 +39,15 @@ enum class IdType {
   OVERLOAD_PARAM,
 };
 
-template <typename JniType_, IdType kIdType, std::size_t idx = kNoIdx,
+template <typename JniType_, IdType kIdType_, std::size_t idx = kNoIdx,
           std::size_t secondary_idx = kNoIdx, std::size_t tertiary_idx = kNoIdx>
 struct Id {
   using JniType = JniType_;
+  static constexpr IdType kIdType = kIdType_;
   static constexpr auto& root = JniType::GetClass();
+  static constexpr std::size_t kIdx = idx;
+  static constexpr std::size_t kSecondaryIdx = secondary_idx;
+  static constexpr std::size_t kTertiaryIdx = tertiary_idx;
 
   template <IdType new_id_type>
   using ChangeIdType =
@@ -51,10 +57,12 @@ struct Id {
   using ChangeIdx = Id<JniType, kIdType, (kIdxToChange == 0 ? kNewValue : idx),
                        (kIdxToChange == 1 ? kNewValue : secondary_idx),
                        (kIdxToChange == 2 ? kNewValue : tertiary_idx)>;
+
   static constexpr const auto& Val() {
     if constexpr (kIdType == IdType::CLASS) {
       return root;
     } else if constexpr (kIdType == IdType::FIELD) {
+      static_assert(idx != kNoIdx);
       return std::get<idx>(root.fields_).raw_;
     } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
       if constexpr (idx == kNoIdx) {
@@ -99,6 +107,17 @@ struct Id {
       }
     }
   }
+
+  static constexpr auto Materialize() {
+    if constexpr (idx == kNoIdx && tertiary_idx == kNoIdx) {
+      return root;
+    } else {
+      return Val();
+    }
+  }
+
+  static constexpr Return kObjectWhenConstructed{
+      Class{JniType::GetClass().name_}};
 
   using RawValT = ArrayStrip_t<std::decay_t<decltype(Val())>>;
   using UnstrippedRawVal = std::decay_t<decltype(Val())>;

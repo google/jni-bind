@@ -75,10 +75,11 @@ class FieldRef {
 
   using ProxyForField = Proxy_t<typename IdT::RawValT>;
   using CDeclForField = CDecl_t<typename IdT::RawValT>;
+  using RawT = typename IdT::RawValT;
 
   Return_t<typename IdT::RawValT, FieldSelectionT> Get() {
-    return FieldHelper<CDeclForField>::GetValue(object_ref_,
-                                                GetFieldID(class_ref_));
+    return {FieldHelper<CDeclForField>::GetValue(object_ref_,
+                                                 GetFieldID(class_ref_))};
   }
 
   template <typename T>

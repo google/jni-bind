@@ -310,6 +310,8 @@ cc_library(
     hdrs = ["id.h"],
     deps = [
         ":array",
+        ":class",
+        ":field",
         ":name_constants",
         ":no_idx",
         ":selector_static_info",

@@ -171,16 +171,22 @@ template <typename JniType, typename MethodSelectionT, size_t overload_idx>
 struct OverloadSelection {
   using IdT =
       Id<JniType, IdType::OVERLOAD, MethodSelectionT::kMethodIdx, overload_idx>;
+  using ReturnIdT = typename IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
+  static constexpr IdType kRetTypeId = IdType::OVERLOAD_PARAM;
 
   static constexpr Return kObjectWhenConstructed{
       Class{JniType::GetClass().name_}};
 
-  static constexpr const auto& GetReturn() {
+  static constexpr const auto GetReturn() {
     if constexpr (MethodSelectionT::kIsConstructor) {
-      return kObjectWhenConstructed;
+      return ReturnIdT::kObjectWhenConstructed;
     } else {
-      return std::get<overload_idx>(MethodSelectionT::GetMethod().invocations_)
-          .return_;
+      if constexpr (std::is_same_v<Return<Void>,
+                                   decltype(Return{ReturnIdT::Val()})>) {
+        return Return<void>{};
+      } else {
+        return Return{ReturnIdT::Val()};
+      }
     }
   }
 
@@ -202,7 +208,7 @@ struct OverloadSelection {
   // Return type is the richly decorated type returned (e.g LocalArray).
   using AsReturn = Return_t<Raw_t<ReturnT>, OverloadSelection>;
 
-  static constexpr size_t kNumParams = std::tuple_size_v<ParamsT>;
+  static constexpr size_t kNumParams = IdT::NumParams();
 
   template <typename... Ts>
   static constexpr bool OverloadViable() {

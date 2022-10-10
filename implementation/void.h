@@ -20,7 +20,9 @@
 namespace jni {
 
 // Single type that be used as a value when expressing void.
-struct Void {};
+struct Void {
+  using Raw = void;
+};
 
 }  // namespace jni
 
