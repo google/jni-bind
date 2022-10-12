@@ -83,26 +83,9 @@ struct MethodSelection {
     return JniType::class_loader_v;
   }
 
-  static constexpr const auto& GetMethod() {
-    if constexpr (is_constructor) {
-      static_assert(method_idx == 0,
-                    "If using MethodSelection for a constructor, there is only "
-                    "ever one method (\"<init>\"), set method_idx to 0.");
-      return JniType::class_v.constructors_;
-    } else {
-      return std::get<method_idx>(JniType::class_v.methods_);
-    }
-  }
+  static constexpr const auto& GetMethod() { return IdT::Val(); }
 
   static constexpr const char* Name() { return IdT::Name(); }
-
-  static constexpr std::size_t NumOverloads() {
-    if constexpr (is_constructor) {
-      return std::tuple_size<decltype(JniType::class_v.constructors_)>();
-    } else {
-      return std::tuple_size<decltype(GetMethod().invocations_)>();
-    }
-  }
 
   template <typename Is, typename... Ts>
   struct Helper;
@@ -123,14 +106,14 @@ struct MethodSelection {
 
   template <typename... Ts>
   static constexpr bool ArgSetViable() {
-    return Helper<std::make_index_sequence<NumOverloads()>,
+    return Helper<std::make_index_sequence<IdT::NumParams()>,
                   std::decay_t<Ts>...>::val;
   }
 
   // The overload that is viable for a set of args, or |kNoIdx|.
   template <typename... Ts>
   static constexpr std::size_t IdxForArgs() {
-    return Helper<std::make_index_sequence<NumOverloads()>,
+    return Helper<std::make_index_sequence<IdT::NumParams()>,
                   std::decay_t<Ts>...>::overload_idx_if_valid;
   }
 

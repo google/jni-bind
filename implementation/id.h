@@ -141,6 +141,12 @@ struct Id {
   static constexpr std::size_t NumParams() {
     if constexpr (kIdType == IdType::OVERLOAD) {
       return std::tuple_size_v<decltype(Val().params_.values_)>;
+    } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
+      if constexpr (idx == kNoIdx) {
+        return std::tuple_size_v<std::decay_t<decltype(Val())>>;
+      } else {
+        return std::tuple_size_v<std::decay_t<decltype(Val().invocations_)>>;
+      }
     } else {
       // Other types don't have meaningful use of this.
       return 1;
