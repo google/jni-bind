@@ -24,6 +24,19 @@ struct Void {
   using Raw = void;
 };
 
+template <typename T>
+struct VoidIfVoid {
+  using type = T;
+};
+
+template <>
+struct VoidIfVoid<Void> {
+  using type = void;
+};
+
+template <typename T>
+using VoidIfVoid_t = typename VoidIfVoid<T>::type;
+
 }  // namespace jni
 
 #endif  // JNI_BIND_IMPLEMENTATION_VOID_H_

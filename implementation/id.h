@@ -27,6 +27,7 @@
 #include "implementation/field.h"
 #include "implementation/name_constants.h"
 #include "implementation/no_idx.h"
+#include "implementation/proxy_convenience_aliases.h"
 #include "implementation/selector_static_info.h"
 
 namespace jni {
@@ -48,6 +49,11 @@ struct Id {
   static constexpr std::size_t kIdx = idx;
   static constexpr std::size_t kSecondaryIdx = secondary_idx;
   static constexpr std::size_t kTertiaryIdx = tertiary_idx;
+
+  static constexpr bool kIsConstructor =
+      (kIdType == IdType::OVERLOAD || kIdType == IdType::OVERLOAD_PARAM ||
+       kIdType == IdType::OVERLOAD_SET) &&
+      (kIdx == kNoIdx);
 
   template <IdType new_id_type>
   using ChangeIdType =
@@ -86,7 +92,7 @@ struct Id {
         // Constructor.
         if constexpr (tertiary_idx == kNoIdx) {
           // Return.
-          return Void{};
+          return root;
         } else {
           // Overload return.
           return std::get<tertiary_idx>(
@@ -108,21 +114,32 @@ struct Id {
     }
   }
 
+  // Returns root for constructor, else return's "raw_" member.
   static constexpr auto Materialize() {
-    if constexpr (idx == kNoIdx && tertiary_idx == kNoIdx) {
-      return root;
+    if constexpr (kIdType == IdType::OVERLOAD) {
+      if constexpr (kIdx == kNoIdx) {
+        // Constructor.
+        return root;
+      } else {
+        // Overload.
+        return std::get<secondary_idx>(
+                   std::get<idx>(root.methods_).invocations_)
+            .return_.raw_;
+      }
     } else {
-      return Val();
+      // Not implemented.
+      return Void{};
     }
   }
 
-  static constexpr Return kObjectWhenConstructed{
-      Class{JniType::GetClass().name_}};
-
+  using MaterializeT = std::decay_t<decltype(Materialize())>;
   using RawValT = ArrayStrip_t<std::decay_t<decltype(Val())>>;
   using UnstrippedRawVal = std::decay_t<decltype(Val())>;
+  using CDecl = CDecl_t<VoidIfVoid_t<MaterializeT>>;
 
   static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(Val());
+  static constexpr Return kObjectWhenConstructed{
+      Class{JniType::GetClass().name_}};
 
   static constexpr const char* Name() {
     if constexpr (kIdType == IdType::OVERLOAD_SET && idx == kNoIdx) {
@@ -183,9 +200,14 @@ struct Id {
       return "NOT_IMPLEMENTED";
     } else if constexpr (kIdType == IdType::OVERLOAD) {
       using Idxs = std::make_index_sequence<NumParams()>;
-      return metaprogramming::StringConcatenate_v<
-          kLeftParenthesis, Helper<Idxs>::kVal, kRightParenthesis,
-          ReturnHelper::kVal>;
+      if constexpr (kIsConstructor) {
+        return metaprogramming::StringConcatenate_v<
+            kLeftParenthesis, Helper<Idxs>::kVal, kRightParenthesis, kLetterV>;
+      } else {
+        return metaprogramming::StringConcatenate_v<
+            kLeftParenthesis, Helper<Idxs>::kVal, kRightParenthesis,
+            ReturnHelper::kVal>;
+      }
     } else if constexpr (kIdType == IdType::OVERLOAD_PARAM) {
       return SelectorStaticInfo<Id>::TypeName();
     }

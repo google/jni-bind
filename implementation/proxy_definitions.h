@@ -224,7 +224,7 @@ struct Proxy<JObject,
     using OvRetIdT =
         typename OvIdT::template ChangeIdType<OverloadT::kRetTypeId>;
 
-    static constexpr auto kClass{OvRetIdT::Materialize()};
+    static constexpr auto kClass{OvRetIdT::Val()};
 
     // TODO(b/174272629): Class loaders should also be enforced.
     using type = LocalObject<kClass, kDefaultClassLoader, kDefaultJvm>;

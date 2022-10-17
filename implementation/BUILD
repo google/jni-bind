@@ -314,6 +314,7 @@ cc_library(
         ":field",
         ":name_constants",
         ":no_idx",
+        ":proxy_convenience_aliases",
         ":selector_static_info",
     ],
 )
