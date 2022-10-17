@@ -48,12 +48,12 @@ static inline auto& GetDefaultLoadedMethodList() {
   return *ret_val;
 }
 
-template <typename JniType, typename Method, typename Overload>
+template <typename IdT, typename JniType, typename Method, typename Overload>
 struct OverloadRef {
   using ReturnProxied = typename Overload::AsReturn;
 
   static constexpr std::string_view GetMethodSignature() {
-    return Overload::IdT::Signature();
+    return IdT::Signature();
   }
 
   static jmethodID GetMethodID(jclass clazz) {

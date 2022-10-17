@@ -19,6 +19,8 @@
 
 #include <type_traits>
 
+#include "implementation/id_type.h"
+
 namespace jni {
 
 template <typename TUndecayed>
@@ -34,9 +36,9 @@ using Index_t = typename ProxyHelper<T>::Index;
 template <typename T>
 using CDecl_t = typename ProxyHelper<T>::CDecl;
 
-template <typename T, typename OverloadSelection>
+template <typename T, typename OverloadSelection, IdType kIdType>
 using Return_t =
-    typename ProxyHelper<T>::template AsReturn_t<OverloadSelection>;
+    typename ProxyHelper<T>::template AsReturn_t<OverloadSelection, kIdType>;
 
 template <typename T, typename ParamSelection>
 using Arg_t = typename ProxyHelper<T>::template AsArg_t<ParamSelection>;

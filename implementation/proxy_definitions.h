@@ -27,6 +27,7 @@
 #include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/id.h"
+#include "implementation/id_type.h"
 #include "implementation/jvm.h"
 #include "implementation/local_array.h"
 #include "implementation/local_string.h"
@@ -58,7 +59,7 @@ struct ProxyBase {
 
   using CDecl = Key_;
 
-  template <typename>
+  template <typename Overload, IdType kIdType>
   using AsReturn = Key_;
 
   using AsArg = std::tuple<Key_>;
@@ -157,7 +158,7 @@ struct Proxy<JString,
   using AsArg =
       std::tuple<std::string, jstring, char*, const char*, std::string_view>;
 
-  template <typename Return>
+  template <typename Overload, IdType kIdType>
   using AsReturn = LocalString;
 
   template <typename T>
@@ -230,7 +231,7 @@ struct Proxy<JObject,
     using type = LocalObject<kClass, kDefaultClassLoader, kDefaultJvm>;
   };
 
-  template <typename Overload>
+  template <typename Overload, IdType kIdType>
   using AsReturn = typename Helper<Overload>::type;
 
   static jobject ProxyAsArg(jobject obj) { return obj; };
@@ -293,9 +294,8 @@ struct Proxy<JArrayType, typename std::enable_if_t<
   using AsArg = std::tuple<JArrayType, RefBaseTag<JArrayType>,
                            ArrayTag<JArrayType>, ArrayRefPrimitiveTag<CDecl>>;
 
-  template <typename Overload>
+  template <typename Overload, IdType kIdType>
   using AsReturn = typename ArrayHelper<Overload>::AsReturn;
-
 
   static JArrayType ProxyAsArg(JArrayType arr) { return arr; };
 

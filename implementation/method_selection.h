@@ -156,6 +156,7 @@ struct OverloadSelection {
       Id<JniType, IdType::OVERLOAD, MethodSelectionT::kMethodIdx, overload_idx>;
   using ReturnIdT = typename IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
   static constexpr IdType kRetTypeId = IdType::OVERLOAD_PARAM;
+  static constexpr std::size_t kOverloadIdx = overload_idx;
 
   static constexpr const auto GetReturn() {
     if constexpr (MethodSelectionT::kIsConstructor) {
@@ -186,7 +187,8 @@ struct OverloadSelection {
   using CDecl = typename IdT::CDecl;
 
   // Return type is the richly decorated type returned (e.g LocalArray).
-  using AsReturn = Return_t<Raw_t<ReturnT>, OverloadSelection>;
+  using AsReturn =
+      Return_t<Raw_t<ReturnT>, OverloadSelection, IdType::OVERLOAD_PARAM>;
 
   static constexpr size_t kNumParams = IdT::NumParams();
 
@@ -209,8 +211,12 @@ struct OverloadSelectionForArgsImpl {
   using OverloadSelectionForArgs =
       typename MethodSelectionForArgs::template FindOverloadSelection<Args...>;
 
-  using OverloadRef =
-      OverloadRef<JniType, MethodSelectionForArgs, OverloadSelectionForArgs>;
+  using OverloadIdT =
+      Id<JniType, IdType::OVERLOAD, is_constructor ? kNoIdx : method_idx,
+         OverloadSelectionForArgs::kOverloadIdx>;
+
+  using OverloadRef = OverloadRef<OverloadIdT, JniType, MethodSelectionForArgs,
+                                  OverloadSelectionForArgs>;
 
   static constexpr bool kIsValidArgSet =
       MethodSelectionForArgs::template ArgSetViable<Args...>();

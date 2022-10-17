@@ -22,11 +22,11 @@
 #include <type_traits>
 #include <utility>
 
-#include "object.h"
-#include "ref_base.h"
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
+#include "implementation/object.h"
 #include "implementation/proxy_convenience_aliases.h"
+#include "implementation/ref_base.h"
 #include "jni_dep.h"
 #include "metaprogramming/cartesian_product.h"
 #include "metaprogramming/combine.h"
@@ -95,8 +95,8 @@ struct ProxyHelper {
 
   using CDecl = typename Proxy_t::CDecl;
 
-  template <typename Overload>
-  using AsReturn_t = typename Proxy_t::template AsReturn<Overload>;
+  template <typename Overload, IdType kIdType>
+  using AsReturn_t = typename Proxy_t::template AsReturn<Overload, kIdType>;
 
   template <typename ParamSelection>
   using AsArg_t = typename Proxy_t::AsArg;

@@ -25,20 +25,13 @@
 #include "implementation/array.h"
 #include "implementation/class.h"
 #include "implementation/field.h"
+#include "implementation/id_type.h"
 #include "implementation/name_constants.h"
 #include "implementation/no_idx.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/selector_static_info.h"
 
 namespace jni {
-
-enum class IdType {
-  CLASS,
-  FIELD,
-  OVERLOAD_SET,
-  OVERLOAD,
-  OVERLOAD_PARAM,
-};
 
 template <typename JniType_, IdType kIdType_, std::size_t idx = kNoIdx,
           std::size_t secondary_idx = kNoIdx, std::size_t tertiary_idx = kNoIdx>

@@ -25,6 +25,7 @@
 #include "implementation/class_ref.h"
 #include "implementation/field_selection.h"
 #include "implementation/id.h"
+#include "implementation/id_type.h"
 #include "implementation/jni_helper/field_value.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/proxy.h"
@@ -77,7 +78,7 @@ class FieldRef {
   using CDeclForField = CDecl_t<typename IdT::RawValT>;
   using RawT = typename IdT::RawValT;
 
-  Return_t<typename IdT::RawValT, FieldSelectionT> Get() {
+  Return_t<typename IdT::RawValT, FieldSelectionT, IdType::FIELD> Get() {
     return {FieldHelper<CDeclForField>::GetValue(object_ref_,
                                                  GetFieldID(class_ref_))};
   }

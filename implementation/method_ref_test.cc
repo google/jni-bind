@@ -22,6 +22,8 @@ namespace {
 
 using ::jni::Array;
 using ::jni::Class;
+using ::jni::Id;
+using ::jni::IdType;
 using ::jni::JniType;
 using ::jni::kDefaultClassLoader;
 using ::jni::Method;
@@ -40,9 +42,10 @@ struct FirstOverloadFirstPermutation {
   using IthMethodSelection =
       MethodSelection_t<JniType<jobject, class_v, class_loader_v>, false, I>;
   using JniTypeT = JniType<jobject, class_v, class_loader_v>;
+  using IdT = Id<JniTypeT, IdType::OVERLOAD, I, 0>;
   using FirstOverload = OverloadSelection<JniTypeT, IthMethodSelection, 0>;
 
-  using type = OverloadRef<JniTypeT, IthMethodSelection, FirstOverload>;
+  using type = OverloadRef<IdT, JniTypeT, IthMethodSelection, FirstOverload>;
 };
 
 template <const auto& class_loader_v, const auto& class_v, size_t I>

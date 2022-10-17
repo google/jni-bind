@@ -237,6 +237,7 @@ cc_library(
         ":class_ref",
         ":field_selection",
         ":id",
+        ":id_type",
         ":proxy",
         "//:jni_dep",
         "//implementation/jni_helper",
@@ -312,6 +313,7 @@ cc_library(
         ":array",
         ":class",
         ":field",
+        ":id_type",
         ":name_constants",
         ":no_idx",
         ":proxy_convenience_aliases",
@@ -326,6 +328,11 @@ cc_test(
         "//:jni_bind",
         "@googletest//:gtest_main",
     ],
+)
+
+cc_library(
+    name = "id_type",
+    hdrs = ["id_type.h"],
 )
 
 cc_library(
@@ -603,6 +610,7 @@ cc_library(
         ":class_loader",
         ":default_class_loader",
         ":id",
+        ":id_type",
         ":jvm",
         ":local_array",
         ":name_constants",
@@ -629,6 +637,7 @@ cc_library(
 cc_library(
     name = "proxy_convenience_aliases",
     hdrs = ["proxy_convenience_aliases.h"],
+    deps = [":id_type"],
 )
 
 cc_test(
