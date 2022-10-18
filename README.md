@@ -213,8 +213,6 @@ runtime_object["intField"].Get(); // = 5;
 
 Accessing and setting fields will follow the rules laid out in [Type Conversion Rules](#type-conversion-rules). *Accessing invalid field names won't compile, and `jfieldID`s are cached on your behalf.*
 
-*Fields are currently missing class support which will be added soon.
-
 [Sample C++](javatests/com/jnibind/test/field_test_jni.cc), [Sample Java](javatests/com/jnibind/test/FieldTest.java)
 
 <a name="constructors"></a>
