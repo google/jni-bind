@@ -185,6 +185,8 @@ struct Id {
     }
   }
 
+  static constexpr std::size_t kNumParams = NumParams();
+
   template <typename IdxPack>
   struct Helper;
 

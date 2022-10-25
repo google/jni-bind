@@ -55,10 +55,6 @@ struct OverloadRef {
   using ReturnProxied =
       Return_t<typename ReturnIdT::MaterializeCDeclT, ReturnIdT>;
 
-  static constexpr std::string_view GetMethodSignature() {
-    return IdT::Signature();
-  }
-
   static jmethodID GetMethodID(jclass clazz) {
     static jni::metaprogramming::DoubleLockedValue<jmethodID> return_value;
 
@@ -67,8 +63,8 @@ struct OverloadRef {
         GetDefaultLoadedMethodList().push_back(&return_value);
       }
 
-      return jni::JniHelper::GetMethodID(clazz, Method::Name(),
-                                         GetMethodSignature().data());
+      return jni::JniHelper::GetMethodID(clazz, IdT::Name(),
+                                         IdT::Signature().data());
 
     });
   }

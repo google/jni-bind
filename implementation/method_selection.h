@@ -122,7 +122,7 @@ struct MethodSelection {
       OverloadSelection<JniType, MethodSelection, IdxForArgs<Ts...>()>;
 };
 
-template <typename OverloadSelectionT>
+template <typename OverloadId>
 struct ArgumentValidate {
   template <bool kSameSize, typename T, typename... Ts>
   struct Helper {
@@ -131,8 +131,8 @@ struct ArgumentValidate {
 
   template <std::size_t... Is, typename... Ts>
   struct Helper<true, std::index_sequence<Is...>, Ts...> {
-    using IdTmp = typename OverloadSelectionT::IdT::template ChangeIdType<
-        IdType::OVERLOAD_PARAM>;
+    using IdTmp =
+        typename OverloadId::template ChangeIdType<IdType::OVERLOAD_PARAM>;
 
     template <std::size_t I>
     using IdTParamType = typename IdTmp::template ChangeIdx<2, I>;
@@ -146,7 +146,7 @@ struct ArgumentValidate {
 
   template <typename... Ts>
   static constexpr bool kValid =
-      Helper<(sizeof...(Ts) == OverloadSelectionT::kNumParams),
+      Helper<(sizeof...(Ts) == OverloadId::kNumParams),
              std::make_index_sequence<sizeof...(Ts)>, Ts...>::kValid;
 };
 
@@ -154,14 +154,11 @@ template <typename JniType, typename MethodSelectionT, size_t overload_idx>
 struct OverloadSelection {
   using IdT =
       Id<JniType, IdType::OVERLOAD, MethodSelectionT::kMethodIdx, overload_idx>;
-  using ReturnIdT = typename IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
   static constexpr std::size_t kOverloadIdx = overload_idx;
-
-  static constexpr size_t kNumParams = IdT::NumParams();
 
   template <typename... Ts>
   static constexpr bool OverloadViable() {
-    return ArgumentValidate<OverloadSelection>::template kValid<Ts...>;
+    return ArgumentValidate<IdT>::template kValid<Ts...>;
   }
 
   template <typename... Ts>
