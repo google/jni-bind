@@ -59,7 +59,7 @@ struct ProxyBase {
 
   using CDecl = Key_;
 
-  template <typename Overload, IdType kIdType>
+  template <typename, IdType>
   using AsReturn = Key_;
 
   using AsArg = std::tuple<Key_>;
@@ -158,7 +158,7 @@ struct Proxy<JString,
   using AsArg =
       std::tuple<std::string, jstring, char*, const char*, std::string_view>;
 
-  template <typename Overload, IdType kIdType>
+  template <typename, IdType>
   using AsReturn = LocalString;
 
   template <typename T>
@@ -216,14 +216,12 @@ struct Proxy<JObject,
   template <typename IdT, typename T>
   static constexpr bool kViable = ContextualViabilityHelper<IdT, T>::kViable;
 
-  template <typename OverloadT>
+  template <typename OvIdT, IdType kRetTypeId>
   struct Helper {
     // It's illegal to initialise this type with a sub-object of another,
     // however, we can construct types with enough validation to guarantee
     // correctness.
-    using OvIdT = typename OverloadT::IdT;
-    using OvRetIdT =
-        typename OvIdT::template ChangeIdType<OverloadT::kRetTypeId>;
+    using OvRetIdT = typename OvIdT::template ChangeIdType<kRetTypeId>;
 
     static constexpr auto kClass{OvRetIdT::Val()};
 
@@ -231,8 +229,8 @@ struct Proxy<JObject,
     using type = LocalObject<kClass, kDefaultClassLoader, kDefaultJvm>;
   };
 
-  template <typename Overload, IdType kIdType>
-  using AsReturn = typename Helper<Overload>::type;
+  template <typename Id, IdType kIdType>
+  using AsReturn = typename Helper<Id, kIdType>::type;
 
   static jobject ProxyAsArg(jobject obj) { return obj; };
 
@@ -294,8 +292,8 @@ struct Proxy<JArrayType, typename std::enable_if_t<
   using AsArg = std::tuple<JArrayType, RefBaseTag<JArrayType>,
                            ArrayTag<JArrayType>, ArrayRefPrimitiveTag<CDecl>>;
 
-  template <typename Overload, IdType kIdType>
-  using AsReturn = typename ArrayHelper<Overload>::AsReturn;
+  template <typename Id, IdType kIdType>
+  using AsReturn = typename ArrayHelper<Id>::AsReturn;
 
   static JArrayType ProxyAsArg(JArrayType arr) { return arr; };
 
@@ -312,7 +310,7 @@ struct Proxy<JArrayType, typename std::enable_if_t<
 };
 
 // This must be defined outside of Proxy so implicit definition doesn't occur.
-template <typename Overload>
+template <typename IdT>
 struct ArrayHelper {
   template <const auto& t>
   struct Helper {
@@ -322,12 +320,11 @@ struct ArrayHelper {
     using ConvertedCDecl = RegularToArrayTypeMap_t<StrippedCDecl>;
   };
 
-  static constexpr auto kVal{Overload::GetReturn().raw_};
+  static constexpr auto kVal{IdT::Materialize()};
 
   static constexpr auto LocalArrayBuildFromArray() {
-    using RawT = std::decay_t<ArrayStrip_t<decltype(kVal.raw_type_)>>;
-
-    constexpr std::size_t kRank = Rankifier<decltype(kVal)>::Rank(kVal);
+    using RawT = typename IdT::RawMaterializeT;
+    constexpr std::size_t kRank = IdT::kMaterializedRank;
 
     // TODO(b/143908983): Support multi-dimensional arrays.
     if constexpr (!std::is_same_v<CDecl_t<RawT>, jobject>) {
@@ -340,6 +337,7 @@ struct ArrayHelper {
 
   using StrippedCDecl = typename Helper<kVal>::StrippedCDecl;
   using ConvertedCDecl = typename Helper<kVal>::ConvertedCDecl;
+
   using AsReturn = decltype(LocalArrayBuildFromArray());
 };
 

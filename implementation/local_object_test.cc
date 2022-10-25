@@ -179,6 +179,16 @@ TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnLvalue) {
   b("Foo", a);
 }
 
+TEST_F(JniTest, LocalObject_SupportsReturningAClass) {
+  static constexpr Class kClass2{"kClass2"};
+
+  static constexpr Class kTestClass1{
+      "TestClass1", Method{"Foo", jni::Return{kClass2}, jni::Params{}}};
+
+  LocalObject<kTestClass1> a{};
+  a("Foo");
+}
+
 TEST_F(JniTest, LocalObject_SupportsReturningAString) {
   static constexpr Class kTestClass1{
       "TestClass1", Method{"Foo", jni::Return<jstring>{}, jni::Params{}}};

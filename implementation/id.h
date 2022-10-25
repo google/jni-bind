@@ -114,11 +114,29 @@ struct Id {
         // Constructor.
         return root;
       } else {
-        // Overload.
+        // Overload return value.
         return std::get<secondary_idx>(
                    std::get<idx>(root.methods_).invocations_)
             .return_.raw_;
       }
+    } else if constexpr (kIdType == IdType::OVERLOAD_PARAM) {
+      if constexpr (kIdx == kNoIdx) {
+        // Constructor.
+        return root;
+      } else if constexpr (tertiary_idx == kNoIdx) {
+        // Overload return value.
+        return std::get<secondary_idx>(
+                   std::get<idx>(root.methods_).invocations_)
+            .return_.raw_;
+      } else {
+        // Overload.
+        return std::get<tertiary_idx>(
+            std::get<secondary_idx>(std::get<idx>(root.methods_).invocations_)
+                .params_.values_);
+      }
+
+    } else if constexpr (kIdType == IdType::FIELD) {
+      return std::get<kIdx>(root.fields_).raw_;
     } else {
       // Not implemented.
       return Void{};
@@ -126,13 +144,17 @@ struct Id {
   }
 
   using MaterializeT = std::decay_t<decltype(Materialize())>;
+  using RawMaterializeT = ArrayStrip_t<MaterializeT>;
+  static constexpr std::size_t kMaterializedRank =
+      Rankifier<MaterializeT>::Rank(Materialize());
+  using MaterializeCDeclT = std::decay_t<VoidIfVoid_t<decltype(Materialize())>>;
+
   using RawValT = ArrayStrip_t<std::decay_t<decltype(Val())>>;
   using UnstrippedRawVal = std::decay_t<decltype(Val())>;
   using CDecl = CDecl_t<VoidIfVoid_t<MaterializeT>>;
 
   static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(Val());
-  static constexpr Return kObjectWhenConstructed{
-      Class{JniType::GetClass().name_}};
+  static constexpr Return kObjectWhenConstructed{root};
 
   static constexpr const char* Name() {
     if constexpr (kIdType == IdType::OVERLOAD_SET && idx == kNoIdx) {

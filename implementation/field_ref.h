@@ -78,7 +78,7 @@ class FieldRef {
   using CDeclForField = CDecl_t<typename IdT::RawValT>;
   using RawT = typename IdT::RawValT;
 
-  Return_t<typename IdT::RawValT, FieldSelectionT, IdType::FIELD> Get() {
+  Return_t<typename IdT::RawValT, IdT, IdType::FIELD> Get() {
     return {FieldHelper<CDeclForField>::GetValue(object_ref_,
                                                  GetFieldID(class_ref_))};
   }

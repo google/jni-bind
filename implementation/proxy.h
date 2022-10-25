@@ -95,8 +95,8 @@ struct ProxyHelper {
 
   using CDecl = typename Proxy_t::CDecl;
 
-  template <typename Overload, IdType kIdType>
-  using AsReturn_t = typename Proxy_t::template AsReturn<Overload, kIdType>;
+  template <typename Id, IdType kIdType>
+  using AsReturn_t = typename Proxy_t::template AsReturn<Id, kIdType>;
 
   template <typename ParamSelection>
   using AsArg_t = typename Proxy_t::AsArg;
