@@ -48,9 +48,12 @@ static inline auto& GetDefaultLoadedMethodList() {
   return *ret_val;
 }
 
-template <typename IdT, typename JniType, typename Method, typename Overload>
+template <typename IdT_, typename JniType, typename Method, typename Overload>
 struct OverloadRef {
-  using ReturnProxied = typename Overload::AsReturn;
+  using IdT = IdT_;
+  using ReturnIdT = typename IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
+  using ReturnProxied =
+      Return_t<typename ReturnIdT::MaterializeCDeclT, ReturnIdT>;
 
   static constexpr std::string_view GetMethodSignature() {
     return IdT::Signature();
@@ -83,15 +86,12 @@ struct OverloadRef {
           clazz, OverloadRef::GetMethodID(clazz),
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
-      using IdReturnT =
-          typename Overload::IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
-      static constexpr std::size_t kRank = IdReturnT::kRank;
-
       // For now, adding +1 because the rest of the type system behaves as if
       // a type is rank 0, and JniMethodInvoke behaves as if void is rank 0.
-      return {JniMethodInvoke<typename Overload::CDecl, kRank + 1>::Invoke(
-          object, OverloadRef::GetMethodID(clazz),
-          Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
+      return {JniMethodInvoke<typename ReturnIdT::CDecl, ReturnIdT::kRank + 1>::
+                  Invoke(object, OverloadRef::GetMethodID(clazz),
+                         Proxy_t<Params>::ProxyAsArg(
+                             std::forward<Params>(params))...)};
     }
   }
 };

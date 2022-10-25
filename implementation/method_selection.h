@@ -157,23 +157,6 @@ struct OverloadSelection {
   using ReturnIdT = typename IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
   static constexpr std::size_t kOverloadIdx = overload_idx;
 
-  static constexpr const auto& GetParams() {
-    if constexpr (MethodSelectionT::kIsConstructor) {
-      return std::get<overload_idx>(MethodSelectionT::GetMethod()).params_;
-    } else {
-      return std::get<overload_idx>(MethodSelectionT::GetMethod().invocations_)
-          .params_;
-    }
-  }
-
-  using ParamsT = std::decay_t<decltype(GetParams().values_)>;
-
-  // CDecl is the type used by the C API for a return type.
-  using CDecl = typename IdT::CDecl;
-
-  // Return type is the richly decorated type returned (e.g LocalArray).
-  using AsReturn = Return_t<typename ReturnIdT::MaterializeCDeclT, ReturnIdT>;
-
   static constexpr size_t kNumParams = IdT::NumParams();
 
   template <typename... Ts>
