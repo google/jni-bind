@@ -155,7 +155,6 @@ struct OverloadSelection {
   using IdT =
       Id<JniType, IdType::OVERLOAD, MethodSelectionT::kMethodIdx, overload_idx>;
   using ReturnIdT = typename IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
-  static constexpr IdType kRetTypeId = IdType::OVERLOAD_PARAM;
   static constexpr std::size_t kOverloadIdx = overload_idx;
 
   static constexpr const auto& GetParams() {
@@ -173,8 +172,7 @@ struct OverloadSelection {
   using CDecl = typename IdT::CDecl;
 
   // Return type is the richly decorated type returned (e.g LocalArray).
-  using AsReturn = Return_t<typename ReturnIdT::MaterializeCDeclT, IdT,
-                            IdType::OVERLOAD_PARAM>;
+  using AsReturn = Return_t<typename ReturnIdT::MaterializeCDeclT, ReturnIdT>;
 
   static constexpr size_t kNumParams = IdT::NumParams();
 

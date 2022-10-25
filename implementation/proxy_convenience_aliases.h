@@ -36,8 +36,8 @@ using Index_t = typename ProxyHelper<T>::Index;
 template <typename T>
 using CDecl_t = typename ProxyHelper<T>::CDecl;
 
-template <typename T, typename Id, IdType kIdType>
-using Return_t = typename ProxyHelper<T>::template AsReturn_t<Id, kIdType>;
+template <typename T, typename Id>
+using Return_t = typename ProxyHelper<T>::template AsReturn_t<Id>;
 
 template <typename T, typename ParamSelection>
 using Arg_t = typename ProxyHelper<T>::template AsArg_t<ParamSelection>;

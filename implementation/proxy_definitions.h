@@ -59,7 +59,7 @@ struct ProxyBase {
 
   using CDecl = Key_;
 
-  template <typename, IdType>
+  template <typename>
   using AsReturn = Key_;
 
   using AsArg = std::tuple<Key_>;
@@ -158,7 +158,7 @@ struct Proxy<JString,
   using AsArg =
       std::tuple<std::string, jstring, char*, const char*, std::string_view>;
 
-  template <typename, IdType>
+  template <typename>
   using AsReturn = LocalString;
 
   template <typename T>
@@ -216,21 +216,16 @@ struct Proxy<JObject,
   template <typename IdT, typename T>
   static constexpr bool kViable = ContextualViabilityHelper<IdT, T>::kViable;
 
-  template <typename OvIdT, IdType kRetTypeId>
+  template <typename Id>
   struct Helper {
-    // It's illegal to initialise this type with a sub-object of another,
-    // however, we can construct types with enough validation to guarantee
-    // correctness.
-    using OvRetIdT = typename OvIdT::template ChangeIdType<kRetTypeId>;
-
-    static constexpr auto kClass{OvRetIdT::Val()};
+    static constexpr auto kClass{Id::Val()};
 
     // TODO(b/174272629): Class loaders should also be enforced.
     using type = LocalObject<kClass, kDefaultClassLoader, kDefaultJvm>;
   };
 
-  template <typename Id, IdType kIdType>
-  using AsReturn = typename Helper<Id, kIdType>::type;
+  template <typename Id>
+  using AsReturn = typename Helper<Id>::type;
 
   static jobject ProxyAsArg(jobject obj) { return obj; };
 
@@ -292,7 +287,7 @@ struct Proxy<JArrayType, typename std::enable_if_t<
   using AsArg = std::tuple<JArrayType, RefBaseTag<JArrayType>,
                            ArrayTag<JArrayType>, ArrayRefPrimitiveTag<CDecl>>;
 
-  template <typename Id, IdType kIdType>
+  template <typename Id>
   using AsReturn = typename ArrayHelper<Id>::AsReturn;
 
   static JArrayType ProxyAsArg(JArrayType arr) { return arr; };

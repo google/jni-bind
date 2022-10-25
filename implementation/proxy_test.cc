@@ -173,32 +173,20 @@ static_assert(std::is_same_v<AsDecl_t<std::string>, std::tuple<jstring>>);
 // of return arguments (only applicable for class return types).
 struct DummyOverload {};
 
-static_assert(std::is_same_v<
-              Return_t<void, DummyOverload, IdType::OVERLOAD_PARAM>, void>);
-static_assert(std::is_same_v<
-              Return_t<jint, DummyOverload, IdType::OVERLOAD_PARAM>, jint>);
-static_assert(std::is_same_v<
-              Return_t<jfloat, DummyOverload, IdType::OVERLOAD_PARAM>, jfloat>);
-static_assert(std::is_same_v<
-              Return_t<jbyte, DummyOverload, IdType::OVERLOAD_PARAM>, jbyte>);
-static_assert(std::is_same_v<
-              Return_t<jchar, DummyOverload, IdType::OVERLOAD_PARAM>, jchar>);
-static_assert(std::is_same_v<
-              Return_t<jshort, DummyOverload, IdType::OVERLOAD_PARAM>, jshort>);
-static_assert(std::is_same_v<
-              Return_t<jlong, DummyOverload, IdType::OVERLOAD_PARAM>, jlong>);
+static_assert(std::is_same_v<Return_t<void, DummyOverload>, void>);
+static_assert(std::is_same_v<Return_t<jint, DummyOverload>, jint>);
+static_assert(std::is_same_v<Return_t<jfloat, DummyOverload>, jfloat>);
+static_assert(std::is_same_v<Return_t<jbyte, DummyOverload>, jbyte>);
+static_assert(std::is_same_v<Return_t<jchar, DummyOverload>, jchar>);
+static_assert(std::is_same_v<Return_t<jshort, DummyOverload>, jshort>);
+static_assert(std::is_same_v<Return_t<jlong, DummyOverload>, jlong>);
+static_assert(std::is_same_v<Return_t<jdouble, DummyOverload>, jdouble>);
 static_assert(
-    std::is_same_v<Return_t<jdouble, DummyOverload, IdType::OVERLOAD_PARAM>,
-                   jdouble>);
+    std::is_same_v<Return_t<const char*, DummyOverload>, LocalString>);
 static_assert(
-    std::is_same_v<Return_t<const char*, DummyOverload, IdType::OVERLOAD_PARAM>,
-                   LocalString>);
-static_assert(std::is_same_v<
-              Return_t<std::string_view, DummyOverload, IdType::OVERLOAD_PARAM>,
-              LocalString>);
+    std::is_same_v<Return_t<std::string_view, DummyOverload>, LocalString>);
 static_assert(
-    std::is_same_v<Return_t<std::string, DummyOverload, IdType::OVERLOAD_PARAM>,
-                   LocalString>);
+    std::is_same_v<Return_t<std::string, DummyOverload>, LocalString>);
 
 // Objects are better tested through the convertability of their output.
 TEST_F(JniTest, MaterializationTests) {
