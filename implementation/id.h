@@ -39,6 +39,7 @@ struct Id {
   using JniType = JniType_;
   static constexpr IdType kIdType = kIdType_;
   static constexpr auto& root = JniType::GetClass();
+
   static constexpr std::size_t kIdx = idx;
   static constexpr std::size_t kSecondaryIdx = secondary_idx;
   static constexpr std::size_t kTertiaryIdx = tertiary_idx;

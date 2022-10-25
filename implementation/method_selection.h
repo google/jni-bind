@@ -68,24 +68,9 @@ using MethodSelectionForArgs_t =
 ////////////////////////////////////////////////////////////////////////////////
 template <typename JniType, bool is_constructor, size_t method_idx>
 struct MethodSelection {
-  static constexpr IdType kIdType = IdType::OVERLOAD_SET;
-
-  static constexpr std::size_t kMethodIdx =
-      is_constructor ? kNoIdx : method_idx;
-
   using IdT =
-      Id<JniType, kIdType, kMethodIdx, is_constructor ? method_idx : kNoIdx>;
-
-  static constexpr bool kIsConstructor = is_constructor;
-
-  static constexpr const auto& GetClass() { return JniType::class_v; }
-  static constexpr const auto& GetClassLoader() {
-    return JniType::class_loader_v;
-  }
-
-  static constexpr const auto& GetMethod() { return IdT::Val(); }
-
-  static constexpr const char* Name() { return IdT::Name(); }
+      Id<JniType, IdType::OVERLOAD_SET, is_constructor ? kNoIdx : method_idx,
+         is_constructor ? method_idx : kNoIdx>;
 
   template <typename Is, typename... Ts>
   struct Helper;
@@ -153,8 +138,7 @@ struct ArgumentValidate {
 template <typename JniType, typename MethodSelectionT, size_t overload_idx>
 struct OverloadSelection {
   using IdT =
-      Id<JniType, IdType::OVERLOAD, MethodSelectionT::kMethodIdx, overload_idx>;
-  static constexpr std::size_t kOverloadIdx = overload_idx;
+      Id<JniType, IdType::OVERLOAD, MethodSelectionT::IdT::kIdx, overload_idx>;
 
   template <typename... Ts>
   static constexpr bool OverloadViable() {
@@ -172,15 +156,14 @@ template <typename JniType, bool is_constructor, size_t method_idx,
 struct OverloadSelectionForArgsImpl {
   using MethodSelectionForArgs =
       MethodSelection_t<JniType, is_constructor, method_idx>;
+
   using OverloadSelectionForArgs =
       typename MethodSelectionForArgs::template FindOverloadSelection<Args...>;
 
   using OverloadIdT =
       Id<JniType, IdType::OVERLOAD, is_constructor ? kNoIdx : method_idx,
-         OverloadSelectionForArgs::kOverloadIdx>;
-
-  using OverloadRef = OverloadRef<OverloadIdT, JniType, MethodSelectionForArgs,
-                                  OverloadSelectionForArgs>;
+         OverloadSelectionForArgs::IdT::kSecondaryIdx>;
+  using OverloadRef = OverloadRef<OverloadIdT, JniType>;
 
   static constexpr bool kIsValidArgSet =
       MethodSelectionForArgs::template ArgSetViable<Args...>();

@@ -48,7 +48,7 @@ static inline auto& GetDefaultLoadedMethodList() {
   return *ret_val;
 }
 
-template <typename IdT_, typename JniType, typename Method, typename Overload>
+template <typename IdT_, typename JniType>
 struct OverloadRef {
   using IdT = IdT_;
   using ReturnIdT = typename IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
@@ -59,13 +59,12 @@ struct OverloadRef {
     static jni::metaprogramming::DoubleLockedValue<jmethodID> return_value;
 
     return return_value.LoadAndMaybeInit([=]() {
-      if constexpr (Method::GetClassLoader() == kDefaultClassLoader) {
+      if constexpr (JniType::GetClassLoader() == kDefaultClassLoader) {
         GetDefaultLoadedMethodList().push_back(&return_value);
       }
 
       return jni::JniHelper::GetMethodID(clazz, IdT::Name(),
                                          IdT::Signature().data());
-
     });
   }
 
@@ -76,8 +75,7 @@ struct OverloadRef {
       JniMethodInvoke<void, 0>::Invoke(
           object, OverloadRef::GetMethodID(clazz),
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
-
-    } else if constexpr (Method::kIsConstructor) {
+    } else if constexpr (IdT::kIsConstructor) {
       return {JniHelper::NewLocalObject(
           clazz, OverloadRef::GetMethodID(clazz),
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
