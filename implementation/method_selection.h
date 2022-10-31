@@ -36,6 +36,7 @@
 #include "metaprogramming/tuple_manipulation.h"
 #include "metaprogramming/type_index_mask.h"
 #include "metaprogramming/type_of_nth_element.h"
+#include "metaprogramming/unfurl.h"
 
 namespace jni {
 
@@ -107,32 +108,33 @@ struct MethodSelection {
       OverloadSelection<JniType, MethodSelection, IdxForArgs<Ts...>()>;
 };
 
+// Viablility helper for an exact parameter.
+template <std::size_t I, typename IdT, typename... Ts>
+struct Viable {
+  using IdTmp = typename IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
+  using IdTParamType = typename IdTmp::template ChangeIdx<2, I>;
+
+  static constexpr bool val =
+      Proxy_t<typename IdTParamType::UnstrippedRawVal>::template kViable<
+          IdTParamType, metaprogramming::TypeOfNthElement_t<I, Ts...>>;
+};
+
 template <typename OverloadId>
 struct ArgumentValidate {
-  template <bool kSameSize, typename T, typename... Ts>
-  struct Helper {
-    static constexpr bool kValid = false;
-  };
+  // Helper to prevents instantiating mismatching size unrolls.
+  template <typename... Ts>
+  static constexpr bool ViableHelper() {
+    if constexpr (sizeof...(Ts) == OverloadId::kNumParams) {
+      return metaprogramming::UnfurlConjunction_v<OverloadId::kNumParams,
+                                                  Viable, OverloadId, Ts...>;
 
-  template <std::size_t... Is, typename... Ts>
-  struct Helper<true, std::index_sequence<Is...>, Ts...> {
-    using IdTmp =
-        typename OverloadId::template ChangeIdType<IdType::OVERLOAD_PARAM>;
-
-    template <std::size_t I>
-    using IdTParamType = typename IdTmp::template ChangeIdx<2, I>;
-
-    static constexpr bool kValid =
-        (Proxy_t<typename IdTParamType<Is>::UnstrippedRawVal>::template kViable<
-             IdTParamType<Is>,
-             metaprogramming::TypeOfNthElement_t<Is, Ts...>> &&
-         ...);
-  };
+    } else {
+      return false;
+    }
+  }
 
   template <typename... Ts>
-  static constexpr bool kValid =
-      Helper<(sizeof...(Ts) == OverloadId::kNumParams),
-             std::make_index_sequence<sizeof...(Ts)>, Ts...>::kValid;
+  static constexpr bool kValid = ViableHelper<Ts...>();
 };
 
 template <typename JniType, typename MethodSelectionT, size_t overload_idx>

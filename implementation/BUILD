@@ -510,6 +510,7 @@ cc_library(
         "//metaprogramming:tuple_manipulation",
         "//metaprogramming:type_index_mask",
         "//metaprogramming:type_of_nth_element",
+        "//metaprogramming:unfurl",
     ],
 )
 
