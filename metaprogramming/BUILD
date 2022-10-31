@@ -577,6 +577,20 @@ cc_test(
 )
 
 cc_library(
+    name = "pack_discriminator",
+    hdrs = ["pack_discriminator.h"],
+)
+
+cc_test(
+    name = "pack_discriminator_test",
+    srcs = ["pack_discriminator_test.cc"],
+    deps = [
+        ":pack_discriminator",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "per_element",
     hdrs = ["per_element.h"],
     deps = [
