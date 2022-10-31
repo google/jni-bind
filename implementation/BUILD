@@ -318,6 +318,7 @@ cc_library(
         ":no_idx",
         ":proxy_convenience_aliases",
         ":selector_static_info",
+        ":signature",
     ],
 )
 
@@ -466,6 +467,7 @@ cc_library(
         ":proxy",
         ":ref_base",
         ":return",
+        ":signature",
         ":string",
         "//:jni_dep",
         "//implementation/jni_helper",
@@ -665,6 +667,30 @@ cc_library(
     name = "return",
     hdrs = ["return.h"],
     deps = [":void"],
+)
+
+cc_library(
+    name = "signature",
+    hdrs = ["signature.h"],
+    deps = [
+        ":array",
+        ":class",
+        ":field",
+        ":id_type",
+        ":name_constants",
+        ":no_idx",
+        ":proxy_convenience_aliases",
+        ":selector_static_info",
+    ],
+)
+
+cc_test(
+    name = "signature_test",
+    srcs = ["signature_test.cc"],
+    deps = [
+        "//:jni_bind",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_library(

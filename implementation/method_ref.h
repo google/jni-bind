@@ -32,6 +32,7 @@
 #include "implementation/proxy.h"
 #include "implementation/ref_base.h"
 #include "implementation/return.h"
+#include "implementation/signature.h"
 #include "implementation/string.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
@@ -64,7 +65,7 @@ struct OverloadRef {
       }
 
       return jni::JniHelper::GetMethodID(clazz, IdT::Name(),
-                                         IdT::Signature().data());
+                                         Signature_v<IdT>.data());
     });
   }
 

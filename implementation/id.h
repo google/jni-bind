@@ -30,6 +30,7 @@
 #include "implementation/no_idx.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/selector_static_info.h"
+#include "implementation/signature.h"
 
 namespace jni {
 
@@ -135,7 +136,6 @@ struct Id {
             std::get<secondary_idx>(std::get<idx>(root.methods_).invocations_)
                 .params_.values_);
       }
-
     } else if constexpr (kIdType == IdType::FIELD) {
       return std::get<kIdx>(root.fields_).raw_;
     } else {
@@ -188,50 +188,6 @@ struct Id {
 
   static constexpr std::size_t kNumParams = NumParams();
 
-  template <typename IdxPack>
-  struct Helper;
-
-  template <std::size_t... Is>
-  struct Helper<std::index_sequence<Is...>> {
-    template <std::size_t I>
-    struct Val {
-      static constexpr std::string_view kVal =
-          Id<JniType, IdType::OVERLOAD_PARAM, idx, secondary_idx,
-             I>::Signature();
-    };
-
-    static constexpr std::string_view kVal =
-        metaprogramming::StringConcatenate_v<Val<Is>::kVal...>;
-  };
-
-  struct ReturnHelper {
-    static constexpr std::string_view kVal =
-        Id<JniType, IdType::OVERLOAD_PARAM, idx, secondary_idx>::Signature();
-  };
-
-  // For methods and ctors generates the signature, e.g. "(II)LClass1;".
-  // For parameters, emits just a type name.
-  static constexpr std::string_view Signature() {
-    if constexpr (kIdType == IdType::FIELD) {
-      return SelectorStaticInfo<Id>::TypeName();
-    } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
-      return "NOT_IMPLEMENTED";
-    } else if constexpr (kIdType == IdType::OVERLOAD) {
-      using Idxs = std::make_index_sequence<NumParams()>;
-      if constexpr (kIsConstructor) {
-        return metaprogramming::StringConcatenate_v<
-            kLeftParenthesis, Helper<Idxs>::kVal, kRightParenthesis, kLetterV>;
-      } else {
-        return metaprogramming::StringConcatenate_v<
-            kLeftParenthesis, Helper<Idxs>::kVal, kRightParenthesis,
-            ReturnHelper::kVal>;
-      }
-    } else if constexpr (kIdType == IdType::OVERLOAD_PARAM) {
-      return SelectorStaticInfo<Id>::TypeName();
-    }
-
-    return "NOT_IMPLEMENTED";
-  }
 };
 
 }  // namespace jni

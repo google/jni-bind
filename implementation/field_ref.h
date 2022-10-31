@@ -70,7 +70,7 @@ class FieldRef {
       }
 
       return jni::JniHelper::GetFieldID(clazz, IdT::Name(),
-                                        IdT::Signature().data());
+                                        Signature_v<IdT>.data());
     });
   }
 
