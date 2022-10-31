@@ -60,6 +60,37 @@ template <typename T>
 static constexpr PackType PackDiscriminator_e =
     PackDiscrimator::template val<T>;
 
+// Metafunction to forward a containerize pack to a compatible container.
+template <template <template <typename...> class> class TypesContainer,
+          template <template <auto...> class> class AutoContainer,
+          template <template <const auto&...> class>
+          class ConstAutoRefContainer>
+struct PackDiscriminatedForward {
+  template <typename T>
+  struct Helper;
+
+  template <template <typename...> class Container, typename... Ts>
+  struct Helper<Container<Ts...>> {
+    using type =
+        typename TypesContainer<Container>::template type<Container<Ts...>>;
+  };
+
+  template <template <auto...> class Container, auto... vs>
+  struct Helper<Container<vs...>> {
+    using type =
+        typename AutoContainer<Container>::template type<Container<vs...>>;
+  };
+
+  template <template <const auto&...> class Container, const auto&... vs>
+  struct Helper<Container<vs...>> {
+    using type = typename ConstAutoRefContainer<Container>::template type<
+        Container<vs...>>;
+  };
+
+  template <typename T>
+  using type = typename Helper<T>::type;
+};
+
 }  // namespace jni::metaprogramming
 
 #endif  // JNI_BIND_METAPROGRAMMING_PACK_DISCRIMINATOR_H_

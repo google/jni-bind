@@ -59,4 +59,6 @@ static_assert(PackDiscriminator_e<C<a, b>> == PackType::AUTO_REF);
 static_assert(PackDiscriminator_e<D<kVal1>> == PackType::CONST_AUTO_REF);
 static_assert(PackDiscriminator_e<D<kVal1, kVal2>> == PackType::CONST_AUTO_REF);
 
+// For |PackDiscriminatedForward| tests, see |Next|.
+
 }  // namespace
