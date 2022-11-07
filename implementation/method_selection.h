@@ -129,10 +129,9 @@ struct OverloadSelector {
   using OverloadSelectionForArgs =
       typename MethodSelection<IdT>::template FindOverloadSelection<Args...>;
 
-  using OverloadIdT = Id<typename IdT::JniType, IdType::OVERLOAD, IdT::kIdx,
-                         OverloadSelectionForArgs::IdT::kSecondaryIdx>;
-
-  using OverloadRef = OverloadRef<OverloadIdT, typename IdT::JniType>;
+  using OverloadRef =
+      OverloadRef<Id<typename IdT::JniType, IdType::OVERLOAD, IdT::kIdx,
+                     OverloadSelectionForArgs::IdT::kSecondaryIdx>>;
 
   static constexpr bool kIsValidArgSet =
       MethodSelection<IdT>::template ArgSetViable<Args...>();

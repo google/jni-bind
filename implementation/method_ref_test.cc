@@ -28,7 +28,6 @@ using ::jni::JniType;
 using ::jni::kDefaultClassLoader;
 using ::jni::Method;
 using ::jni::OverloadRef;
-using ::jni::OverloadSelection;
 using ::jni::Params;
 using ::jni::test::JniTest;
 using ::testing::_;
@@ -37,16 +36,8 @@ using ::testing::InSequence;
 using ::testing::StrEq;
 
 template <const auto& class_loader_v, const auto& class_v, size_t I>
-struct FirstOverloadFirstPermutation {
-  using JniTypeT = JniType<jobject, class_v, class_loader_v>;
-  using IdT = Id<JniTypeT, IdType::OVERLOAD, I, 0>;
-
-  using type = OverloadRef<IdT, JniTypeT>;
-};
-
-template <const auto& class_loader_v, const auto& class_v, size_t I>
-using MethodRefT_t =
-    typename FirstOverloadFirstPermutation<class_loader_v, class_v, I>::type;
+using MethodRefT_t = OverloadRef<
+    Id<JniType<jobject, class_v, class_loader_v>, IdType::OVERLOAD, I, 0>>;
 
 TEST_F(JniTest, MethodRef_DoesntStaticCrossTalkWithTagUse) {
   static constexpr Method m{"FooV", jni::Return<void>{}, Params{jint{}}};

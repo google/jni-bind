@@ -49,7 +49,7 @@ static inline auto& GetDefaultLoadedMethodList() {
   return *ret_val;
 }
 
-template <typename IdT_, typename JniType>
+template <typename IdT_>
 struct OverloadRef {
   using IdT = IdT_;
   using ReturnIdT = typename IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
@@ -60,7 +60,7 @@ struct OverloadRef {
     static jni::metaprogramming::DoubleLockedValue<jmethodID> return_value;
 
     return return_value.LoadAndMaybeInit([=]() {
-      if constexpr (JniType::GetClassLoader() == kDefaultClassLoader) {
+      if constexpr (IdT_::JniType::GetClassLoader() == kDefaultClassLoader) {
         GetDefaultLoadedMethodList().push_back(&return_value);
       }
 
