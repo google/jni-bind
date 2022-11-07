@@ -40,74 +40,6 @@
 
 namespace jni {
 
-// Represents an indexing into a specific class and method.
-template <typename JniType, bool is_constructor, size_t method_idx>
-struct MethodSelection;
-
-// Represents a specific overload selection.
-template <typename JniType, typename MethodSelectionT, size_t overload_idx>
-struct OverloadSelection;
-
-// Helper to find overloads for a given arg set.
-template <typename JniType, bool is_constructor, size_t method_idx,
-          typename... Args>
-struct OverloadSelectionForArgsImpl;
-
-////////////////////////////////////////////////////////////////////////////////
-// Helper Aliases.
-////////////////////////////////////////////////////////////////////////////////
-template <typename JniType, bool is_constructor, size_t method_idx>
-using MethodSelection_t = MethodSelection<JniType, is_constructor, method_idx>;
-
-template <typename JniType, bool is_constructor, size_t method_idx,
-          typename... Args>
-using MethodSelectionForArgs_t =
-    OverloadSelectionForArgsImpl<JniType, is_constructor, method_idx, Args...>;
-
-////////////////////////////////////////////////////////////////////////////////
-// Implementation Details.
-////////////////////////////////////////////////////////////////////////////////
-template <typename JniType, bool is_constructor, size_t method_idx>
-struct MethodSelection {
-  using IdT =
-      Id<JniType, IdType::OVERLOAD_SET, is_constructor ? kNoIdx : method_idx,
-         is_constructor ? method_idx : kNoIdx>;
-
-  template <typename Is, typename... Ts>
-  struct Helper;
-
-  template <size_t... Is, typename... Ts>
-  struct Helper<std::index_sequence<Is...>, Ts...> {
-    static constexpr bool val =
-        (OverloadSelection<JniType, MethodSelection,
-                           Is>::template OverloadViable<Ts...>() ||
-         ...);
-
-    // kNoIdx is the max of std::size_t, so, this essentially selects any
-    // idx (if a valid one exists), or defaults to kNoIdx.
-    static constexpr std::size_t overload_idx_if_valid{std::min(
-        {OverloadSelection<JniType, MethodSelection,
-                           Is>::template OverloadIdxIfViable<Ts...>()...})};
-  };
-
-  template <typename... Ts>
-  static constexpr bool ArgSetViable() {
-    return Helper<std::make_index_sequence<IdT::NumParams()>,
-                  std::decay_t<Ts>...>::val;
-  }
-
-  // The overload that is viable for a set of args, or |kNoIdx|.
-  template <typename... Ts>
-  static constexpr std::size_t IdxForArgs() {
-    return Helper<std::make_index_sequence<IdT::NumParams()>,
-                  std::decay_t<Ts>...>::overload_idx_if_valid;
-  }
-
-  template <typename... Ts>
-  using FindOverloadSelection =
-      OverloadSelection<JniType, MethodSelection, IdxForArgs<Ts...>()>;
-};
-
 // Viablility helper for an exact parameter.
 template <std::size_t I, typename IdT, typename... Ts>
 struct Viable {
@@ -153,11 +85,52 @@ struct OverloadSelection {
   }
 };
 
+template <typename JniType, bool is_constructor, size_t method_idx>
+struct MethodSelection {
+  using IdT =
+      Id<JniType, IdType::OVERLOAD_SET, is_constructor ? kNoIdx : method_idx,
+         is_constructor ? method_idx : kNoIdx>;
+
+  template <typename Is, typename... Ts>
+  struct Helper;
+
+  template <size_t... Is, typename... Ts>
+  struct Helper<std::index_sequence<Is...>, Ts...> {
+    static constexpr bool val =
+        (OverloadSelection<JniType, MethodSelection,
+                           Is>::template OverloadViable<Ts...>() ||
+         ...);
+
+    // kNoIdx is the max of std::size_t, so, this essentially selects any
+    // idx (if a valid one exists), or defaults to kNoIdx.
+    static constexpr std::size_t overload_idx_if_valid{std::min(
+        {OverloadSelection<JniType, MethodSelection,
+                           Is>::template OverloadIdxIfViable<Ts...>()...})};
+  };
+
+  template <typename... Ts>
+  static constexpr bool ArgSetViable() {
+    return Helper<std::make_index_sequence<IdT::NumParams()>,
+                  std::decay_t<Ts>...>::val;
+  }
+
+  // The overload that is viable for a set of args, or |kNoIdx|.
+  template <typename... Ts>
+  static constexpr std::size_t IdxForArgs() {
+    return Helper<std::make_index_sequence<IdT::NumParams()>,
+                  std::decay_t<Ts>...>::overload_idx_if_valid;
+  }
+
+  template <typename... Ts>
+  using FindOverloadSelection =
+      OverloadSelection<JniType, MethodSelection, IdxForArgs<Ts...>()>;
+};
+
 template <typename JniType, bool is_constructor, size_t method_idx,
           typename... Args>
-struct OverloadSelectionForArgsImpl {
+struct OverloadSelector {
   using MethodSelectionForArgs =
-      MethodSelection_t<JniType, is_constructor, method_idx>;
+      MethodSelection<JniType, is_constructor, method_idx>;
 
   using OverloadSelectionForArgs =
       typename MethodSelectionForArgs::template FindOverloadSelection<Args...>;

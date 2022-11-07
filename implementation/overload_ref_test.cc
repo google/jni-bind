@@ -23,7 +23,6 @@ namespace {
 using jni::Class;
 using jni::LocalObject;
 using jni::Method;
-using jni::MethodSelection_t;
 using jni::Overload;
 using jni::Params;
 using jni::test::JniTest;
