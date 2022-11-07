@@ -26,14 +26,10 @@
 
 namespace jni::metaprogramming {
 
-// "Invokes" a metafunctions (i.e. a type alias for Func::type).
+// "Invokes" a metafunction (i.e. a type alias for Func::type).
 // Handles both variadic or non-variadic args for a consistent syntax.
-template <typename... Func>
-struct Invoke {};
-
-// Single function invocation (typical case).
 template <typename Func>
-struct Invoke<Func> {
+struct Invoke {
   template <typename, typename Enable = void>
   struct InvokeHelper {};
 
