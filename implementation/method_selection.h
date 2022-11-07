@@ -124,25 +124,18 @@ struct MethodSelection {
       Id<JniType, IdType::OVERLOAD, IdT::kIdx, IdxForArgs<Ts...>()>>;
 };
 
-template <typename JniType, bool is_constructor, size_t method_idx,
-          typename... Args>
+template <typename IdT, typename... Args>
 struct OverloadSelector {
-  using IdT =
-      Id<JniType, IdType::OVERLOAD_SET, is_constructor ? kNoIdx : method_idx,
-         is_constructor ? method_idx : kNoIdx>;
-
-  using MethodSelectionForArgs = MethodSelection<IdT>;
-
   using OverloadSelectionForArgs =
-      typename MethodSelectionForArgs::template FindOverloadSelection<Args...>;
+      typename MethodSelection<IdT>::template FindOverloadSelection<Args...>;
 
-  using OverloadIdT =
-      Id<JniType, IdType::OVERLOAD, is_constructor ? kNoIdx : method_idx,
-         OverloadSelectionForArgs::IdT::kSecondaryIdx>;
-  using OverloadRef = OverloadRef<OverloadIdT, JniType>;
+  using OverloadIdT = Id<typename IdT::JniType, IdType::OVERLOAD, IdT::kIdx,
+                         OverloadSelectionForArgs::IdT::kSecondaryIdx>;
+
+  using OverloadRef = OverloadRef<OverloadIdT, typename IdT::JniType>;
 
   static constexpr bool kIsValidArgSet =
-      MethodSelectionForArgs::template ArgSetViable<Args...>();
+      MethodSelection<IdT>::template ArgSetViable<Args...>();
 };
 
 }  // namespace jni

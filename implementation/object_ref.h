@@ -79,8 +79,9 @@ class ObjectRef : public MethodMap_t<JniTypeT, ObjectRef<JniTypeT>>,
   // Invoked through CRTP from InvocableMap.
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
-    using MethodSelectionForArgs =
-        OverloadSelector<JniTypeT, false, I, Args...>;
+    using IdT = Id<JniTypeT, IdType::OVERLOAD_SET, I>;
+
+    using MethodSelectionForArgs = OverloadSelector<IdT, Args...>;
 
     static_assert(MethodSelectionForArgs::kIsValidArgSet,
                   "JNI Error: Invalid argument set.");
@@ -117,8 +118,10 @@ class ConstructorValidator : public ObjectRef<JniTypeT> {
 
   template <typename... Args>
   struct Helper {
+    using IdT = Id<JniTypeT, IdType::OVERLOAD_SET, kNoIdx>;
+
     // 0 is (always) used to represent the constructor.
-    using type = OverloadSelector<JniTypeT, true, 0, Args...>;
+    using type = OverloadSelector<IdT, Args...>;
   };
 
   template <typename... Args>
