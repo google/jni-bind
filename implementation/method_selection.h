@@ -69,10 +69,9 @@ struct ArgumentValidate {
   static constexpr bool kValid = ViableHelper<Ts...>();
 };
 
-template <typename JniType, typename MethodSelectionT, size_t overload_idx>
+template <typename IdT_>
 struct OverloadSelection {
-  using IdT =
-      Id<JniType, IdType::OVERLOAD, MethodSelectionT::IdT::kIdx, overload_idx>;
+  using IdT = IdT_;
 
   template <typename... Ts>
   static constexpr bool OverloadViable() {
@@ -81,15 +80,14 @@ struct OverloadSelection {
 
   template <typename... Ts>
   static constexpr size_t OverloadIdxIfViable() {
-    return OverloadViable<Ts...>() ? overload_idx : kNoIdx;
+    return OverloadViable<Ts...>() ? IdT::kSecondaryIdx : kNoIdx;
   }
 };
 
-template <typename JniType, bool is_constructor, size_t method_idx>
+template <typename IdT_>
 struct MethodSelection {
-  using IdT =
-      Id<JniType, IdType::OVERLOAD_SET, is_constructor ? kNoIdx : method_idx,
-         is_constructor ? method_idx : kNoIdx>;
+  using IdT = IdT_;
+  using JniType = typename IdT::JniType;
 
   template <typename Is, typename... Ts>
   struct Helper;
@@ -97,15 +95,15 @@ struct MethodSelection {
   template <size_t... Is, typename... Ts>
   struct Helper<std::index_sequence<Is...>, Ts...> {
     static constexpr bool val =
-        (OverloadSelection<JniType, MethodSelection,
-                           Is>::template OverloadViable<Ts...>() ||
+        (OverloadSelection<Id<JniType, IdType::OVERLOAD, IdT::kIdx,
+                              Is>>::template OverloadViable<Ts...>() ||
          ...);
 
     // kNoIdx is the max of std::size_t, so, this essentially selects any
     // idx (if a valid one exists), or defaults to kNoIdx.
     static constexpr std::size_t overload_idx_if_valid{std::min(
-        {OverloadSelection<JniType, MethodSelection,
-                           Is>::template OverloadIdxIfViable<Ts...>()...})};
+        {OverloadSelection<Id<JniType, IdType::OVERLOAD, IdT::kIdx,
+                              Is>>::template OverloadIdxIfViable<Ts...>()...})};
   };
 
   template <typename... Ts>
@@ -122,15 +120,18 @@ struct MethodSelection {
   }
 
   template <typename... Ts>
-  using FindOverloadSelection =
-      OverloadSelection<JniType, MethodSelection, IdxForArgs<Ts...>()>;
+  using FindOverloadSelection = OverloadSelection<
+      Id<JniType, IdType::OVERLOAD, IdT::kIdx, IdxForArgs<Ts...>()>>;
 };
 
 template <typename JniType, bool is_constructor, size_t method_idx,
           typename... Args>
 struct OverloadSelector {
-  using MethodSelectionForArgs =
-      MethodSelection<JniType, is_constructor, method_idx>;
+  using IdT =
+      Id<JniType, IdType::OVERLOAD_SET, is_constructor ? kNoIdx : method_idx,
+         is_constructor ? method_idx : kNoIdx>;
+
+  using MethodSelectionForArgs = MethodSelection<IdT>;
 
   using OverloadSelectionForArgs =
       typename MethodSelectionForArgs::template FindOverloadSelection<Args...>;

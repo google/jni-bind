@@ -27,7 +27,6 @@ using ::jni::IdType;
 using ::jni::JniType;
 using ::jni::kDefaultClassLoader;
 using ::jni::Method;
-using ::jni::MethodSelection;
 using ::jni::OverloadRef;
 using ::jni::OverloadSelection;
 using ::jni::Params;
@@ -39,8 +38,6 @@ using ::testing::StrEq;
 
 template <const auto& class_loader_v, const auto& class_v, size_t I>
 struct FirstOverloadFirstPermutation {
-  using IthMethodSelection =
-      MethodSelection<JniType<jobject, class_v, class_loader_v>, false, I>;
   using JniTypeT = JniType<jobject, class_v, class_loader_v>;
   using IdT = Id<JniTypeT, IdType::OVERLOAD, I, 0>;
 
