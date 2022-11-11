@@ -360,8 +360,23 @@ Sample [method_test_jni.cc](javatests/com/jnibind/test/method_test_jni.cc), [Met
 <a name="class-loaders"></a>
 ## Class Loaders
 
-*Documentation coming soon!*
+Class loaded objects are supported by JNI Bind although they have special constraints on how they can be built and passed. When objects are built under normal circumstances (for example via `new` in Java, or creating a new object through JNI), they are built by the "default" classloader (repreesented in JNI Bind as `kDefaultClassLoader`).
+  
+If you'd like to build an object via a classloader (for example, suppose you wanted to build an object downloaded from a class definition on a website), you will need to build the object via an instance of the class loader, and not via the object's constructor itself (the nuances of this construction are complicated, so consider reviewing [this classloader documentation](https://www.baeldung.com/java-classloaders).
 
+**WARNING: Classloaders currently cannot be constructed directly in JNI Bind but support will be added soon.**
+  
+In order for a classloader to be used in JNI Bind, you must describe the full list of classes that are buildable by a given classloader. In general, if an object is not in the given set, it will defer to a parent classloader, which, if left unspecified, is usually the default classloader.  You may also specify a `null` class loader as the parent, in which case the classloader will be tightly constrained to the prescribed set, and no more.
+  
+```cpp
+  static constexpr Class kClass1{"TestClass1"};
+  static constexpr Class kClass2{
+      "TestClass2", Method{"Foo", jni::Return{}, jni::Params{kTestClass1}}};
+  
+    static constexpr ClassLoader kClassLoader{kDefaultClassLoader,
+                                            SupportedClassSet{kClass1, kClass2}};
+```
+  
 <a name="arrays"></a>
 ## Arrays
 
