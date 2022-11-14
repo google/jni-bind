@@ -826,29 +826,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "reduce_vals",
-    hdrs = ["reduce_vals.h"],
-    deps = [
-        ":combine",
-        ":tuple_manipulation",
-    ],
-)
-
-cc_test(
-    name = "reduce_vals_test",
-    srcs = ["reduce_vals_test.cc"],
-    deps = [
-        ":combine",
-        ":concatenate",
-        ":conditional",
-        ":invoke",
-        ":reduce_vals",
-        ":same",
-        "@googletest//:gtest_main",
-    ],
-)
-
 cc_test(
     name = "zip_invoke_test",
     srcs = ["zip_invoke_test.cc"],
