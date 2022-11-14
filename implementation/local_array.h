@@ -17,7 +17,6 @@
 #define JNI_BIND_LOCAL_ARRAY_H_
 
 #include <cstddef>
-#include <span>
 #include <type_traits>
 
 #include "array.h"
