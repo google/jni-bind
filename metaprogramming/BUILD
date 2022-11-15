@@ -183,6 +183,26 @@ cc_test(
 )
 
 cc_library(
+    name = "conjunction",
+    hdrs = ["conjunction.h"],
+    deps = [
+        ":invoke",
+        ":next",
+    ],
+)
+
+cc_test(
+    name = "conjunction_test",
+    srcs = ["conjunction_test.cc"],
+    deps = [
+        ":conjunction",
+        ":invoke",
+        ":next",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "contains",
     hdrs = ["contains.h"],
     deps = [
