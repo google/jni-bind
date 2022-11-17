@@ -645,6 +645,20 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "per_element_val",
+    hdrs = ["per_element_val.h"],
+)
+
+cc_test(
+    name = "per_element_val_test",
+    srcs = ["per_element_val_test.cc"],
+    deps = [
+        ":per_element_val",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_test(
     name = "queryable_map_test",
     srcs = ["queryable_map_test.cc"],
