@@ -115,6 +115,8 @@ static_assert(MthdId_t<c1, 7>::ArgSetViable<const char (&)[18]>());
 
 static_assert(MthdId_t<c1, 8>::ArgSetViable<jobject>());
 static_assert(MthdId_t<c1, 8>::ArgSetViable<LocalObj1>());
+static_assert(MthdId_t<c1, 8>::ArgSetViable<LocalObj1&>());
+static_assert(MthdId_t<c1, 8>::ArgSetViable<LocalObj1&&>());
 static_assert(MthdId_t<c1, 8>::ArgSetViable<LocalObj1NoDefinition>());
 static_assert(!MthdId_t<c1, 8>::ArgSetViable<LocalObj2>());
 static_assert(MthdId_t<c1, 8>::ArgSetViable<LocalObj1>());
