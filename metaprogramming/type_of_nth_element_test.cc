@@ -23,6 +23,10 @@ using jni::metaprogramming::TypeOfNthTupleElement_t;
 namespace {
 
 static_assert(std::is_same_v<TypeOfNthElement_t<0, int>, int>);
+static_assert(std::is_same_v<TypeOfNthElement_t<0, int&>, int&>);
+static_assert(std::is_same_v<TypeOfNthElement_t<0, int&&>, int&&>);
+static_assert(std::is_same_v<TypeOfNthElement_t<0, const int&>, const int&>);
+static_assert(std::is_same_v<TypeOfNthElement_t<0, const int&&>, const int&&>);
 static_assert(std::is_same_v<TypeOfNthElement_t<0, int, float, double>, int>);
 static_assert(std::is_same_v<TypeOfNthElement_t<1, int, float, double>, float>);
 static_assert(

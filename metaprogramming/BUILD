@@ -549,6 +549,22 @@ cc_test(
 )
 
 cc_library(
+    name = "min_max",
+    hdrs = ["min_max.h"],
+    deps = [":vals"],
+)
+
+cc_test(
+    name = "min_max_test",
+    srcs = ["min_max_test.cc"],
+    deps = [
+        ":min_max",
+        ":reduce",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "modified_max",
     hdrs = ["modified_max.h"],
 )

@@ -24,6 +24,16 @@
 namespace jni::metaprogramming {
 
 // Wrapper to convert a sequence of values into a type.
+template <const auto val_>
+struct Val {
+  using type = decltype(val_);
+  static constexpr type val = val_;
+};
+
+template <const auto val>
+using Val_t = Val<val>;
+
+// Wrapper to convert a sequence of values into a type.
 template <auto... Vs>
 struct Vals {
   static constexpr std::array val{Vs...};

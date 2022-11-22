@@ -63,6 +63,13 @@ struct Reduce {
 template <typename Operation, typename... Ts>
 using Reduce_t = typename Reduce<Operation>::template type<Ts...>;
 
+template <typename Operation, typename TupleOfTs>
+using ReduceAsPack_t = TupleUnroller_t<Reduce<Operation>, TupleOfTs>;
+
+template <typename Operation, typename TupleOfTs>
+static constexpr auto ReduceAsPack_v =
+    TupleUnroller_t<Reduce<Operation>, TupleOfTs>::val;
+
 }  // namespace jni::metaprogramming
 
 #endif  // JNI_BIND_METAPROGRAMMING_REDUCE_H_
