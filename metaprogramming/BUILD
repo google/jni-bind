@@ -4,11 +4,6 @@ licenses(["notice"])
 
 exports_files(["LICENSE"])
 
-filegroup(
-    name = "headers_for_export",
-    srcs = glob(["**/*.h"]),
-)
-
 cc_library(
     name = "all",
     hdrs = ["all.h"],
@@ -286,38 +281,26 @@ cc_test(
 )
 
 cc_library(
-    name = "increment",
-    hdrs = ["increment.h"],
+    name = "filter",
+    hdrs = ["filter.h"],
+    deps = [
+        ":combine",
+        ":concatenate",
+        ":conditional",
+        ":reduce",
+        ":same",
+    ],
 )
 
 cc_test(
-    name = "increment_test",
-    srcs = ["increment_test.cc"],
+    name = "filter_test",
+    srcs = ["filter_test.cc"],
     deps = [
-        ":increment",
+        ":filter",
         ":invoke",
+        ":same",
         "@googletest//:gtest_main",
     ],
-)
-
-cc_library(
-    name = "index",
-    hdrs = ["index.h"],
-    deps = [":tuple_manipulation"],
-)
-
-cc_test(
-    name = "index_test",
-    srcs = ["index_test.cc"],
-    deps = [
-        ":index",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "interleave",
-    hdrs = ["interleave.h"],
 )
 
 cc_library(
@@ -354,25 +337,65 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "function_traits",
+    hdrs = ["function_traits.h"],
+)
+
 cc_test(
-    name = "interleave_test",
-    srcs = ["interleave_test.cc"],
+    name = "function_traits_test",
+    srcs = ["function_traits_test.cc"],
     deps = [
-        ":interleave",
+        ":function_traits",
+        "@googletest//:gtest_main",
+    ],
+)
+
+filegroup(
+    name = "headers_for_export",
+    srcs = glob(["**/*.h"]),
+)
+
+cc_library(
+    name = "increment",
+    hdrs = ["increment.h"],
+)
+
+cc_test(
+    name = "increment_test",
+    srcs = ["increment_test.cc"],
+    deps = [
+        ":increment",
+        ":invoke",
         "@googletest//:gtest_main",
     ],
 )
 
 cc_library(
-    name = "lambda_string",
-    hdrs = ["lambda_string.h"],
+    name = "index",
+    hdrs = ["index.h"],
+    deps = [":tuple_manipulation"],
 )
 
 cc_test(
-    name = "lambda_string_test",
-    srcs = ["lambda_string_test.cc"],
+    name = "index_test",
+    srcs = ["index_test.cc"],
     deps = [
-        ":lambda_string",
+        ":index",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "interleave",
+    hdrs = ["interleave.h"],
+)
+
+cc_test(
+    name = "interleave_test",
+    srcs = ["interleave_test.cc"],
+    deps = [
+        ":interleave",
         "@googletest//:gtest_main",
     ],
 )
@@ -393,6 +416,42 @@ cc_test(
     srcs = ["invocable_map_test.cc"],
     deps = [
         ":invocable_map",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "invoke",
+    hdrs = ["invoke.h"],
+    deps = [
+        ":per_element",
+        ":tuple_manipulation",
+        ":type_of_nth_element",
+    ],
+)
+
+cc_test(
+    name = "invoke_test",
+    srcs = ["invoke_test.cc"],
+    deps = [
+        ":increment",
+        ":invoke",
+        ":per_element",
+        ":same",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "lambda_string",
+    hdrs = ["lambda_string.h"],
+)
+
+cc_test(
+    name = "lambda_string_test",
+    srcs = ["lambda_string_test.cc"],
+    deps = [
+        ":lambda_string",
         "@googletest//:gtest_main",
     ],
 )
@@ -471,76 +530,6 @@ cc_test(
     srcs = ["type_of_nth_element_test.cc"],
     deps = [
         ":type_of_nth_element",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "queryable_map",
-    hdrs = ["queryable_map.h"],
-    deps = [
-        ":interleave",
-        ":tuple_from_size",
-        ":tuple_manipulation",
-        ":type_of_nth_element",
-    ],
-)
-
-cc_library(
-    name = "function_traits",
-    hdrs = ["function_traits.h"],
-)
-
-cc_test(
-    name = "function_traits_test",
-    srcs = ["function_traits_test.cc"],
-    deps = [
-        ":function_traits",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "invoke",
-    hdrs = ["invoke.h"],
-    deps = [
-        ":per_element",
-        ":tuple_manipulation",
-        ":type_of_nth_element",
-    ],
-)
-
-cc_test(
-    name = "invoke_test",
-    srcs = ["invoke_test.cc"],
-    deps = [
-        ":increment",
-        ":invoke",
-        ":per_element",
-        ":same",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "filter",
-    hdrs = ["filter.h"],
-    deps = [
-        ":combine",
-        ":concatenate",
-        ":conditional",
-        ":reduce",
-        ":same",
-    ],
-)
-
-cc_test(
-    name = "filter_test",
-    srcs = ["filter_test.cc"],
-    deps = [
-        ":filter",
-        ":invoke",
-        ":same",
         "@googletest//:gtest_main",
     ],
 )
@@ -659,6 +648,17 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "queryable_map",
+    hdrs = ["queryable_map.h"],
+    deps = [
+        ":interleave",
+        ":tuple_from_size",
+        ":tuple_manipulation",
+        ":type_of_nth_element",
+    ],
+)
+
 cc_test(
     name = "queryable_map_test",
     srcs = ["queryable_map_test.cc"],
@@ -688,6 +688,7 @@ cc_test(
         ":invoke",
         ":reduce",
         ":same",
+        ":vals",
         "@googletest//:gtest_main",
     ],
 )
@@ -780,6 +781,7 @@ cc_library(
     name = "unfurl",
     hdrs = ["unfurl.h"],
     deps = [
+        ":tuple_manipulation",
     ],
 )
 
