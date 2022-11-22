@@ -98,6 +98,20 @@ cc_test(
 )
 
 cc_library(
+    name = "call",
+    hdrs = ["call.h"],
+)
+
+cc_test(
+    name = "call_test",
+    srcs = ["call_test.cc"],
+    deps = [
+        ":call",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "cartesian_product",
     hdrs = ["cartesian_product.h"],
     deps = [
