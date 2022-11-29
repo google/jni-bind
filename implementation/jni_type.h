@@ -51,9 +51,12 @@ struct JniType {
     }
   }
 
+  static constexpr auto GetStatic() { return GetClass().static_; }
+
   static constexpr decltype(GetClass()) class_v = GetClass();
   static constexpr decltype(GetClassLoader()) class_loader_v = GetClassLoader();
   static constexpr decltype(jvm_v_) jvm_v = jvm_v_;
+  static constexpr decltype(GetStatic()) static_v = GetStatic();
 
   using SpanType = SpanType_;
   using StorageType = typename StorageHelper<SpanType_, kRank>::type;
@@ -61,6 +64,7 @@ struct JniType {
   using ClassT = std::decay_t<decltype(GetClass())>;
   using ClassLoaderT = std::decay_t<decltype(GetClassLoader())>;
   using JvmT = std::decay_t<decltype(jvm_v)>;
+  using StaticT = std::decay_t<decltype(GetStatic())>;
 };
 
 template <typename T1, typename T2>

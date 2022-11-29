@@ -35,6 +35,7 @@
 #include "implementation/return.h"
 #include "implementation/selector_static_info.h"
 #include "implementation/static.h"
+#include "implementation/static_ref.h"
 #include "implementation/string.h"
 #include "implementation/supported_class_set.h"
 

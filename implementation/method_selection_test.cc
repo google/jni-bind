@@ -73,7 +73,8 @@ constexpr Class c1{
 
 template <const auto& class_v, size_t method_idx>
 using MthdId_t = MethodSelection<
-    Id<JniType<jobject, class_v>, IdType::OVERLOAD_SET, method_idx>>;
+    Id<JniType<jobject, class_v>, IdType::OVERLOAD_SET, method_idx>,
+    IdType::OVERLOAD, IdType::OVERLOAD_PARAM>;
 
 static_assert(MthdId_t<c1, 0>::ArgSetViable<>());
 static_assert(!MthdId_t<c1, 0>::ArgSetViable<int>());

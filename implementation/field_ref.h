@@ -47,10 +47,10 @@ static inline auto& GetDefaultLoadedFieldList() {
 //
 // Note, this class performs no cleanup on destruction.  jFieldIDs are static
 // throughout the duration of a JVM's life, see JvmRef for teardown.
-template <typename JniTypeT, std::size_t I>
+template <typename JniTypeT, IdType field_type, std::size_t I>
 class FieldRef {
  public:
-  using IdT = Id<JniTypeT, IdType::FIELD, I>;
+  using IdT = Id<JniTypeT, field_type, I>;
   using FieldSelectionT = FieldSelection<JniTypeT, I>;
 
   explicit FieldRef(jclass class_ref, jobject object_ref)

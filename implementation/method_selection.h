@@ -41,13 +41,16 @@
 #include "metaprogramming/type_index_mask.h"
 #include "metaprogramming/type_of_nth_element.h"
 #include "metaprogramming/unfurl.h"
+#include "metaprogramming/vals.h"
 
 namespace jni {
 
 // Viablility helper for an exact parameter.
-template <std::size_t I, typename IdT, typename... Ts>
+template <std::size_t I, typename IdT, typename ValkReturnIDType,
+          typename... Ts>
 struct Viable {
-  using IdTmp = typename IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
+  static constexpr IdType kReturnIDType = ValkReturnIDType::val;
+  using IdTmp = typename IdT::template ChangeIdType<kReturnIDType>;
   using IdTParamType = typename IdTmp::template ChangeIdx<2, I>;
 
   static constexpr bool val =
@@ -56,14 +59,15 @@ struct Viable {
           metaprogramming::TypeOfNthElement_t<I, std::decay_t<Ts>...>>;
 };
 
-template <typename OverloadId>
+template <typename OverloadId, IdType kReturnIDType>
 struct ArgumentValidate {
   // Helper to prevents instantiating mismatching size unrolls.
   template <typename... Ts>
   static constexpr bool ViableHelper() {
     if constexpr (sizeof...(Ts) == OverloadId::kNumParams) {
-      return metaprogramming::UnfurlConjunction_v<OverloadId::kNumParams,
-                                                  Viable, OverloadId, Ts...>;
+      return metaprogramming::UnfurlConjunction_v<
+          OverloadId::kNumParams, Viable, OverloadId,
+          metaprogramming::Val_t<kReturnIDType>, Ts...>;
     } else {
       return false;
     }
@@ -73,13 +77,13 @@ struct ArgumentValidate {
   static constexpr bool kValid = ViableHelper<Ts...>();
 };
 
-template <typename IdT_>
+template <typename IdT_, IdType kReturnIDType>
 struct OverloadSelection {
   using IdT = IdT_;
 
   template <typename... Ts>
   static constexpr bool OverloadViable() {
-    return ArgumentValidate<IdT>::template kValid<Ts...>;
+    return ArgumentValidate<IdT, kReturnIDType>::template kValid<Ts...>;
   }
 
   template <typename... Ts>
@@ -88,16 +92,17 @@ struct OverloadSelection {
   }
 };
 
-template <typename IdT_>
+template <typename IdT_, IdType kIDType = IdType::OVERLOAD,
+          IdType kReturnIDType = IdType::OVERLOAD_PARAM>
 struct MethodSelection {
   using IdT = IdT_;
   using JniType = typename IdT::JniType;
 
   template <std::size_t I, typename... Ts>
   struct Helper {
-    using type = metaprogramming::Val_t<
-        OverloadSelection<Id<JniType, IdType::OVERLOAD, IdT::kIdx,
-                             I>>::template OverloadIdxIfViable<Ts...>()>;
+    using type = metaprogramming::Val_t<OverloadSelection<
+        Id<JniType, kIDType, IdT::kIdx, I>,
+        kReturnIDType>::template OverloadIdxIfViable<Ts...>()>;
   };
 
   template <typename... Ts>
@@ -106,8 +111,9 @@ struct MethodSelection {
                                 IdT::NumParams(), Helper, Ts...>>>::val;
 
   template <typename... Ts>
-  using FindOverloadSelection = OverloadSelection<
-      Id<JniType, IdType::OVERLOAD, IdT::kIdx, kIdxForTs<Ts...>>>;
+  using FindOverloadSelection =
+      OverloadSelection<Id<JniType, kIDType, IdT::kIdx, kIdxForTs<Ts...>>,
+                        kReturnIDType>;
 
   template <typename... Ts>
   static constexpr bool ArgSetViable() {
@@ -115,17 +121,19 @@ struct MethodSelection {
   }
 };
 
-template <typename IdT, typename... Args>
+template <typename IdT, IdType kIDType, IdType kReturnIDType, typename... Args>
 struct OverloadSelector {
-  using OverloadSelectionForArgs =
-      typename MethodSelection<IdT>::template FindOverloadSelection<Args...>;
+  using OverloadSelectionForArgs = typename MethodSelection<
+      IdT, kIDType, kReturnIDType>::template FindOverloadSelection<Args...>;
 
   using OverloadRef =
-      OverloadRef<Id<typename IdT::JniType, IdType::OVERLOAD, IdT::kIdx,
-                     OverloadSelectionForArgs::IdT::kSecondaryIdx>>;
+      OverloadRef<Id<typename IdT::JniType, kIDType, IdT::kIdx,
+                     OverloadSelectionForArgs::IdT::kSecondaryIdx>,
+                  kReturnIDType>;
 
   static constexpr bool kIsValidArgSet =
-      MethodSelection<IdT>::template ArgSetViable<Args...>();
+      MethodSelection<IdT, kIDType,
+                      kReturnIDType>::template ArgSetViable<Args...>();
 };
 
 }  // namespace jni

@@ -51,6 +51,7 @@ cc_library(
         "//implementation:return",
         "//implementation:selector_static_info",
         "//implementation:static",
+        "//implementation:static_ref",
         "//implementation:string",
         "//implementation:string_ref",
         "//implementation:supported_class_set",

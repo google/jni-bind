@@ -23,6 +23,7 @@
 
 #include "implementation/class_loader.h"
 #include "implementation/class_ref.h"
+#include "implementation/id_type.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/jni_method_invoke.h"
@@ -49,10 +50,10 @@ static inline auto& GetDefaultLoadedMethodList() {
   return *ret_val;
 }
 
-template <typename IdT_>
+template <typename IdT_, IdType kReturnIDType>
 struct OverloadRef {
   using IdT = IdT_;
-  using ReturnIdT = typename IdT::template ChangeIdType<IdType::OVERLOAD_PARAM>;
+  using ReturnIdT = typename IdT::template ChangeIdType<kReturnIDType>;
   using ReturnProxied =
       Return_t<typename ReturnIdT::MaterializeCDeclT, ReturnIdT>;
 
@@ -90,22 +91,6 @@ struct OverloadRef {
     }
   }
 };
-
-//==============================================================================
-// Helper class for ObjectRef to inherit from.
-// Inheriting from MethodMapHelper::type exposes an operator() which keys on
-// method names.
-template <typename JniTypeT, typename CrtpBase_>
-struct MethodMapHelper {
-  using MethodTup = std::decay_t<decltype(JniTypeT::class_v.methods_)>;
-
-  using type = metaprogramming::InvocableMap<CrtpBase_, JniTypeT::class_v,
-                                             typename JniTypeT::ClassT,
-                                             &JniTypeT::ClassT::methods_>;
-};
-
-template <typename JniTypeT, typename CrtpBase_>
-using MethodMap_t = typename MethodMapHelper<JniTypeT, CrtpBase_>::type;
 
 }  // namespace jni
 

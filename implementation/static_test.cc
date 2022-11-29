@@ -26,22 +26,29 @@ using jni::Method;
 using jni::Params;
 using jni::Return;
 using jni::Static;
+using jni::StaticRef;
 using jni::test::JniTest;
 
-TEST_F(JniTest, MethodSmokeTest) {
+TEST_F(JniTest, StaticMethodNoArgs) {
   static constexpr Class kClass{
       "c1", Static{Method{"Foo", Return<int>{}, Params<>{}}}};
 
-  // In a follow up CL the following syntax will be enabled.
-  // StaticRef<kClass>::Call("Foo");
-
-  static_assert(!std::is_same_v<decltype(kClass), void>);
+  StaticRef<kClass>{}("Foo");
+  // StaticRef<kClass>{}("Foo", 123); // doesn't compile (good).
 }
 
-TEST_F(JniTest, FieldSmokeTest) {
-  static constexpr Class kClass{"c2", Static{Field{"Foo", int{}}}};
+TEST_F(JniTest, StaticMethodOneArg) {
+  static constexpr Class kClass{
+      "c1", Static{Method{"Foo", Return<int>{}, Params<jint>{}}}};
 
-  static_assert(!std::is_same_v<decltype(kClass), void>);
+  // StaticRef<kClass>{}("Foo"); // doesn't compile (good).
+  StaticRef<kClass>{}("Foo", 123);
+}
+
+TEST_F(JniTest, FieldInt) {
+  static constexpr Class kClass{"c2", Static{Field{"foo", int{}}}};
+
+  StaticRef<kClass>{}["foo"];
 }
 
 }  // namespace

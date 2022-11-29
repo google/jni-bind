@@ -37,7 +37,8 @@ using ::testing::StrEq;
 
 template <const auto& class_loader_v, const auto& class_v, size_t I>
 using MethodRefT_t = OverloadRef<
-    Id<JniType<jobject, class_v, class_loader_v>, IdType::OVERLOAD, I, 0>>;
+    Id<JniType<jobject, class_v, class_loader_v>, IdType::OVERLOAD, I, 0>,
+    IdType::OVERLOAD_PARAM>;
 
 TEST_F(JniTest, MethodRef_DoesntStaticCrossTalkWithTagUse) {
   static constexpr Method m{"FooV", jni::Return<void>{}, Params{jint{}}};

@@ -462,6 +462,7 @@ cc_library(
     deps = [
         ":class_loader",
         ":class_ref",
+        ":id_type",
         ":jni_type",
         ":method",
         ":params",
@@ -516,6 +517,7 @@ cc_library(
         "//metaprogramming:type_index_mask",
         "//metaprogramming:type_of_nth_element",
         "//metaprogramming:unfurl",
+        "//metaprogramming:vals",
     ],
 )
 
@@ -737,6 +739,24 @@ cc_library(
         ":method",
         ":params",
         "//metaprogramming:base_filter",
+        "//metaprogramming:invocable_map",
+        "//metaprogramming:queryable_map",
+    ],
+)
+
+cc_library(
+    name = "static_ref",
+    hdrs = ["static_ref.h"],
+    deps = [
+        ":default_class_loader",
+        ":field_ref",
+        ":id",
+        ":id_type",
+        ":jni_type",
+        ":jvm",
+        ":method_selection",
+        "//metaprogramming:invocable_map",
+        "//metaprogramming:queryable_map",
     ],
 )
 

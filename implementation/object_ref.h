@@ -50,7 +50,9 @@ namespace jni {
 // To call methods on the object, use the  operator(), to access fields, use
 // operator[].
 template <typename JniTypeT>
-class ObjectRef : public MethodMap_t<JniTypeT, ObjectRef<JniTypeT>>,
+class ObjectRef : public metaprogramming::InvocableMap<
+                      ObjectRef<JniTypeT>, JniTypeT::class_v,
+                      typename JniTypeT::ClassT, &JniTypeT::ClassT::methods_>,
                   public metaprogramming::QueryableMap_t<
                       ObjectRef<JniTypeT>, JniTypeT::class_v,
                       &std::decay_t<decltype(JniTypeT::class_v)>::fields_>,
@@ -80,8 +82,9 @@ class ObjectRef : public MethodMap_t<JniTypeT, ObjectRef<JniTypeT>>,
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
     using IdT = Id<JniTypeT, IdType::OVERLOAD_SET, I>;
-
-    using MethodSelectionForArgs = OverloadSelector<IdT, Args...>;
+    using MethodSelectionForArgs =
+        OverloadSelector<IdT, IdType::OVERLOAD, IdType::OVERLOAD_PARAM,
+                         Args...>;
 
     static_assert(MethodSelectionForArgs::kIsValidArgSet,
                   "JNI Error: Invalid argument set.");
@@ -93,7 +96,8 @@ class ObjectRef : public MethodMap_t<JniTypeT, ObjectRef<JniTypeT>>,
   // Invoked through CRTP from QueryableMap.
   template <size_t I>
   auto QueryableMapCall(const char* key) const {
-    return FieldRef<JniTypeT, I>{GetJClass(), RefBase::object_ref_};
+    return FieldRef<JniTypeT, IdType::FIELD, I>{GetJClass(),
+                                                RefBase::object_ref_};
   }
 };
 
@@ -121,7 +125,8 @@ class ConstructorValidator : public ObjectRef<JniTypeT> {
     using IdT = Id<JniTypeT, IdType::OVERLOAD_SET, kNoIdx>;
 
     // 0 is (always) used to represent the constructor.
-    using type = OverloadSelector<IdT, Args...>;
+    using type = OverloadSelector<IdT, IdType::OVERLOAD, IdType::OVERLOAD_PARAM,
+                                  Args...>;
   };
 
   template <typename... Args>
