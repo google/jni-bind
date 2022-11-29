@@ -20,6 +20,7 @@
 #include <type_traits>
 #include <variant>
 
+#include "implementation/array.h"
 #include "implementation/array_type_conversion.h"
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
@@ -51,7 +52,9 @@ struct JniType {
     }
   }
 
-  static constexpr auto GetStatic() { return GetClass().static_; }
+  static constexpr auto GetStatic() {
+    return FullArrayStripV(GetClass()).static_;
+  }
 
   static constexpr decltype(GetClass()) class_v = GetClass();
   static constexpr decltype(GetClassLoader()) class_loader_v = GetClassLoader();
@@ -61,10 +64,12 @@ struct JniType {
   using SpanType = SpanType_;
   using StorageType = typename StorageHelper<SpanType_, kRank>::type;
 
-  using ClassT = std::decay_t<decltype(GetClass())>;
+  using ClassT = std::decay_t<ArrayStrip_t<std::decay_t<decltype(GetClass())>>>;
   using ClassLoaderT = std::decay_t<decltype(GetClassLoader())>;
   using JvmT = std::decay_t<decltype(jvm_v)>;
   using StaticT = std::decay_t<decltype(GetStatic())>;
+
+  static constexpr ClassT stripped_class_v{FullArrayStripV(GetClass())};
 };
 
 template <typename T1, typename T2>

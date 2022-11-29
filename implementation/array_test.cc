@@ -25,6 +25,7 @@ using ::jni::ArrayFromRank_t;
 using ::jni::ArrayStrip_t;
 using ::jni::CDecl_t;
 using ::jni::Class;
+using ::jni::Field;
 using ::jni::LocalArray;
 using ::jni::LocalObject;
 using ::jni::Method;
@@ -36,6 +37,7 @@ using ::testing::_;
 using ::testing::StrEq;
 
 static constexpr Class kClass{"kClass"};
+static constexpr Class kClass2{"kClass2"};
 
 static constexpr Array arr1{jint{}};
 static constexpr Array arr2{jfloat{}};
@@ -139,7 +141,6 @@ TEST_F(JniTest, Array_ConstructsFromRValue) {
 }
 
 TEST_F(JniTest, Array_HandlesSingleObjectArrayAsReturn) {
-  static constexpr Class kClass2{"kClass2"};
   static constexpr Class kClass{
       "ClassThatReturnsIntArrays",
       Method{"ObjectArray", jni::Return{Array{kClass2}}, Params{}}};
@@ -164,7 +165,6 @@ TEST_F(JniTest, Array_HandlesSingleArrayParam_NativeJNIType) {
 }
 
 TEST_F(JniTest, Array_HandlesSingleObjectArray) {
-  static constexpr Class kClass2{"kClass2"};
   static constexpr Class kClass{
       "kClass",
       Method{"takesObjectArray", jni::Return<void>{}, Params{Array{kClass2}}}};
@@ -225,8 +225,6 @@ TEST_F(JniTest, Array_HandlesMultipleBoolAsParam) {
 }
 
 TEST_F(JniTest, Array_HandlesComplexArrays) {
-  static constexpr Class kClass2{"kClass2"};
-
   static constexpr Class kClass{
       "ClassThatReturnsArrays",
       Method{"Foo", jni::Return{Array{kClass2}},
@@ -278,8 +276,6 @@ TEST_F(JniTest, Array_HandlesSingle2DIntAsParamWithRankfulReturnT) {
 }
 
 TEST_F(JniTest, Array_HandlesSingle2DClassAsReturn) {
-  static constexpr Class kClass2{"kClass2"};
-
   static constexpr Class kClass{
       "ClassThatReturnsArrays",
       Method{"Foo", jni::Return{Array{Array{kClass2}}}, Params{}}};
@@ -320,12 +316,9 @@ TEST_F(JniTest, Array_HandlesSingleUndefinedClassAsParam) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Various Complicated Array Tests.
+// Methods.
 ////////////////////////////////////////////////////////////////////////////////
-
 TEST_F(JniTest, Array_LooksUpCorrectSignaturesForReturns) {
-  static constexpr Class kClass2{"kClass2"};
-
   static constexpr Class kClass{
       "ClassThatReturnsArrays",
       Method{"BoolArray", jni::Return{Array{jboolean{}}}, Params{}},
@@ -361,47 +354,57 @@ TEST_F(JniTest, Array_LooksUpCorrectSignaturesForReturns) {
   obj("ObjectArray");
 }
 
-TEST_F(JniTest, Array_LooksUpCorrectSignaturesForInputParams) {
-  static constexpr Class kClass2{"kClass2"};
-
+////////////////////////////////////////////////////////////////////////////////
+// Fields.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, Array_FieldTests) {
   static constexpr Class kClass{
       "ClassThatReturnsArrays",
-      Method{"BoolArray", jni::Return<void>{}, Params{Array{jboolean{}}}},
-      Method{"ByteArray", jni::Return<void>{}, Params{Array{jbyte{}}}},
-      Method{"CharArray", jni::Return<void>{}, Params{Array{jchar{}}}},
-      Method{"ShortArray", jni::Return<void>{}, Params{Array{jshort{}}}},
-      Method{"IntArray", jni::Return<void>{}, Params{Array{jint{}}}},
-      Method{"FloatArray", jni::Return<void>{}, Params{Array{jfloat{}}}},
-      Method{"DoubleArray", jni::Return<void>{}, Params{Array{jdouble{}}}},
-      Method{"LongArray", jni::Return<void>{}, Params{Array{jlong{}}}},
-      Method{"ObjectArray", jni::Return<void>{}, Params{Array{kClass2}}},
+      Field{"BoolArray", Array{jboolean{}}},
+      Field{"ByteArray", Array{jbyte{}}},
+      Field{"CharArray", Array{jchar{}}},
+      Field{"ShortArray", Array{jshort{}}},
+      Field{"IntArray", Array{jint{}}},
+      Field{"FloatArray", Array{jfloat{}}},
+      Field{"DoubleArray", Array{jdouble{}}},
+      Field{"LongArray", Array{jlong{}}},
+      Field{"ObjectArrayRank1", Array{kClass2}},
+      Field{"ObjectArrayRank2", Array{Array{kClass2}}},
+      Field{"ObjectArrayRank3", Array{Array{Array{kClass2}}}},
   };
 
   LocalObject<kClass> obj{jobject{nullptr}};
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("BoolArray"), StrEq("([Z)V")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("ByteArray"), StrEq("([B)V")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("CharArray"), StrEq("([C)V")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("ShortArray"), StrEq("([S)V")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("IntArray"), StrEq("([I)V")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("FloatArray"), StrEq("([F)V")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("DoubleArray"), StrEq("([D)V")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("LongArray"), StrEq("([J)V")));
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("BoolArray"), StrEq("[Z")));
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("ByteArray"), StrEq("[B")));
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("CharArray"), StrEq("[C")));
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("ShortArray"), StrEq("[S")));
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("IntArray"), StrEq("[I")));
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("FloatArray"), StrEq("[F")));
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("DoubleArray"), StrEq("[D")));
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("LongArray"), StrEq("[J")));
   EXPECT_CALL(*env_,
-              GetMethodID(_, StrEq("ObjectArray"), StrEq("([LkClass2;)V")));
+              GetFieldID(_, StrEq("ObjectArrayRank1"), StrEq("[LkClass2;")));
+  EXPECT_CALL(*env_,
+              GetFieldID(_, StrEq("ObjectArrayRank2"), StrEq("[[LkClass2;")));
+  EXPECT_CALL(*env_,
+              GetFieldID(_, StrEq("ObjectArrayRank3"), StrEq("[[[LkClass2;")));
 
-  obj("BoolArray", jbooleanArray{nullptr});
-  obj("ByteArray", jbyteArray{nullptr});
-  obj("CharArray", jcharArray{nullptr});
-  obj("ShortArray", jshortArray{nullptr});
-  obj("IntArray", jintArray{nullptr});
-  obj("FloatArray", jfloatArray{nullptr});
-  obj("LongArray", jlongArray{nullptr});
-  obj("DoubleArray", jdoubleArray{nullptr});
-  obj("ObjectArray", jobjectArray{nullptr});
+  obj["BoolArray"].Get();
+  obj["ByteArray"].Get();
+  obj["CharArray"].Get();
+  obj["ShortArray"].Get();
+  obj["IntArray"].Get();
+  obj["FloatArray"].Get();
+  obj["LongArray"].Get();
+  obj["DoubleArray"].Get();
+  obj["ObjectArrayRank1"].Get();
+  obj["ObjectArrayRank2"].Get();
+  obj["ObjectArrayRank3"].Get();
 }
 
-static constexpr Class kClass2{"kClass2"};
-
+////////////////////////////////////////////////////////////////////////////////
+// Multi-Dimensional arrays.
+////////////////////////////////////////////////////////////////////////////////
 static constexpr Class kArrClass{
     "ArrClass",
     Method{"Foo", jni::Return{Array{jint{}}}, Params{Array{Array{jint{}}}}},

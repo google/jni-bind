@@ -29,6 +29,7 @@
 #include "method_ref.h"
 #include "proxy.h"
 #include "ref_base.h"
+#include "implementation/array.h"
 #include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/jni_env.h"
@@ -50,13 +51,14 @@ namespace jni {
 // To call methods on the object, use the  operator(), to access fields, use
 // operator[].
 template <typename JniTypeT>
-class ObjectRef : public metaprogramming::InvocableMap<
-                      ObjectRef<JniTypeT>, JniTypeT::class_v,
-                      typename JniTypeT::ClassT, &JniTypeT::ClassT::methods_>,
-                  public metaprogramming::QueryableMap_t<
-                      ObjectRef<JniTypeT>, JniTypeT::class_v,
-                      &std::decay_t<decltype(JniTypeT::class_v)>::fields_>,
-                  public RefBase<JniTypeT> {
+class ObjectRef
+    : public metaprogramming::InvocableMap<
+          ObjectRef<JniTypeT>, JniTypeT::stripped_class_v,
+          typename JniTypeT::ClassT, &JniTypeT::ClassT::methods_>,
+      public metaprogramming::QueryableMap_t<ObjectRef<JniTypeT>,
+                                             JniTypeT::stripped_class_v,
+                                             &JniTypeT::ClassT::fields_>,
+      public RefBase<JniTypeT> {
  protected:
   static_assert(
       JniTypeT::class_loader_v

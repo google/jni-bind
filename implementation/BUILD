@@ -341,6 +341,7 @@ cc_library(
     name = "jni_type",
     hdrs = ["jni_type.h"],
     deps = [
+        ":array",
         ":array_type_conversion",
         ":class",
         ":class_loader",
@@ -570,6 +571,7 @@ cc_library(
     name = "object_ref",
     hdrs = ["object_ref.h"],
     deps = [
+        ":array",
         ":class",
         ":class_loader",
         ":class_ref",
