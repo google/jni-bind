@@ -32,7 +32,7 @@ struct ParamsBase {};
 // definition.
 //
 // These may be in their native type (e.g. int, float, etc) or they may have
-// some minimal type wrapping such as Object<Name> (see JniTypeProxy).
+// some minimal type wrapping such as Object<Name> (see JniTProxy).
 template <typename... ValuesRaw_>
 struct Params : ParamsBase {
  public:

@@ -42,8 +42,8 @@ namespace jni {
 
 template <const auto& jvm_v_, const auto& class_loader_v_>
 class ClassLoaderRef
-    : public ObjectRef<JniType<jobject, kJavaLangClassLoader,
-                               kDefaultClassLoader, kDefaultJvm>> {
+    : public ObjectRef<JniT<jobject, kJavaLangClassLoader, kDefaultClassLoader,
+                            kDefaultJvm>> {
  private:
   // Returns kDefaultJvm for default class loaded objects, otherwise returns the
   // jvm associated with this loader.  Default loaders do not use indexing,
@@ -60,8 +60,8 @@ class ClassLoaderRef
 
  public:
   ClassLoaderRef(jobject class_loader)
-      : ObjectRef<JniType<jobject, kJavaLangClassLoader, kDefaultClassLoader,
-                          kDefaultJvm>>(class_loader) {}
+      : ObjectRef<JniT<jobject, kJavaLangClassLoader, kDefaultClassLoader,
+                       kDefaultJvm>>(class_loader) {}
 
   static_assert(class_loader_v_ != kDefaultClassLoader,
                 "Custom class loaders should not use the default class loader,"

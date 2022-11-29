@@ -28,7 +28,7 @@ using ::jni::Constructor;
 using ::jni::Field;
 using ::jni::Id;
 using ::jni::IdType;
-using ::jni::JniType;
+using ::jni::JniT;
 using ::jni::kNoIdx;
 using ::jni::Method;
 using ::jni::Overload;
@@ -63,7 +63,7 @@ static constexpr Class kClass1{
     Field{"f0", int{}},
     Field{"f1", Class{"kClass2"}}};
 
-using JT = JniType<jobject, kClass1>;
+using JT = JniT<jobject, kClass1>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructors
@@ -196,7 +196,7 @@ static constexpr Class kStaticClass{
     },
 };
 
-using JTS = JniType<jobject, kStaticClass>;
+using JTS = JniT<jobject, kStaticClass>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Static Methods.

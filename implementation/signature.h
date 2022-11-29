@@ -29,7 +29,7 @@
 
 namespace jni {
 
-template <typename JniType_, IdType kIdType_, std::size_t idx,
+template <typename JniT_, IdType kIdType_, std::size_t idx,
           std::size_t secondary_idx, std::size_t tertiary_idx>
 struct Id;
 
@@ -37,10 +37,10 @@ struct Id;
 template <typename>
 struct Signature {};
 
-template <typename JniType_, IdType kIdType_, std::size_t idx,
+template <typename JniT_, IdType kIdType_, std::size_t idx,
           std::size_t secondary_idx, std::size_t tertiary_idx>
-struct Signature<Id<JniType_, kIdType_, idx, secondary_idx, tertiary_idx>> {
-  using IdT = Id<JniType_, kIdType_, idx, secondary_idx, tertiary_idx>;
+struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
+  using IdT = Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>;
 
   template <typename IdxPack>
   struct Helper;
@@ -50,7 +50,7 @@ struct Signature<Id<JniType_, kIdType_, idx, secondary_idx, tertiary_idx>> {
     template <std::size_t I>
     struct Val {
       static constexpr std::string_view val = Signature<
-          Id<JniType_, IdType::OVERLOAD_PARAM, idx, secondary_idx, I>>::val;
+          Id<JniT_, IdType::OVERLOAD_PARAM, idx, secondary_idx, I>>::val;
     };
 
     static constexpr std::string_view val =
@@ -59,7 +59,7 @@ struct Signature<Id<JniType_, kIdType_, idx, secondary_idx, tertiary_idx>> {
 
   struct ReturnHelper {
     static constexpr std::string_view val = Signature<
-        Id<JniType_, IdType::OVERLOAD_PARAM, idx, secondary_idx, kNoIdx>>::val;
+        Id<JniT_, IdType::OVERLOAD_PARAM, idx, secondary_idx, kNoIdx>>::val;
   };
 
   // For methods and ctors generates the signature, e.g. "(II)LClass1;".

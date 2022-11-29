@@ -47,15 +47,15 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref);
 // Represents a fully specified class and class loader pair for a given Jvm.
 // Because this is fully specified, classes associated with this type of loader
 // can be programmatically torn down.
-template <typename JniType>
+template <typename JniT>
 class ClassRef {
  public:
-  static_assert(kDefaultJvm != JniType::jvm_v,
+  static_assert(kDefaultJvm != JniT::jvm_v,
                 "For default Jvm use DefaultClassRef.");
 
-  static const auto& GetClassLoader() { return JniType::GetClassLoader(); }
+  static const auto& GetClassLoader() { return JniT::GetClassLoader(); }
 
-  static const auto& GetClass() { return JniType::GetClass(); }
+  static const auto& GetClass() { return JniT::GetClass(); }
 
   template <typename Lambda>
   static void PrimeJClassFromClassLoader(Lambda lambda) {
@@ -193,11 +193,11 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref) {
 template <const auto& jvm_v_, const auto& class_loader_v_, const auto& class_v_>
 struct ClassRefSelector {
   using type =
-      ClassRef<JniType<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_,
-                       0, class_loader_v_.template IdxOfClass<class_v_>(),
-                       jvm_v_.template IdxOfClassLoader<class_loader_v_>()
+      ClassRef<JniT<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_, 0,
+                    class_loader_v_.template IdxOfClass<class_v_>(),
+                    jvm_v_.template IdxOfClassLoader<class_loader_v_>()
 
-                       >>;
+                    >>;
 };
 
 template <const auto& class_loader_v_, const auto& class_v_>

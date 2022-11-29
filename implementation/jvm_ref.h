@@ -140,8 +140,8 @@ class JvmRef : public JvmRefBase {
     template <size_t... Is>
     static constexpr void TeardownClass(
         std::index_sequence<Is...> index_sequence) {
-      (ClassRef<JniType<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_,
-                        0, Is, ClassLoaderIdx>
+      (ClassRef<JniT<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_, 0,
+                     Is, ClassLoaderIdx>
 
                 >::MaybeReleaseClassRef(),
        ...);

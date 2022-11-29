@@ -96,12 +96,12 @@ template <typename IdT_, IdType kIDType = IdType::OVERLOAD,
           IdType kReturnIDType = IdType::OVERLOAD_PARAM>
 struct MethodSelection {
   using IdT = IdT_;
-  using JniType = typename IdT::JniType;
+  using JniT = typename IdT::JniT;
 
   template <std::size_t I, typename... Ts>
   struct Helper {
     using type = metaprogramming::Val_t<OverloadSelection<
-        Id<JniType, kIDType, IdT::kIdx, I>,
+        Id<JniT, kIDType, IdT::kIdx, I>,
         kReturnIDType>::template OverloadIdxIfViable<Ts...>()>;
   };
 
@@ -112,7 +112,7 @@ struct MethodSelection {
 
   template <typename... Ts>
   using FindOverloadSelection =
-      OverloadSelection<Id<JniType, kIDType, IdT::kIdx, kIdxForTs<Ts...>>,
+      OverloadSelection<Id<JniT, kIDType, IdT::kIdx, kIdxForTs<Ts...>>,
                         kReturnIDType>;
 
   template <typename... Ts>
@@ -127,7 +127,7 @@ struct OverloadSelector {
       IdT, kIDType, kReturnIDType>::template FindOverloadSelection<Args...>;
 
   using OverloadRef =
-      OverloadRef<Id<typename IdT::JniType, kIDType, IdT::kIdx,
+      OverloadRef<Id<typename IdT::JniT, kIDType, IdT::kIdx,
                      OverloadSelectionForArgs::IdT::kSecondaryIdx>,
                   kReturnIDType>;
 

@@ -61,7 +61,7 @@ struct OverloadRef {
     static jni::metaprogramming::DoubleLockedValue<jmethodID> return_value;
 
     return return_value.LoadAndMaybeInit([=]() {
-      if constexpr (IdT_::JniType::GetClassLoader() == kDefaultClassLoader) {
+      if constexpr (IdT_::JniT::GetClassLoader() == kDefaultClassLoader) {
         GetDefaultLoadedMethodList().push_back(&return_value);
       }
 

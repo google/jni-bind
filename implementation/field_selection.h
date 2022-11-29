@@ -26,9 +26,9 @@
 
 namespace jni {
 
-template <typename JniTypeT, size_t field_idx_>
+template <typename JniT, size_t field_idx_>
 struct FieldSelection {
-  using IdT = Id<JniTypeT, IdType::FIELD, field_idx_>;
+  using IdT = Id<JniT, IdType::FIELD, field_idx_>;
   static constexpr IdType kRetTypeId = IdType::FIELD;
 };
 

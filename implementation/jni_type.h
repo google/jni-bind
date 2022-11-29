@@ -35,7 +35,7 @@ template <typename SpanType_, const auto& class_v_,
           const auto& jvm_v_ = kDefaultJvm, std::size_t kRank = 0,
           std::size_t class_idx_ = kNoIdx,
           std::size_t class_loader_idx_ = kNoIdx>
-struct JniType {
+struct JniT {
   static constexpr const auto& GetClassLoader() {
     if constexpr (class_loader_idx_ != kNoIdx) {
       return std::get<class_loader_idx_>(jvm_v_.class_loaders_);
@@ -73,7 +73,7 @@ struct JniType {
 };
 
 template <typename T1, typename T2>
-struct JniTypeEqual {
+struct JniTEqual {
   static constexpr bool val = false;
 };
 
@@ -81,8 +81,8 @@ template <typename SpanType1, const auto& class_v_1,
           const auto& class_loader_v_1, const auto& jvm_v_1, typename SpanType2,
           const auto& class_v_2, const auto& class_loader_v_2,
           const auto& jvm_v_2>
-struct JniTypeEqual<JniType<SpanType1, class_v_1, class_loader_v_1, jvm_v_1>,
-                    JniType<SpanType2, class_v_2, class_loader_v_2, jvm_v_2> > {
+struct JniTEqual<JniT<SpanType1, class_v_1, class_loader_v_1, jvm_v_1>,
+                 JniT<SpanType2, class_v_2, class_loader_v_2, jvm_v_2>> {
   static constexpr bool val =
       std::is_same_v<SpanType1, SpanType2> &&
       metaprogramming::ValsEqual_cr_v<class_v_1, class_v_2> &&
@@ -91,7 +91,7 @@ struct JniTypeEqual<JniType<SpanType1, class_v_1, class_loader_v_1, jvm_v_1>,
 };
 
 template <typename T1, typename T2>
-constexpr bool JniTypeEqual_v = JniTypeEqual<T1, T2>::val;
+constexpr bool JniTEqual_v = JniTEqual<T1, T2>::val;
 
 }  // namespace jni
 

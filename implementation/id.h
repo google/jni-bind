@@ -34,12 +34,12 @@
 
 namespace jni {
 
-template <typename JniType_, IdType kIdType_, std::size_t idx = kNoIdx,
+template <typename JniT_, IdType kIdType_, std::size_t idx = kNoIdx,
           std::size_t secondary_idx = kNoIdx, std::size_t tertiary_idx = kNoIdx>
 struct Id {
-  using JniType = JniType_;
+  using JniT = JniT_;
   static constexpr IdType kIdType = kIdType_;
-  static constexpr auto& root = JniType::GetClass();
+  static constexpr auto& root = JniT::GetClass();
 
   static constexpr std::size_t kIdx = idx;
   static constexpr std::size_t kSecondaryIdx = secondary_idx;
@@ -51,11 +51,10 @@ struct Id {
       (kIdx == kNoIdx);
 
   template <IdType new_id_type>
-  using ChangeIdType =
-      Id<JniType, new_id_type, idx, secondary_idx, tertiary_idx>;
+  using ChangeIdType = Id<JniT, new_id_type, idx, secondary_idx, tertiary_idx>;
 
   template <std::size_t kIdxToChange, std::size_t kNewValue>
-  using ChangeIdx = Id<JniType, kIdType, (kIdxToChange == 0 ? kNewValue : idx),
+  using ChangeIdx = Id<JniT, kIdType, (kIdxToChange == 0 ? kNewValue : idx),
                        (kIdxToChange == 1 ? kNewValue : secondary_idx),
                        (kIdxToChange == 2 ? kNewValue : tertiary_idx)>;
 
@@ -192,8 +191,7 @@ struct Id {
     if constexpr (kIdType == IdType::STATIC_OVERLOAD_SET) {
       return Val().name_;
     } else if constexpr (kIdType == IdType::STATIC_OVERLOAD) {
-      return Id<JniType, IdType::STATIC_OVERLOAD_SET, idx,
-                secondary_idx>::Name();
+      return Id<JniT, IdType::STATIC_OVERLOAD_SET, idx, secondary_idx>::Name();
     } else if constexpr (kIdType == IdType::STATIC_FIELD) {
       return std::get<idx>(root.static_.fields_).name_;
     } else if constexpr (kIdType == IdType::OVERLOAD_SET && idx == kNoIdx) {
@@ -201,7 +199,7 @@ struct Id {
     } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
       return Val().name_;
     } else if constexpr (kIdType == IdType::OVERLOAD) {
-      return Id<JniType, IdType::OVERLOAD_SET, idx, secondary_idx>::Name();
+      return Id<JniT, IdType::OVERLOAD_SET, idx, secondary_idx>::Name();
     } else if constexpr (kIdType == IdType::FIELD) {
       return std::get<idx>(root.fields_).name_;
     } else {
@@ -228,7 +226,6 @@ struct Id {
   }
 
   static constexpr std::size_t kNumParams = NumParams();
-
 };
 
 }  // namespace jni

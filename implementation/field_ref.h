@@ -47,11 +47,11 @@ static inline auto& GetDefaultLoadedFieldList() {
 //
 // Note, this class performs no cleanup on destruction.  jFieldIDs are static
 // throughout the duration of a JVM's life, see JvmRef for teardown.
-template <typename JniTypeT, IdType field_type, std::size_t I>
+template <typename JniT, IdType field_type, std::size_t I>
 class FieldRef {
  public:
-  using IdT = Id<JniTypeT, field_type, I>;
-  using FieldSelectionT = FieldSelection<JniTypeT, I>;
+  using IdT = Id<JniT, field_type, I>;
+  using FieldSelectionT = FieldSelection<JniT, I>;
 
   explicit FieldRef(jclass class_ref, jobject object_ref)
       : class_ref_(class_ref), object_ref_(object_ref) {}
@@ -65,7 +65,7 @@ class FieldRef {
     static jni::metaprogramming::DoubleLockedValue<jfieldID> return_value;
 
     return return_value.LoadAndMaybeInit([=]() {
-      if constexpr (JniTypeT::class_loader_v == kDefaultClassLoader) {
+      if constexpr (JniT::class_loader_v == kDefaultClassLoader) {
         GetDefaultLoadedFieldList().push_back(&return_value);
       }
 

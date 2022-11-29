@@ -38,12 +38,11 @@ static constexpr Class kJavaLangString{"java/lang/String"};
 template <typename CrtpBase>
 class StringRefBase
     : public RefBase<
-          JniType<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>> {
+          JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>> {
  public:
-  using JniTypeT =
-      JniType<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>;
-  using RefBaseT = RefBase<JniTypeT>;
-  StringRefBase(jstring object) : RefBase<JniTypeT>(object) {}
+  using JniT = JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>;
+  using RefBaseT = RefBase<JniT>;
+  StringRefBase(jstring object) : RefBase<JniT>(object) {}
 
   ~StringRefBase() {
     if (object_ref_) {

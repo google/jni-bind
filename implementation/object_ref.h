@@ -50,21 +50,20 @@ namespace jni {
 //
 // To call methods on the object, use the  operator(), to access fields, use
 // operator[].
-template <typename JniTypeT>
+template <typename JniT>
 class ObjectRef
     : public metaprogramming::InvocableMap<
-          ObjectRef<JniTypeT>, JniTypeT::stripped_class_v,
-          typename JniTypeT::ClassT, &JniTypeT::ClassT::methods_>,
-      public metaprogramming::QueryableMap_t<ObjectRef<JniTypeT>,
-                                             JniTypeT::stripped_class_v,
-                                             &JniTypeT::ClassT::fields_>,
-      public RefBase<JniTypeT> {
+          ObjectRef<JniT>, JniT::stripped_class_v, typename JniT::ClassT,
+          &JniT::ClassT::methods_>,
+      public metaprogramming::QueryableMap_t<
+          ObjectRef<JniT>, JniT::stripped_class_v, &JniT::ClassT::fields_>,
+      public RefBase<JniT> {
  protected:
   static_assert(
-      JniTypeT::class_loader_v
-          .template SupportedDirectlyOrIndirectly<JniTypeT::class_v>(),
+      JniT::class_loader_v
+          .template SupportedDirectlyOrIndirectly<JniT::class_v>(),
       "This class is not directly or indirectly supported by this loader.");
-  using RefBase = RefBase<JniTypeT>;
+  using RefBase = RefBase<JniT>;
 
   ObjectRef() = delete;
   explicit ObjectRef(ObjectRef&& rhs) = default;
@@ -72,9 +71,8 @@ class ObjectRef
   ObjectRef& operator=(const ObjectRef& rhs) = delete;
 
   jclass GetJClass() const {
-    return ClassRef_t<
-        JniTypeT::jvm_v, JniTypeT::class_loader_v,
-        JniTypeT::class_v>::GetAndMaybeLoadClassRef(RefBase::object_ref_);
+    return ClassRef_t<JniT::jvm_v, JniT::class_loader_v, JniT::class_v>::
+        GetAndMaybeLoadClassRef(RefBase::object_ref_);
   }
 
  public:
@@ -83,7 +81,7 @@ class ObjectRef
   // Invoked through CRTP from InvocableMap.
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
-    using IdT = Id<JniTypeT, IdType::OVERLOAD_SET, I>;
+    using IdT = Id<JniT, IdType::OVERLOAD_SET, I>;
     using MethodSelectionForArgs =
         OverloadSelector<IdT, IdType::OVERLOAD, IdType::OVERLOAD_PARAM,
                          Args...>;
@@ -98,18 +96,17 @@ class ObjectRef
   // Invoked through CRTP from QueryableMap.
   template <size_t I>
   auto QueryableMapCall(const char* key) const {
-    return FieldRef<JniTypeT, IdType::FIELD, I>{GetJClass(),
-                                                RefBase::object_ref_};
+    return FieldRef<JniT, IdType::FIELD, I>{GetJClass(), RefBase::object_ref_};
   }
 };
 
 // Imbues constructors for ObjectRefs and handles calling the correct
 // intermediate constructors.  Access to this class is constrainted for non
 // default classloaders (see |ValidatorProxy|).
-template <typename JniTypeT>
-class ConstructorValidator : public ObjectRef<JniTypeT> {
+template <typename JniT>
+class ConstructorValidator : public ObjectRef<JniT> {
  public:
-  using Base = ObjectRef<JniTypeT>;
+  using Base = ObjectRef<JniT>;
   using Base::Base;
 
   // Objects can still be wrapped.  This could happen if a classloaded object
@@ -120,11 +117,11 @@ class ConstructorValidator : public ObjectRef<JniTypeT> {
   friend class ClassLoaderRef;
 
   static constexpr std::size_t kNumConstructors =
-      std::tuple_size_v<decltype(JniTypeT::class_v.constructors_)>;
+      std::tuple_size_v<decltype(JniT::class_v.constructors_)>;
 
   template <typename... Args>
   struct Helper {
-    using IdT = Id<JniTypeT, IdType::OVERLOAD_SET, kNoIdx>;
+    using IdT = Id<JniT, IdType::OVERLOAD_SET, kNoIdx>;
 
     // 0 is (always) used to represent the constructor.
     using type = OverloadSelector<IdT, IdType::OVERLOAD, IdType::OVERLOAD_PARAM,
@@ -157,15 +154,15 @@ class ConstructorValidator : public ObjectRef<JniTypeT> {
   }
 };
 
-template <typename JniTypeT>
-struct ValidatorProxy : public ConstructorValidator<JniTypeT> {
-  using Base = ConstructorValidator<JniTypeT>;
+template <typename JniT>
+struct ValidatorProxy : public ConstructorValidator<JniT> {
+  using Base = ConstructorValidator<JniT>;
   using Base::Base;
 };
 
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 using ObjectRefBuilder_t =
-    ValidatorProxy<JniType<jobject, class_v_, class_loader_v_, jvm_v_>>;
+    ValidatorProxy<JniT<jobject, class_v_, class_loader_v_, jvm_v_>>;
 
 }  // namespace jni
 

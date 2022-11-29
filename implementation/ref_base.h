@@ -54,14 +54,14 @@ class RefBaseTag {
 // This can also be used as a temporary when passed into a function that accepts
 // objects.  This ensures type correctness (names must match) but doesn't
 // require the full class description be used when describing the function.
-template <typename JniTypeT>
-class RefBase : public RefBaseTag<typename JniTypeT::StorageType> {
+template <typename JniT>
+class RefBase : public RefBaseTag<typename JniT::StorageType> {
  public:
-  using StorageType = typename JniTypeT::StorageType;
+  using StorageType = typename JniT::StorageType;
   using RefBaseTag<StorageType>::RefBaseTag;
-  using RefBaseTag<StorageType>::operator typename JniTypeT::StorageType;
+  using RefBaseTag<StorageType>::operator typename JniT::StorageType;
 
-  static inline const char* name_ = JniTypeT::class_v.name_;
+  static inline const char* name_ = JniT::class_v.name_;
 
   RefBase(RefBaseTag<StorageType>&& rhs)
       : RefBaseTag<StorageType>(std::move(rhs)) {}

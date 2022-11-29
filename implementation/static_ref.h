@@ -31,7 +31,7 @@ namespace jni {
 template <typename CrtpBase_, const auto& class_v_, const auto& class_loader_v_,
           const auto& jvm_v_>
 struct StaticRefHelper {
-  using JniT = JniType<jobject, class_v_, class_loader_v_, jvm_v_>;
+  using JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
 
   using MethodMapT = metaprogramming::InvocableMap<CrtpBase_, JniT::static_v,
                                                    typename JniT::StaticT,
@@ -61,7 +61,7 @@ struct StaticRef
           class_loader_v_, jvm_v_>,
       StaticRefHelperFieldMap_t<StaticRef<class_v_, class_loader_v_, jvm_v_>,
                                 class_v_, class_loader_v_, jvm_v_> {
-  using JniT = JniType<jobject, class_v_, class_loader_v_, jvm_v_>;
+  using JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
 
   jclass GetJClass() const {
     return ClassRef_t<JniT::jvm_v, JniT::class_loader_v,

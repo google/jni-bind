@@ -52,12 +52,12 @@ template <typename SpanType, std::size_t kRank_ = 1,
           const auto& jvm_v_ = kDefaultJvm>
 class LocalArray
     : public ArrayRef<
-          JniType<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>> {
+          JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>> {
  public:
   using ObjectClassRefT = ClassRef_t<jvm_v_, class_loader_v_, class_v_>;
 
   using Base =
-      ArrayRef<JniType<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
+      ArrayRef<JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
   using Base::Base;
 
   LocalArray(std::size_t size)

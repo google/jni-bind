@@ -24,7 +24,7 @@ using ::jni::Array;
 using ::jni::Class;
 using ::jni::Id;
 using ::jni::IdType;
-using ::jni::JniType;
+using ::jni::JniT;
 using ::jni::kDefaultClassLoader;
 using ::jni::Method;
 using ::jni::OverloadRef;
@@ -37,7 +37,7 @@ using ::testing::StrEq;
 
 template <const auto& class_loader_v, const auto& class_v, size_t I>
 using MethodRefT_t = OverloadRef<
-    Id<JniType<jobject, class_v, class_loader_v>, IdType::OVERLOAD, I, 0>,
+    Id<JniT<jobject, class_v, class_loader_v>, IdType::OVERLOAD, I, 0>,
     IdType::OVERLOAD_PARAM>;
 
 TEST_F(JniTest, MethodRef_DoesntStaticCrossTalkWithTagUse) {

@@ -26,7 +26,7 @@ using ::jni::Constructor;
 using ::jni::GlobalObject;
 using ::jni::Id;
 using ::jni::IdType;
-using ::jni::JniType;
+using ::jni::JniT;
 using ::jni::kNoIdx;
 using ::jni::LocalArray;
 using ::jni::LocalObject;
@@ -73,7 +73,7 @@ constexpr Class c1{
 
 template <const auto& class_v, size_t method_idx>
 using MthdId_t = MethodSelection<
-    Id<JniType<jobject, class_v>, IdType::OVERLOAD_SET, method_idx>,
+    Id<JniT<jobject, class_v>, IdType::OVERLOAD_SET, method_idx>,
     IdType::OVERLOAD, IdType::OVERLOAD_PARAM>;
 
 static_assert(MthdId_t<c1, 0>::ArgSetViable<>());
@@ -261,8 +261,8 @@ constexpr Class c5{"c5",
                    Constructor{kClass2}};
 
 template <const auto& class_v>
-using ConstructorId_t = MethodSelection<
-    Id<JniType<jobject, class_v>, IdType::OVERLOAD_SET, kNoIdx>>;
+using ConstructorId_t =
+    MethodSelection<Id<JniT<jobject, class_v>, IdType::OVERLOAD_SET, kNoIdx>>;
 
 static_assert(ConstructorId_t<c5>::ArgSetViable<>());
 static_assert(ConstructorId_t<c5>::ArgSetViable<int>());

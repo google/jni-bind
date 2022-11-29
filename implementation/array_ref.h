@@ -30,16 +30,16 @@ namespace jni {
 struct ArrayRefPrimitiveBaseTag {};
 
 // Tag for non object array ref like tags (e.g. jintArray but not jobjectArray).
-template <typename JniTypeT>
+template <typename JniT>
 struct ArrayRefPrimitiveTag : ArrayRefPrimitiveBaseTag {};
 
 // |SpanType| is primitive types like jint, jfloat, etc.
-template <typename JniTypeT, typename Enable = void>
-class ArrayRef : public RefBase<JniTypeT>,
-                 ArrayRefPrimitiveTag<typename JniTypeT::SpanType> {
+template <typename JniT, typename Enable = void>
+class ArrayRef : public RefBase<JniT>,
+                 ArrayRefPrimitiveTag<typename JniT::SpanType> {
  public:
-  using SpanType = typename JniTypeT::SpanType;
-  using Base = RefBase<JniTypeT>;
+  using SpanType = typename JniT::SpanType;
+  using Base = RefBase<JniT>;
   using Base::Base;
 
   ArrayView<SpanType> Pin(bool copy_on_completion = true) {
@@ -54,21 +54,20 @@ class ArrayRef : public RefBase<JniTypeT>,
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class LocalObject;
 
-template <typename JniTypeT>
+template <typename JniT>
 class ArrayRef<
-    JniTypeT,
-    std::enable_if_t<std::is_same_v<typename JniTypeT::SpanType, jobject>>>
-    : public RefBase<JniTypeT> {
+    JniT, std::enable_if_t<std::is_same_v<typename JniT::SpanType, jobject>>>
+    : public RefBase<JniT> {
  public:
-  using SpanType = typename JniTypeT::SpanType;
-  using Base = RefBase<JniTypeT>;
+  using SpanType = typename JniT::SpanType;
+  using Base = RefBase<JniT>;
   using Base::Base;
 
   std::size_t Length() {
     return JniArrayHelper<jobject>::GetLength(Base::object_ref_);
   }
 
-  LocalObject<JniTypeT::class_v, JniTypeT::class_loader_v, JniTypeT::jvm_v> Get(
+  LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v> Get(
       std::size_t idx) {
     return {JniArrayHelper<jobject>::GetArrayElement(Base::object_ref_, idx)};
   }
@@ -78,9 +77,9 @@ class ArrayRef<
   //
   // TODO(b/406948932): Permit lvalues of locals and globals as technically
   // they're both viable (the scope will be extended as expected).
-  void Set(std::size_t idx,
-           LocalObject<JniTypeT::class_v, JniTypeT::class_loader_v,
-                       JniTypeT::jvm_v>&& val) {
+  void Set(
+      std::size_t idx,
+      LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v>&& val) {
     return JniArrayHelper<jobject>::SetArrayElement(Base::object_ref_, idx,
                                                     val.Release());
   }
