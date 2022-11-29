@@ -29,17 +29,14 @@ inline constexpr Class kJavaLangClass{"java/lang/Class"};
 
 inline constexpr Class kJavaLangObject{"java/lang/Object"};
 
-inline constexpr Method kLoadClassMethod{"loadClass", Return{kJavaLangClass},
-                                         Params<jstring>{}};
+inline constexpr Class kJavaLangClassLoader{
+    "java/lang/ClassLoader",
+    Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}}};
 
-inline constexpr Class kJavaLangClassLoader{"java/lang/ClassLoader",
-                                            kLoadClassMethod};
-
-// TODO (b/143908983): This should be in kJavaLangClass, but we currently
-// cannot represent dependency loops (ClassLoader.findClass() returns a class,
-// Class.getClassLoader() returns a ClassLoader) without a dummy class.
 inline constexpr Method kGetClassLoaderMethod{
-    "getClassLoader", Return{kJavaLangClassLoader}, Params{}};
+    "getClassLoader",
+    Return{Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}}},
+    Params{}};
 
 }  // namespace jni
 
