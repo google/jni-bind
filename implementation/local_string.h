@@ -47,7 +47,7 @@ class LocalString : public StringRefBase<LocalString> {
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
-  UtfStringView Pin() { return {*RefBaseTag<jstring>::object_ref_}; }
+  UtfStringView Pin() { return {RefBaseTag<jstring>::object_ref_}; }
 
  private:
   // Invoked through CRTP on dtor.

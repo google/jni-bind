@@ -23,6 +23,8 @@ using jni::test::MockJniEnv;
 using testing::Return;
 using testing::StrEq;
 
+jstring FakeJString() { return reinterpret_cast<jstring>(0xFAFAFAFAFA); }
+
 TEST_F(JniTest, String_NullWorks) {
   jni::LocalString local_jni_string{nullptr};
 }
@@ -36,7 +38,8 @@ TEST_F(JniTest, String_ConstructsFromOutputOfMethod) {
 }
 
 TEST_F(JniTest, String_CreatesLocalStringFromCharPtr) {
-  EXPECT_CALL(*env_, NewStringUTF(StrEq("TestString")));
+  EXPECT_CALL(*env_, NewStringUTF(StrEq("TestString")))
+      .WillOnce(Return(FakeJString()));
   EXPECT_CALL(*env_, DeleteLocalRef);
   jni::LocalString jni_string{"TestString"};
 }

@@ -37,23 +37,25 @@ using testing::StrEq;
 
 static constexpr Class kClass{"kClass"};
 
+jintArray FakeJIntArray() { return reinterpret_cast<jintArray>(0xDADADADADA); }
+
 ////////////////////////////////////////////////////////////////////////////////
 // Construction Tests.
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, LocalArray_BuildsAndDestroys) {
-  EXPECT_CALL(*env_, NewIntArray(1));
+  EXPECT_CALL(*env_, NewIntArray(1)).WillOnce(Return(FakeJIntArray()));
   EXPECT_CALL(*env_, DeleteLocalRef(_));
 
   LocalArray<jint> int_array_1{1};
 }
 
 TEST_F(JniTest, LocalArray_ConstructsIntArrayWithCorrectSize) {
-  EXPECT_CALL(*env_, NewIntArray(1));
-  EXPECT_CALL(*env_, NewIntArray(2));
-  EXPECT_CALL(*env_, NewIntArray(3));
-  EXPECT_CALL(*env_, NewIntArray(4));
+  EXPECT_CALL(*env_, NewIntArray(1)).WillOnce(Return(FakeJIntArray()));
+  EXPECT_CALL(*env_, NewIntArray(2)).WillOnce(Return(FakeJIntArray()));
+  EXPECT_CALL(*env_, NewIntArray(3)).WillOnce(Return(FakeJIntArray()));
+  EXPECT_CALL(*env_, NewIntArray(4)).WillOnce(Return(FakeJIntArray()));
 
-  EXPECT_CALL(*env_, DeleteLocalRef(_)).Times(4);
+  EXPECT_CALL(*env_, DeleteLocalRef(FakeJIntArray())).Times(4);
 
   LocalArray<jint> int_array_1{1};
   LocalArray<jint> int_array_2{2};

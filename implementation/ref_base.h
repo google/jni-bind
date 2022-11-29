@@ -35,20 +35,16 @@ class RefBaseTag {
   RefBaseTag(RefBaseTag&& rhs) : object_ref_(rhs.Release()) {}
 
   StorageType Release() {
-    StorageType return_value = *object_ref_;
-    object_ref_ = std::nullopt;
+    StorageType return_value = object_ref_;
+    object_ref_ = nullptr;
+
     return return_value;
   }
 
-  explicit operator StorageType() const {
-    if (object_ref_) {
-      return *object_ref_;
-    }
-    return nullptr;
-  }
+  explicit operator StorageType() const { return object_ref_; }
 
  protected:
-  std::optional<StorageType> object_ref_;
+  StorageType object_ref_ = nullptr;
 };
 
 // Represents a runtime object with only Name information.  It is ephemeral and

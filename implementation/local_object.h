@@ -53,7 +53,7 @@ class LocalObject
 
   ~LocalObject() {
     if (ObjectRefT::object_ref_) {
-      JniHelper::DeleteLocalObject(*ObjectRefT::object_ref_);
+      JniHelper::DeleteLocalObject(ObjectRefT::object_ref_);
     }
   }
 };

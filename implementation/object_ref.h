@@ -70,7 +70,7 @@ class ObjectRef : public MethodMap_t<JniTypeT, ObjectRef<JniTypeT>>,
   jclass GetJClass() const {
     return ClassRef_t<
         JniTypeT::jvm_v, JniTypeT::class_loader_v,
-        JniTypeT::class_v>::GetAndMaybeLoadClassRef(*RefBase::object_ref_);
+        JniTypeT::class_v>::GetAndMaybeLoadClassRef(RefBase::object_ref_);
   }
 
  public:
@@ -87,13 +87,13 @@ class ObjectRef : public MethodMap_t<JniTypeT, ObjectRef<JniTypeT>>,
                   "JNI Error: Invalid argument set.");
 
     return MethodSelectionForArgs::OverloadRef::Invoke(
-        GetJClass(), *RefBase::object_ref_, std::forward<Args>(args)...);
+        GetJClass(), RefBase::object_ref_, std::forward<Args>(args)...);
   }
 
   // Invoked through CRTP from QueryableMap.
   template <size_t I>
   auto QueryableMapCall(const char* key) const {
-    return FieldRef<JniTypeT, I>{GetJClass(), *RefBase::object_ref_};
+    return FieldRef<JniTypeT, I>{GetJClass(), RefBase::object_ref_};
   }
 };
 
@@ -131,7 +131,7 @@ class ConstructorValidator : public ObjectRef<JniTypeT> {
             typename std::enable_if<sizeof...(Args) != 0, int>::type = 0>
   ConstructorValidator(Args&&... args)
       : Base(Permutation_t<Args...>::OverloadRef::Invoke(
-                 Base::GetJClass(), *Base::object_ref_,
+                 Base::GetJClass(), Base::object_ref_,
                  std::forward<Args>(args)...)
                  .Release()) {
     static_assert(Permutation_t<Args...>::kIsValidArgSet,
@@ -140,7 +140,7 @@ class ConstructorValidator : public ObjectRef<JniTypeT> {
 
   ConstructorValidator()
       : Base(Permutation_t<>::OverloadRef::Invoke(Base::GetJClass(),
-                                                  *Base::object_ref_)
+                                                  Base::object_ref_)
                  .Release()) {
     static_assert(
         kNumConstructors != 0,

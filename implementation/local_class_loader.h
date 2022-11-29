@@ -35,7 +35,7 @@ class LocalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
 
   ~LocalClassLoader() {
     if (Base::object_ref_) {
-      JniHelper::DeleteLocalObject(*Base::object_ref_);
+      JniHelper::DeleteLocalObject(Base::object_ref_);
     }
   }
 

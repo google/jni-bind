@@ -63,7 +63,7 @@ class GlobalObject
 
   ~GlobalObject() {
     if (ObjectRefT::object_ref_) {
-      JniHelper::DeleteGlobalObject(*ObjectRefT::object_ref_);
+      JniHelper::DeleteGlobalObject(ObjectRefT::object_ref_);
     }
   }
 };

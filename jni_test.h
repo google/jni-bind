@@ -102,6 +102,18 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
             testing::Invoke([&](jclass clazz, const char* name,
                                 const char* sig) { return kDefaultMethodID; }));
 
+    ON_CALL(*env_, NewObjectArray)
+        .WillByDefault(
+            testing::Invoke([&](jsize sz, jclass clazz, jobject obj) {
+              return reinterpret_cast<jobjectArray>(0xBABABABABA);
+            }));
+
+    ON_CALL(*env_, NewObjectV)
+        .WillByDefault(testing::Invoke(
+            [&](jclass clazz, jmethodID methodID, va_list args) {
+              return reinterpret_cast<jobject>(0xDADADADADA);
+            }));
+
     ON_CALL(*env_, NewGlobalRef(testing::_))
         .WillByDefault(testing::Invoke([&](jobject object) {
           jobject return_value = AsGlobal(object);

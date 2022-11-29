@@ -92,7 +92,7 @@ class LocalArray
 
   ~LocalArray() {
     if (Base::object_ref_) {
-      JniHelper::DeleteLocalObject(*Base::object_ref_);
+      JniHelper::DeleteLocalObject(Base::object_ref_);
     }
   }
 };

@@ -41,7 +41,7 @@ class GlobalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
 
   ~GlobalClassLoader() {
     if (Base::object_ref_) {
-      JniHelper::DeleteGlobalObject(*Base::object_ref_);
+      JniHelper::DeleteGlobalObject(Base::object_ref_);
     }
   }
 };

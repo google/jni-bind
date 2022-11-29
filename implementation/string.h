@@ -47,7 +47,7 @@ class StringRefBase
 
   ~StringRefBase() {
     if (object_ref_) {
-      static_cast<CrtpBase &>(*this).ClassSpecificDeleteObjectRef(*object_ref_);
+      static_cast<CrtpBase &>(*this).ClassSpecificDeleteObjectRef(object_ref_);
     }
   }
 };

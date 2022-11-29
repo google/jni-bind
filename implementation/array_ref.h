@@ -43,11 +43,11 @@ class ArrayRef : public RefBase<JniTypeT>,
   using Base::Base;
 
   ArrayView<SpanType> Pin(bool copy_on_completion = true) {
-    return {*Base::object_ref_, copy_on_completion};
+    return {Base::object_ref_, copy_on_completion};
   }
 
   std::size_t Length() {
-    return JniArrayHelper<SpanType>::GetLength(*Base::object_ref_);
+    return JniArrayHelper<SpanType>::GetLength(Base::object_ref_);
   }
 };
 
@@ -65,12 +65,12 @@ class ArrayRef<
   using Base::Base;
 
   std::size_t Length() {
-    return JniArrayHelper<jobject>::GetLength(*Base::object_ref_);
+    return JniArrayHelper<jobject>::GetLength(Base::object_ref_);
   }
 
   LocalObject<JniTypeT::class_v, JniTypeT::class_loader_v, JniTypeT::jvm_v> Get(
       std::size_t idx) {
-    return {JniArrayHelper<jobject>::GetArrayElement(*Base::object_ref_, idx)};
+    return {JniArrayHelper<jobject>::GetArrayElement(Base::object_ref_, idx)};
   }
 
   // Note: Globals are not permitted in a local array because it makes reasoning
@@ -81,7 +81,7 @@ class ArrayRef<
   void Set(std::size_t idx,
            LocalObject<JniTypeT::class_v, JniTypeT::class_loader_v,
                        JniTypeT::jvm_v>&& val) {
-    return JniArrayHelper<jobject>::SetArrayElement(*Base::object_ref_, idx,
+    return JniArrayHelper<jobject>::SetArrayElement(Base::object_ref_, idx,
                                                     val.Release());
   }
 };
