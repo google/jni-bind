@@ -100,6 +100,7 @@ cc_library(
         ":method",
         ":no_idx",
         ":object",
+        ":static",
         "//:jni_dep",
         "//metaprogramming:all_unique",
         "//metaprogramming:base_filter",
@@ -725,6 +726,27 @@ cc_library(
         ":void",
         "//implementation/jni_helper:jni_typename_to_string",
         "//metaprogramming:string_concatenate",
+    ],
+)
+
+cc_library(
+    name = "static",
+    hdrs = ["static.h"],
+    deps = [
+        ":field",
+        ":method",
+        ":params",
+        "//metaprogramming:base_filter",
+    ],
+)
+
+cc_test(
+    name = "static_test",
+    srcs = ["static_test.cc"],
+    deps = [
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
     ],
 )
 

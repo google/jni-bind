@@ -27,6 +27,7 @@
 #include "object.h"
 #include "implementation/method.h"
 #include "implementation/no_idx.h"
+#include "implementation/static.h"
 #include "jni_dep.h"
 #include "metaprogramming/all_unique.h"
 #include "metaprogramming/base_filter.h"
@@ -35,38 +36,75 @@ namespace jni {
 
 static constexpr struct NoClass {
   const char* name_ = "__JNI_BIND__NO_CLASS__";
+  const Static<std::tuple<>, std::tuple<>> static_{};
   const std::tuple<> methods_{};
   const std::tuple<> fields_{};
 } kNoClassSpecified;
 
-template <typename Constructors_, typename Fields_, typename Methods_>
+template <typename Constructors_, typename Static_, typename Methods_,
+          typename Fields_>
 struct Class {};
 
-template <typename... Constructors_, typename... Fields_, typename... Methods_>
-struct Class<std::tuple<Constructors_...>, std::tuple<Fields_...>,
-             std::tuple<Methods_...>> : public Object {
+template <typename... Constructors_, typename... StaticMethods_,
+          typename... StaticFields_, typename... Methods_, typename... Fields_>
+struct Class<std::tuple<Constructors_...>,
+             std::tuple<Static<std::tuple<StaticMethods_...>,
+                               std::tuple<StaticFields_...>>>,
+             std::tuple<Methods_...>, std::tuple<Fields_...>> : public Object {
  public:
   const std::tuple<Constructors_...> constructors_;
+  const Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
+      static_;
   const std::tuple<Methods_...> methods_;
   const std::tuple<Fields_...> fields_;
 
+  // Ctors + static.
+  explicit constexpr Class(
+      const char* class_name, Constructors_... constructors,
+      Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
+          statik,
+      Methods_... methods, Fields_... fields)
+      : Object(class_name),
+        constructors_(constructors...),
+        static_(statik),
+        methods_(methods...),
+        fields_(fields...) {}
+
+  // No ctors, static.
+  explicit constexpr Class(
+      const char* class_name,
+      Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
+          statik,
+      Methods_... methods, Fields_... fields)
+      : Object(class_name),
+        constructors_(Constructor<>{}),
+        static_(statik),
+        methods_(methods...),
+        fields_(fields...) {}
+
+  // Ctors, no static.
   explicit constexpr Class(const char* class_name,
                            Constructors_... constructors, Methods_... methods,
                            Fields_... fields)
       : Object(class_name),
         constructors_(constructors...),
+        static_(Static{}),
         methods_(methods...),
         fields_(fields...) {}
 
+  // No ctors, no static.
   explicit constexpr Class(const char* class_name, Methods_... methods,
                            Fields_... fields)
-      : Class(class_name, Constructor<>{}, methods..., fields...) {}
+      : Class(class_name, Constructor<>{}, Static{}, methods..., fields...) {}
 
-  template <typename... Params, typename... Constructors, typename... Fields,
-            typename... Methods>
+  template <typename... Params, typename... Constructors,
+            typename... StaticMethods, typename... StaticFields,
+            typename... Fields, typename... Methods>
   constexpr bool operator==(
-      const Class<std::tuple<Constructors...>, std::tuple<Fields...>,
-                  std::tuple<Methods...>>& rhs) const {
+      const Class<std::tuple<Constructors...>,
+                  std::tuple<Static<std::tuple<StaticMethods...>,
+                                    std::tuple<StaticFields...>>>,
+                  std::tuple<Methods...>, std::tuple<Fields...>>& rhs) const {
     // Don't compare the other parameters so classes can be used as parameters
     // or return values before the class itself is defined.
     return std::string_view(name_) == std::string_view(rhs.name_);
@@ -77,11 +115,15 @@ template <typename... Params>
 Class(const char*, Params...)
     -> Class<metaprogramming::BaseFilterWithDefault_t<ConstructorBase,
                                                       Constructor<>, Params...>,
-             metaprogramming::BaseFilter_t<FieldBase, Params...>,
-             metaprogramming::BaseFilter_t<MethodBase, Params...>>;
+             metaprogramming::BaseFilterWithDefault_t<
+                 StaticBase, Static<std::tuple<>, std::tuple<>>, Params...>,
+             metaprogramming::BaseFilter_t<MethodBase, Params...>,
+             metaprogramming::BaseFilter_t<FieldBase, Params...>>;
 
 Class(const char*)
-    ->Class<std::tuple<Constructor<>>, std::tuple<>, std::tuple<>>;
+    ->Class<std::tuple<Constructor<>>,
+            std::tuple<Static<std::tuple<>, std::tuple<>>>, std::tuple<>,
+            std::tuple<>>;
 
 }  // namespace jni
 

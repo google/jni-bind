@@ -34,6 +34,7 @@ using ::jni::Method;
 using ::jni::Overload;
 using ::jni::Params;
 using ::jni::Return;
+using ::jni::Static;
 
 static constexpr Class kClass1{
     "kClass1",
@@ -41,6 +42,7 @@ static constexpr Class kClass1{
     Constructor{jint{}},
     Constructor{jfloat{}, jboolean{}},
     Constructor{Array{jint{}}},
+
     Method{"m0", jni::Return<void>{}, Params{}},
     Method{"m1", jni::Return<jshort>{}, Params<jint>{}},
     Method{"m2", jni::Return{Class{"kClass2"}}, Params<jfloat, jboolean>{}},
@@ -159,5 +161,96 @@ using kField1 = Id<JT, IdType::FIELD, 1>;
 
 static_assert(std::string_view{"f0"} == kField0::Name());
 static_assert(std::string_view{"f1"} == kField1::Name());
+
+////////////////////////////////////////////////////////////////////////////////
+// Statics.
+////////////////////////////////////////////////////////////////////////////////
+static constexpr Class kStaticClass{
+    "kStaticClass",
+
+    Static{
+        Method{"sm0", jni::Return<void>{}, Params{}},
+        Method{"sm1", jni::Return<jshort>{}, Params<jint>{}},
+        Method{"sm2", jni::Return{Class{"kClass2"}},
+               Params<jfloat, jboolean>{}},
+        Method{
+            "sm3",
+            Overload{jni::Return<void>{}, Params{}},
+            Overload{jni::Return<jint>{}, Params<jboolean>{}},
+            Overload{jni::Return<jfloat>{}, Params<jshort, jdouble>{}},
+        },
+        Method{
+            "sm4",
+            Overload{jni::Return{Array{jboolean{}}}, Params{Array{jint{}}}},
+            Overload{jni::Return{Array{Array{jboolean{}}}},
+                     Params{Array{Array{jfloat{}}}}},
+            Overload{jni::Return{Array{Array{Array{jboolean{}}}}},
+                     Params{Array{Array{Array{jshort{}}}}}},
+        },
+
+        Field{"sf0", int{}},
+        Field{"sf1", Class{"kClass2"}},
+        Field{"sf2", Array{Class{"kClass2"}}},
+        Field{"sf3", Array{Array{Class{"kClass2"}}}},
+        Field{"sf4", float{}},
+    },
+};
+
+using JTS = JniType<jobject, kStaticClass>;
+
+////////////////////////////////////////////////////////////////////////////////
+// Static Methods.
+////////////////////////////////////////////////////////////////////////////////
+using kStaticMethod0 = Id<JTS, IdType::STATIC_OVERLOAD_SET, 0>;
+using kStaticMethod1 = Id<JTS, IdType::STATIC_OVERLOAD_SET, 1>;
+using kStaticMethod2 = Id<JTS, IdType::STATIC_OVERLOAD_SET, 2>;
+using kStaticMethod3 = Id<JTS, IdType::STATIC_OVERLOAD_SET, 3>;
+
+static_assert(kStaticMethod0::Name() == std::string_view{"sm0"});
+static_assert(kStaticMethod1::Name() == std::string_view{"sm1"});
+static_assert(kStaticMethod2::Name() == std::string_view{"sm2"});
+static_assert(kStaticMethod3::Name() == std::string_view{"sm3"});
+
+using kStaticMethod0Overload0 = Id<JTS, IdType::STATIC_OVERLOAD, 0, 0>;
+using kStaticMethod1Overload0 = Id<JTS, IdType::STATIC_OVERLOAD, 1, 0>;
+using kStaticMethod2Overload0 = Id<JTS, IdType::STATIC_OVERLOAD, 2, 0>;
+using kStaticMethod3Overload0 = Id<JTS, IdType::STATIC_OVERLOAD, 3, 0>;
+
+static_assert(kStaticMethod0Overload0::NumParams() == 0);
+static_assert(kStaticMethod1Overload0::NumParams() == 1);
+static_assert(kStaticMethod2Overload0::NumParams() == 2);
+
+static_assert(kStaticMethod0Overload0::Name() == std::string_view{"sm0"});
+static_assert(kStaticMethod1Overload0::Name() == std::string_view{"sm1"});
+static_assert(kStaticMethod2Overload0::Name() == std::string_view{"sm2"});
+static_assert(kStaticMethod3Overload0::Name() == std::string_view{"sm3"});
+
+static_assert(0 == Id<JTS, IdType::STATIC_OVERLOAD_PARAM, 0, 0>::kRank);
+static_assert(0 == Id<JTS, IdType::STATIC_OVERLOAD_PARAM, 1, 0>::kRank);
+static_assert(0 == Id<JTS, IdType::STATIC_OVERLOAD_PARAM, 1, 0, 0>::kRank);
+static_assert(0 == Id<JTS, IdType::STATIC_OVERLOAD_PARAM, 2, 0, 0>::kRank);
+static_assert(0 == Id<JTS, IdType::STATIC_OVERLOAD_PARAM, 2, 0, 1>::kRank);
+
+////////////////////////////////////////////////////////////////////////////////
+// Static Fields.
+////////////////////////////////////////////////////////////////////////////////
+using kStaticField0 = Id<JTS, IdType::STATIC_FIELD, 0>;
+using kStaticField1 = Id<JTS, IdType::STATIC_FIELD, 1>;
+using kStaticField2 = Id<JTS, IdType::STATIC_FIELD, 2>;
+using kStaticField3 = Id<JTS, IdType::STATIC_FIELD, 3>;
+
+static_assert(kStaticField0::Name() == std::string_view{"sf0"});
+static_assert(kStaticField1::Name() == std::string_view{"sf1"});
+static_assert(kStaticField2::Name() == std::string_view{"sf2"});
+static_assert(kStaticField3::Name() == std::string_view{"sf3"});
+
+static_assert(kStaticField0::NumParams() == 1);
+static_assert(kStaticField1::NumParams() == 1);
+static_assert(kStaticField2::NumParams() == 1);
+
+static_assert(kStaticField0::kRank == 0);
+static_assert(kStaticField1::kRank == 0);
+static_assert(kStaticField2::kRank == 1);
+static_assert(kStaticField3::kRank == 2);
 
 }  // namespace

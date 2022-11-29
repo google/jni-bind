@@ -21,10 +21,14 @@ namespace jni {
 
 enum class IdType {
   CLASS,
-  FIELD,
+  STATIC_OVERLOAD_SET,
+  STATIC_OVERLOAD,
+  STATIC_OVERLOAD_PARAM,
   OVERLOAD_SET,
   OVERLOAD,
   OVERLOAD_PARAM,
+  STATIC_FIELD,
+  FIELD,
 };
 
 }  // namespace jni

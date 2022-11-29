@@ -25,6 +25,7 @@
 namespace jni {
 
 struct OverloadBase {};
+struct MethodBase {};
 
 // Represents a single overload of a given method.
 template <typename ReturnT_, typename Params_>
@@ -38,8 +39,6 @@ struct Overload : OverloadBase {
 
 template <typename ReturnT_, typename Params_>
 Overload(ReturnT_, Params_) -> Overload<ReturnT_, Params_>;
-
-struct MethodBase {};
 
 template <typename Returns_, typename Params_>
 struct Method {};
