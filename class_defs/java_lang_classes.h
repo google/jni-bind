@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_CLASS_DEFS_JAVA_LANG_CLASSES_H_
 #define JNI_BIND_CLASS_DEFS_JAVA_LANG_CLASSES_H_
 
+#include "implementation/array.h"
 #include "implementation/class.h"
 #include "implementation/method.h"
 #include "implementation/params.h"
@@ -25,6 +26,7 @@
 
 namespace jni {
 
+// clang-format off
 inline constexpr Class kJavaLangClass{"java/lang/Class"};
 
 inline constexpr Class kJavaLangObject{"java/lang/Object"};
@@ -33,10 +35,12 @@ inline constexpr Class kJavaLangClassLoader{
     "java/lang/ClassLoader",
     Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}}};
 
-inline constexpr Method kGetClassLoaderMethod{
-    "getClassLoader",
-    Return{Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}}},
-    Params{}};
+static constexpr Class kJavaLangString{
+    "java/lang/String",
+    Constructor{Array{jbyte{}}},
+    Method{"toString", Return{jstring{}}, Params<>{}}
+};
+// clang-format on
 
 }  // namespace jni
 

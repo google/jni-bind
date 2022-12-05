@@ -14,6 +14,7 @@ cc_library(
     hdrs = ["java_lang_classes.h"],
     deps = [
         "//:jni_dep",
+        "//implementation:array",
         "//implementation:class",
         "//implementation:method",
         "//implementation:params",

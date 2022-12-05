@@ -22,8 +22,11 @@
 #include <string_view>
 
 #include "jni_helper/jni_helper.h"
+#include "class_defs/java_lang_classes.h"
+#include "implementation/array.h"
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
+#include "implementation/constructor.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_type.h"
@@ -32,8 +35,6 @@
 #include "jni_dep.h"
 
 namespace jni {
-
-static constexpr Class kJavaLangString{"java/lang/String"};
 
 template <typename CrtpBase>
 class StringRefBase
