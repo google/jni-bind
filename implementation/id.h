@@ -146,7 +146,31 @@ struct Id {
 
   // Returns root for constructor, else return's "raw_" member.
   static constexpr auto Materialize() {
-    if constexpr (kIdType == IdType::OVERLOAD) {
+    if constexpr (kIdType == IdType::STATIC_OVERLOAD) {
+      static_assert(kIdx != kNoIdx);
+
+      // Overload return value.
+      return std::get<secondary_idx>(
+                 std::get<idx>(root.static_.methods_).invocations_)
+          .return_.raw_;
+    } else if constexpr (kIdType == IdType::STATIC_OVERLOAD_PARAM) {
+      static_assert(kIdx != kNoIdx);
+
+      if constexpr (tertiary_idx == kNoIdx) {
+        // Overload return value.
+        return std::get<secondary_idx>(
+                   std::get<idx>(root.static_.methods_).invocations_)
+            .return_.raw_;
+      } else {
+        // Overload.
+        return std::get<tertiary_idx>(
+            std::get<secondary_idx>(
+                std::get<idx>(root.static_.methods_).invocations_)
+                .params_.values_);
+      }
+    }
+
+    else if constexpr (kIdType == IdType::OVERLOAD) {
       if constexpr (kIdx == kNoIdx) {
         // Constructor.
         return root;

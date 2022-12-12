@@ -20,9 +20,12 @@
 
 namespace {
 
+using ::jni::Array;
 using ::jni::Class;
 using ::jni::Field;
 using ::jni::LocalObject;
+using ::jni::Method;
+using ::jni::Params;
 using ::jni::Static;
 using ::jni::StaticRef;
 using ::jni::test::JniTest;
@@ -178,6 +181,91 @@ TEST_F(JniTest, StaticField_ObjectSet) {
   EXPECT_CALL(*env_, SetStaticObjectField(_, field_id, fake_obj));
 
   StaticRef<kClass>{}["classField"].Set(LocalObject<kClass2>{fake_obj});
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Static Methods.
+////////////////////////////////////////////////////////////////////////////////
+
+// clang-format off
+static constexpr Class kMethodClass{
+  "kMethodClass",
+      Static {
+        Method{"booleanMethod", ::jni::Return{jboolean{}}, Params<>{}},
+        Method{"byteMethod", ::jni::Return{jbyte{}}, Params<>{}},
+        Method{"charMethod", ::jni::Return{jchar{}}, Params<>{}},
+        Method{"shortMethod", ::jni::Return{jshort{}}, Params<>{}},
+        Method{"intMethod", ::jni::Return{jint{}}, Params<>{}},
+        Method{"longMethod", ::jni::Return{jlong{}}, Params<>{}},
+        Method{"floatMethod", ::jni::Return{jfloat{}}, Params<>{}},
+        Method{"doubleMethod", ::jni::Return{jdouble{}}, Params<>{}},
+        Method{"objectMethod", ::jni::Return{Class{"kClass2"}}, Params<>{}},
+        Method{"rank1ArrayMethod", ::jni::Return{Array{Class{"kClass2"}}}, Params<>{}},
+        Method{"rank2ArrayMethod", ::jni::Return{Array{Array{Class{"kClass2"}}}}, Params<>{}},
+
+        Method{"simpleFunc", ::jni::Return{int{}}, Params{jfloat{}}},
+        Method{"complexFunc", ::jni::Return{float{}},
+          Params{
+            Array{Array{Class{"kClass2"}}}, int{}, float{}, Class{"kClass3"},
+          }
+        }
+      },
+};
+// clang-format on
+
+TEST_F(JniTest, StaticExerciseAllReturns) {
+  EXPECT_CALL(*env_,
+              GetStaticMethodID(_, StrEq("booleanMethod"), StrEq("()Z")));
+  EXPECT_CALL(*env_, CallStaticBooleanMethodV);
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("byteMethod"), StrEq("()B")));
+  EXPECT_CALL(*env_, CallStaticByteMethodV);
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("charMethod"), StrEq("()C")));
+  EXPECT_CALL(*env_, CallStaticCharMethodV);
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("shortMethod"), StrEq("()S")));
+  EXPECT_CALL(*env_, CallStaticShortMethodV);
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("intMethod"), StrEq("()I")));
+  EXPECT_CALL(*env_, CallStaticIntMethodV);
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("longMethod"), StrEq("()J")));
+  EXPECT_CALL(*env_, CallStaticLongMethodV);
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("floatMethod"), StrEq("()F")));
+  EXPECT_CALL(*env_, CallStaticFloatMethodV);
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("doubleMethod"), StrEq("()D")));
+  EXPECT_CALL(*env_, CallStaticDoubleMethodV);
+
+  EXPECT_CALL(
+      *env_, GetStaticMethodID(_, StrEq("objectMethod"), StrEq("()LkClass2;")));
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("rank1ArrayMethod"),
+                                       StrEq("()[LkClass2;")));
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("rank2ArrayMethod"),
+                                       StrEq("()[[LkClass2;")));
+
+  EXPECT_CALL(*env_, CallStaticObjectMethodV).Times(3);
+
+  StaticRef<kMethodClass>{}("booleanMethod");
+  StaticRef<kMethodClass>{}("byteMethod");
+  StaticRef<kMethodClass>{}("charMethod");
+  StaticRef<kMethodClass>{}("shortMethod");
+  StaticRef<kMethodClass>{}("intMethod");
+  StaticRef<kMethodClass>{}("longMethod");
+  StaticRef<kMethodClass>{}("floatMethod");
+  StaticRef<kMethodClass>{}("doubleMethod");
+
+  // It would be more complete to exercise all types here.
+  StaticRef<kMethodClass>{}("objectMethod");
+  StaticRef<kMethodClass>{}("rank1ArrayMethod");
+  StaticRef<kMethodClass>{}("rank2ArrayMethod");
+}
+
+TEST_F(JniTest, StaticExerciseComplexSetOfParams) {
+  // The primary difference for statics are how they handle their returns.
+  // Coverage is already fairly extensive for params.
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("simpleFunc"), StrEq("(F)I")));
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("complexFunc"),
+                                       StrEq("([[LkClass2;IFLkClass3;)F")));
+
+  StaticRef<kMethodClass>{}("simpleFunc", 123.f);
+  StaticRef<kMethodClass>{}("complexFunc", jobjectArray{nullptr}, 123, 456.f,
+                            jobject{nullptr});
 }
 
 }  // namespace

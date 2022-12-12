@@ -42,6 +42,10 @@ template <typename JniT_, IdType kIdType_, std::size_t idx,
 struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
   using IdT = Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>;
 
+  static constexpr IdType kChildIdType = kIdType_ == IdType::OVERLOAD
+                                             ? IdType::OVERLOAD_PARAM
+                                             : IdType::STATIC_OVERLOAD_PARAM;
+
   template <typename IdxPack>
   struct Helper;
 
@@ -50,7 +54,8 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
     template <std::size_t I>
     struct Val {
       static constexpr std::string_view val = Signature<
-          Id<JniT_, IdType::OVERLOAD_PARAM, idx, secondary_idx, I>>::val;
+          // Id<JniT_, IdType::OVERLOAD_PARAM, idx, secondary_idx, I>>::val;
+          Id<JniT_, kChildIdType, idx, secondary_idx, I>>::val;
     };
 
     static constexpr std::string_view val =
@@ -59,7 +64,8 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
 
   struct ReturnHelper {
     static constexpr std::string_view val = Signature<
-        Id<JniT_, IdType::OVERLOAD_PARAM, idx, secondary_idx, kNoIdx>>::val;
+        // Id<JniT_, IdType::OVERLOAD_PARAM, idx, secondary_idx, kNoIdx>>::val;
+        Id<JniT_, kChildIdType, idx, secondary_idx, kNoIdx>>::val;
   };
 
   // For methods and ctors generates the signature, e.g. "(II)LClass1;".
@@ -70,7 +76,8 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
       return SelectorStaticInfo<IdT>::TypeName();
     } else if constexpr (kIdType_ == IdType::OVERLOAD_SET) {
       return "NOT_IMPLEMENTED";
-    } else if constexpr (kIdType_ == IdType::OVERLOAD) {
+    } else if constexpr (kIdType_ == IdType::OVERLOAD ||
+                         kIdType_ == IdType::STATIC_OVERLOAD) {
       using Idxs = std::make_index_sequence<IdT::NumParams()>;
       if constexpr (IdT::kIsConstructor) {
         return metaprogramming::StringConcatenate_v<
@@ -80,7 +87,8 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
             kLeftParenthesis, Helper<Idxs>::val, kRightParenthesis,
             ReturnHelper::val>;
       }
-    } else if constexpr (kIdType_ == IdType::OVERLOAD_PARAM) {
+    } else if constexpr (kIdType_ == IdType::OVERLOAD_PARAM ||
+                         kIdType_ == IdType::STATIC_OVERLOAD_PARAM) {
       return SelectorStaticInfo<IdT>::TypeName();
     }
 

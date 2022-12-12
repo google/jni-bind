@@ -106,6 +106,15 @@ cc_test(
 )
 
 cc_library(
+    name = "jni_static_method_invoke",
+    hdrs = ["jni_static_method_invoke.h"],
+    deps = [
+        ":jni_env",
+        "//:jni_dep",
+    ],
+)
+
+cc_library(
     name = "static_field_value",
     hdrs = ["static_field_value.h"],
     deps = [

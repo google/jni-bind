@@ -477,6 +477,7 @@ cc_library(
         "//implementation/jni_helper",
         "//implementation/jni_helper:jni_env",
         "//implementation/jni_helper:jni_method_invoke",
+        "//implementation/jni_helper:jni_static_method_invoke",
         "//metaprogramming:double_locked_value",
         "//metaprogramming:invocable_map",
         "//metaprogramming:optional_wrap",
