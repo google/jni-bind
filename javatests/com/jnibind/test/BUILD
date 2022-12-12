@@ -221,7 +221,7 @@ java_test(
 )
 
 #################################################################################
-## RJni String Test
+# RJni String Test
 #################################################################################
 cc_library(
     name = "string_test_jni_impl",
@@ -232,16 +232,6 @@ cc_library(
         "//:jni_bind",
     ],
     alwayslink = True,
-)
-
-cc_library(
-    name = "class_loader_test_jni",
-    testonly = True,
-    srcs = ["class_loader_test_jni.cc"],
-    deps = [
-        ":object_test_helper_jni",
-        "//:jni_bind",
-    ],
 )
 
 cc_binary(
@@ -264,5 +254,38 @@ java_test(
         "@maven//:com_google_truth_truth_1_1",
         "@maven//:junit_junit_4_13_1",
         "@maven//:org_mockito_mockito_core_2_28_2",
+    ],
+)
+
+#################################################################################
+# Statics Test.
+#################################################################################
+cc_library(
+    name = "static_test_jni_impl",
+    testonly = 1,
+    srcs = ["static_test_jni.cc"],
+    deps = ["//:jni_bind"],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libstatic_test_jni.so",
+    testonly = 1,
+    linkshared = True,
+    deps = [":static_test_jni_impl"],
+)
+
+java_test(
+    name = "StaticTest",
+    testonly = 1,
+    srcs = [
+        "StaticTest.java",
+        "StaticTestHelper.java",
+    ],
+    data = [":libstatic_test_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    deps = [
+        "@maven//:com_google_truth_truth_1_1",
+        "@maven//:junit_junit_4_13_1",
     ],
 )

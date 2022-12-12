@@ -22,26 +22,18 @@ package com.jnibind.test;
  */
 public class StringTestHelper {
   /** Void Methods. */
-
   public void voidMethodTakesString(String s) {}
-
-
   public void voidMethodTakesTwoStrings(String s1, String s2) {}
-
-
   public void voidMethodTakesFiveStrings(String s1, String s2, String s3, String s4, String s5) {}
 
   /** String Methods. */
-
   public String stringMethodTakesString(String s) {
     return s;
   }
 
-
   public String stringMethodTakesTwoStrings(String s1, String s2) {
     return s1 + s2;
   }
-
 
   public String stringMethodTakesFiveStrings(
       String s1, String s2, String s3, String s4, String s5) {
