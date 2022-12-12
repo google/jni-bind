@@ -104,3 +104,12 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "static_field_value",
+    hdrs = ["static_field_value.h"],
+    deps = [
+        ":jni_env",
+        "//:jni_dep",
+    ],
+)

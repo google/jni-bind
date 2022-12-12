@@ -24,10 +24,9 @@ namespace jni {
 
 template <typename Raw>
 struct FieldHelper {
-  static Raw GetValue(const jobject object_ref, const jfieldID field_ref_);
+  static Raw GetValue(jobject object_ref, jfieldID field_ref_);
 
-  static void SetValue(const jobject object_ref, const jfieldID field_ref_,
-                       Raw&& value);
+  static void SetValue(jobject object_ref, jfieldID field_ref_, Raw&& value);
 };
 
 template <>

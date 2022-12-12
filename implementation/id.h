@@ -50,6 +50,11 @@ struct Id {
        kIdType == IdType::OVERLOAD_SET) &&
       (kIdx == kNoIdx);
 
+  static constexpr bool kIsStatic = kIdType == IdType::STATIC_OVERLOAD_SET ||
+                                    kIdType == IdType::STATIC_OVERLOAD ||
+                                    kIdType == IdType::STATIC_OVERLOAD_PARAM ||
+                                    kIdType == IdType::STATIC_FIELD;
+
   template <IdType new_id_type>
   using ChangeIdType = Id<JniT, new_id_type, idx, secondary_idx, tertiary_idx>;
 

@@ -47,9 +47,18 @@ class JniHelper {
   static inline jmethodID GetMethodID(jclass clazz, const char* method_name,
                                       const char* method_signature);
 
+  // Gets a static method for a signature (no caching is performed).
+  static inline jmethodID GetStaticMethodID(jclass clazz,
+                                            const char* method_name,
+                                            const char* method_signature);
+
   // FieldIds follow the same semantics as MethodIds.
   static inline jfieldID GetFieldID(jclass clazz, const char* name,
                                     const char* signature);
+
+  // Gets a static field for a signature (no caching is performed).
+  static inline jfieldID GetStaticFieldID(jclass clazz, const char* field_name,
+                                          const char* field_signature);
 
   // Objects.
   template <typename... CtorArgs>
@@ -105,9 +114,20 @@ jmethodID JniHelper::GetMethodID(jclass clazz, const char* method_name,
                                             method_signature);
 }
 
+jmethodID JniHelper::GetStaticMethodID(jclass clazz, const char* method_name,
+                                       const char* method_signature) {
+  return jni::JniEnv::GetEnv()->GetStaticMethodID(clazz, method_name,
+                                                  method_signature);
+}
+
 jfieldID JniHelper::GetFieldID(jclass clazz, const char* name,
                                const char* signature) {
   return jni::JniEnv::GetEnv()->GetFieldID(clazz, name, signature);
+}
+
+jfieldID JniHelper::GetStaticFieldID(jclass clazz, const char* name,
+                                     const char* signature) {
+  return jni::JniEnv::GetEnv()->GetStaticFieldID(clazz, name, signature);
 }
 
 template <typename... CtorArgs>

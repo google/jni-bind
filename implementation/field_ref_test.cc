@@ -23,16 +23,13 @@
 
 namespace {
 
-using jni::Class;
-using jni::Field;
-
-using jni::LocalObject;
-using jni::test::JniTest;
-using testing::_;
-using testing::Eq;
-using testing::InSequence;
-using testing::Return;
-using testing::StrEq;
+using ::jni::Class;
+using ::jni::Field;
+using ::jni::LocalObject;
+using ::jni::test::JniTest;
+using ::testing::_;
+using ::testing::Return;
+using ::testing::StrEq;
 
 // clang-format off
 static constexpr Class java_class_under_test{

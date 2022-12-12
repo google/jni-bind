@@ -28,6 +28,7 @@
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/field_value.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/static_field_value.h"
 #include "implementation/proxy.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
@@ -69,8 +70,13 @@ class FieldRef {
         GetDefaultLoadedFieldList().push_back(&return_value);
       }
 
-      return jni::JniHelper::GetFieldID(clazz, IdT::Name(),
-                                        Signature_v<IdT>.data());
+      if constexpr (IdT::kIsStatic) {
+        return jni::JniHelper::GetStaticFieldID(clazz, IdT::Name(),
+                                                Signature_v<IdT>.data());
+      } else {
+        return jni::JniHelper::GetFieldID(clazz, IdT::Name(),
+                                          Signature_v<IdT>.data());
+      }
     });
   }
 
@@ -79,15 +85,26 @@ class FieldRef {
   using RawT = typename IdT::RawValT;
 
   Return_t<typename IdT::RawValT, IdT> Get() {
-    return {FieldHelper<CDeclForField>::GetValue(object_ref_,
-                                                 GetFieldID(class_ref_))};
+    if constexpr (IdT::kIsStatic) {
+      return {StaticFieldHelper<CDeclForField>::GetValue(
+          class_ref_, GetFieldID(class_ref_))};
+    } else {
+      return {FieldHelper<CDeclForField>::GetValue(object_ref_,
+                                                   GetFieldID(class_ref_))};
+    }
   }
 
   template <typename T>
   void Set(T&& value) {
-    FieldHelper<CDecl_t<typename IdT::RawValT>>::SetValue(
-        object_ref_, GetFieldID(class_ref_),
-        ProxyForField::ProxyAsArg(std::forward<T>(value)));
+    if constexpr (IdT::kIsStatic) {
+      StaticFieldHelper<CDecl_t<typename IdT::RawValT>>::SetValue(
+          class_ref_, GetFieldID(class_ref_),
+          ProxyForField::ProxyAsArg(std::forward<T>(value)));
+    } else {
+      FieldHelper<CDecl_t<typename IdT::RawValT>>::SetValue(
+          object_ref_, GetFieldID(class_ref_),
+          ProxyForField::ProxyAsArg(std::forward<T>(value)));
+    }
   }
 
  private:

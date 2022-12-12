@@ -225,6 +225,11 @@ static_assert(kStaticMethod1Overload0::Name() == std::string_view{"sm1"});
 static_assert(kStaticMethod2Overload0::Name() == std::string_view{"sm2"});
 static_assert(kStaticMethod3Overload0::Name() == std::string_view{"sm3"});
 
+static_assert(kStaticMethod0Overload0::kIsStatic);
+static_assert(kStaticMethod1Overload0::kIsStatic);
+static_assert(kStaticMethod2Overload0::kIsStatic);
+static_assert(kStaticMethod3Overload0::kIsStatic);
+
 static_assert(0 == Id<JTS, IdType::STATIC_OVERLOAD_PARAM, 0, 0>::kRank);
 static_assert(0 == Id<JTS, IdType::STATIC_OVERLOAD_PARAM, 1, 0>::kRank);
 static_assert(0 == Id<JTS, IdType::STATIC_OVERLOAD_PARAM, 1, 0, 0>::kRank);
@@ -247,6 +252,10 @@ static_assert(kStaticField3::Name() == std::string_view{"sf3"});
 static_assert(kStaticField0::NumParams() == 1);
 static_assert(kStaticField1::NumParams() == 1);
 static_assert(kStaticField2::NumParams() == 1);
+
+static_assert(kStaticField0::kIsStatic);
+static_assert(kStaticField1::kIsStatic);
+static_assert(kStaticField2::kIsStatic);
 
 static_assert(kStaticField0::kRank == 0);
 static_assert(kStaticField1::kRank == 0);

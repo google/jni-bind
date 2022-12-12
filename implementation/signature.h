@@ -65,7 +65,8 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
   // For methods and ctors generates the signature, e.g. "(II)LClass1;".
   // For parameters, emits just a type name.
   static constexpr std::string_view Val() {
-    if constexpr (kIdType_ == IdType::FIELD) {
+    if constexpr (kIdType_ == IdType::FIELD ||
+                  kIdType_ == IdType::STATIC_FIELD) {
       return SelectorStaticInfo<IdT>::TypeName();
     } else if constexpr (kIdType_ == IdType::OVERLOAD_SET) {
       return "NOT_IMPLEMENTED";

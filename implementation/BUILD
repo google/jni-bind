@@ -243,6 +243,7 @@ cc_library(
         "//:jni_dep",
         "//implementation/jni_helper",
         "//implementation/jni_helper:field_value_getter",
+        "//implementation/jni_helper:static_field_value",
         "//metaprogramming:double_locked_value",
         "//metaprogramming:optional_wrap",
         "//metaprogramming:queryable_map",
@@ -766,8 +767,8 @@ cc_library(
 )
 
 cc_test(
-    name = "static_test",
-    srcs = ["static_test.cc"],
+    name = "static_ref_test",
+    srcs = ["static_ref_test.cc"],
     deps = [
         "//:jni_bind",
         "//:jni_test",
