@@ -24,8 +24,8 @@
 #include "class_defs/java_lang_classes.h"
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
+#include "implementation/jni_helper/invoke.h"
 #include "implementation/jni_helper/jni_helper.h"
-#include "implementation/jni_helper/jni_method_invoke.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/method.h"
@@ -162,16 +162,19 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref) {
   jmethodID get_class_loader_jmethod = JniHelper::GetMethodID(
       java_lang_class_jclass, "getClassLoader", "()Ljava/lang/ClassLoader;");
 
-  jobject object_ref_class_loader_jobject = JniMethodInvoke<jobject>::Invoke(
-      class_of_object_jclass, get_class_loader_jmethod);
+  jobject object_ref_class_loader_jobject =
+      InvokeHelper<jobject, 1, false>::Invoke(class_of_object_jclass, nullptr,
+                                              get_class_loader_jmethod);
 
   jmethodID load_class_jmethod =
       JniHelper::GetMethodID(java_lang_class_loader_jclass, "loadClass",
                              "(Ljava/lang/String;)Ljava/lang/Class;");
 
   jstring name_string = JniHelper::NewLocalString(name);
-  jobject local_jclass_of_correct_loader = JniMethodInvoke<jobject>::Invoke(
-      object_ref_class_loader_jobject, load_class_jmethod, name_string);
+  jobject local_jclass_of_correct_loader =
+      InvokeHelper<jobject, 1, false>::Invoke(object_ref_class_loader_jobject,
+                                              nullptr, load_class_jmethod,
+                                              name_string);
   jobject promote_jclass_of_correct_loader =
       JniHelper::PromoteLocalToGlobalObject(local_jclass_of_correct_loader);
 

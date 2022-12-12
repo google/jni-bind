@@ -24,10 +24,10 @@
 #include "implementation/class_loader.h"
 #include "implementation/class_ref.h"
 #include "implementation/id_type.h"
+#include "implementation/jni_helper/invoke.h"
+#include "implementation/jni_helper/invoke_static.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/jni_helper.h"
-#include "implementation/jni_helper/jni_method_invoke.h"
-#include "implementation/jni_helper/jni_static_method_invoke.h"
 #include "implementation/jni_type.h"
 #include "implementation/method.h"
 #include "implementation/params.h"
@@ -36,6 +36,7 @@
 #include "implementation/return.h"
 #include "implementation/signature.h"
 #include "implementation/string.h"
+#include "implementation/void.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
 #include "metaprogramming/invocable_map.h"
@@ -80,38 +81,23 @@ struct OverloadRef {
   template <typename... Params>
   static ReturnProxied Invoke(jclass clazz, jobject object,
                               Params&&... params) {
-    if constexpr (std::is_same_v<ReturnProxied, void>) {
-      if constexpr (IdT::kIsStatic) {
-        JniStaticMethodInvoke<void, 0>::Invoke(
-            clazz, OverloadRef::GetMethodID(clazz),
-            Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
-      } else {
-        JniMethodInvoke<void, 0>::Invoke(
-            object, OverloadRef::GetMethodID(clazz),
-            Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
-      }
-    } else if constexpr (IdT::kIsConstructor) {
-      static_assert(!IdT::kIsStatic);
+    constexpr std::size_t kRank = ReturnIdT::kRank;
+    constexpr bool kStatic = ReturnIdT::kIsStatic;
+    const jmethodID mthd = OverloadRef::GetMethodID(clazz);
 
-      return {JniHelper::NewLocalObject(
-          clazz, OverloadRef::GetMethodID(clazz),
+    if constexpr (std::is_same_v<ReturnProxied, void>) {
+      return InvokeHelper<void, kRank, kStatic>::Invoke(
+          object, clazz, mthd,
+          Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
+    } else if constexpr (IdT::kIsConstructor) {
+      return ReturnProxied{JniHelper::NewLocalObject(
+          clazz, mthd,
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
-      // For now, adding +1 because the rest of the type system behaves as if
-      // a type is rank 0, and JniMethodInvoke behaves as if void is rank 0.
-      if constexpr (IdT::kIsStatic) {
-        return {JniStaticMethodInvoke<typename ReturnIdT::CDecl,
-                                      ReturnIdT::kRank + 1>::
-                    Invoke(clazz, OverloadRef::GetMethodID(clazz),
-                           Proxy_t<Params>::ProxyAsArg(
-                               std::forward<Params>(params))...)};
-      } else {
-        return {
-            JniMethodInvoke<typename ReturnIdT::CDecl, ReturnIdT::kRank + 1>::
-                Invoke(object, OverloadRef::GetMethodID(clazz),
-                       Proxy_t<Params>::ProxyAsArg(
-                           std::forward<Params>(params))...)};
-      }
+      return {
+          InvokeHelper<typename ReturnIdT::CDecl, kRank + 1, kStatic>::Invoke(
+              object, clazz, mthd,
+              Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     }
   }
 };

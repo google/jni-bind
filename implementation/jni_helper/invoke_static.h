@@ -19,21 +19,19 @@
 #include <cstddef>
 #include <utility>
 
+#include "invoke.h"
 #include "jni_env.h"
 #include "jni_dep.h"
 
 namespace jni {
 
-template <typename ReturnType, std::size_t kRank = 1>
-class JniStaticMethodInvoke {};
-
 ////////////////////////////////////////////////////////////////////////////////
 // Rank 0 type (aka void).
 ////////////////////////////////////////////////////////////////////////////////
 template <>
-struct JniStaticMethodInvoke<void, 0> {
+struct InvokeHelper<void, 0, true> {
   template <typename... Ts>
-  static void Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static void Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
     jni::JniEnv::GetEnv()->CallStaticVoidMethod(clazz, method_id,
                                                 std::forward<Ts>(ts)...);
   }
@@ -43,92 +41,99 @@ struct JniStaticMethodInvoke<void, 0> {
 // Rank 1 types, i.e. the primitive type itself (e.g. int).
 ////////////////////////////////////////////////////////////////////////////////
 template <>
-struct JniStaticMethodInvoke<jboolean, 1> {
+struct InvokeHelper<jboolean, 1, true> {
   template <typename... Ts>
-  static jboolean Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
+                         Ts&&... ts) {
     return jni::JniEnv::GetEnv()->CallStaticBooleanMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
   }
 };
 
 template <>
-struct JniStaticMethodInvoke<jbyte, 1> {
+struct InvokeHelper<jbyte, 1, true> {
   template <typename... Ts>
-  static jboolean Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
+                         Ts&&... ts) {
     return jni::JniEnv::GetEnv()->CallStaticByteMethod(clazz, method_id,
                                                        std::forward<Ts>(ts)...);
   }
 };
 
 template <>
-struct JniStaticMethodInvoke<jchar, 1> {
+struct InvokeHelper<jchar, 1, true> {
   template <typename... Ts>
-  static jboolean Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
+                         Ts&&... ts) {
     return jni::JniEnv::GetEnv()->CallStaticCharMethod(clazz, method_id,
                                                        std::forward<Ts>(ts)...);
   }
 };
 
 template <>
-struct JniStaticMethodInvoke<jshort, 1> {
+struct InvokeHelper<jshort, 1, true> {
   template <typename... Ts>
-  static jboolean Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
+                         Ts&&... ts) {
     return jni::JniEnv::GetEnv()->CallStaticShortMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
   }
 };
 
 template <>
-struct JniStaticMethodInvoke<jint, 1> {
+struct InvokeHelper<jint, 1, true> {
   template <typename... Ts>
-  static jint Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jint Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
     return jni::JniEnv::GetEnv()->CallStaticIntMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...);
   }
 };
 
 template <>
-struct JniStaticMethodInvoke<jlong, 1> {
+struct InvokeHelper<jlong, 1, true> {
   template <typename... Ts>
-  static jlong Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jlong Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
     return jni::JniEnv::GetEnv()->CallStaticLongMethod(clazz, method_id,
                                                        std::forward<Ts>(ts)...);
   }
 };
 
 template <>
-struct JniStaticMethodInvoke<jfloat, 1> {
+struct InvokeHelper<jfloat, 1, true> {
   template <typename... Ts>
-  static jfloat Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jfloat Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
     return jni::JniEnv::GetEnv()->CallStaticFloatMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
   }
 };
 
 template <>
-struct JniStaticMethodInvoke<jdouble, 1> {
+struct InvokeHelper<jdouble, 1, true> {
   template <typename... Ts>
-  static jdouble Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jdouble Invoke(jobject, jclass clazz, jmethodID method_id,
+                        Ts&&... ts) {
     return jni::JniEnv::GetEnv()->CallStaticDoubleMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
   }
 };
 
 template <>
-struct JniStaticMethodInvoke<jobject, 1> {
+struct InvokeHelper<jobject, 1, true> {
   // This always returns a local reference which should be embedded in type
   // information wherever this is used.
   template <typename... Ts>
-  static jobject Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobject Invoke(jobject, jclass clazz, jmethodID method_id,
+                        Ts&&... ts) {
     return jni::JniEnv::GetEnv()->CallStaticObjectMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
   }
 };
 
 template <>
-struct JniStaticMethodInvoke<jstring, 1> {
+struct InvokeHelper<jstring, 1, true> {
   template <typename... Ts>
-  static jobject Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobject Invoke(jobject, jclass clazz, jmethodID method_id,
+                        Ts&&... ts) {
     return jni::JniEnv::GetEnv()->CallStaticObjectMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
   }
@@ -138,9 +143,10 @@ struct JniStaticMethodInvoke<jstring, 1> {
 // Rank 2 types, i.e. single dimension arrays (e.g. int[]).
 ////////////////////////////////////////////////////////////////////////////////
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jboolean>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank == 2), jboolean>, kRank, true> {
   template <typename... Ts>
-  static jbooleanArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jbooleanArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                              Ts&&... ts) {
     return static_cast<jbooleanArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -148,9 +154,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jboolean>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jbyte>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank == 2), jbyte>, kRank, true> {
   template <typename... Ts>
-  static jbyteArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jbyteArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                           Ts&&... ts) {
     return static_cast<jbyteArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -158,9 +165,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jbyte>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jchar>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank == 2), jchar>, kRank, true> {
   template <typename... Ts>
-  static jcharArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jcharArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                           Ts&&... ts) {
     return static_cast<jcharArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -168,9 +176,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jchar>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jshort>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank == 2), jshort>, kRank, true> {
   template <typename... Ts>
-  static jshortArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jshortArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                            Ts&&... ts) {
     return static_cast<jshortArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -178,18 +187,20 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jshort>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jint>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank == 2), jint>, kRank, true> {
   template <typename... Ts>
-  static jintArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jintArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                          Ts&&... ts) {
     return static_cast<jintArray>(jni::JniEnv::GetEnv()->CallStaticObjectMethod(
         clazz, method_id, std::forward<Ts>(ts)...));
   }
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jfloat>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank == 2), jfloat>, kRank, true> {
   template <typename... Ts>
-  static jfloatArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jfloatArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                            Ts&&... ts) {
     return static_cast<jfloatArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -197,9 +208,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jfloat>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jdouble>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank == 2), jdouble>, kRank, true> {
   template <typename... Ts>
-  static jdoubleArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jdoubleArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jdoubleArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -207,9 +219,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jdouble>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jlong>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank == 2), jlong>, kRank, true> {
   template <typename... Ts>
-  static jlongArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jlongArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                           Ts&&... ts) {
     return static_cast<jlongArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -217,11 +230,12 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jlong>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jarray>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank == 2), jarray>, kRank, true> {
   // Arrays of arrays (which this invoke represents) return object arrays
   // (arrays themselves are objects, ergo object arrays).
   template <typename... Ts>
-  static jobjectArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -229,9 +243,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jarray>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jobject>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank == 2), jobject>, kRank, true> {
   template <typename... Ts>
-  static jobjectArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -242,9 +257,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank == 2), jobject>, kRank> {
 // Rank 3+ types, i.e. multi-dimension arrays (e.g. int[][], int[][][]).
 ////////////////////////////////////////////////////////////////////////////////
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jboolean>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank > 2), jboolean>, kRank, true> {
   template <typename... Ts>
-  static jobjectArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -252,9 +268,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jboolean>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jbyte>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank > 2), jbyte>, kRank, true> {
   template <typename... Ts>
-  static jobjectArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -262,9 +279,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jbyte>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jchar>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank > 2), jchar>, kRank, true> {
   template <typename... Ts>
-  static jobjectArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -272,9 +290,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jchar>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jshort>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank > 2), jshort>, kRank, true> {
   template <typename... Ts>
-  static jobjectArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -282,9 +301,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jshort>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jint>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank > 2), jint>, kRank, true> {
   template <typename... Ts>
-  static jobjectArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -292,9 +312,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jint>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jfloat>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank > 2), jfloat>, kRank, true> {
   template <typename... Ts>
-  static jobjectArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -302,9 +323,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jfloat>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jdouble>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank > 2), jdouble>, kRank, true> {
   template <typename... Ts>
-  static jobjectArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -312,9 +334,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jdouble>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jlong>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank > 2), jlong>, kRank, true> {
   template <typename... Ts>
-  static jobjectArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -322,11 +345,12 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jlong>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jarray>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank > 2), jarray>, kRank, true> {
   // Arrays of arrays (which this invoke represents) return object arrays
   // (arrays themselves are objects, ergo object arrays).
   template <typename... Ts>
-  static jobjectArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -334,9 +358,10 @@ struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jarray>, kRank> {
 };
 
 template <std::size_t kRank>
-struct JniStaticMethodInvoke<std::enable_if_t<(kRank > 2), jobject>, kRank> {
+struct InvokeHelper<std::enable_if_t<(kRank > 2), jobject>, kRank, true> {
   template <typename... Ts>
-  static jobjectArray Invoke(jclass clazz, jmethodID method_id, Ts&&... ts) {
+  static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
+                             Ts&&... ts) {
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));

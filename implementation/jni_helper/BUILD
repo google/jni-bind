@@ -84,8 +84,8 @@ cc_test(
 )
 
 cc_library(
-    name = "jni_method_invoke",
-    hdrs = ["jni_method_invoke.h"],
+    name = "invoke",
+    hdrs = ["invoke.h"],
     deps = [
         ":jni_env",
         "//:jni_dep",
@@ -93,10 +93,10 @@ cc_library(
 )
 
 cc_test(
-    name = "jni_method_invoke_test",
-    srcs = ["jni_method_invoke_test.cc"],
+    name = "invoke_test",
+    srcs = ["invoke_test.cc"],
     deps = [
-        ":jni_method_invoke",
+        ":invoke",
         "//:jni_bind",
         "//:jni_dep",
         "//:jni_test",
@@ -106,9 +106,10 @@ cc_test(
 )
 
 cc_library(
-    name = "jni_static_method_invoke",
-    hdrs = ["jni_static_method_invoke.h"],
+    name = "invoke_static",
+    hdrs = ["invoke_static.h"],
     deps = [
+        ":invoke",
         ":jni_env",
         "//:jni_dep",
     ],
