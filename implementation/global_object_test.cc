@@ -23,26 +23,70 @@
 
 namespace {
 
-using jni::Class;
-using jni::Field;
-using jni::GlobalObject;
-using jni::Method;
-using jni::Params;
-using jni::test::AsGlobal;
-using jni::test::JniTest;
-using testing::_;
-using testing::InSequence;
-using testing::Return;
-using testing::StrEq;
+using ::jni::AdoptGlobal;
+using ::jni::Class;
+using ::jni::Constructor;
+using ::jni::Field;
+using ::jni::GlobalObject;
+using ::jni::Method;
+using ::jni::Params;
+using ::jni::PromoteToGlobal;
+using ::jni::test::AsGlobal;
+using ::jni::test::JniTest;
+using ::testing::_;
+using ::testing::InSequence;
+using ::testing::Return;
+using ::testing::StrEq;
 
 TEST_F(JniTest, GlobalObject_CallsNewAndDeleteOnNewObject) {
-  static constexpr Class kClass{"com/google/CallsNewAndDeleteOnNewObject"};
+  static constexpr Class kClass{"kClass"};
   const jobject local_jobject{reinterpret_cast<jobject>(0XBBBBBB)};
 
   EXPECT_CALL(*env_, NewObjectV).WillOnce(Return(local_jobject));
   EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(local_jobject)));
 
   GlobalObject<kClass> global_object{};
+
+  EXPECT_NE(jobject{global_object}, nullptr);
+}
+
+TEST_F(JniTest, GlobalObject_ConstructsFromNonStandardConstructor) {
+  static constexpr Class kClass{
+      "kClass",
+      Constructor{jfloat{}, jfloat{}},
+  };
+  const jobject local_jobject{reinterpret_cast<jobject>(0XBBBBBB)};
+
+  EXPECT_CALL(*env_, NewObjectV).WillOnce(Return(local_jobject));
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(local_jobject)));
+
+  GlobalObject<kClass> global_object{1.f, 2.f};
+
+  EXPECT_NE(jobject{global_object}, nullptr);
+}
+
+TEST_F(JniTest, GlobalObject_DoesNotDeleteAnyLocalsForAdoptedGlobalJobject) {
+  static constexpr Class kClass{"kClass"};
+  const jobject global_jobject{reinterpret_cast<jobject>(0XBBBBBB)};
+
+  EXPECT_CALL(*env_, NewObjectV).Times(0);
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(0);
+  EXPECT_CALL(*env_, DeleteGlobalRef(global_jobject));
+
+  GlobalObject<kClass> global_object{AdoptGlobal{}, global_jobject};
+
+  EXPECT_NE(jobject{global_object}, nullptr);
+}
+
+TEST_F(JniTest, GlobalObject_PromotesJobjectsOnConstruction) {
+  static constexpr Class kClass{"kClass"};
+  const jobject local_jobject{reinterpret_cast<jobject>(0XBBBBBB)};
+
+  EXPECT_CALL(*env_, NewObjectV).Times(0);
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(1);
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(local_jobject)));
+
+  GlobalObject<kClass> global_object{PromoteToGlobal{}, local_jobject};
 
   EXPECT_NE(jobject{global_object}, nullptr);
 }

@@ -146,11 +146,6 @@ class ConstructorValidator : public ObjectRef<JniT> {
       : Base(Permutation_t<>::OverloadRef::Invoke(Base::GetJClass(),
                                                   Base::object_ref_)
                  .Release()) {
-    static_assert(
-        kNumConstructors != 0,
-        "You are attempting to construct an object which has no Constructor "
-        "defined.  If you intended to construct this object with no arguments, "
-        "ensure you define a jni::Constructor with no arguments.");
   }
 };
 

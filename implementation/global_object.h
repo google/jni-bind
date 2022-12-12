@@ -24,6 +24,13 @@
 
 namespace jni {
 
+// Pass this tag to allow Global object's constructor to promote for you.
+struct PromoteToGlobal {};
+
+// WARNING: Avoid using a global jobject in a constructor unless you are
+// confident the underlying jobject has been pinned as a global.
+struct AdoptGlobal {};
+
 template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
@@ -52,10 +59,25 @@ class GlobalObject
         "type");
   }
 
-  // Promotes then wraps a local jobject.  Prefer using regular API over this.
+  // Constructs a new object using the local object's default constructor.
   explicit GlobalObject()
       : GlobalObject(JniHelper::PromoteLocalToGlobalObject(
             LocalObject<class_v_, class_loader_v_, jvm_v_>{}.Release())) {}
+
+  // Constructs a new object using arg based ctor.
+  template <typename... Ts>
+  explicit GlobalObject(Ts&&... ts)
+      : GlobalObject(JniHelper::PromoteLocalToGlobalObject(
+            LocalObject<class_v_, class_loader_v_, jvm_v_>{
+                std::forward<Ts>(ts)...}
+                .Release())) {}
+
+  // Constructs a global promoting a local object to a global (standard).
+  explicit GlobalObject(PromoteToGlobal, jobject obj)
+      : ObjectRefT(JniHelper::PromoteLocalToGlobalObject(obj)) {}
+
+  // Constructs a global by wrapping a jobject (non-standard).
+  explicit GlobalObject(AdoptGlobal, jobject obj) : ObjectRefT(obj) {}
 
   GlobalObject(const GlobalObject&) = delete;
   GlobalObject(GlobalObject&& rhs) = default;
