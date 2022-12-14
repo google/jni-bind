@@ -1,4 +1,14 @@
-package(default_visibility = ["//visibility:public"])
+load("//tools/build_defs/license:license.bzl", "license")
+
+package(
+    default_applicable_licenses = ["//third_party/jni_wrapper/metaprogramming:license"],
+    default_visibility = ["//visibility:public"],
+)
+
+license(
+    name = "license",
+    package_name = "metaprogramming",
+)
 
 licenses(["notice"])
 

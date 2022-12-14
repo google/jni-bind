@@ -1,6 +1,14 @@
+load("//tools/build_defs/license:license.bzl", "license")
+
 package(
+    default_applicable_licenses = ["//third_party/jni_wrapper:license"],
     default_visibility = ["//visibility:public"],
     licenses = ["notice"],
+)
+
+license(
+    name = "license",
+    package_name = "jni_wrapper",
 )
 
 filegroup(
