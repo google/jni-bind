@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef JNI_BIND_STRING_H_
-#define JNI_BIND_STRING_H_
+#ifndef JNI_BIND_STRING_REF_H_
+#define JNI_BIND_STRING_REF_H_
 
 #include <optional>
 #include <string>
@@ -88,4 +88,4 @@ class UtfStringView {
 
 }  // namespace jni
 
-#endif  // JNI_BIND_STRING_H_
+#endif  // JNI_BIND_STRING_REF_H_

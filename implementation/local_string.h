@@ -18,7 +18,7 @@
 #define JNI_BIND_LOCAL_STRING_H_
 
 #include "ref_base.h"
-#include "string.h"
+#include "string_ref.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "jni_dep.h"
 

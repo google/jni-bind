@@ -17,10 +17,9 @@
 #ifndef JNI_BIND_GLOBAL_STRING_H_
 #define JNI_BIND_GLOBAL_STRING_H_
 
-#include "local_string.h"
-#include "ref_base.h"
-#include "string.h"
-#include "implementation/string.h"
+#include "implementation/local_string.h"
+#include "implementation/ref_base.h"
+#include "implementation/string_ref.h"
 #include "jni_dep.h"
 
 namespace jni {

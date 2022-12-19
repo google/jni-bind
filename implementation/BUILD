@@ -180,12 +180,12 @@ cc_library(
         ":jni_type",
         ":jvm_ref",
         ":local_object",
+        ":local_string",
         ":method",
         ":method_ref",
         ":object_ref",
         ":params",
         ":return",
-        ":string_ref",
         "//:jni_dep",
         "//class_defs:java_lang_classes",
         "//implementation/jni_helper:jni_env",
@@ -510,7 +510,7 @@ cc_library(
         ":ref_base",
         ":return",
         ":signature",
-        ":string",
+        ":string_ref",
         ":void",
         "//:jni_dep",
         "//implementation/jni_helper",
@@ -664,10 +664,12 @@ cc_library(
         ":corpus",
         ":corpus_tag",
         ":default_class_loader",
+        ":global_string",
         ":id",
         ":id_type",
         ":jvm",
         ":local_array",
+        ":local_string",
         ":name_constants",
         ":object",
         ":proxy_convenience_aliases",
@@ -747,8 +749,8 @@ cc_test(
 )
 
 cc_library(
-    name = "string",
-    hdrs = ["string.h"],
+    name = "string_ref",
+    hdrs = ["string_ref.h"],
     deps = [
         ":array",
         ":class",
@@ -819,18 +821,26 @@ cc_test(
 )
 
 cc_library(
-    name = "string_ref",
-    hdrs = [
-        "global_string.h",
-        "local_string.h",
-    ],
+    name = "local_string",
+    hdrs = ["local_string.h"],
     deps = [
         ":default_class_loader",
         ":jvm",
         ":ref_base",
-        ":string",
+        ":string_ref",
         "//:jni_dep",
         "//implementation/jni_helper",
+    ],
+)
+
+cc_library(
+    name = "global_string",
+    hdrs = ["global_string.h"],
+    deps = [
+        ":local_string",
+        ":ref_base",
+        ":string_ref",
+        "//:jni_dep",
     ],
 )
 

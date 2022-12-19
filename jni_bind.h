@@ -40,7 +40,7 @@
 #include "implementation/selector_static_info.h"
 #include "implementation/static.h"
 #include "implementation/static_ref.h"
-#include "implementation/string.h"
+#include "implementation/string_ref.h"
 #include "implementation/supported_class_set.h"
 
 // Convenience headers for system libraries.

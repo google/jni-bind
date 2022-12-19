@@ -35,7 +35,7 @@
 #include "implementation/ref_base.h"
 #include "implementation/return.h"
 #include "implementation/signature.h"
-#include "implementation/string.h"
+#include "implementation/string_ref.h"
 #include "implementation/void.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
