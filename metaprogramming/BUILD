@@ -276,6 +276,20 @@ cc_test(
 )
 
 cc_library(
+    name = "detect",
+    hdrs = ["detect.h"],
+)
+
+cc_test(
+    name = "detect_test",
+    srcs = ["detect_test.cc"],
+    deps = [
+        ":detect",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "double_locked_value",
     hdrs = ["double_locked_value.h"],
 )
