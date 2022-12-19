@@ -19,6 +19,10 @@
 // <jni.h> include helper.
 #include "jni_dep.h"
 
+// JNI Corpus.
+#include "implementation/corpus.h"
+#include "implementation/corpus_tag.h"
+
 // Headers for static definitions.
 #include "implementation/array.h"
 #include "implementation/array_type_conversion.h"

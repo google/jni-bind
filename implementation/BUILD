@@ -228,6 +228,36 @@ cc_test(
 )
 
 cc_library(
+    name = "corpus",
+    hdrs = ["corpus.h"],
+    deps = [
+        ":corpus_tag",
+        "//metaprogramming:concatenate",
+        "//metaprogramming:detect",
+    ],
+)
+
+cc_library(
+    name = "corpus_tag",
+    hdrs = ["corpus_tag.h"],
+    deps = [
+        "//metaprogramming:concatenate",
+        "//metaprogramming:detect",
+    ],
+)
+
+cc_test(
+    name = "corpus_test",
+    srcs = ["corpus_test.cc"],
+    deps = [
+        ":corpus",
+        ":corpus_tag",
+        "//metaprogramming:detect",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "default_class_loader",
     hdrs = ["default_class_loader.h"],
     deps = ["//metaprogramming:modified_max"],
@@ -631,6 +661,8 @@ cc_library(
         ":array",
         ":class",
         ":class_loader",
+        ":corpus",
+        ":corpus_tag",
         ":default_class_loader",
         ":id",
         ":id_type",

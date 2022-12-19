@@ -24,6 +24,8 @@
 
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
+#include "implementation/corpus.h"
+#include "implementation/corpus_tag.h"
 #include "implementation/object.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/ref_base.h"
@@ -50,10 +52,10 @@ struct Proxy;
 // Note, if the size can reasonably differ, the jtype is enforced by virtue of
 // being a different type (i.e. you can't accidentally widen).
 using AllKeys =
-    std::tuple<void, jboolean, jbyte, jshort, jint, jfloat, jlong, jchar,
-               jdouble, jstring, jobject, jarray, jobjectArray, jintArray,
-               jbooleanArray, jbyteArray, jcharArray, jshortArray, jdoubleArray,
-               jfloatArray, jlongArray>;
+    Corpus_t<JniUserDefinedCorpusTag, void, jboolean, jbyte, jshort, jint,
+             jfloat, jlong, jchar, jdouble, jstring, jobject, jarray,
+             jobjectArray, jintArray, jbooleanArray, jbyteArray, jcharArray,
+             jshortArray, jdoubleArray, jfloatArray, jlongArray>;
 
 template <typename TUndecayed>
 struct ProxyHelper {
