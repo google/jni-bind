@@ -1,5 +1,3 @@
-package(default_applicable_licenses = ["//third_party/jni_wrapper:license"])
-
 licenses(["notice"])
 
 ################################################################################

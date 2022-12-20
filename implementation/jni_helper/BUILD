@@ -1,13 +1,5 @@
-load("//tools/build_defs/license:license.bzl", "license")
-
 package(
-    default_applicable_licenses = ["//third_party/jni_wrapper/implementation/jni_helper:license"],
     default_visibility = ["//visibility:public"],
-)
-
-license(
-    name = "license",
-    package_name = "jni_helper",
 )
 
 licenses(["notice"])
