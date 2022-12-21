@@ -32,6 +32,7 @@
 #include "implementation/method.h"
 #include "implementation/params.h"
 #include "implementation/proxy.h"
+#include "implementation/proxy_definitions.h"
 #include "implementation/ref_base.h"
 #include "implementation/return.h"
 #include "implementation/signature.h"

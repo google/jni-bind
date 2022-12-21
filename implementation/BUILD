@@ -499,6 +499,7 @@ cc_library(
         ":method",
         ":params",
         ":proxy",
+        ":proxy_definitions",
         ":ref_base",
         ":return",
         ":signature",
@@ -645,10 +646,7 @@ cc_library(
 
 cc_library(
     name = "proxy",
-    hdrs = [
-        "proxy.h",
-        "proxy_definitions.h",
-    ],
+    hdrs = ["proxy.h"],
     deps = [
         ":array",
         ":class",
@@ -680,6 +678,29 @@ cc_library(
         "//metaprogramming:type_to_type_map",
         "//metaprogramming:unique_set",
         "//metaprogramming:unwrap",
+    ],
+)
+
+cc_library(
+    name = "proxy_definitions",
+    hdrs = [
+        "proxy_definitions.h",
+    ],
+    deps = [
+        ":array",
+        ":class",
+        ":class_loader",
+        ":default_class_loader",
+        ":id",
+        ":id_type",
+        ":jvm",
+        ":local_array",
+        ":local_string",
+        ":name_constants",
+        ":object",
+        ":proxy",
+        ":ref_base",
+        "//:jni_dep",
     ],
 )
 

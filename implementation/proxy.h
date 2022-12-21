@@ -106,10 +106,28 @@ struct ProxyHelper {
   using AsDecl_t = typename Proxy_t::AsDecl;
 };
 
-}  // namespace jni
+// Default Proxy, all types and values are pure passthrough.
+template <typename Key_>
+struct ProxyBase {
+  using Key = Key_;
 
-// Consumers of Proxy *must* include proxy defininitions after proxy.h. This is
-// because Arrays define themselves using the proxies of other types.
-#include "proxy_definitions.h"
+  using CDecl = Key_;
+
+  template <typename>
+  using AsReturn = Key_;
+
+  using AsArg = std::tuple<Key_>;
+  using AsDecl = std::tuple<Key_>;
+
+  template <typename T>
+  static auto ProxyAsArg(T&& t) {
+    return std::forward<T>(t);
+  }
+
+  template <typename InputParamSelectionT, typename T>
+  static constexpr bool kViable = IsConvertibleKey_v<Key_, T>;
+};
+
+}  // namespace jni
 
 #endif  // JNI_BIND_TYPE_PROXY_H_

@@ -52,28 +52,6 @@ struct ArrayHelper;
 template <typename TUndecayed>
 struct ProxyHelper;
 
-// Default Proxy, all types and values are pure passthrough.
-template <typename Key_>
-struct ProxyBase {
-  using Key = Key_;
-
-  using CDecl = Key_;
-
-  template <typename>
-  using AsReturn = Key_;
-
-  using AsArg = std::tuple<Key_>;
-  using AsDecl = std::tuple<Key_>;
-
-  template <typename T>
-  static auto ProxyAsArg(T&& t) {
-    return std::forward<T>(t);
-  }
-
-  template <typename InputParamSelectionT, typename T>
-  static constexpr bool kViable = IsConvertibleKey_v<Key_, T>;
-};
-
 // Proxy is a metafunction that gives useful conversions from
 // types and forwards to a corresponding type that's viable as input.
 //
