@@ -500,6 +500,7 @@ cc_library(
         ":params",
         ":proxy",
         ":proxy_definitions",
+        ":proxy_definitions_string",
         ":ref_base",
         ":return",
         ":signature",
@@ -654,12 +655,10 @@ cc_library(
         ":corpus",
         ":corpus_tag",
         ":default_class_loader",
-        ":global_string",
         ":id",
         ":id_type",
         ":jvm",
         ":local_array",
-        ":local_string",
         ":name_constants",
         ":object",
         ":proxy_convenience_aliases",
@@ -683,9 +682,7 @@ cc_library(
 
 cc_library(
     name = "proxy_definitions",
-    hdrs = [
-        "proxy_definitions.h",
-    ],
+    hdrs = ["proxy_definitions.h"],
     deps = [
         ":array",
         ":class",
@@ -695,12 +692,21 @@ cc_library(
         ":id_type",
         ":jvm",
         ":local_array",
-        ":local_string",
+        #":local_string",
         ":name_constants",
         ":object",
         ":proxy",
         ":ref_base",
         "//:jni_dep",
+    ],
+)
+
+cc_library(
+    name = "proxy_definitions_string",
+    hdrs = ["proxy_definitions_string.h"],
+    deps = [
+        ":local_string",
+        ":proxy",
     ],
 )
 
@@ -837,8 +843,6 @@ cc_library(
     name = "local_string",
     hdrs = ["local_string.h"],
     deps = [
-        ":default_class_loader",
-        ":jvm",
         ":ref_base",
         ":string_ref",
         "//:jni_dep",

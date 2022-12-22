@@ -30,7 +30,6 @@
 #include "implementation/id_type.h"
 #include "implementation/jvm.h"
 #include "implementation/local_array.h"
-#include "implementation/local_string.h"
 #include "implementation/name_constants.h"
 #include "implementation/object.h"
 #include "implementation/proxy.h"
@@ -126,41 +125,6 @@ struct Proxy<LongType,
                                         !std::is_same_v<jlong, long>>>
   static jlong ProxyAsArg(T val) {
     return jlong{val};
-  }
-};
-
-template <typename JString>
-struct Proxy<JString,
-             typename std::enable_if_t<std::is_same_v<JString, jstring>>>
-    : public ProxyBase<JString> {
-  using AsArg =
-      std::tuple<std::string, jstring, char*, const char*, std::string_view>;
-
-  template <typename>
-  using AsReturn = LocalString;
-
-  template <typename T>
-  struct Helper {
-    static constexpr bool val = true;
-  };
-
-  template <typename OverloadSelection, typename T>
-  static constexpr bool kViable =
-      IsConvertibleKey<T>::template value<std::string> ||
-      IsConvertibleKey<T>::template value<jstring> ||
-      IsConvertibleKey<T>::template value<char*> ||
-      IsConvertibleKey<T>::template value<const char*> ||
-      IsConvertibleKey<T>::template value<std::string_view>;
-
-  // These leak local instances of strings.  Usually, RAII mechanisms would
-  // correctly release local instances, but here we are stripping that so it can
-  // be used in a method.  This could be obviated by wrapping the calling scope
-  // in a local stack frame.
-  static jstring ProxyAsArg(jstring s) { return s; }
-  static jstring ProxyAsArg(const char* s) { return LocalString{s}.Release(); }
-  static jstring ProxyAsArg(std::string s) { return LocalString{s}.Release(); }
-  static jstring ProxyAsArg(std::string_view s) {
-    return LocalString{s}.Release();
   }
 };
 
