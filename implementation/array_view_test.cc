@@ -22,21 +22,23 @@
 
 namespace {
 
-using jni::ArrayView;
-using jni::CDecl_t;
-using jni::Class;
-using jni::LocalArray;
-using jni::LocalObject;
-using jni::test::JniTest;
-using testing::_;
-using testing::Eq;
-using testing::Return;
+using ::jni::ArrayView;
+using ::jni::CDecl_t;
+using ::jni::Class;
+using ::jni::LocalArray;
+using ::jni::LocalObject;
+using ::jni::Method;
+using ::jni::Params;
+using ::jni::Return;
+using ::jni::test::JniTest;
+using ::testing::_;
+using ::testing::Eq;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Pin Tests.
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, ArrayView_CallsLengthProperly) {
-  EXPECT_CALL(*env_, GetArrayLength).WillOnce(testing::Return(3));
+  EXPECT_CALL(*env_, GetArrayLength).WillOnce(::testing::Return(3));
 
   LocalArray<jint> local_int_array{5};
   EXPECT_EQ(local_int_array.Length(), 3);
@@ -62,42 +64,42 @@ TEST_F(JniTest, ArrayView_GetsAndReleaseArrayBuffer) {
   jdouble* fake_raw_double_ptr{reinterpret_cast<jdouble*>(0xbaaaaab1)};
 
   EXPECT_CALL(*env_, GetBooleanArrayElements(Eq(fake_boolean_jobject), _))
-      .WillOnce(Return(fake_raw_boolean_ptr));
+      .WillOnce(::testing::Return(fake_raw_boolean_ptr));
   EXPECT_CALL(*env_, ReleaseBooleanArrayElements(Eq(fake_boolean_jobject),
                                                  Eq(fake_raw_boolean_ptr), 0));
 
   EXPECT_CALL(*env_, GetByteArrayElements(Eq(fake_byte_jobject), _))
-      .WillOnce(Return(fake_raw_byte_ptr));
+      .WillOnce(::testing::Return(fake_raw_byte_ptr));
   EXPECT_CALL(*env_, ReleaseByteArrayElements(Eq(fake_byte_jobject),
                                               Eq(fake_raw_byte_ptr), 0));
 
   EXPECT_CALL(*env_, GetCharArrayElements(Eq(fake_char_jobject), _))
-      .WillOnce(Return(fake_raw_char_ptr));
+      .WillOnce(::testing::Return(fake_raw_char_ptr));
   EXPECT_CALL(*env_, ReleaseCharArrayElements(Eq(fake_char_jobject),
                                               Eq(fake_raw_char_ptr), 0));
 
   EXPECT_CALL(*env_, GetShortArrayElements(Eq(fake_short_jobject), _))
-      .WillOnce(Return(fake_raw_short_ptr));
+      .WillOnce(::testing::Return(fake_raw_short_ptr));
   EXPECT_CALL(*env_, ReleaseShortArrayElements(Eq(fake_short_jobject),
                                                Eq(fake_raw_short_ptr), 0));
 
   EXPECT_CALL(*env_, GetIntArrayElements(Eq(fake_int_jobject), _))
-      .WillOnce(Return(fake_raw_int_ptr));
+      .WillOnce(::testing::Return(fake_raw_int_ptr));
   EXPECT_CALL(*env_, ReleaseIntArrayElements(Eq(fake_int_jobject),
                                              Eq(fake_raw_int_ptr), 0));
 
   EXPECT_CALL(*env_, GetLongArrayElements(Eq(fake_long_jobject), _))
-      .WillOnce(Return(fake_raw_long_ptr));
+      .WillOnce(::testing::Return(fake_raw_long_ptr));
   EXPECT_CALL(*env_, ReleaseLongArrayElements(Eq(fake_long_jobject),
                                               Eq(fake_raw_long_ptr), 0));
 
   EXPECT_CALL(*env_, GetFloatArrayElements(Eq(fake_float_jobject), _))
-      .WillOnce(Return(fake_raw_float_ptr));
+      .WillOnce(::testing::Return(fake_raw_float_ptr));
   EXPECT_CALL(*env_, ReleaseFloatArrayElements(Eq(fake_float_jobject),
                                                Eq(fake_raw_float_ptr), 0));
 
   EXPECT_CALL(*env_, GetDoubleArrayElements(Eq(fake_double_jobject), _))
-      .WillOnce(Return(fake_raw_double_ptr));
+      .WillOnce(::testing::Return(fake_raw_double_ptr));
   EXPECT_CALL(*env_, ReleaseDoubleArrayElements(Eq(fake_double_jobject),
                                                 Eq(fake_raw_double_ptr), 0));
 
@@ -125,7 +127,7 @@ TEST_F(JniTest, LocalArrayView_AllowsCTAD) {
   jboolean* fake_raw_boolean_ptr{reinterpret_cast<jboolean*>(0xbaaaaaaa)};
 
   EXPECT_CALL(*env_, GetBooleanArrayElements(Eq(fake_boolean_jobject), _))
-      .WillOnce(Return(fake_raw_boolean_ptr));
+      .WillOnce(::testing::Return(fake_raw_boolean_ptr));
   EXPECT_CALL(*env_, ReleaseBooleanArrayElements(Eq(fake_boolean_jobject),
                                                  Eq(fake_raw_boolean_ptr), 0));
 
@@ -233,7 +235,7 @@ TEST_F(JniTest, ArrayView_IntIsIterable) {
   std::array fake_vals{jint{1}, jint{2}, jint{3}};
   const jintArray fake_jarr = reinterpret_cast<jintArray>(0xDADADADADA);
 
-  EXPECT_CALL(*env_, NewIntArray(3)).WillOnce(Return(fake_jarr));
+  EXPECT_CALL(*env_, NewIntArray(3)).WillOnce(::testing::Return(fake_jarr));
   EXPECT_CALL(*env_, GetArrayLength(fake_jarr)).WillOnce(testing::Return(3));
   EXPECT_CALL(*env_, GetIntArrayElements)
       .WillOnce(testing::Return(fake_vals.data()));
@@ -291,6 +293,60 @@ TEST_F(JniTest, ArrayView_DoubleIsIterable) {
 
   EXPECT_TRUE(std::equal(bool_view.begin(), bool_view.end(), fake_vals.begin(),
                          fake_vals.end()));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Iteration Tests: Objects.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, ArrayView_ShallowObjectsAreIterable) {
+  jobject fake_obj_1 = reinterpret_cast<jobject>(0xBBBBBAAAAA);
+  jobject fake_obj_2 = reinterpret_cast<jobject>(0xCCCCCAAAAA);
+  jobject fake_obj_3 = reinterpret_cast<jobject>(0xDDDDDAAAAA);
+
+  std::array fake_vals{fake_obj_1, fake_obj_2, fake_obj_3};
+
+  const jobjectArray fake_jarr = reinterpret_cast<jobjectArray>(0xDADADADADA);
+
+  EXPECT_CALL(*env_, GetArrayLength(fake_jarr)).WillOnce(testing::Return(3));
+  EXPECT_CALL(*env_, GetObjectArrayElement)
+      .WillOnce(::testing::Return(fake_obj_1))
+      .WillOnce(::testing::Return(fake_obj_2))
+      .WillOnce(::testing::Return(fake_obj_3));
+
+  LocalArray<jobject> obj_arr{fake_jarr};
+  ArrayView<jobject> obj_view = obj_arr.Pin();
+
+  EXPECT_TRUE(std::equal(obj_view.begin(), obj_view.end(), fake_vals.begin(),
+                         fake_vals.end()));
+}
+
+TEST_F(JniTest, ArrayView_RichObjectsAreIterable) {
+  static constexpr Class kClass{"kClass",
+                                Method{"Foo", Return<int>{}, Params<>{}}};
+
+  jobject fake_obj_1 = reinterpret_cast<jobject>(0xBBBBBAAAAA);
+  jobject fake_obj_2 = reinterpret_cast<jobject>(0xCCCCCAAAAA);
+  jobject fake_obj_3 = reinterpret_cast<jobject>(0xDDDDDAAAAA);
+
+  const jobjectArray fake_jarr = reinterpret_cast<jobjectArray>(0xDADADADADA);
+
+  EXPECT_CALL(*env_, GetArrayLength(fake_jarr)).WillOnce(testing::Return(3));
+  EXPECT_CALL(*env_, GetObjectArrayElement)
+      .WillOnce(::testing::Return(fake_obj_1))
+      .WillOnce(::testing::Return(fake_obj_2))
+      .WillOnce(::testing::Return(fake_obj_3));
+
+  LocalArray<jobject, 1, kClass> obj_arr{fake_jarr};
+  auto obj_view = obj_arr.Pin();
+
+  // Note: GlobalObject will fail to compile here. This is good, the user
+  // should be forced to explicitly promote the local.
+  int fake_result = 123;
+  for (LocalObject<kClass> obj : obj_view) {
+    EXPECT_CALL(*env_, CallIntMethodV).WillOnce(::testing::Return(fake_result));
+    EXPECT_EQ(obj("Foo"), fake_result);
+    fake_result++;
+  }
 }
 
 }  // namespace
