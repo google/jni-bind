@@ -30,6 +30,7 @@ cc_library(
         "//class_defs:java_util_classes",
         "//implementation:array",
         "//implementation:array_type_conversion",
+        "//implementation:array_view",
         "//implementation:class",
         "//implementation:class_loader",
         "//implementation:constructor",

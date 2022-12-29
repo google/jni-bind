@@ -16,6 +16,8 @@
 #ifndef JNI_BIND_IMPLEMENTATION_ARRAY_VIEW_H_
 #define JNI_BIND_IMPLEMENTATION_ARRAY_VIEW_H_
 
+#include <iterator>
+
 #include "implementation/jni_helper/jni_array_helper.h"
 #include "jni_dep.h"
 
@@ -24,14 +26,58 @@ namespace jni {
 template <typename SpanType>
 class ArrayView {
  public:
+  struct Iterator {
+    using iterator_category = std::random_access_iterator_tag;
+    using difference_type = std::size_t;
+    using value_type = SpanType;
+    using pointer = SpanType*;
+    using reference = SpanType&;
+
+    Iterator(SpanType* ptr, std::size_t size, std::size_t idx)
+        : ptr_(ptr), size_(size), idx_(idx) {}
+
+    Iterator& operator++() {
+      idx_++;
+      return *this;
+    }
+
+    Iterator operator++(int) {
+      Iterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+
+    SpanType& operator*() const { return ptr_[idx_]; }
+    const SpanType* operator->() const { return ptr_[idx_]; }
+
+    friend bool operator==(const Iterator& lhs, const Iterator& rhs) {
+      return (lhs.ptr_ == rhs.ptr_) && (lhs.size_ == rhs.size_) &&
+             (lhs.idx_ == rhs.idx_);
+    };
+
+    friend bool operator!=(const Iterator& lhs, const Iterator& rhs) {
+      return !(lhs == rhs);
+    };
+
+    friend std::size_t operator-(const Iterator& lhs, const Iterator& rhs) {
+      return lhs.idx_ - rhs.idx_;
+    };
+
+   private:
+    const std::size_t size_;
+    SpanType* const ptr_;
+    std::size_t idx_;
+  };
+
   ArrayView(ArrayView&&) = delete;
   ArrayView(const ArrayView&) = delete;
 
-  ArrayView(jarray array, bool copy_on_completion)
+  ArrayView(jarray array, bool copy_on_completion, std::size_t size)
       : array_(array),
         get_array_elements_result_(
             JniArrayHelper<SpanType>::GetArrayElements(array)),
-        copy_on_completion_(copy_on_completion) {}
+        copy_on_completion_(copy_on_completion),
+        size_(size) {}
 
   ~ArrayView() {
     JniArrayHelper<SpanType>::ReleaseArrayElements(
@@ -40,10 +86,14 @@ class ArrayView {
 
   SpanType* ptr() { return get_array_elements_result_.ptr_; }
 
+  Iterator begin() { return Iterator{ptr(), size_, 0}; }
+  Iterator end() { return Iterator{ptr(), size_, size_}; }
+
  protected:
   const jarray array_;
   const GetArrayElementsResult<SpanType> get_array_elements_result_;
   const bool copy_on_completion_;
+  const std::size_t size_;
 };
 
 // This CTAD guide is required for materialising new ArrayViews from |Pin()|

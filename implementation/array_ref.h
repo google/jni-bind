@@ -43,7 +43,7 @@ class ArrayRef : public RefBase<JniT>,
   using Base::Base;
 
   ArrayView<SpanType> Pin(bool copy_on_completion = true) {
-    return {Base::object_ref_, copy_on_completion};
+    return {Base::object_ref_, copy_on_completion, Length()};
   }
 
   std::size_t Length() {
@@ -59,13 +59,16 @@ class ArrayRef<
     JniT, std::enable_if_t<std::is_same_v<typename JniT::SpanType, jobject>>>
     : public RefBase<JniT> {
  public:
-  using SpanType = typename JniT::SpanType;
+  using SpanType = jobject;
   using Base = RefBase<JniT>;
   using Base::Base;
 
   std::size_t Length() {
     return JniArrayHelper<jobject>::GetLength(Base::object_ref_);
   }
+
+  // Object arrays cannot be efficiently pinned like primitive types can.
+  ArrayView<jobject> Pin() { return {Base::object_ref_, false, Length()}; }
 
   LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v> Get(
       std::size_t idx) {

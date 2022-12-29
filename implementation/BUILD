@@ -74,6 +74,17 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "array_view_test",
+    srcs = ["array_view_test.cc"],
+    deps = [
+        ":array_view",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "class",
     hdrs = ["class.h"],

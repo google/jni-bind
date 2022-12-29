@@ -20,20 +20,18 @@
 
 namespace {
 
-using jni::Array;
-using jni::ArrayView;
-using jni::CDecl_t;
-using jni::Class;
-using jni::GlobalObject;
-using jni::LocalArray;
-using jni::LocalObject;
-using jni::Method;
-using jni::Params;
-using jni::test::JniTest;
-using testing::_;
-using testing::Eq;
-using testing::Return;
-using testing::StrEq;
+using ::jni::Array;
+using ::jni::CDecl_t;
+using ::jni::Class;
+using ::jni::GlobalObject;
+using ::jni::LocalArray;
+using ::jni::LocalObject;
+using ::jni::Method;
+using ::jni::Params;
+using ::jni::test::JniTest;
+using ::testing::_;
+using ::testing::Return;
+using ::testing::StrEq;
 
 static constexpr Class kClass{"kClass"};
 
@@ -203,136 +201,6 @@ TEST_F(JniTest, Array_DifferentiatesWithOverloads) {
 
   LocalObject<kClass> obj{jobject{nullptr}};
   obj("Foo", LocalArray<jobject, 1, kClass2>{123, LocalObject<kClass2>{}});
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Pin Tests.
-////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, LocalArray_CallsLengthProperly) {
-  EXPECT_CALL(*env_, GetArrayLength).WillOnce(testing::Return(3));
-
-  LocalArray<jint> local_int_array{5};
-  EXPECT_EQ(local_int_array.Length(), 3);
-}
-
-TEST_F(JniTest, LocalArray_GetsAndReleaseArrayBuffer) {
-  jbooleanArray fake_boolean_jobject{reinterpret_cast<jbooleanArray>(0xaaaaaa)};
-  jbyteArray fake_byte_jobject{reinterpret_cast<jbyteArray>(0xaaaaab)};
-  jcharArray fake_char_jobject{reinterpret_cast<jcharArray>(0xaaaaac)};
-  jshortArray fake_short_jobject{reinterpret_cast<jshortArray>(0xaaaaad)};
-  jintArray fake_int_jobject{reinterpret_cast<jintArray>(0xaaaaae)};
-  jlongArray fake_long_jobject{reinterpret_cast<jlongArray>(0xaaaaaf)};
-  jfloatArray fake_float_jobject{reinterpret_cast<jfloatArray>(0xaaaab0)};
-  jdoubleArray fake_double_jobject{reinterpret_cast<jdoubleArray>(0xaaaab1)};
-
-  jboolean* fake_raw_boolean_ptr{reinterpret_cast<jboolean*>(0xbaaaaaaa)};
-  jbyte* fake_raw_byte_ptr{reinterpret_cast<jbyte*>(0xbaaaaaab)};
-  jchar* fake_raw_char_ptr{reinterpret_cast<jchar*>(0xbaaaaaac)};
-  jshort* fake_raw_short_ptr{reinterpret_cast<jshort*>(0xbaaaaaad)};
-  jint* fake_raw_int_ptr{reinterpret_cast<jint*>(0xbaaaaaae)};
-  jlong* fake_raw_long_ptr{reinterpret_cast<jlong*>(0xbaaaaaaf)};
-  jfloat* fake_raw_float_ptr{reinterpret_cast<jfloat*>(0xbaaaaab0)};
-  jdouble* fake_raw_double_ptr{reinterpret_cast<jdouble*>(0xbaaaaab1)};
-
-  EXPECT_CALL(*env_, GetBooleanArrayElements(Eq(fake_boolean_jobject), _))
-      .WillOnce(Return(fake_raw_boolean_ptr));
-  EXPECT_CALL(*env_, ReleaseBooleanArrayElements(Eq(fake_boolean_jobject),
-                                                 Eq(fake_raw_boolean_ptr), 0));
-
-  EXPECT_CALL(*env_, GetByteArrayElements(Eq(fake_byte_jobject), _))
-      .WillOnce(Return(fake_raw_byte_ptr));
-  EXPECT_CALL(*env_, ReleaseByteArrayElements(Eq(fake_byte_jobject),
-                                              Eq(fake_raw_byte_ptr), 0));
-
-  EXPECT_CALL(*env_, GetCharArrayElements(Eq(fake_char_jobject), _))
-      .WillOnce(Return(fake_raw_char_ptr));
-  EXPECT_CALL(*env_, ReleaseCharArrayElements(Eq(fake_char_jobject),
-                                              Eq(fake_raw_char_ptr), 0));
-
-  EXPECT_CALL(*env_, GetShortArrayElements(Eq(fake_short_jobject), _))
-      .WillOnce(Return(fake_raw_short_ptr));
-  EXPECT_CALL(*env_, ReleaseShortArrayElements(Eq(fake_short_jobject),
-                                               Eq(fake_raw_short_ptr), 0));
-
-  EXPECT_CALL(*env_, GetIntArrayElements(Eq(fake_int_jobject), _))
-      .WillOnce(Return(fake_raw_int_ptr));
-  EXPECT_CALL(*env_, ReleaseIntArrayElements(Eq(fake_int_jobject),
-                                             Eq(fake_raw_int_ptr), 0));
-
-  EXPECT_CALL(*env_, GetLongArrayElements(Eq(fake_long_jobject), _))
-      .WillOnce(Return(fake_raw_long_ptr));
-  EXPECT_CALL(*env_, ReleaseLongArrayElements(Eq(fake_long_jobject),
-                                              Eq(fake_raw_long_ptr), 0));
-
-  EXPECT_CALL(*env_, GetFloatArrayElements(Eq(fake_float_jobject), _))
-      .WillOnce(Return(fake_raw_float_ptr));
-  EXPECT_CALL(*env_, ReleaseFloatArrayElements(Eq(fake_float_jobject),
-                                               Eq(fake_raw_float_ptr), 0));
-
-  EXPECT_CALL(*env_, GetDoubleArrayElements(Eq(fake_double_jobject), _))
-      .WillOnce(Return(fake_raw_double_ptr));
-  EXPECT_CALL(*env_, ReleaseDoubleArrayElements(Eq(fake_double_jobject),
-                                                Eq(fake_raw_double_ptr), 0));
-
-  LocalArray<jboolean> boolean_array{fake_boolean_jobject};
-  LocalArray<jbyte> byte_array{fake_byte_jobject};
-  LocalArray<jchar> char_array{fake_char_jobject};
-  LocalArray<jshort> short_array{fake_short_jobject};
-  LocalArray<jint> int_array{fake_int_jobject};
-  LocalArray<jlong> long_array{fake_long_jobject};
-  LocalArray<jfloat> float_array{fake_float_jobject};
-  LocalArray<jdouble> double_array{fake_double_jobject};
-
-  ArrayView<jboolean> boolean_array_pin = {boolean_array.Pin()};
-  ArrayView<jbyte> byte_array_pin = {byte_array.Pin()};
-  ArrayView<jint> int_array_pin = {int_array.Pin()};
-  ArrayView<jchar> char_array_pin = {char_array.Pin()};
-  ArrayView<jshort> short_array_pin = {short_array.Pin()};
-  ArrayView<jlong> long_array_pin = {long_array.Pin()};
-  ArrayView<jfloat> float_array_pin = {float_array.Pin()};
-  ArrayView<jdouble> double_array_pin = {double_array.Pin()};
-}
-
-TEST_F(JniTest, LocalArrayView_AllowsCTAD) {
-  jbooleanArray fake_boolean_jobject{reinterpret_cast<jbooleanArray>(0xaaaaaa)};
-  jboolean* fake_raw_boolean_ptr{reinterpret_cast<jboolean*>(0xbaaaaaaa)};
-
-  EXPECT_CALL(*env_, GetBooleanArrayElements(Eq(fake_boolean_jobject), _))
-      .WillOnce(Return(fake_raw_boolean_ptr));
-  EXPECT_CALL(*env_, ReleaseBooleanArrayElements(Eq(fake_boolean_jobject),
-                                                 Eq(fake_raw_boolean_ptr), 0));
-
-  LocalArray<jboolean> boolean_array{fake_boolean_jobject};
-  ArrayView ctad_array_view {boolean_array.Pin()};
-
-  // Despite supporting construction from xvalue, move ctor is deleted (good).
-  // ArrayView ctad_array_view_2 {std::move(ctad_array_view)};
-}
-
-TEST_F(JniTest, LocalArray_ConstructsFromAnObject) {
-  static constexpr Class kClass{"kClass"};
-  LocalArray<jobject, 1, kClass> local_obj_array{1, LocalObject<kClass>{}};
-}
-
-TEST_F(JniTest, LocalArray_ConstructsFromAnObjectRValueWithCTAD) {
-  static constexpr Class kClass{"kClass"};
-  LocalArray<jobject, 1, kClass> local_obj_array{1, LocalObject<kClass>{}};
-}
-
-TEST_F(JniTest, LocalArray_GetsAnObject) {
-  static constexpr Class kClass{"kClass"};
-
-  EXPECT_CALL(*env_, GetObjectArrayElement(_, _));
-  LocalArray<jobject, 1, kClass> local_obj_array{1, LocalObject<kClass>{}};
-  local_obj_array.Get(0);
-}
-
-TEST_F(JniTest, LocalArray_GetsAnObjectWithCTAD) {
-  static constexpr Class kClass{"kClass"};
-
-  EXPECT_CALL(*env_, GetObjectArrayElement(_, _));
-  LocalArray<jobject, 1, kClass> local_obj_array{1, LocalObject<kClass>{}};
-  local_obj_array.Get(0);
 }
 
 }  // namespace

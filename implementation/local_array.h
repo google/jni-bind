@@ -19,18 +19,16 @@
 #include <cstddef>
 #include <type_traits>
 
-#include "array.h"
-#include "array_ref.h"
-#include "class.h"
-#include "class_ref.h"
-#include "object.h"
 #include "implementation/array.h"
+#include "implementation/array_ref.h"
+#include "implementation/class.h"
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/jni_array_helper.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
+#include "implementation/object.h"
 #include "jni_dep.h"
 
 namespace jni {

@@ -48,6 +48,7 @@
 #include "class_defs/java_util_classes.h"
 
 // Headers for dynamic definitions.
+#include "implementation/array_view.h"
 #include "implementation/global_class_loader.h"
 #include "implementation/global_object.h"
 #include "implementation/global_string.h"
