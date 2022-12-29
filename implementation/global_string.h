@@ -26,16 +26,16 @@ namespace jni {
 
 class GlobalString : public StringRefBase<GlobalString> {
  public:
-  using ClassT = decltype(kJavaLangString);
+  using StringRefBase<GlobalString>::StringRefBase;
   friend class StringRefBase<GlobalString>;
 
-  GlobalString(GlobalString &&local_string)
+  GlobalString(jobject java_string_as_object)
+      : StringRefBase<GlobalString>(JniHelper::PromoteLocalToGlobalString(
+            static_cast<jstring>(java_string_as_object))) {}
+
+  GlobalString(LocalString &&local_string)
       : StringRefBase<GlobalString>(
             JniHelper::PromoteLocalToGlobalString(local_string.Release())) {}
-
-  GlobalString(std::string_view str)
-      : StringRefBase<GlobalString>(JniHelper::PromoteLocalToGlobalString(
-            JniHelper::NewLocalString(str.data()))) {}
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.

@@ -22,20 +22,20 @@
 #include <type_traits>
 #include <utility>
 
-#include "class.h"
-#include "class_ref.h"
-#include "constructor.h"
-#include "field_ref.h"
-#include "method_ref.h"
-#include "proxy.h"
-#include "ref_base.h"
 #include "implementation/array.h"
+#include "implementation/class.h"
 #include "implementation/class_loader.h"
+#include "implementation/class_ref.h"
+#include "implementation/constructor.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/field_ref.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm_ref.h"
+#include "implementation/method_ref.h"
 #include "implementation/method_selection.h"
+#include "implementation/proxy.h"
+#include "implementation/ref_base.h"
 #include "jni_dep.h"
 #include "metaprogramming/invocable_map.h"
 #include "metaprogramming/optional_wrap.h"
@@ -76,7 +76,8 @@ class ObjectRef
   }
 
  public:
-  explicit ObjectRef(RefBaseTag<jobject>&& rhs) : RefBase(std::move(rhs)) {}
+  explicit ObjectRef(RefBaseTag<typename JniT::StorageType>&& rhs)
+      : RefBase(std::move(rhs)) {}
 
   // Invoked through CRTP from InvocableMap.
   template <size_t I, typename... Args>
@@ -111,7 +112,7 @@ class ConstructorValidator : public ObjectRef<JniT> {
 
   // Objects can still be wrapped.  This could happen if a classloaded object
   // is built in Java and then passed through to JNI.
-  ConstructorValidator(jobject obj) : Base(obj) {}
+  ConstructorValidator(typename JniT::StorageType obj) : Base(obj) {}
 
   template <const auto& jvm_v, const auto& class_loader_v>
   friend class ClassLoaderRef;
@@ -134,10 +135,11 @@ class ConstructorValidator : public ObjectRef<JniT> {
   template <typename... Args,
             typename std::enable_if<sizeof...(Args) != 0, int>::type = 0>
   ConstructorValidator(Args&&... args)
-      : Base(Permutation_t<Args...>::OverloadRef::Invoke(
-                 Base::GetJClass(), Base::object_ref_,
-                 std::forward<Args>(args)...)
-                 .Release()) {
+      : Base(static_cast<typename JniT::StorageType>(
+            Permutation_t<Args...>::OverloadRef::Invoke(
+                Base::GetJClass(), Base::object_ref_,
+                std::forward<Args>(args)...)
+                .Release())) {
     static_assert(Permutation_t<Args...>::kIsValidArgSet,
                   "You have passed invalid arguments to construct this type.");
   }

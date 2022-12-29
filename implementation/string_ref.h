@@ -31,6 +31,7 @@
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
+#include "implementation/object_ref.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
 
@@ -38,12 +39,15 @@ namespace jni {
 
 template <typename CrtpBase>
 class StringRefBase
-    : public RefBase<
+    : public ConstructorValidator<
           JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>> {
  public:
-  using JniT = JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>;
-  using RefBaseT = RefBase<JniT>;
-  StringRefBase(jstring object) : RefBase<JniT>(object) {}
+  using ValidT = ConstructorValidator<
+      JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>>;
+  using ValidT::ValidT;
+
+  StringRefBase(std::nullptr_t) : ValidT(jstring{nullptr}) {}
+  StringRefBase(jstring object) : ValidT(object) {}
 
   ~StringRefBase() {
     if (object_ref_) {

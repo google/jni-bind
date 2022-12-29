@@ -17,9 +17,9 @@
 #ifndef JNI_BIND_LOCAL_STRING_H_
 #define JNI_BIND_LOCAL_STRING_H_
 
-#include "ref_base.h"
-#include "string_ref.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/ref_base.h"
+#include "implementation/string_ref.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -33,17 +33,12 @@ namespace jni {
 // semantics.
 class LocalString : public StringRefBase<LocalString> {
  public:
+  using StringRefBase<LocalString>::StringRefBase;
   friend class StringRefBase<LocalString>;
 
   LocalString(jobject java_string_as_object)
       : StringRefBase<LocalString>(
             static_cast<jstring>(java_string_as_object)) {}
-
-  LocalString(std::string_view str)
-      : LocalString(JniHelper::NewLocalString(str.data())) {}
-
-  explicit LocalString(RefBaseTag<jstring> &&rhs)
-      : LocalString(static_cast<jstring>(rhs.Release())) {}
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.

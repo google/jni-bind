@@ -16,12 +16,17 @@
 #ifndef JNI_BIND_IMPLEMENTATION_PROXY_DEFINITIONS_STRING_H_
 #define JNI_BIND_IMPLEMENTATION_PROXY_DEFINITIONS_STRING_H_
 
+#include <string>
 #include <type_traits>
 
-#include "implementation/local_string.h"
+#include "class_defs/java_lang_classes.h"
+#include "implementation/default_class_loader.h"
+#include "implementation/jvm.h"
 #include "implementation/proxy.h"
 
 namespace jni {
+
+class LocalString;
 
 template <typename JString>
 struct Proxy<JString,
@@ -51,10 +56,17 @@ struct Proxy<JString,
   // be used in a method.  This could be obviated by wrapping the calling scope
   // in a local stack frame.
   static jstring ProxyAsArg(jstring s) { return s; }
-  static jstring ProxyAsArg(const char* s) { return LocalString{s}.Release(); }
-  static jstring ProxyAsArg(std::string s) { return LocalString{s}.Release(); }
-  static jstring ProxyAsArg(std::string_view s) {
-    return LocalString{s}.Release();
+
+  template <typename T,
+            typename = std::enable_if_t<std::is_same_v<T, const char*> ||
+                                        std::is_same_v<T, std::string> ||
+                                        std::is_same_v<T, std::string_view>>>
+  static jstring ProxyAsArg(T s) {
+    if constexpr (std::is_same_v<T, const char*>) {
+      return JniHelper::NewLocalString(s);
+    } else {
+      return JniHelper::NewLocalString(s.data());
+    }
   }
 };
 

@@ -505,7 +505,6 @@ cc_library(
         ":ref_base",
         ":return",
         ":signature",
-        ":string_ref",
         ":void",
         "//:jni_dep",
         "//implementation/jni_helper",
@@ -664,7 +663,6 @@ cc_library(
         ":object",
         ":proxy_convenience_aliases",
         ":ref_base",
-        ":string_ref",
         "//:jni_dep",
         "//metaprogramming:cartesian_product",
         "//metaprogramming:combine",
@@ -706,8 +704,10 @@ cc_library(
     name = "proxy_definitions_string",
     hdrs = ["proxy_definitions_string.h"],
     deps = [
-        ":local_string",
+        ":default_class_loader",
+        ":jvm",
         ":proxy",
+        "//class_defs:java_lang_classes",
     ],
 )
 
@@ -779,6 +779,7 @@ cc_library(
         ":default_class_loader",
         ":jni_type",
         ":jvm",
+        ":object_ref",
         ":ref_base",
         "//:jni_dep",
         "//class_defs:java_lang_classes",

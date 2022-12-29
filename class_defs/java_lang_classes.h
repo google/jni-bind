@@ -37,8 +37,11 @@ inline constexpr Class kJavaLangClassLoader{
 
 static constexpr Class kJavaLangString{
     "java/lang/String",
+
+    Constructor{jstring{}},
     Constructor{Array{jbyte{}}},
-    Method{"toString", Return{jstring{}}, Params<>{}}
+
+    Method{"toString", Return{jstring{}}, Params<>{}},
 };
 // clang-format on
 
