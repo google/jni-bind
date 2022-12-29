@@ -37,6 +37,16 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "array_test",
+    srcs = ["array_test.cc"],
+    deps = [
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "array_type_conversion",
     hdrs = ["array_type_conversion.h"],
@@ -61,34 +71,6 @@ cc_library(
     deps = [
         "//:jni_dep",
         "//implementation/jni_helper:jni_array_helper",
-    ],
-)
-
-cc_library(
-    name = "local_array",
-    hdrs = ["local_array.h"],
-    deps = [
-        ":array",
-        ":array_ref",
-        ":class",
-        ":class_ref",
-        ":default_class_loader",
-        ":jni_type",
-        ":jvm",
-        ":object",
-        "//:jni_dep",
-        "//implementation/jni_helper",
-        "//implementation/jni_helper:jni_array_helper",
-    ],
-)
-
-cc_test(
-    name = "array_test",
-    srcs = ["array_test.cc"],
-    deps = [
-        "//:jni_bind",
-        "//:jni_test",
-        "@googletest//:gtest_main",
     ],
 )
 
@@ -340,6 +322,17 @@ cc_test(
 )
 
 cc_library(
+    name = "global_string",
+    hdrs = ["global_string.h"],
+    deps = [
+        ":local_string",
+        ":ref_base",
+        ":string_ref",
+        "//:jni_dep",
+    ],
+)
+
+cc_library(
     name = "id",
     hdrs = ["id.h"],
     deps = [
@@ -434,6 +427,24 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "local_array",
+    hdrs = ["local_array.h"],
+    deps = [
+        ":array",
+        ":array_ref",
+        ":class",
+        ":class_ref",
+        ":default_class_loader",
+        ":jni_type",
+        ":jvm",
+        ":object",
+        "//:jni_dep",
+        "//implementation/jni_helper",
+        "//implementation/jni_helper:jni_array_helper",
+    ],
+)
+
 cc_test(
     name = "local_array_test",
     srcs = ["local_array_test.cc"],
@@ -484,6 +495,17 @@ cc_test(
 )
 
 cc_library(
+    name = "local_string",
+    hdrs = ["local_string.h"],
+    deps = [
+        ":ref_base",
+        ":string_ref",
+        "//:jni_dep",
+        "//implementation/jni_helper",
+    ],
+)
+
+cc_library(
     name = "method",
     hdrs = ["method.h"],
     deps = [":params"],
@@ -501,6 +523,7 @@ cc_library(
         ":params",
         ":proxy",
         ":proxy_definitions",
+        ":proxy_definitions_array",
         ":proxy_definitions_string",
         ":ref_base",
         ":return",
@@ -691,12 +714,22 @@ cc_library(
         ":id_type",
         ":jvm",
         ":local_array",
-        #":local_string",
         ":name_constants",
         ":object",
         ":proxy",
         ":ref_base",
         "//:jni_dep",
+    ],
+)
+
+cc_library(
+    name = "proxy_definitions_array",
+    hdrs = ["proxy_definitions_array.h"],
+    deps = [
+        ":default_class_loader",
+        ":jvm",
+        ":name_constants",
+        ":proxy",
     ],
 )
 
@@ -838,28 +871,6 @@ cc_test(
         "//:jni_bind",
         "//:jni_test",
         "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "local_string",
-    hdrs = ["local_string.h"],
-    deps = [
-        ":ref_base",
-        ":string_ref",
-        "//:jni_dep",
-        "//implementation/jni_helper",
-    ],
-)
-
-cc_library(
-    name = "global_string",
-    hdrs = ["global_string.h"],
-    deps = [
-        ":local_string",
-        ":ref_base",
-        ":string_ref",
-        "//:jni_dep",
     ],
 )
 
