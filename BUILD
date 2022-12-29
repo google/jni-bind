@@ -1,7 +1,4 @@
-package(
-    default_visibility = ["//visibility:public"],
-    licenses = ["notice"],
-)
+package(licenses = ["notice"])
 
 filegroup(
     name = "headers_for_export",
@@ -26,6 +23,7 @@ exports_files(["LICENSE"])
 cc_library(
     name = "jni_bind",
     hdrs = ["jni_bind.h"],
+    visibility = ["//visibility:public"],
     deps = [
         ":jni_dep",
         "//class_defs:java_lang_classes",
@@ -73,6 +71,7 @@ cc_library(
         "external/local_jdk/include",
         "external/local_jdk/include/linux",
     ],
+    visibility = [":__subpackages__"],
 )
 
 ################################################################################
@@ -83,6 +82,7 @@ cc_library(
     name = "jni_test",
     testonly = 1,
     hdrs = ["jni_test.h"],
+    visibility = [":__subpackages__"],
     deps = [
         ":jni_bind",
         ":jni_dep",
@@ -96,6 +96,7 @@ cc_library(
     name = "mock_jni_env",
     testonly = 1,
     hdrs = ["mock_jni_env.h"],
+    visibility = [":__subpackages__"],
     deps = [
         "//:jni_dep",
         "@googletest//:gtest_main",
@@ -106,6 +107,7 @@ cc_library(
     name = "mock_jvm",
     testonly = 1,
     hdrs = ["mock_jvm.h"],
+    visibility = [":__subpackages__"],
     deps = [
         "//:jni_dep",
         "@googletest//:gtest_main",
