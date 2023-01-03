@@ -97,7 +97,7 @@ TEST_F(JniTest, GlobalObject_CallsOnlyDeleteOnWrapCtor) {
 
   EXPECT_CALL(*env_, DeleteGlobalRef(global_jobject_from_user));
 
-  GlobalObject<kClass> global_object{global_jobject_from_user};
+  GlobalObject<kClass> global_object{AdoptGlobal{}, global_jobject_from_user};
 
   EXPECT_NE(jobject{global_object}, nullptr);
 }
@@ -109,7 +109,7 @@ TEST_F(JniTest, GlobalObject_CallsDeleteOnceAfterAMoveConstruction) {
 
   EXPECT_CALL(*env_, DeleteGlobalRef(global_jobject_from_user));
 
-  GlobalObject<kClass> global_object_1{global_jobject_from_user};
+  GlobalObject<kClass> global_object_1{AdoptGlobal{}, global_jobject_from_user};
   EXPECT_NE(jobject{global_object_1}, nullptr);
   GlobalObject<kClass> global_object_2{std::move(global_object_1)};
   EXPECT_NE(jobject{global_object_2}, nullptr);
@@ -123,8 +123,10 @@ TEST_F(JniTest, GlobalObject_FunctionsProperlyInSTLContainer) {
 
   EXPECT_CALL(*env_, DeleteGlobalRef(global_jobject_from_user1));
   EXPECT_CALL(*env_, DeleteGlobalRef(global_jobject_from_user2));
-  GlobalObject<kClass> global_object_1{global_jobject_from_user1};
-  GlobalObject<kClass> global_object_2{global_jobject_from_user2};
+  GlobalObject<kClass> global_object_1{AdoptGlobal{},
+                                       global_jobject_from_user1};
+  GlobalObject<kClass> global_object_2{AdoptGlobal{},
+                                       global_jobject_from_user2};
   std::tuple t{std::move(global_object_1), std::move(global_object_2)};
 }
 
@@ -138,7 +140,7 @@ TEST_F(JniTest, GlobalObject_ValuesWorkAfterMoveConstructor) {
   EXPECT_CALL(*env_, CallIntMethodV).Times(3);
   EXPECT_CALL(*env_, SetIntField).Times(4);
 
-  GlobalObject<kClass> global_object_1{global_jobject_from_user};
+  GlobalObject<kClass> global_object_1{AdoptGlobal{}, global_jobject_from_user};
   global_object_1("Foo", 1);
   global_object_1("Foo", 2);
   global_object_1["BarField"].Set(1);
@@ -149,7 +151,7 @@ TEST_F(JniTest, GlobalObject_ValuesWorkAfterMoveConstructor) {
   global_object_2["BarField"].Set(3);
   global_object_2["BarField"].Set(4);
 
-  GlobalObject<kClass> global_object_3{global_jobject_from_user};
+  GlobalObject<kClass> global_object_3{AdoptGlobal{}, global_jobject_from_user};
 }
 
 TEST_F(JniTest, GlobalObject_ObjectReturnsInstanceMethods) {

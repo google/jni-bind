@@ -20,6 +20,7 @@
 
 namespace {
 
+using ::jni::AdoptGlobal;
 using ::jni::Array;
 using ::jni::CDecl_t;
 using ::jni::Class;
@@ -130,7 +131,7 @@ TEST_F(JniTest, Array_HandlesLValueGlobalObject) {
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([LkClass2;)V")));
 
-  GlobalObject<kClass> obj{jobject{nullptr}};
+  GlobalObject<kClass> obj{AdoptGlobal{}, jobject{nullptr}};
   obj("Foo", LocalArray<jobject, 1, kClass2>{jobjectArray{nullptr}});
 }
 

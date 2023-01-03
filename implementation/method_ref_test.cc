@@ -20,15 +20,20 @@
 
 namespace {
 
+using ::jni::AdoptGlobal;
 using ::jni::Array;
 using ::jni::Class;
+using ::jni::GlobalObject;
 using ::jni::Id;
 using ::jni::IdType;
 using ::jni::JniT;
 using ::jni::kDefaultClassLoader;
+using ::jni::LocalArray;
+using ::jni::LocalObject;
 using ::jni::Method;
 using ::jni::OverloadRef;
 using ::jni::Params;
+using ::jni::Return;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::Eq;
@@ -41,7 +46,7 @@ using MethodRefT_t = OverloadRef<
     IdType::OVERLOAD_PARAM>;
 
 TEST_F(JniTest, MethodRef_DoesntStaticCrossTalkWithTagUse) {
-  static constexpr Method m{"FooV", jni::Return<void>{}, Params{jint{}}};
+  static constexpr Method m{"FooV", Return<void>{}, Params{jint{}}};
   static constexpr Class kSomeClass{"someClass", m};
 
   const jclass clazz{reinterpret_cast<jclass>(0XAAAAA)};
@@ -51,7 +56,7 @@ TEST_F(JniTest, MethodRef_DoesntStaticCrossTalkWithTagUse) {
 }
 
 TEST_F(JniTest, MethodRef_CallsGetMethodCorrectlyForSingleMethod) {
-  static constexpr Method m1{"FooV", jni::Return<void>{}, Params<>{}};
+  static constexpr Method m1{"FooV", Return<void>{}, Params<>{}};
   static constexpr Class c{"SimpleClass", m1};
 
   InSequence seq;
@@ -68,7 +73,7 @@ TEST_F(JniTest, MethodRef_CallsGetMethodCorrectlyForSingleMethod) {
 
 TEST_F(JniTest, MethodRef_ReturnWithObject) {
   static constexpr Class c2{"someClass2"};
-  static constexpr Method m1{"FooV", jni::Return{c2}, Params<>{}};
+  static constexpr Method m1{"FooV", Return{c2}, Params<>{}};
   static constexpr Class c{"someClass", m1};
 
   InSequence seq;
@@ -85,9 +90,9 @@ TEST_F(JniTest, MethodRef_ReturnWithObject) {
 }
 
 TEST_F(JniTest, MethodRef_ReturnWithNoParams) {
-  static constexpr Method m1{"FooV", jni::Return<void>{}, Params<>{}};
-  static constexpr Method m2{"BarI", jni::Return<jint>{}, Params<>{}};
-  static constexpr Method m3{"BazF", jni::Return<jfloat>{}, Params<>{}};
+  static constexpr Method m1{"FooV", Return<void>{}, Params<>{}};
+  static constexpr Method m2{"BarI", Return<jint>{}, Params<>{}};
+  static constexpr Method m3{"BazF", Return<jfloat>{}, Params<>{}};
   static constexpr Class c{"someClass", m1, m2, m3};
 
   InSequence seq;
@@ -115,9 +120,9 @@ TEST_F(JniTest, MethodRef_ReturnWithNoParams) {
 }
 
 TEST_F(JniTest, MethodRef_SingleParam) {
-  constexpr Method m1{"SomeFunc1", jni::Return<void>{}, Params<jint>{}};
-  constexpr Method m2{"SomeFunc2", jni::Return<jint>{}, Params<jfloat>{}};
-  constexpr Method m3{"SomeFunc3", jni::Return<jfloat>{}, Params<jfloat>{}};
+  constexpr Method m1{"SomeFunc1", Return<void>{}, Params<jint>{}};
+  constexpr Method m2{"SomeFunc2", Return<jint>{}, Params<jfloat>{}};
+  constexpr Method m3{"SomeFunc3", Return<jfloat>{}, Params<jfloat>{}};
   static constexpr Class c{"someClass", m1, m2, m3};
 
   InSequence seq;
@@ -150,7 +155,7 @@ TEST_F(JniTest, MethodRef_ReturnsObjects) {
   static constexpr Class c1{"Bazz"};
   static constexpr Class kClass{
       "com/google/ReturnsObjects",
-      Method{"Foo", jni::Return{c1}, Params<jint>{}},
+      Method{"Foo", Return{c1}, Params<jint>{}},
   };
 
   const jobject local_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
@@ -158,22 +163,22 @@ TEST_F(JniTest, MethodRef_ReturnsObjects) {
   // Note, class refs are not released, so Times() != 2.
   EXPECT_CALL(*env_, NewObjectV).WillOnce(testing::Return(local_jobject));
 
-  jni::GlobalObject<kClass> global_object{};
-  jni::LocalObject<c1> new_obj{global_object("Foo", 5)};
+  GlobalObject<kClass> global_object{};
+  LocalObject<c1> new_obj{global_object("Foo", 5)};
 }
 
 TEST_F(JniTest, MethodRef_PassesObjects) {
   static constexpr Class c1{"com/google/Bazz"};
   static constexpr Class kClass{
       "com/google/PassesObjects",
-      Method{"Foo", jni::Return<jint>{}, Params{c1}},
+      Method{"Foo", Return<jint>{}, Params{c1}},
   };
 
   const jobject local_instance{reinterpret_cast<jobject>(0XAAAAAA)};
   const jobject global_c1_instance{reinterpret_cast<jobject>(0XBBBBBB)};
 
-  jni::LocalObject<c1> local_object{local_instance};
-  jni::GlobalObject<kClass> global_object{global_c1_instance};
+  LocalObject<c1> local_object{local_instance};
+  GlobalObject<kClass> global_object{AdoptGlobal{}, global_c1_instance};
 
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("Foo"), StrEq("(Lcom/google/Bazz;)I")));
@@ -189,44 +194,44 @@ TEST_F(JniTest, MethodRef_PassesAndReturnsMultipleObjects) {
 
   static constexpr Class class_under_test{
       "com/google/PassesAndReturnsMultipleObjects",
-      Method{"Foo", jni::Return{c1}, Params{c1, c2, c3, c4}},
+      Method{"Foo", Return{c1}, Params{c1, c2, c3, c4}},
   };
 
   const jobject fake_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
 
-  jni::LocalObject<c1> obj1{fake_jobject};
-  jni::LocalObject<c2> obj2{fake_jobject};
-  jni::LocalObject<c3> obj3{fake_jobject};
-  jni::LocalObject<c4> obj4{fake_jobject};
-  jni::LocalObject<class_under_test> object_under_test{fake_jobject};
+  LocalObject<c1> obj1{fake_jobject};
+  LocalObject<c2> obj2{fake_jobject};
+  LocalObject<c3> obj3{fake_jobject};
+  LocalObject<c4> obj4{fake_jobject};
+  LocalObject<class_under_test> object_under_test{fake_jobject};
 
-  jni::LocalObject<c1> obj5{object_under_test("Foo", obj1, obj2, obj3, obj4)};
+  LocalObject<c1> obj5{object_under_test("Foo", obj1, obj2, obj3, obj4)};
 }
 
 TEST_F(JniTest, MethodRef_SupportsForwardDefines) {
   static constexpr Class kClass1{
       "kClass1",
-      Method{"m1", jni::Return<void>{}, Params{Class{"kClass1"}}},
-      Method{"m2", jni::Return<void>{}, Params{Class{"kClass2"}}},
-      Method{"m3", jni::Return{Class{"kClass1"}}, Params{}},
-      Method{"m4", jni::Return{Class{"kClass2"}}, Params{}},
+      Method{"m1", Return<void>{}, Params{Class{"kClass1"}}},
+      Method{"m2", Return<void>{}, Params{Class{"kClass2"}}},
+      Method{"m3", Return{Class{"kClass1"}}, Params{}},
+      Method{"m4", Return{Class{"kClass2"}}, Params{}},
   };
 
   static constexpr Class kClass2{
       "kClass2",
-      Method{"m1", jni::Return<void>{}, Params{Class{"kClass1"}}},
-      Method{"m2", jni::Return<void>{}, Params{Class{"kClass2"}}},
-      Method{"m3", jni::Return{Class{"kClass1"}}, Params{}},
-      Method{"m4", jni::Return{Class{"kClass2"}}, Params{}},
+      Method{"m1", Return<void>{}, Params{Class{"kClass1"}}},
+      Method{"m2", Return<void>{}, Params{Class{"kClass2"}}},
+      Method{"m3", Return{Class{"kClass1"}}, Params{}},
+      Method{"m4", Return{Class{"kClass2"}}, Params{}},
   };
 
   const jobject fake_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
 
-  jni::LocalObject<kClass1> c1_obj1{fake_jobject};
-  jni::LocalObject<kClass1> c1_obj2{fake_jobject};
+  LocalObject<kClass1> c1_obj1{fake_jobject};
+  LocalObject<kClass1> c1_obj2{fake_jobject};
 
-  jni::LocalObject<kClass2> c2_obj1{fake_jobject};
-  jni::LocalObject<kClass2> c2_obj2{fake_jobject};
+  LocalObject<kClass2> c2_obj1{fake_jobject};
+  LocalObject<kClass2> c2_obj2{fake_jobject};
 
   c1_obj1("m1", c1_obj1);
   c1_obj1("m2", c2_obj1);
@@ -248,14 +253,14 @@ TEST_F(JniTest, MethodRef_SupportsForwardDefines) {
 TEST_F(JniTest, MethodRef_SupportsStrings) {
   static constexpr Class class_under_test{
       "com/google/SupportsStrings",
-      Method{"Foo", jni::Return<void>{}, Params<jstring>{}},
-      Method{"Bar", jni::Return<void>{}, Params<jstring, jstring>{}},
-      Method{"Baz", jni::Return<jstring>{}, Params<>{}},
+      Method{"Foo", Return<void>{}, Params<jstring>{}},
+      Method{"Bar", Return<void>{}, Params<jstring, jstring>{}},
+      Method{"Baz", Return<jstring>{}, Params<>{}},
   };
 
   const jobject fake_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
 
-  jni::LocalObject<class_under_test> obj1{fake_jobject};
+  LocalObject<class_under_test> obj1{fake_jobject};
   obj1("Foo", "This is a method.");
   obj1("Bar", "This is a method.", "It takes strings");
   obj1("Baz");
@@ -265,13 +270,13 @@ TEST_F(JniTest, MethodRef_SupportsArrays) {
   static constexpr Class kClass{"kClass"};
   static constexpr Class class_under_test{
       "com/google/SupportsArrays",
-      Method{"Foo", jni::Return<void>{}, Params{Array{kClass}}},
-      Method{"Bar", jni::Return<void>{}, Params<int>{}}};
+      Method{"Foo", Return<void>{}, Params{Array{kClass}}},
+      Method{"Bar", Return<void>{}, Params<int>{}}};
 
   const jobject fake_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
 
-  jni::LocalArray<jobject, 1, kClass> local_array{nullptr};
-  jni::LocalObject<class_under_test> obj1{fake_jobject};
+  LocalArray<jobject, 1, kClass> local_array{nullptr};
+  LocalObject<class_under_test> obj1{fake_jobject};
   obj1("Foo", local_array);
 }
 

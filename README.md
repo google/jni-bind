@@ -170,6 +170,16 @@ When `jni::LocalObject` or `jni::GlobalObject` falls off scope, it will unpin th
 
 When possible try to avoid using raw `jobject`. Managing lifetimes with regular JNI is difficult, e.g. `jobject` can mean either local or global object (the former will be automatically unpinned at the end of the JNI call, but the latter won't and must be deleted _exactly_ once).
 
+Because jobject does not uniquely identify its underlying storage, it is presumed to always be local.  If you want to build a global, you must use either `jni::PromoteToGlobal` or `jni::AdoptGlobal`. e.g.
+
+```cpp
+jobject obj1, obj2, obj3;
+jni::LocalObject local_obj {obj1}; // Fine, given local semantics.
+// jni::GlobalObject global_obj {obj2}; // Illegal, obj2 could be local or global.
+jni::GlobalObject global_obj_1 {PromoteToGlobal{}, obj2}; // obj2 will be promoted.
+jni::GlobalObject global_obj_2 {AdoptGlobal{}, obj3}; // obj3 will *not* be promoted.
+```
+
 [Sample C++](javatests/com/jnibind/test/context_test_jni.cc), [Sample Java](javatests/com/jnibind/test/ContextTest.java)
 
 <a name="method-definitions"></a>

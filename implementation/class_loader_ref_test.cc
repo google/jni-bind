@@ -119,6 +119,29 @@ TEST_F(JniTestForClassLoaders,
   TearDown();
 }
 
+TEST_F(JniTestForClassLoaders,
+       ClassLoaderRefTest_ConstructorsAcceptGlobalClassLoadedObjects) {
+  static constexpr Class kTestClass1{"TestClass1"};
+  static constexpr Class kTestClass2{
+      "TestClass2", Constructor{kTestClass1},
+      Method{"Foo", Return{}, Params{kTestClass1}}};
+  static constexpr ClassLoader kClassLoader{kNullClassLoader,
+                                            SupportedClassSet{kTestClass1}};
+
+  JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get()};
+  const jobject class_loader_local_to_be_wrapped{
+      reinterpret_cast<jobject>(0XAAAAAA)};
+
+  LocalClassLoader<kClassLoader> local_class_loader{
+      class_loader_local_to_be_wrapped};
+  auto a = local_class_loader.BuildGlobalObject<kTestClass1>();
+  LocalObject<kTestClass2> b{a};
+  b("Foo", a);
+
+  default_globals_made_that_should_be_released_.clear();
+  TearDown();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Non standard JVM, non-default classloader (ID teardown on JVM destruction).
 ////////////////////////////////////////////////////////////////////////////////

@@ -24,6 +24,9 @@
 
 namespace jni {
 
+template <const auto& jvm_v_, const auto& class_loader_v_>
+class ClassLoaderRef;
+
 // Pass this tag to allow Global object's constructor to promote for you.
 struct PromoteToGlobal {};
 
@@ -37,6 +40,9 @@ template <const auto& class_v_,
 class GlobalObject
     : public ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_> {
  public:
+  template <const auto& jvm_v, const auto& class_loader_v>
+  friend class ClassLoaderRef;
+
   using ObjectRefT = ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>;
   using ObjectRefT::ObjectRefT;
 
@@ -87,6 +93,10 @@ class GlobalObject
       JniHelper::DeleteGlobalObject(ObjectRefT::object_ref_);
     }
   }
+
+ private:
+  // Construction from jobject requires |PromoteToGlobal| or |AdoptGlobal|.
+  explicit GlobalObject(jobject obj) : ObjectRefT(obj) {}
 };
 
 template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
