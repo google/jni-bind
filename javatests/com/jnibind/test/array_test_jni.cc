@@ -86,7 +86,15 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeBooleanTests(
       array_view.ptr()[i] = true;
     }
   }
-  rjni_test_helper("rJniBooleanArray", true, new_array);
+
+  // And it can be iterated over.
+  for (jboolean& val : new_array.Pin(true)) {
+    // Below we modify the value 2 times but with a bool there's no way,
+    // so we instead just set it back.
+    val = false;
+  }
+
+  rjni_test_helper("rJniBooleanArray", false, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeByteTests(
@@ -117,7 +125,12 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeByteTests(
       array_view.ptr()[i] += 5;
     }
   }
-  rjni_test_helper("rJniByteArray", jbyte{5}, new_array);
+
+  // And it can be iterated over.
+  for (jbyte& val : new_array.Pin(true)) {
+    val += 5;
+  }
+  rjni_test_helper("rJniByteArray", jbyte{5 + 5}, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeCharTests(
@@ -148,7 +161,13 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeCharTests(
       array_view.ptr()[i] += 5;
     }
   }
-  rjni_test_helper("rJniCharArray", jchar{5}, new_array);
+
+  // And it can be iterated over.
+  for (jchar& val : new_array.Pin(true)) {
+    val += 5;
+  }
+
+  rjni_test_helper("rJniCharArray", jchar{5 + 5}, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeShortTests(
@@ -180,7 +199,13 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeShortTests(
       array_view.ptr()[i] += 5;
     }
   }
-  rjni_test_helper("rJniShortArray", jshort{5}, new_array);
+
+  // And it can be iterated over.
+  for (jshort& val : new_array.Pin(true)) {
+    val += 5;
+  }
+
+  rjni_test_helper("rJniShortArray", jshort{5 + 5}, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeIntTests(
@@ -211,7 +236,13 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeIntTests(
       array_view.ptr()[i] += 5;
     }
   }
-  rjni_test_helper("rJniIntArray", 5, new_array);
+
+  // And it can be iterated over.
+  for (int& val : new_array.Pin(true)) {
+    val += 5;
+  }
+
+  rjni_test_helper("rJniIntArray", 5 * 2, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeLongTests(
@@ -242,7 +273,13 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeLongTests(
       array_view.ptr()[i] += 5;
     }
   }
-  rjni_test_helper("rJniLongArray", jlong{5}, new_array);
+
+  // And it can be iterated over.
+  for (jlong& val : new_array.Pin(true)) {
+    val += 5;
+  }
+
+  rjni_test_helper("rJniLongArray", jlong{5 * 2}, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeFloatTests(
@@ -290,7 +327,12 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeDoubleTests(
       array_view.ptr()[i] += 5;
     }
   }
-  rjni_test_helper("rJniDoubleArray", jdouble{5}, new_array);
+
+  // And it can be iterated over.
+  for (jdouble& val : new_array.Pin(true)) {
+    val += 5;
+  }
+  rjni_test_helper("rJniDoubleArray", jdouble{5 * 2}, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeObjectTests(
@@ -325,7 +367,18 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeObjectTests(
                         "returnNewObjectWithFieldSetToSum", new_array.Get(i)));
     }
   }
-  rjni_test_helper("rJniObjectArray", 2, new_array);
+
+  // And it can be iterated over.
+  // Note: LocalObject is not a reference here, instead, the underlying jobject
+  //  is being iterated over, and upcast to a LocalObject.
+  // Also note: Pin is not to contiguous memory, so no copyback bool either.
+  for (LocalObject<kObjectTestHelperClass> val : new_array.Pin()) {
+    val["intVal1"].Set(val["intVal1"].Get() + 3);
+    val["intVal2"].Set(val["intVal2"].Get() + 3);
+    val["intVal3"].Set(val["intVal3"].Get() + 3);
+  }
+
+  rjni_test_helper("rJniObjectArray", 2 + 3, new_array);
 }
 
 }  // extern "C"
