@@ -69,6 +69,7 @@ cc_library(
     name = "array_view",
     hdrs = ["array_view.h"],
     deps = [
+        ":array_type_conversion",
         "//:jni_dep",
         "//implementation/jni_helper:jni_array_helper",
     ],
@@ -78,7 +79,6 @@ cc_test(
     name = "array_view_test",
     srcs = ["array_view_test.cc"],
     deps = [
-        ":array_view",
         "//:jni_bind",
         "//:jni_test",
         "@googletest//:gtest_main",

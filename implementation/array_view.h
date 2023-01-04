@@ -18,12 +18,14 @@
 
 #include <iterator>
 
+#include "implementation/array_type_conversion.h"
 #include "implementation/jni_helper/jni_array_helper.h"
 #include "jni_dep.h"
 
 namespace jni {
 
-template <typename SpanType, typename ClassId = void>
+// Primitive Rank 1 Arrays.
+template <typename SpanType, std::size_t kRank, typename Enable = void>
 class ArrayView {
  public:
   struct Iterator {
@@ -84,7 +86,10 @@ class ArrayView {
         array_, get_array_elements_result_.ptr_, copy_on_completion_);
   }
 
-  SpanType* ptr() { return get_array_elements_result_.ptr_; }
+  // Arrays of rank > 1 are object arrays which are not contiguous.
+  std::enable_if_t<kRank == 1, SpanType*> ptr() {
+    return get_array_elements_result_.ptr_;
+  }
 
   Iterator begin() { return Iterator{ptr(), size_, 0}; }
   Iterator end() { return Iterator{ptr(), size_, size_}; }
@@ -96,15 +101,34 @@ class ArrayView {
   const std::size_t size_;
 };
 
-template <typename ClassId>
-class ArrayView<jobject, ClassId> {
+// Object arrays, or arrays with rank > 1 (which are object arrays).
+template <typename SpanType, std::size_t kRank>
+class ArrayView<
+    SpanType, kRank,
+    std::enable_if_t<(kRank > 1) || std::is_same_v<SpanType, jobject>>> {
  public:
+  // Metafunction that returns the type after a single dereference.
+  template <std::size_t>
+  struct PinHelper {
+    using type = jobjectArray;
+  };
+  template <>
+  struct PinHelper<2> {
+    using type = RegularToArrayTypeMap_t<SpanType>;
+  };
+  template <>
+  struct PinHelper<1> {
+    using type = jobject;
+  };
+
+  using PinHelper_t = typename PinHelper<kRank>::type;
+
   struct Iterator {
     using iterator_category = std::random_access_iterator_tag;
     using difference_type = std::size_t;
-    using value_type = jobject;
-    using pointer = jobject*;
-    using reference = jobject&;
+    using value_type = PinHelper_t;
+    using pointer = PinHelper_t*;
+    using reference = PinHelper_t&;
 
     Iterator(jobjectArray arr, std::size_t size, std::size_t idx)
         : arr_(arr), size_(size), idx_(idx) {}
@@ -120,8 +144,13 @@ class ArrayView<jobject, ClassId> {
       return tmp;
     }
 
-    jobject operator*() const {
-      return JniArrayHelper<jobject>::GetArrayElement(arr_, idx_);
+    PinHelper_t operator*() const {
+      if constexpr (kRank >= 2) {
+        return static_cast<PinHelper_t>(
+            JniArrayHelper<jobject>::GetArrayElement(arr_, idx_));
+      } else {
+        return JniArrayHelper<SpanType>::GetArrayElement(arr_, idx_);
+      }
     }
 
     friend bool operator==(const Iterator& lhs, const Iterator& rhs) {
@@ -159,8 +188,8 @@ class ArrayView<jobject, ClassId> {
 
 // This CTAD guide is required for materialising new ArrayViews from |Pin()|
 // calls as move and copy constructors are deleted.
-template <typename SpanType>
-ArrayView(ArrayView<SpanType>&&) -> ArrayView<SpanType>;
+template <typename SpanType, std::size_t kRank>
+ArrayView(ArrayView<SpanType, kRank>&&) -> ArrayView<SpanType, kRank>;
 
 }  // namespace jni
 

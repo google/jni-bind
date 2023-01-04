@@ -32,10 +32,12 @@ namespace jni {
 
 template <typename SpanType_, const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm, std::size_t kRank = 0,
+          const auto& jvm_v_ = kDefaultJvm, std::size_t kRank_ = 0,
           std::size_t class_idx_ = kNoIdx,
           std::size_t class_loader_idx_ = kNoIdx>
 struct JniT {
+  static constexpr std::size_t kRank = kRank_;
+
   static constexpr const auto& GetClassLoader() {
     if constexpr (class_loader_idx_ != kNoIdx) {
       return std::get<class_loader_idx_>(jvm_v_.class_loaders_);

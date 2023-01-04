@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "implementation/array_view.h"
+#include <algorithm>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -112,14 +112,14 @@ TEST_F(JniTest, ArrayView_GetsAndReleaseArrayBuffer) {
   LocalArray<jfloat> float_array{fake_float_jobject};
   LocalArray<jdouble> double_array{fake_double_jobject};
 
-  ArrayView<jboolean> boolean_array_pin = {boolean_array.Pin()};
-  ArrayView<jbyte> byte_array_pin = {byte_array.Pin()};
-  ArrayView<jint> int_array_pin = {int_array.Pin()};
-  ArrayView<jchar> char_array_pin = {char_array.Pin()};
-  ArrayView<jshort> short_array_pin = {short_array.Pin()};
-  ArrayView<jlong> long_array_pin = {long_array.Pin()};
-  ArrayView<jfloat> float_array_pin = {float_array.Pin()};
-  ArrayView<jdouble> double_array_pin = {double_array.Pin()};
+  ArrayView<jboolean, 1> boolean_array_pin = {boolean_array.Pin()};
+  ArrayView<jbyte, 1> byte_array_pin = {byte_array.Pin()};
+  ArrayView<jint, 1> int_array_pin = {int_array.Pin()};
+  ArrayView<jchar, 1> char_array_pin = {char_array.Pin()};
+  ArrayView<jshort, 1> short_array_pin = {short_array.Pin()};
+  ArrayView<jlong, 1> long_array_pin = {long_array.Pin()};
+  ArrayView<jfloat, 1> float_array_pin = {float_array.Pin()};
+  ArrayView<jdouble, 1> double_array_pin = {double_array.Pin()};
 }
 
 TEST_F(JniTest, LocalArrayView_AllowsCTAD) {
@@ -177,7 +177,7 @@ TEST_F(JniTest, ArrayView_BooleanIsIterable) {
       .WillOnce(::testing::Return(fake_vals.data()));
 
   LocalArray<jboolean> bool_arr{3};
-  ArrayView<jboolean> bool_view = bool_arr.Pin();
+  ArrayView<jboolean, 1> bool_view = bool_arr.Pin();
 
   EXPECT_TRUE(std::equal(bool_view.begin(), bool_view.end(), fake_vals.begin(),
                          fake_vals.end()));
@@ -193,7 +193,7 @@ TEST_F(JniTest, ArrayView_ByteIsIterable) {
       .WillOnce(::testing::Return(fake_vals.data()));
 
   LocalArray<jbyte> bool_arr{3};
-  ArrayView<jbyte> bool_view = bool_arr.Pin();
+  ArrayView<jbyte, 1> bool_view = bool_arr.Pin();
 
   EXPECT_TRUE(std::equal(bool_view.begin(), bool_view.end(), fake_vals.begin(),
                          fake_vals.end()));
@@ -209,7 +209,7 @@ TEST_F(JniTest, ArrayView_CharIsIterable) {
       .WillOnce(::testing::Return(fake_vals.data()));
 
   LocalArray<jchar> bool_arr{3};
-  ArrayView<jchar> bool_view = bool_arr.Pin();
+  ArrayView<jchar, 1> bool_view = bool_arr.Pin();
 
   EXPECT_TRUE(std::equal(bool_view.begin(), bool_view.end(), fake_vals.begin(),
                          fake_vals.end()));
@@ -225,7 +225,7 @@ TEST_F(JniTest, ArrayView_ShortIsIterable) {
       .WillOnce(::testing::Return(fake_vals.data()));
 
   LocalArray<jshort> bool_arr{3};
-  ArrayView<jshort> bool_view = bool_arr.Pin();
+  ArrayView<jshort, 1> bool_view = bool_arr.Pin();
 
   EXPECT_TRUE(std::equal(bool_view.begin(), bool_view.end(), fake_vals.begin(),
                          fake_vals.end()));
@@ -241,7 +241,7 @@ TEST_F(JniTest, ArrayView_IntIsIterable) {
       .WillOnce(testing::Return(fake_vals.data()));
 
   LocalArray<jint> int_arr{3};
-  ArrayView<jint> int_view = int_arr.Pin();
+  ArrayView<jint, 1> int_view = int_arr.Pin();
 
   EXPECT_TRUE(std::equal(int_view.begin(), int_view.end(), fake_vals.begin(),
                          fake_vals.end()));
@@ -257,7 +257,7 @@ TEST_F(JniTest, ArrayView_LongIsIterable) {
       .WillOnce(::testing::Return(fake_vals.data()));
 
   LocalArray<jlong> bool_arr{3};
-  ArrayView<jlong> bool_view = bool_arr.Pin();
+  ArrayView<jlong, 1> bool_view = bool_arr.Pin();
 
   EXPECT_TRUE(std::equal(bool_view.begin(), bool_view.end(), fake_vals.begin(),
                          fake_vals.end()));
@@ -273,7 +273,7 @@ TEST_F(JniTest, ArrayView_FloatIsIterable) {
       .WillOnce(::testing::Return(fake_vals.data()));
 
   LocalArray<jfloat> bool_arr{3};
-  ArrayView<jfloat> bool_view = bool_arr.Pin();
+  ArrayView<jfloat, 1> bool_view = bool_arr.Pin();
 
   EXPECT_TRUE(std::equal(bool_view.begin(), bool_view.end(), fake_vals.begin(),
                          fake_vals.end()));
@@ -289,7 +289,7 @@ TEST_F(JniTest, ArrayView_DoubleIsIterable) {
       .WillOnce(::testing::Return(fake_vals.data()));
 
   LocalArray<jdouble> bool_arr{3};
-  ArrayView<jdouble> bool_view = bool_arr.Pin();
+  ArrayView<jdouble, 1> bool_view = bool_arr.Pin();
 
   EXPECT_TRUE(std::equal(bool_view.begin(), bool_view.end(), fake_vals.begin(),
                          fake_vals.end()));
@@ -314,7 +314,7 @@ TEST_F(JniTest, ArrayView_ShallowObjectsAreIterable) {
       .WillOnce(::testing::Return(fake_obj_3));
 
   LocalArray<jobject> obj_arr{fake_jarr};
-  ArrayView<jobject> obj_view = obj_arr.Pin();
+  ArrayView<jobject, 1> obj_view = obj_arr.Pin();
 
   EXPECT_TRUE(std::equal(obj_view.begin(), obj_view.end(), fake_vals.begin(),
                          fake_vals.end()));
@@ -347,6 +347,135 @@ TEST_F(JniTest, ArrayView_RichObjectsAreIterable) {
     EXPECT_EQ(obj("Foo"), fake_result);
     fake_result++;
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Iteration Tests: Rank 2 Iterations.
+//
+// Note: Writing through every type would be tedious, however, if these tests
+//   could be generalised across the universe of types it would be better.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, ArrayView_Rank2IntArraysAreIterable) {
+  const jobjectArray fake_int_array_rank_2 =
+      reinterpret_cast<jobjectArray>(0xDADADADADA);
+  const jintArray fake_jint_arr_1 = reinterpret_cast<jintArray>(0xBBBBBAAAAA);
+  const jintArray fake_jint_arr_2 = reinterpret_cast<jintArray>(0xCCCCCAAAAA);
+  const jintArray fake_jint_arr_3 = reinterpret_cast<jintArray>(0xDDDDDAAAAA);
+  std::array fake_vals{fake_jint_arr_1, fake_jint_arr_2, fake_jint_arr_3};
+
+  EXPECT_CALL(*env_, GetArrayLength(fake_int_array_rank_2))
+      .WillOnce(testing::Return(3));
+  EXPECT_CALL(*env_, GetObjectArrayElement(fake_int_array_rank_2, 0))
+      .WillOnce(testing::Return(fake_jint_arr_1));
+  EXPECT_CALL(*env_, GetObjectArrayElement(fake_int_array_rank_2, 1))
+      .WillOnce(testing::Return(fake_jint_arr_2));
+  EXPECT_CALL(*env_, GetObjectArrayElement(fake_int_array_rank_2, 2))
+      .WillOnce(testing::Return(fake_jint_arr_3));
+
+  LocalArray<jint, 2> int_arr_rank_2{fake_int_array_rank_2};
+  ArrayView<jint, 2> int_rank2_view = int_arr_rank_2.Pin();
+
+  EXPECT_TRUE(std::equal(int_rank2_view.begin(), int_rank2_view.end(),
+                         fake_vals.begin(), fake_vals.end()));
+
+  // Also viable to write this:
+  // for (LocalArray<jint, 1> jint_array : int_rank2_view) { }
+}
+
+TEST_F(JniTest, ArrayView_Rank2ObjectkArraysAreIterable) {
+  const jobjectArray fake_object_array_rank_2 =
+      reinterpret_cast<jobjectArray>(0xDADADADADA);
+  const jobjectArray fake_jobject_arr_1 =
+      reinterpret_cast<jobjectArray>(0xBBBBBAAAAA);
+  const jobjectArray fake_jobject_arr_2 =
+      reinterpret_cast<jobjectArray>(0xCCCCCAAAAA);
+  const jobjectArray fake_jobject_arr_3 =
+      reinterpret_cast<jobjectArray>(0xDDDDDAAAAA);
+  std::array fake_vals{fake_jobject_arr_1, fake_jobject_arr_2,
+                       fake_jobject_arr_3};
+
+  EXPECT_CALL(*env_, GetArrayLength(fake_object_array_rank_2))
+      .WillOnce(testing::Return(3));
+  EXPECT_CALL(*env_, GetObjectArrayElement(fake_object_array_rank_2, 0))
+      .WillOnce(testing::Return(fake_jobject_arr_1));
+  EXPECT_CALL(*env_, GetObjectArrayElement(fake_object_array_rank_2, 1))
+      .WillOnce(testing::Return(fake_jobject_arr_2));
+  EXPECT_CALL(*env_, GetObjectArrayElement(fake_object_array_rank_2, 2))
+      .WillOnce(testing::Return(fake_jobject_arr_3));
+
+  LocalArray<jobject, 2> object_arr_rank_2{fake_object_array_rank_2};
+  ArrayView<jobject, 2> object_rank2_view = object_arr_rank_2.Pin();
+
+  EXPECT_TRUE(std::equal(object_rank2_view.begin(), object_rank2_view.end(),
+                         fake_vals.begin(), fake_vals.end()));
+
+  // Also viable to write this:
+  // for (LocalArray<jobject, 1> jobject_array : object_rank2_view) { }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Iteration Tests: Rank 3 Iterations.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, ArrayView_Rank3IntArraysAreIterable) {
+  const jobjectArray fake_int_array_rank_3 =
+      reinterpret_cast<jobjectArray>(0xDADADADADA);
+  const jobjectArray fake_jobject_arr_1 =
+      reinterpret_cast<jobjectArray>(0xBBBBBAAAAA);
+  const jobjectArray fake_jobject_arr_2 =
+      reinterpret_cast<jobjectArray>(0xCCCCCAAAAA);
+  const jobjectArray fake_jobject_arr_3 =
+      reinterpret_cast<jobjectArray>(0xDDDDDAAAAA);
+  std::array fake_vals{fake_jobject_arr_1, fake_jobject_arr_2,
+                       fake_jobject_arr_3};
+
+  EXPECT_CALL(*env_, GetArrayLength(fake_int_array_rank_3))
+      .WillOnce(testing::Return(3));
+  EXPECT_CALL(*env_, GetObjectArrayElement(fake_int_array_rank_3, 0))
+      .WillOnce(testing::Return(fake_jobject_arr_1));
+  EXPECT_CALL(*env_, GetObjectArrayElement(fake_int_array_rank_3, 1))
+      .WillOnce(testing::Return(fake_jobject_arr_2));
+  EXPECT_CALL(*env_, GetObjectArrayElement(fake_int_array_rank_3, 2))
+      .WillOnce(testing::Return(fake_jobject_arr_3));
+
+  LocalArray<jint, 3> int_arr_rank_3{fake_int_array_rank_3};
+  ArrayView<jint, 3> int_rank_3_view = int_arr_rank_3.Pin();
+
+  EXPECT_TRUE(std::equal(int_rank_3_view.begin(), int_rank_3_view.end(),
+                         fake_vals.begin(), fake_vals.end()));
+
+  // Also viable to write this:
+  // for (LocalArray<jint, 1> jint_array : int_rank_3_view) {  }
+}
+
+TEST_F(JniTest, ArrayView_Rank3ObjectkArraysAreIterable) {
+  const jobjectArray fake_object_array_rank_3 =
+      reinterpret_cast<jobjectArray>(0xDADADADADA);
+  const jobjectArray fake_jobject_arr_1 =
+      reinterpret_cast<jobjectArray>(0xBBBBBAAAAA);
+  const jobjectArray fake_jobject_arr_2 =
+      reinterpret_cast<jobjectArray>(0xCCCCCAAAAA);
+  const jobjectArray fake_jobject_arr_3 =
+      reinterpret_cast<jobjectArray>(0xDDDDDAAAAA);
+  std::array fake_vals{fake_jobject_arr_1, fake_jobject_arr_2,
+                       fake_jobject_arr_3};
+
+  EXPECT_CALL(*env_, GetArrayLength(fake_object_array_rank_3))
+      .WillOnce(testing::Return(3));
+  EXPECT_CALL(*env_, GetObjectArrayElement(fake_object_array_rank_3, 0))
+      .WillOnce(testing::Return(fake_jobject_arr_1));
+  EXPECT_CALL(*env_, GetObjectArrayElement(fake_object_array_rank_3, 1))
+      .WillOnce(testing::Return(fake_jobject_arr_2));
+  EXPECT_CALL(*env_, GetObjectArrayElement(fake_object_array_rank_3, 2))
+      .WillOnce(testing::Return(fake_jobject_arr_3));
+
+  LocalArray<jobject, 3> object_arr_rank_3{fake_object_array_rank_3};
+  ArrayView<jobject, 3> object_rank_3_view = object_arr_rank_3.Pin();
+
+  EXPECT_TRUE(std::equal(object_rank_3_view.begin(), object_rank_3_view.end(),
+                         fake_vals.begin(), fake_vals.end()));
+
+  // Also viable to write this:
+  // for (LocalArray<jobject, 2> jobject_array : object_rank_3_view) { }
 }
 
 }  // namespace
