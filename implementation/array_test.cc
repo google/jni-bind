@@ -21,15 +21,16 @@
 namespace {
 
 using ::jni::Array;
-using ::jni::ArrayFromRank_t;
 using ::jni::ArrayStrip_t;
 using ::jni::CDecl_t;
 using ::jni::Class;
 using ::jni::Field;
+using ::jni::FullArrayStripV;
 using ::jni::LocalArray;
 using ::jni::LocalObject;
 using ::jni::Method;
 using ::jni::Params;
+using ::jni::Rank;
 using ::jni::Rankifier;
 using ::jni::RegularToArrayTypeMap_t;
 using ::jni::test::JniTest;
@@ -45,6 +46,9 @@ static constexpr Array arr3{jdouble{}};
 static constexpr Array arr4{Class{"kClass"}};
 static constexpr Array arr5{kClass};
 static constexpr Array arr6{arr1};
+static constexpr Array arr7{jint{}, Rank<2>{}};
+static constexpr Array arr8{kClass, Rank<2>{}};
+static constexpr Array arr9{kClass, Rank<3>{}};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Equality Tests.
@@ -56,8 +60,8 @@ static_assert(arr1 != arr2);
 static_assert(arr1 != arr3);
 static_assert(arr2 != arr3);
 static_assert(arr6 == arr6);
-static_assert(arr1 != arr6);
-static_assert(arr6 != arr1);
+static_assert(arr1 == arr6);
+static_assert(arr6 == arr1);
 
 // Classes.
 static_assert(arr4 == arr4);
@@ -69,9 +73,9 @@ static_assert(arr3 != arr4);
 ////////////////////////////////////////////////////////////////////////////////
 static constexpr jint kArrRank0{0};
 static constexpr Array kArrRank1{jint{}};
-static constexpr Array kArrRank2{Array{jint{}}};
-static constexpr Array kArrRank3{Array{Array{jint{}}}};
-static constexpr Array kArrRank4{Array{Array{Array{jint{}}}}};
+static constexpr Array kArrRank2{jint{}, Rank<2>{}};
+static constexpr Array kArrRank3{jint{}, Rank<3>{}};
+static constexpr Array kArrRank4{jint{}, Rank<4>{}};
 
 using ArrRank0T = std::decay_t<decltype(kArrRank0)>;
 using ArrRank1T = std::decay_t<decltype(kArrRank1)>;
@@ -81,10 +85,10 @@ using ArrRank4T = std::decay_t<decltype(kArrRank4)>;
 
 // Surprisingly these do actually require some care with the CTAD guides.
 static_assert(std::is_same_v<ArrRank0T, jint>);
-static_assert(std::is_same_v<ArrRank1T, Array<jint>>);
-static_assert(std::is_same_v<ArrRank2T, Array<Array<jint>>>);
-static_assert(std::is_same_v<ArrRank3T, Array<Array<Array<jint>>>>);
-static_assert(std::is_same_v<ArrRank4T, Array<Array<Array<Array<jint>>>>>);
+static_assert(std::is_same_v<ArrRank1T, Array<jint, 1>>);
+static_assert(std::is_same_v<ArrRank2T, Array<jint, 2>>);
+static_assert(std::is_same_v<ArrRank3T, Array<jint, 3>>);
+static_assert(std::is_same_v<ArrRank4T, Array<jint, 4>>);
 
 static_assert(Rankifier<ArrRank0T>::Rank(kArrRank0) == 0);
 static_assert(Rankifier<ArrRank1T>::Rank(kArrRank1) == 1);
@@ -95,28 +99,23 @@ static_assert(Rankifier<ArrRank4T>::Rank(kArrRank4) == 4);
 ////////////////////////////////////////////////////////////////////////////////
 // Strip Tests.
 ////////////////////////////////////////////////////////////////////////////////
-
 static_assert(std::is_same_v<ArrayStrip_t<ArrRank0T>, jint>);
 static_assert(std::is_same_v<ArrayStrip_t<ArrRank1T>, jint>);
 static_assert(std::is_same_v<ArrayStrip_t<ArrRank2T>, jint>);
 static_assert(std::is_same_v<ArrayStrip_t<ArrRank3T>, jint>);
 
 static_assert(jni::kIsArrayType<Array<int>>);
-static_assert(jni::kIsArrayType<Array<Array<int>>>);
-static_assert(
-    std::is_same_v<int, std::decay_t<decltype(jni::FullArrayStripV(arr1))>>);
-static_assert(
-    std::is_same_v<int, std::decay_t<decltype(jni::FullArrayStripV(arr6))>>);
 
-////////////////////////////////////////////////////////////////////////////////
-// Build from Rank Tests.
-////////////////////////////////////////////////////////////////////////////////
-
-static_assert(std::is_same_v<ArrayFromRank_t<jint, 0>, jint>);
-static_assert(std::is_same_v<ArrayFromRank_t<jint, 1>, Array<jint>>);
-static_assert(std::is_same_v<ArrayFromRank_t<jint, 2>, Array<Array<jint>>>);
+static_assert(jni::kIsArrayType<Array<int, 2>>);
 static_assert(
-    std::is_same_v<ArrayFromRank_t<jint, 3>, Array<Array<Array<jint>>>>);
+    std::is_same_v<int, std::decay_t<decltype(FullArrayStripV(arr1))>>);
+static_assert(
+    std::is_same_v<int, std::decay_t<decltype(FullArrayStripV(arr6))>>);
+static_assert(
+    std::is_same_v<int, std::decay_t<decltype(FullArrayStripV(arr7))>>);
+
+static_assert(FullArrayStripV(arr8) == kClass);
+static_assert(FullArrayStripV(arr9) == kClass);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation Tests.
@@ -254,7 +253,7 @@ TEST_F(JniTest, Array_AllowsRValuesOfLocalArrays) {
 TEST_F(JniTest, Array_HandlesSingle2DIntAsReturnT) {
   static constexpr Class kClass{
       "ClassThatReturnsArrays",
-      Method{"I", jni::Return{Array{Array{jint{}}}}, Params{}}};
+      Method{"I", jni::Return{Array<jint, 2>{}}, Params{}}};
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("I"), StrEq("()[[I")));
 
@@ -265,7 +264,7 @@ TEST_F(JniTest, Array_HandlesSingle2DIntAsReturnT) {
 TEST_F(JniTest, Array_HandlesSingle2DIntAsParamWithRankfulReturnT) {
   static constexpr Class kClass{
       "ClassThatReturnsArrays",
-      Method{"I", jni::Return<int>{}, Params{Array{Array{jint{}}}}}};
+      Method{"I", jni::Return<int>{}, Params{Array<jint, 2>{}}}};
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("I"), StrEq("([[I)I")));
 
@@ -278,7 +277,7 @@ TEST_F(JniTest, Array_HandlesSingle2DIntAsParamWithRankfulReturnT) {
 TEST_F(JniTest, Array_HandlesSingle2DClassAsReturn) {
   static constexpr Class kClass{
       "ClassThatReturnsArrays",
-      Method{"Foo", jni::Return{Array{Array{kClass2}}}, Params{}}};
+      Method{"Foo", jni::Return{Array{kClass2, Rank<2>{}}}, Params{}}};
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("()[[LkClass2;")));
 
@@ -369,8 +368,8 @@ TEST_F(JniTest, Array_FieldTests) {
       Field{"DoubleArray", Array{jdouble{}}},
       Field{"LongArray", Array{jlong{}}},
       Field{"ObjectArrayRank1", Array{kClass2}},
-      Field{"ObjectArrayRank2", Array{Array{kClass2}}},
-      Field{"ObjectArrayRank3", Array{Array{Array{kClass2}}}},
+      Field{"ObjectArrayRank2", Array{kClass2, Rank<2>{}}},
+      Field{"ObjectArrayRank3", Array{kClass2, Rank<3>{}}},
   };
 
   LocalObject<kClass> obj{jobject{nullptr}};
@@ -407,11 +406,10 @@ TEST_F(JniTest, Array_FieldTests) {
 ////////////////////////////////////////////////////////////////////////////////
 static constexpr Class kArrClass{
     "ArrClass",
-    Method{"Foo", jni::Return{Array{jint{}}}, Params{Array{Array{jint{}}}}},
-    Method{"Baz", jni::Return{Array{kClass2}},
-           Params{Array{Array{Array{jint{}}}}}},
-    Method{"Bar", jni::Return{Array{Array{Class{"kClass3"}}}},
-           Params{Array{Array{Array{jint{}}}}, Array{double{}}}},
+    Method{"Foo", jni::Return{Array{jint{}}}, Params{Array<jint, 2>{}}},
+    Method{"Baz", jni::Return{Array{kClass2}}, Params{Array<jint, 3>{}}},
+    Method{"Bar", jni::Return{Array{Class{"kClass3"}, Rank<2>{}}},
+           Params{Array<jint, 3>{}, Array{double{}}}},
 };
 
 TEST_F(JniTest, Array_HandlesMultipleMultiDimensionalValues_1) {

@@ -30,6 +30,7 @@ using ::jni::kNoIdx;
 using ::jni::Method;
 using ::jni::Overload;
 using ::jni::Params;
+using ::jni::Rank;
 using ::jni::Return;
 using ::jni::Signature_v;
 
@@ -39,6 +40,7 @@ static constexpr Class kClass1{
     Constructor{jint{}},
     Constructor{jfloat{}, jboolean{}},
     Constructor{Array{jint{}}},
+    Constructor{Array{jint{}, Rank<2>{}}},
     Method{"m0", jni::Return<void>{}, Params{}},
     Method{"m1", jni::Return<jshort>{}, Params<jint>{}},
     Method{"m2", jni::Return{Class{"kClass2"}}, Params<jfloat, jboolean>{}},
@@ -47,14 +49,15 @@ static constexpr Class kClass1{
         Overload{jni::Return<void>{}, Params{}},
         Overload{jni::Return<jint>{}, Params<jboolean>{}},
         Overload{jni::Return<jfloat>{}, Params<jshort, jdouble>{}},
+        Overload{jni::Return<jfloat>{}, Params{Class{"kClass2"}}},
+        Overload{jni::Return{Class{"kClass3"}}, Params{}},
     },
     Method{
         "m4",
         Overload{jni::Return{Array{jboolean{}}}, Params{Array{jint{}}}},
-        Overload{jni::Return{Array{Array{jboolean{}}}},
-                 Params{Array{Array{jfloat{}}}}},
-        Overload{jni::Return{Array{Array{Array{jboolean{}}}}},
-                 Params{Array{Array{Array{jshort{}}}}}},
+        Overload{jni::Return{Array<jboolean, 2>{}}, Params{Array<jfloat, 2>{}}},
+        Overload{jni::Return{Array<jboolean, 3>{}}, Params{Array<jshort, 3>{}}},
+        Overload{jni::Return{Array{Class{"kClass2"}, Rank<2>{}}}, Params{}},
     },
     Field{"f0", int{}},
     Field{"f1", Class{"kClass2"}}};
@@ -82,11 +85,12 @@ static_assert(std::string_view{"[I"} ==
 static_assert(std::string_view{"()V"} == Signature_v<kCtor0>);
 static_assert(std::string_view{"(I)V"} == Signature_v<kCtor1>);
 static_assert(std::string_view{"(FZ)V"} == Signature_v<kCtor2>);
+static_assert(std::string_view{"([I)V"} == Signature_v<kCtor3>);
+static_assert(std::string_view{"([[I)V"} == Signature_v<kCtor4>);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Methods (Overload sets with only one overload)
 ////////////////////////////////////////////////////////////////////////////////
-
 static_assert(std::string_view{"S"} ==
               Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 1, 0>>);
 static_assert(std::string_view{"I"} ==
@@ -127,18 +131,27 @@ static_assert(std::string_view{"(FZ)LkClass2;"} ==
 using kMethod3Overload0 = Id<JT, IdType::OVERLOAD, 3, 0>;
 using kMethod3Overload1 = Id<JT, IdType::OVERLOAD, 3, 1>;
 using kMethod3Overload2 = Id<JT, IdType::OVERLOAD, 3, 2>;
+using kMethod3Overload3 = Id<JT, IdType::OVERLOAD, 3, 3>;
+using kMethod3Overload4 = Id<JT, IdType::OVERLOAD, 3, 4>;
 
 using kMethod4Overload0 = Id<JT, IdType::OVERLOAD, 4, 0>;
 using kMethod4Overload1 = Id<JT, IdType::OVERLOAD, 4, 1>;
 using kMethod4Overload2 = Id<JT, IdType::OVERLOAD, 4, 2>;
+using kMethod4Overload3 = Id<JT, IdType::OVERLOAD, 4, 3>;
 
 static_assert(std::string_view{"()V"} == Signature_v<kMethod3Overload0>);
 static_assert(std::string_view{"(Z)I"} == Signature_v<kMethod3Overload1>);
 static_assert(std::string_view{"(SD)F"} == Signature_v<kMethod3Overload2>);
+static_assert(std::string_view{"(LkClass2;)F"} ==
+              Signature_v<kMethod3Overload3>);
+static_assert(std::string_view{"()LkClass3;"} ==
+              Signature_v<kMethod3Overload4>);
 
 static_assert(std::string_view{"([I)[Z"} == Signature_v<kMethod4Overload0>);
 static_assert(std::string_view{"([[F)[[Z"} == Signature_v<kMethod4Overload1>);
 static_assert(std::string_view{"([[[S)[[[Z"} == Signature_v<kMethod4Overload2>);
+static_assert(std::string_view{"()[[LkClass2;"} ==
+              Signature_v<kMethod4Overload3>);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Fields (Overload sets with only one overload)

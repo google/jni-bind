@@ -93,7 +93,7 @@ template <typename IdT>
 struct ArrayHelper {
   template <const auto& t>
   struct Helper {
-    static constexpr auto val = FullArrayStripV(t.raw_type_);
+    static constexpr auto val = FullArrayStripV(t.raw_);
 
     using StrippedCDecl = CDecl_t<std::decay_t<decltype(val)>>;
     using ConvertedCDecl = RegularToArrayTypeMap_t<StrippedCDecl>;

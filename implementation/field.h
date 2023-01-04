@@ -33,7 +33,6 @@ struct Field : public FieldBase {
   const char* name_;
 
   const Raw_ raw_ = {};
-  const Raw_ raw_type_ = raw_;
 
   constexpr Field(const char* name) : name_(name) {}
   constexpr Field(const char* name, Raw_ value_raw)

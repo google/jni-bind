@@ -33,6 +33,7 @@ using ::jni::kNoIdx;
 using ::jni::Method;
 using ::jni::Overload;
 using ::jni::Params;
+using ::jni::Rank;
 using ::jni::Return;
 using ::jni::Static;
 
@@ -51,15 +52,17 @@ static constexpr Class kClass1{
         Overload{jni::Return<void>{}, Params{}},
         Overload{jni::Return<jint>{}, Params<jboolean>{}},
         Overload{jni::Return<jfloat>{}, Params<jshort, jdouble>{}},
+        Overload{jni::Return{Array{Class{"kClass2"}}},
+                 Params<jshort, jdouble>{}},
     },
     Method{
         "m4",
         Overload{jni::Return{Array{jboolean{}}}, Params{Array{jint{}}}},
-        Overload{jni::Return{Array{Array{jboolean{}}}},
-                 Params{Array{Array{jfloat{}}}}},
-        Overload{jni::Return{Array{Array{Array{jboolean{}}}}},
-                 Params{Array{Array{Array{jshort{}}}}}},
+        Overload{jni::Return{Array<jboolean, 2>{}}, Params{Array<jfloat, 2>{}}},
+        Overload{jni::Return{Array<jboolean, 3>{}}, Params{Array<jshort, 3>{}}},
     },
+    Method{"m5", jni::Return{Array{Class{"kClass2"}}}, Params<>{}},
+    Method{"m6", jni::Return{Array{Class{"kClass2"}, Rank<2>{}}}, Params<>{}},
     Field{"f0", int{}},
     Field{"f1", Class{"kClass2"}}};
 
@@ -96,16 +99,22 @@ using kMethod0 = Id<JT, IdType::OVERLOAD_SET, 0>;
 using kMethod1 = Id<JT, IdType::OVERLOAD_SET, 1>;
 using kMethod2 = Id<JT, IdType::OVERLOAD_SET, 2>;
 using kMethod3 = Id<JT, IdType::OVERLOAD_SET, 3>;
+using kMethod4 = Id<JT, IdType::OVERLOAD_SET, 4>;
+using kMethod5 = Id<JT, IdType::OVERLOAD_SET, 5>;
 
 static_assert(kMethod0::Name() == std::string_view{"m0"});
 static_assert(kMethod1::Name() == std::string_view{"m1"});
 static_assert(kMethod2::Name() == std::string_view{"m2"});
 static_assert(kMethod3::Name() == std::string_view{"m3"});
+static_assert(kMethod4::Name() == std::string_view{"m4"});
+static_assert(kMethod5::Name() == std::string_view{"m5"});
 
 using kMethod0Overload0 = Id<JT, IdType::OVERLOAD, 0, 0>;
 using kMethod1Overload0 = Id<JT, IdType::OVERLOAD, 1, 0>;
 using kMethod2Overload0 = Id<JT, IdType::OVERLOAD, 2, 0>;
 using kMethod3Overload0 = Id<JT, IdType::OVERLOAD, 3, 0>;
+using kMethod5Overload0 = Id<JT, IdType::OVERLOAD, 5, 0>;
+using kMethod6Overload0 = Id<JT, IdType::OVERLOAD, 6, 0>;
 
 static_assert(kMethod0Overload0::NumParams() == 0);
 static_assert(kMethod1Overload0::NumParams() == 1);
@@ -153,6 +162,17 @@ static_assert(2 == kMethod4Overload1Return::kRank);
 static_assert(3 == kMethod4Overload2Param0::kRank);
 static_assert(3 == kMethod4Overload2Return::kRank);
 
+using kMethod5Overload0Return = Id<JT, IdType::OVERLOAD_PARAM, 5, 0>;
+using kMethod5Overload0Param0 = Id<JT, IdType::OVERLOAD_PARAM, 5, 0>;
+using kMethod6Overload0Return = Id<JT, IdType::OVERLOAD_PARAM, 6, 0>;
+using kMethod6Overload0Param0 = Id<JT, IdType::OVERLOAD_PARAM, 6, 0>;
+
+static_assert(std::string_view{"m5"} == kMethod5Overload0::Name());
+static_assert(std::string_view{"m6"} == kMethod6Overload0::Name());
+
+static_assert(1 == kMethod5Overload0Return::kRank);
+static_assert(2 == kMethod6Overload0Return::kRank);
+
 ////////////////////////////////////////////////////////////////////////////////
 // Fields (Overload sets with only one overload)
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,17 +201,17 @@ static constexpr Class kStaticClass{
         },
         Method{
             "sm4",
-            Overload{jni::Return{Array{jboolean{}}}, Params{Array{jint{}}}},
-            Overload{jni::Return{Array{Array{jboolean{}}}},
-                     Params{Array{Array{jfloat{}}}}},
-            Overload{jni::Return{Array{Array{Array{jboolean{}}}}},
-                     Params{Array{Array{Array{jshort{}}}}}},
+            Overload{jni::Return{Array<jboolean>{}}, Params{Array<jint>{}}},
+            Overload{jni::Return{Array<jboolean, 2>{}},
+                     Params{Array<jfloat, 2>{}}},
+            Overload{jni::Return{Array<jboolean, 3>{}},
+                     Params{Array<jshort, 3>{}}},
         },
 
         Field{"sf0", int{}},
         Field{"sf1", Class{"kClass2"}},
         Field{"sf2", Array{Class{"kClass2"}}},
-        Field{"sf3", Array{Array{Class{"kClass2"}}}},
+        Field{"sf3", Array{Class{"kClass2"}, Rank<2>{}}},
         Field{"sf4", float{}},
     },
 };

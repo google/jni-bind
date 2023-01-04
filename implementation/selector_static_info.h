@@ -45,7 +45,7 @@ struct SelectorStaticInfo {
   struct IthRawTypeMember {
     template <typename T>
     static constexpr const auto& Val(const T& val) {
-      return IthRawTypeMember<I - 1>::Val(val.raw_type_);
+      return IthRawTypeMember<I - 1>::Val(val.raw_);
     }
   };
 
@@ -64,7 +64,7 @@ struct SelectorStaticInfo {
     if constexpr (Selector::kRank == 0) {
       return Selector::Val();
     } else {
-      return IthRawTypeMember<kRank>::Val(Selector::Val());
+      return Selector::Val().raw_;
     }
   }
 

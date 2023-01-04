@@ -54,7 +54,6 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
     template <std::size_t I>
     struct Val {
       static constexpr std::string_view val = Signature<
-          // Id<JniT_, IdType::OVERLOAD_PARAM, idx, secondary_idx, I>>::val;
           Id<JniT_, kChildIdType, idx, secondary_idx, I>>::val;
     };
 
@@ -64,7 +63,6 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
 
   struct ReturnHelper {
     static constexpr std::string_view val = Signature<
-        // Id<JniT_, IdType::OVERLOAD_PARAM, idx, secondary_idx, kNoIdx>>::val;
         Id<JniT_, kChildIdType, idx, secondary_idx, kNoIdx>>::val;
   };
 

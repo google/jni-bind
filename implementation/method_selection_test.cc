@@ -34,6 +34,7 @@ using ::jni::Method;
 using ::jni::MethodSelection;
 using ::jni::Overload;
 using ::jni::Params;
+using ::jni::Rank;
 using ::jni::Return;
 
 static constexpr Class kClass1{"class1", Method{"Foo", Return{}, Params{}}};
@@ -64,12 +65,12 @@ constexpr Class c1{
     Method{"6", Return<void>{}, Params<jdouble>{}},
     Method{"7", Return<void>{}, Params{jstring{}}},
     Method{"8", Return<void>{}, Params{kClass1}},
-    Method{"9", Return<void>{}, Params{Array{int{}}}},
-    Method{"10", Return<void>{}, Params{Array{Array{int{}}}}},
-    Method{"11", Return<void>{}, Params{Array{Array{Array{float{}}}}}},
+    Method{"9", Return<void>{}, Params{Array<int>{}}},
+    Method{"10", Return<void>{}, Params{Array<int, 2>{}}},
+    Method{"11", Return<void>{}, Params{Array<float, 3>{}}},
     Method{"12", Return<void>{}, Params{Array{kClass1}}},
-    Method{"13", Return<void>{}, Params{Array{Array{kClass1}}}},
-    Method{"14", Return<void>{}, Params{Array{Array{Array{kClass1}}}}}};
+    Method{"13", Return<void>{}, Params{Array{kClass1, Rank<2>{}}}},
+    Method{"14", Return<void>{}, Params{Array{kClass1, Rank<3>{}}}}};
 
 template <const auto& class_v, size_t method_idx>
 using MthdId_t = MethodSelection<

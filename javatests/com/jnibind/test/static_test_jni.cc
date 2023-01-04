@@ -19,7 +19,6 @@
 #include "jni_bind.h"
 
 using jni::Array;
-using ::jni::ArrayFromRank_t;
 using jni::Class;
 using jni::Field;
 using jni::Method;
@@ -42,7 +41,7 @@ static constexpr Class kClass{
         Method{"floatFunc", Return<jfloat>{}, Params{}},
         Method{"doubleFunc", Return<jdouble>{}, Params{}},
         Method{"complexFunc", Return<jstring>{},
-               Params{int{}, float{}, jstring{}, Array{Array{jlong{}}}}},
+               Params{int{}, float{}, jstring{}, Array<jlong, 2>{}}},
 
         Field{"booleanField", jboolean{}},
         Field{"byteField", jbyte{}},

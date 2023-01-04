@@ -34,6 +34,7 @@ using ::jni::Method;
 using ::jni::OverloadRef;
 using ::jni::Params;
 using ::jni::Return;
+using ::jni::Rank;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::Eq;
@@ -83,6 +84,43 @@ TEST_F(JniTest, MethodRef_ReturnWithObject) {
   const jmethodID fake_jmethod_1{reinterpret_cast<jmethodID>(0XBBBBBB)};
   EXPECT_CALL(*env_,
               GetMethodID(Eq(clazz), StrEq("FooV"), StrEq("()LsomeClass2;")))
+      .WillOnce(testing::Return(fake_jmethod_1));
+  EXPECT_CALL(*env_, CallObjectMethodV(object, fake_jmethod_1, _));
+
+  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(clazz, object);
+}
+
+TEST_F(JniTest, MethodRef_ReturnWithRank1Object) {
+  static constexpr Class c2{"someClass2"};
+  static constexpr Method m1{"FooV", Return{Array{c2}}, Params<>{}};
+  static constexpr Class c{"someClass", m1};
+
+  InSequence seq;
+  const jclass clazz{reinterpret_cast<jclass>(0XABABA)};
+  const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
+
+  const jmethodID fake_jmethod_1{reinterpret_cast<jmethodID>(0XBBBBBB)};
+  EXPECT_CALL(*env_,
+              GetMethodID(Eq(clazz), StrEq("FooV"), StrEq("()[LsomeClass2;")))
+      .WillOnce(testing::Return(fake_jmethod_1));
+  EXPECT_CALL(*env_, CallObjectMethodV(object, fake_jmethod_1, _));
+
+  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(clazz, object);
+}
+
+TEST_F(JniTest, MethodRef_ReturnWithRank2Object) {
+  static constexpr Class c2{"someClass2"};
+  static constexpr Method m1{"FooV", Return{Array{c2, Rank<2>{}}},
+                             Params<>{}};
+  static constexpr Class c{"someClass", m1};
+
+  InSequence seq;
+  const jclass clazz{reinterpret_cast<jclass>(0XABABA)};
+  const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
+
+  const jmethodID fake_jmethod_1{reinterpret_cast<jmethodID>(0XBBBBBB)};
+  EXPECT_CALL(*env_,
+              GetMethodID(Eq(clazz), StrEq("FooV"), StrEq("()[[LsomeClass2;")))
       .WillOnce(testing::Return(fake_jmethod_1));
   EXPECT_CALL(*env_, CallObjectMethodV(object, fake_jmethod_1, _));
 

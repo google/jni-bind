@@ -48,8 +48,6 @@ Return()->Return<void>;
 template <typename Raw>
 Return(Raw) -> Return<Raw>;
 
-//==============================================================================
-
 template <typename T>
 using Raw_t = typename T::Raw;
 

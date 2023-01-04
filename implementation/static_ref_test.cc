@@ -26,6 +26,7 @@ using ::jni::Field;
 using ::jni::LocalObject;
 using ::jni::Method;
 using ::jni::Params;
+using ::jni::Rank;
 using ::jni::Static;
 using ::jni::StaticRef;
 using ::jni::test::JniTest;
@@ -201,12 +202,12 @@ static constexpr Class kMethodClass{
         Method{"doubleMethod", ::jni::Return{jdouble{}}, Params<>{}},
         Method{"objectMethod", ::jni::Return{Class{"kClass2"}}, Params<>{}},
         Method{"rank1ArrayMethod", ::jni::Return{Array{Class{"kClass2"}}}, Params<>{}},
-        Method{"rank2ArrayMethod", ::jni::Return{Array{Array{Class{"kClass2"}}}}, Params<>{}},
+        Method{"rank2ArrayMethod", ::jni::Return{Array{Class{"kClass2"}, Rank<2>{}}}, Params<>{}},
 
         Method{"simpleFunc", ::jni::Return{int{}}, Params{jfloat{}}},
         Method{"complexFunc", ::jni::Return{float{}},
           Params{
-            Array{Array{Class{"kClass2"}}}, int{}, float{}, Class{"kClass3"},
+            Array{Class{"kClass2"}, Rank<2>{}}, int{}, float{}, Class{"kClass3"},
           }
         }
       },
