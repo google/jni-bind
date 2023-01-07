@@ -89,8 +89,8 @@ class FieldRef {
       return {StaticFieldHelper<CDeclForField>::GetValue(
           class_ref_, GetFieldID(class_ref_))};
     } else {
-      return {FieldHelper<CDeclForField>::GetValue(object_ref_,
-                                                   GetFieldID(class_ref_))};
+      return {FieldHelper<CDeclForField, IdT::kRank + 1>::GetValue(
+          object_ref_, GetFieldID(class_ref_))};
     }
   }
 
@@ -101,7 +101,7 @@ class FieldRef {
           class_ref_, GetFieldID(class_ref_),
           ProxyForField::ProxyAsArg(std::forward<T>(value)));
     } else {
-      FieldHelper<CDecl_t<typename IdT::RawValT>>::SetValue(
+      FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank + 1>::SetValue(
           object_ref_, GetFieldID(class_ref_),
           ProxyForField::ProxyAsArg(std::forward<T>(value)));
     }

@@ -17,134 +17,155 @@
 #ifndef JNI_BIND_FIELD_VALUE_GETTER_H_
 #define JNI_BIND_FIELD_VALUE_GETTER_H_
 
+#include <cstddef>
+
 #include "jni_env.h"
 #include "jni_dep.h"
 
 namespace jni {
 
-template <typename Raw>
+template <typename Raw, std::size_t kRank>
 struct FieldHelper {
   static Raw GetValue(jobject object_ref, jfieldID field_ref_);
 
   static void SetValue(jobject object_ref, jfieldID field_ref_, Raw&& value);
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1+.
+////////////////////////////////////////////////////////////////////////////////
 template <>
-inline jboolean FieldHelper<jboolean>::GetValue(const jobject object_ref,
-                                                const jfieldID field_ref_) {
+inline jboolean FieldHelper<jboolean, 1>::GetValue(const jobject object_ref,
+                                                   const jfieldID field_ref_) {
   return jni::JniEnv::GetEnv()->GetBooleanField(object_ref, field_ref_);
 }
 
 template <>
-inline void FieldHelper<jboolean>::SetValue(const jobject object_ref,
-                                            const jfieldID field_ref_,
-                                            jboolean&& value) {
+inline void FieldHelper<jboolean, 1>::SetValue(const jobject object_ref,
+                                               const jfieldID field_ref_,
+                                               jboolean&& value) {
   jni::JniEnv::GetEnv()->SetBooleanField(object_ref, field_ref_, value);
 }
 
 template <>
-inline jbyte FieldHelper<jbyte>::GetValue(const jobject object_ref,
-                                          const jfieldID field_ref_) {
+inline jbyte FieldHelper<jbyte, 1>::GetValue(const jobject object_ref,
+                                             const jfieldID field_ref_) {
   return jni::JniEnv::GetEnv()->GetByteField(object_ref, field_ref_);
 }
 
 template <>
-inline void FieldHelper<jbyte>::SetValue(const jobject object_ref,
-                                         const jfieldID field_ref_,
-                                         jbyte&& value) {
+inline void FieldHelper<jbyte, 1>::SetValue(const jobject object_ref,
+                                            const jfieldID field_ref_,
+                                            jbyte&& value) {
   jni::JniEnv::GetEnv()->SetByteField(object_ref, field_ref_, value);
 }
 
 template <>
-inline jchar FieldHelper<jchar>::GetValue(const jobject object_ref,
-                                          const jfieldID field_ref_) {
+inline jchar FieldHelper<jchar, 1>::GetValue(const jobject object_ref,
+                                             const jfieldID field_ref_) {
   return jni::JniEnv::GetEnv()->GetCharField(object_ref, field_ref_);
 }
 
 template <>
-inline void FieldHelper<jchar>::SetValue(const jobject object_ref,
-                                         const jfieldID field_ref_,
-                                         jchar&& value) {
+inline void FieldHelper<jchar, 1>::SetValue(const jobject object_ref,
+                                            const jfieldID field_ref_,
+                                            jchar&& value) {
   jni::JniEnv::GetEnv()->SetCharField(object_ref, field_ref_, value);
 }
 
 template <>
-inline jshort FieldHelper<jshort>::GetValue(const jobject object_ref,
-                                            const jfieldID field_ref_) {
+inline jshort FieldHelper<jshort, 1>::GetValue(const jobject object_ref,
+                                               const jfieldID field_ref_) {
   return jni::JniEnv::GetEnv()->GetShortField(object_ref, field_ref_);
 }
 
 template <>
-inline void FieldHelper<jshort>::SetValue(const jobject object_ref,
-                                          const jfieldID field_ref_,
-                                          jshort&& value) {
+inline void FieldHelper<jshort, 1>::SetValue(const jobject object_ref,
+                                             const jfieldID field_ref_,
+                                             jshort&& value) {
   jni::JniEnv::GetEnv()->SetShortField(object_ref, field_ref_, value);
 }
 
 template <>
-inline jint FieldHelper<jint>::GetValue(const jobject object_ref,
-                                        const jfieldID field_ref_) {
+inline jint FieldHelper<jint, 1>::GetValue(const jobject object_ref,
+                                           const jfieldID field_ref_) {
   return jni::JniEnv::GetEnv()->GetIntField(object_ref, field_ref_);
 }
 
 template <>
-inline void FieldHelper<jint>::SetValue(const jobject object_ref,
-                                        const jfieldID field_ref_,
-                                        jint&& value) {
+inline void FieldHelper<jint, 1>::SetValue(const jobject object_ref,
+                                           const jfieldID field_ref_,
+                                           jint&& value) {
   jni::JniEnv::GetEnv()->SetIntField(object_ref, field_ref_, value);
 }
 
 template <>
-inline jlong FieldHelper<jlong>::GetValue(const jobject object_ref,
-                                          const jfieldID field_ref_) {
+inline jlong FieldHelper<jlong, 1>::GetValue(const jobject object_ref,
+                                             const jfieldID field_ref_) {
   return jni::JniEnv::GetEnv()->GetLongField(object_ref, field_ref_);
 }
 
 template <>
-inline void FieldHelper<jlong>::SetValue(const jobject object_ref,
-                                         const jfieldID field_ref_,
-                                         jlong&& value) {
+inline void FieldHelper<jlong, 1>::SetValue(const jobject object_ref,
+                                            const jfieldID field_ref_,
+                                            jlong&& value) {
   jni::JniEnv::GetEnv()->SetLongField(object_ref, field_ref_, value);
 }
 
 template <>
-inline jfloat FieldHelper<jfloat>::GetValue(const jobject object_ref,
-                                            const jfieldID field_ref_) {
+inline jfloat FieldHelper<jfloat, 1>::GetValue(const jobject object_ref,
+                                               const jfieldID field_ref_) {
   return jni::JniEnv::GetEnv()->GetFloatField(object_ref, field_ref_);
 }
 
 template <>
-inline void FieldHelper<jfloat>::SetValue(const jobject object_ref,
-                                          const jfieldID field_ref_,
-                                          jfloat&& value) {
+inline void FieldHelper<jfloat, 1>::SetValue(const jobject object_ref,
+                                             const jfieldID field_ref_,
+                                             jfloat&& value) {
   jni::JniEnv::GetEnv()->SetFloatField(object_ref, field_ref_, value);
 }
 
 template <>
-inline jdouble FieldHelper<jdouble>::GetValue(const jobject object_ref,
-                                              const jfieldID field_ref_) {
+inline jdouble FieldHelper<jdouble, 1>::GetValue(const jobject object_ref,
+                                                 const jfieldID field_ref_) {
   return jni::JniEnv::GetEnv()->GetDoubleField(object_ref, field_ref_);
 }
 
 template <>
-inline void FieldHelper<jdouble>::SetValue(const jobject object_ref,
-                                           const jfieldID field_ref_,
-                                           jdouble&& value) {
+inline void FieldHelper<jdouble, 1>::SetValue(const jobject object_ref,
+                                              const jfieldID field_ref_,
+                                              jdouble&& value) {
   jni::JniEnv::GetEnv()->SetDoubleField(object_ref, field_ref_, value);
 }
 
 template <>
-inline jobject FieldHelper<jobject>::GetValue(const jobject object_ref,
-                                              const jfieldID field_ref_) {
+inline jobject FieldHelper<jobject, 1>::GetValue(const jobject object_ref,
+                                                 const jfieldID field_ref_) {
   return jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_);
 }
 
-template <>
-inline void FieldHelper<jobject>::SetValue(const jobject object_ref,
-                                           const jfieldID field_ref_,
+// template <>
+
+template <std::size_t kRank,
+          typename T = std::enable_if_t<(kRank == 1), jobject>>
+inline void FieldHelper<T, kRank>::SetValue(const jobject object_ref,
+                                            const jfieldID field_ref_,
+                                            jobject&& new_value) {
+  jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 2+.
+////////////////////////////////////////////////////////////////////////////////
+/*
+template <std::size_t kRank>
+inline void FieldHelper<
+  std::enable_if_t<(kRank > 1), jobject>, kRank>
+>::SetValue(const jobject object_ref, const jfieldID field_ref_,
                                            jobject&& new_value) {
   jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
 }
+*/
 
 }  // namespace jni
 
