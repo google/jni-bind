@@ -107,10 +107,12 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
+        ":default_class_loader",
         ":jni_type",
         ":jvm",
         ":method",
         "//:jni_dep",
+        "//base:logging",
         "//class_defs:java_lang_classes",
         "//implementation/jni_helper",
         "//implementation/jni_helper:invoke",
@@ -162,6 +164,7 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
+        ":default_class_loader",
         ":global_object",
         ":jni_type",
         ":jvm_ref",
@@ -421,6 +424,7 @@ cc_library(
         ":jvm",
         ":method_ref",
         "//:jni_dep",
+        "//base:logging",
         "//metaprogramming:double_locked_value",
         "//metaprogramming:function_traits",
     ],

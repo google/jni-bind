@@ -22,6 +22,7 @@
 #include "class_defs/java_lang_classes.h"
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
+#include "implementation/default_class_loader.h"
 #include "implementation/global_object.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_type.h"
@@ -74,8 +75,14 @@ class ClassLoaderRef
 
     if constexpr (ParentLoaderForClass<class_loader_v_, class_v>() !=
                   kDefaultClassLoader) {
-      ClassRef_t<JniT<jobject, class_v, class_loader_v_, jvm_v_,
-                      1>>::PrimeJClassFromClassLoader([=]() {
+      // ClassRef_t<JniT<jobject, class_v, class_loader_v_, jvm_v_,
+      // ClassRef_t<JniT<jobject, kNoClassSpecified, class_loader_v_, jvm_v_,
+      ClassRef_t<JniT<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_,
+                      // 1
+                      0, class_loader_v_.template IdxOfClass<class_v>(),
+                      jvm_v_.template IdxOfClassLoader<class_loader_v_>()
+
+                      >>::PrimeJClassFromClassLoader([=]() {
         // Prevent the object (which is a runtime instance of a class) from
         // falling out of scope so it is not released.
         LocalObject loaded_class = (*this)("loadClass", class_v.name_);

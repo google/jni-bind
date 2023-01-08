@@ -20,6 +20,7 @@
 #include <atomic>
 #include <utility>
 
+#include "base/logging.h"
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/class_ref.h"
@@ -140,6 +141,9 @@ class JvmRef : public JvmRefBase {
     template <size_t... Is>
     static constexpr void TeardownClass(
         std::index_sequence<Is...> index_sequence) {
+      LOG(ERROR) << "jif static constexpr void TeardownClass( "
+                 << sizeof...(Is);
+
       (ClassRef<JniT<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_, 0,
                      Is, ClassLoaderIdx>
 
@@ -185,8 +189,10 @@ class JvmRef : public JvmRefBase {
     //     by JvmRef::~JvmRef, and JvmRef cannot be moved, therefore it is
     //     guaranteed to be in a single threaded context.
     auto& default_loaded_class_list = GetDefaultLoadedClassList();
+    LOG(ERROR) << " jif GetDefaultLoadedClassList PRE";
     for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
          default_loaded_class_list) {
+      LOG(ERROR) << " jif GetDefaultLoadedClassList iter";
       maybe_loaded_class_id->Reset(
           [](jclass clazz) { JniHelper::ReleaseClass(clazz); });
     }

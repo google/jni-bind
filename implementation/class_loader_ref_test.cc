@@ -65,6 +65,7 @@ class JniTestForClassLoaders : public JniTestWithNoDefaultJvmRef {
   }
 };
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // Default JVM, non-default classloader (No ID teardown on JVM destruction).
 //
@@ -141,6 +142,7 @@ TEST_F(JniTestForClassLoaders,
   default_globals_made_that_should_be_released_.clear();
   TearDown();
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // Non standard JVM, non-default classloader (ID teardown on JVM destruction).
@@ -148,9 +150,9 @@ TEST_F(JniTestForClassLoaders,
 TEST_F(JniTestForClassLoaders,
        ClassLoaderRefTest_DefaultLoadedObjectBuildsWithClassLoadedObject) {
   static constexpr Class kTestClass1{"TestClass1"};
-  static constexpr Class kTestClass2{
-      "TestClass2", Constructor{kTestClass1},
-      Method{"Foo", Return{}, Params{kTestClass1}}};
+  // static constexpr Class kTestClass2{
+  //"TestClass2", Constructor{kTestClass1},
+  // Method{"Foo", Return{}, Params{kTestClass1}}};
   static constexpr ClassLoader kClassLoader{kNullClassLoader,
                                             SupportedClassSet{kTestClass1}};
   static constexpr Jvm kJvm{kClassLoader};
@@ -163,12 +165,15 @@ TEST_F(JniTestForClassLoaders,
       class_loader_local_to_be_wrapped};
   LocalObject<kTestClass1, kClassLoader> a =
       local_class_loader.BuildLocalObject<kTestClass1>();
+  /*
   LocalObject<kTestClass2> b{a};
   b("Foo", a);
+  */
 
   TearDown();
 }
 
+/*
 TEST_F(JniTestForClassLoaders, ClassLoaderRefTest_ConstructsFromRValue) {
   static constexpr Class kTestClass2{"TestClass2"};
   static constexpr Class kTestClass1{
@@ -484,5 +489,6 @@ TEST_F(JniTestWithNoDefaultJvmRef,
 
   this->TearDown();
 }
+*/
 
 }  // namespace

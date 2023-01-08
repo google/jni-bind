@@ -37,6 +37,8 @@ template <typename SpanType_, const auto& class_v_,
           std::size_t class_loader_idx_ = kNoIdx>
 struct JniT {
   static constexpr std::size_t kRank = kRank_;
+  static constexpr std::size_t kClassIdx = class_idx_;
+  static constexpr std::size_t kClassLoaderIdx = class_loader_idx_;
 
   static constexpr const auto& GetClassLoader() {
     if constexpr (class_loader_idx_ != kNoIdx) {
