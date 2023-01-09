@@ -1305,8 +1305,6 @@ Return()->Return<void>;
 template <typename Raw>
 Return(Raw) -> Return<Raw>;
 
-//==============================================================================
-
 template <typename T>
 using Raw_t = typename T::Raw;
 
@@ -1388,7 +1386,6 @@ struct Field : public FieldBase {
   const char* name_;
 
   const Raw_ raw_ = {};
-  const Raw_ raw_type_ = raw_;
 
   constexpr Field(const char* name) : name_(name) {}
   constexpr Field(const char* name, Raw_ value_raw)
@@ -1725,85 +1722,101 @@ Class(const char*)
 
 namespace jni {
 
-template <typename RawType>
+template <typename RawType, std::size_t kRank = 1>
 struct Array;
+
+template <std::size_t kRank>
+struct Rank {};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Array Non-Object Implementation.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename RawType>
+template <typename RawType, std::size_t kRank>
 struct ArrayNonObjectTypeImpl {
-  RawType raw_type_;
+  RawType raw_;
 
-  constexpr ArrayNonObjectTypeImpl(RawType raw_type) : raw_type_(raw_type) {}
+  constexpr ArrayNonObjectTypeImpl(RawType raw) : raw_(raw) {}
 
-  template <typename RawTypeRhs>
-  constexpr bool operator==(const Array<RawTypeRhs>& rhs) const {
+  constexpr ArrayNonObjectTypeImpl(RawType raw, Rank<kRank>) : raw_(raw) {}
+
+  template <std::size_t kRank_, typename RawType_>
+  constexpr ArrayNonObjectTypeImpl(Array<RawType, kRank>&& invalid_arg)
+      : raw_(nullptr) {
+    static_assert(std::is_same_v<RawType, void>,
+                  "JNI Error: Invalid array declaration, use Array { type{}, "
+                  "Rank<kRank>{} }.");
+  }
+
+  template <typename RawTypeRhs, std::size_t kRankRhs>
+  constexpr bool operator==(const Array<RawTypeRhs, kRankRhs>& rhs) const {
     if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
-      return (raw_type_ == rhs.raw_type_);
+      return (raw_ == rhs.raw_);
     }
     return false;
   }
 
-  template <typename RawTypeRhs>
-  constexpr bool operator!=(const Array<RawTypeRhs>& rhs) const {
+  template <typename RawTypeRhs, std::size_t kRankRhs>
+  constexpr bool operator!=(const Array<RawTypeRhs, kRankRhs>& rhs) const {
     return !(*this == rhs);
   }
 };
 
 // Primitive array implementaiton.
-template <typename T, bool HoldsObject>
-struct ArrayImpl : public ArrayNonObjectTypeImpl<T>,
+template <typename T, std::size_t kRank, bool HoldsObject>
+struct ArrayImpl : public ArrayNonObjectTypeImpl<T, kRank>,
                    ArrayTag<RegularToArrayTypeMap_t<T>> {
  public:
-  using ArrayNonObjectTypeImpl<T>::ArrayNonObjectTypeImpl;
-};
-
-// Arrays of arrays are nominally special in that they index as jarrays but they
-// will CDecl as their most base type.
-template <typename T>
-struct ArrayImpl<Array<T>, false> : public ArrayNonObjectTypeImpl<Array<T>>,
-                                    ArrayTag<jarray> {
- public:
-  using ArrayNonObjectTypeImpl<Array<T>>::ArrayNonObjectTypeImpl;
+  using ArrayNonObjectTypeImpl<T, kRank>::ArrayNonObjectTypeImpl;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Array Object Implementation.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename RawType>
-struct ArrayImpl<RawType, true> : public ArrayTag<jobjectArray> {
-  RawType raw_type_;
+template <typename RawType, std::size_t kRank_>
+struct ArrayImpl<RawType, kRank_, true> : public ArrayTag<jobjectArray> {
+  RawType raw_;
 
-  constexpr ArrayImpl(RawType raw_type) : raw_type_(raw_type) {}
+  constexpr ArrayImpl(RawType raw) : raw_(raw) {}
 
-  template <typename RawTypeRhs>
-  constexpr bool operator==(const Array<RawTypeRhs>& rhs) const {
+  template <std::size_t kRank>
+  constexpr ArrayImpl(RawType raw, Rank<kRank>) : raw_(raw) {}
+
+  template <typename RawTypeRhs, std::size_t kRank>
+  constexpr bool operator==(const Array<RawTypeRhs, kRank>& rhs) const {
     if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
-      return (raw_type_ == rhs.raw_type_);
+      return (raw_ == rhs.raw_);
     }
     return false;
   }
 
-  template <typename RawTypeRhs>
-  constexpr bool operator!=(const Array<RawTypeRhs>& rhs) const {
+  template <typename RawTypeRhs, std::size_t kRank>
+  constexpr bool operator!=(const Array<RawTypeRhs, kRank>& rhs) const {
     return !(*this == rhs);
   }
 };
 
 // This type correlates to those used in declarations,
 //   e.g. Field { Array { Array { jint {} } } }.
-template <typename RawType>
-struct Array : public ArrayImpl<RawType, std::is_base_of_v<Object, RawType>> {
-  constexpr Array(RawType raw_type)
-      : ArrayImpl<RawType, std::is_base_of_v<Object, RawType>>(raw_type) {}
+template <typename RawType, std::size_t kRank_>
+struct Array
+    : public ArrayImpl<RawType, kRank_, std::is_base_of_v<Object, RawType>> {
+  constexpr Array()
+      : ArrayImpl<RawType, kRank_, std::is_base_of_v<Object, RawType>>(
+            RawType{}) {}
+
+  constexpr Array(RawType raw)
+      : ArrayImpl<RawType, kRank_, std::is_base_of_v<Object, RawType>>(raw) {}
+
+  template <std::size_t kRank>
+  constexpr Array(RawType raw, Rank<kRank>)
+      : ArrayImpl<RawType, kRank, std::is_base_of_v<Object, RawType>>(raw) {}
 };
 
 template <typename RawType>
-Array(RawType) -> Array<RawType>;
+Array(RawType) -> Array<RawType, 1>;
 
-template <typename RawType>
-Array(Array<RawType>) -> Array<Array<RawType>>;
+template <typename RawType, std::size_t kRank>
+Array(RawType, Rank<kRank>) -> Array<RawType, kRank>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Rank Utilities.
@@ -1812,10 +1825,18 @@ template <typename T>
 struct Rankifier {
   static constexpr bool kComputableRank = true;
 
+  template <typename SpanType_>
+  struct Helper;
+
+  template <typename SpanType_, std::size_t kRank_>
+  struct Helper<Array<SpanType_, kRank_>> {
+    static constexpr std::size_t kRank = kRank_;
+  };
+
   template <typename ArrayT>
   static inline constexpr std::size_t Rank(const ArrayT& maybe_array) {
     if constexpr (kIsArrayType<std::decay_t<decltype(maybe_array)>>) {
-      return Rank(maybe_array.raw_type_) + 1;
+      return Helper<ArrayT>::kRank;
     } else {
       return 0;
     }
@@ -1835,7 +1856,7 @@ struct Rankifier<void> {
 ////////////////////////////////////////////////////////////////////////////////
 // Strip Utilities.
 // Takes an native array like type, and emits the innermost type.
-// e.g. {Array<int>, Array{Array<int>}, Array{Array{Array<int>}} } => int.
+// e.g. {Array<int>, Array{Rank<2>{}, int{}, Array{Rank<3>{}, int{}} } => int.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct ArrayStrip {
@@ -1845,41 +1866,19 @@ struct ArrayStrip {
 template <typename T>
 using ArrayStrip_t = typename ArrayStrip<T>::type;
 
-template <typename T>
-struct ArrayStrip<Array<T>> {
-  using type = ArrayStrip_t<T>;
+template <typename T, std::size_t kRank>
+struct ArrayStrip<Array<T, kRank>> {
+  using type = T;
 };
 
 template <typename T>
 constexpr auto FullArrayStripV(const T& val) {
   if constexpr (kIsArrayType<std::decay_t<decltype(val)>>) {
-    return FullArrayStripV(val.raw_type_);
+    return FullArrayStripV(val.raw_);
   } else {
     return val;
   }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// Array Build from Span + Rank.
-////////////////////////////////////////////////////////////////////////////////
-template <typename RawType, std::size_t kRank>
-struct ArrayFromRank {
-  // Deferred
-  template <std::size_t kRecursedRank>
-  struct Helper {
-    using type = Array<typename ArrayFromRank<RawType, kRank - 1>::type>;
-  };
-
-  template <>
-  struct Helper<0> {
-    using type = RawType;
-  };
-
-  using type = typename Helper<kRank>::type;
-};
-
-template <typename RawType, std::size_t kRank>
-using ArrayFromRank_t = typename ArrayFromRank<RawType, kRank>::type;
 
 }  // namespace jni
 
@@ -2003,8 +2002,11 @@ inline constexpr Class kJavaLangClassLoader{
 
 static constexpr Class kJavaLangString{
     "java/lang/String",
+
+    Constructor{jstring{}},
     Constructor{Array{jbyte{}}},
-    Method{"toString", Return{jstring{}}, Params<>{}}
+
+    Method{"toString", Return{jstring{}}, Params<>{}},
 };
 // clang-format on
 
@@ -2871,6 +2873,40 @@ class DoubleLockedValue {
 
 }  // namespace jni::metaprogramming
 
+#include <tuple>
+#include <type_traits>
+
+namespace jni::metaprogramming {
+
+// Metafunction that detects a partial specialisation for a Container.
+template <template <typename> class Container>
+struct Detect {
+  template <typename T, typename Enable = void>
+  struct Helper {
+    static constexpr bool val = false;
+    using type = std::tuple<>;
+  };
+
+  template <typename T>
+  struct Helper<T, std::void_t<typename Container<T>::type>> {
+    static constexpr bool val = true;
+    using type = typename Container<T>::type;
+  };
+
+  template <typename T>
+  using type = typename Helper<T>::type;
+
+  template <typename T>
+  static constexpr bool val = Helper<T>::val;
+};
+
+template <template <typename> class Container, typename T>
+using Detect_t = typename Detect<Container>::template type<T>;
+
+template <template <typename> class Container, typename T>
+static constexpr bool Detect_v = Detect<Container>::template val<T>;
+
+}  // namespace jni::metaprogramming
 
 #include <utility>
 
@@ -3196,7 +3232,7 @@ struct SelectorStaticInfo {
   struct IthRawTypeMember {
     template <typename T>
     static constexpr const auto& Val(const T& val) {
-      return IthRawTypeMember<I - 1>::Val(val.raw_type_);
+      return IthRawTypeMember<I - 1>::Val(val.raw_);
     }
   };
 
@@ -3215,7 +3251,7 @@ struct SelectorStaticInfo {
     if constexpr (Selector::kRank == 0) {
       return Selector::Val();
     } else {
-      return IthRawTypeMember<kRank>::Val(Selector::Val());
+      return Selector::Val().raw_;
     }
   }
 
@@ -3380,10 +3416,12 @@ namespace jni {
 
 template <typename SpanType_, const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm, std::size_t kRank = 0,
+          const auto& jvm_v_ = kDefaultJvm, std::size_t kRank_ = 0,
           std::size_t class_idx_ = kNoIdx,
           std::size_t class_loader_idx_ = kNoIdx>
 struct JniT {
+  static constexpr std::size_t kRank = kRank_;
+
   static constexpr const auto& GetClassLoader() {
     if constexpr (class_loader_idx_ != kNoIdx) {
       return std::get<class_loader_idx_>(jvm_v_.class_loaders_);
@@ -3443,37 +3481,176 @@ constexpr bool JniTEqual_v = JniTEqual<T1, T2>::val;
 
 }  // namespace jni
 
+#include <iterator>
+
 namespace jni {
 
-template <typename SpanType>
+// Primitive Rank 1 Arrays.
+template <typename SpanType, std::size_t kRank, typename Enable = void>
 class ArrayView {
  public:
+  struct Iterator {
+    using iterator_category = std::random_access_iterator_tag;
+    using difference_type = std::size_t;
+    using value_type = SpanType;
+    using pointer = SpanType*;
+    using reference = SpanType&;
+
+    Iterator(SpanType* ptr, std::size_t size, std::size_t idx)
+        : ptr_(ptr), size_(size), idx_(idx) {}
+
+    Iterator& operator++() {
+      idx_++;
+      return *this;
+    }
+
+    Iterator operator++(int) {
+      Iterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+
+    SpanType& operator*() const { return ptr_[idx_]; }
+    const SpanType* operator->() const { return ptr_[idx_]; }
+
+    friend bool operator==(const Iterator& lhs, const Iterator& rhs) {
+      return (lhs.ptr_ == rhs.ptr_) && (lhs.size_ == rhs.size_) &&
+             (lhs.idx_ == rhs.idx_);
+    };
+
+    friend bool operator!=(const Iterator& lhs, const Iterator& rhs) {
+      return !(lhs == rhs);
+    };
+
+    friend std::size_t operator-(const Iterator& lhs, const Iterator& rhs) {
+      return lhs.idx_ - rhs.idx_;
+    };
+
+   private:
+    const std::size_t size_;
+    SpanType* const ptr_;
+    std::size_t idx_;
+  };
+
   ArrayView(ArrayView&&) = delete;
   ArrayView(const ArrayView&) = delete;
 
-  ArrayView(jarray array, bool copy_on_completion)
+  ArrayView(jarray array, bool copy_on_completion, std::size_t size)
       : array_(array),
         get_array_elements_result_(
             JniArrayHelper<SpanType>::GetArrayElements(array)),
-        copy_on_completion_(copy_on_completion) {}
+        copy_on_completion_(copy_on_completion),
+        size_(size) {}
 
   ~ArrayView() {
     JniArrayHelper<SpanType>::ReleaseArrayElements(
         array_, get_array_elements_result_.ptr_, copy_on_completion_);
   }
 
-  SpanType* ptr() { return get_array_elements_result_.ptr_; }
+  // Arrays of rank > 1 are object arrays which are not contiguous.
+  std::enable_if_t<kRank == 1, SpanType*> ptr() {
+    return get_array_elements_result_.ptr_;
+  }
+
+  Iterator begin() { return Iterator{ptr(), size_, 0}; }
+  Iterator end() { return Iterator{ptr(), size_, size_}; }
 
  protected:
   const jarray array_;
   const GetArrayElementsResult<SpanType> get_array_elements_result_;
   const bool copy_on_completion_;
+  const std::size_t size_;
+};
+
+// Object arrays, or arrays with rank > 1 (which are object arrays).
+template <typename SpanType, std::size_t kRank>
+class ArrayView<
+    SpanType, kRank,
+    std::enable_if_t<(kRank > 1) || std::is_same_v<SpanType, jobject>>> {
+ public:
+  // Metafunction that returns the type after a single dereference.
+  template <std::size_t>
+  struct PinHelper {
+    using type = jobjectArray;
+  };
+  template <>
+  struct PinHelper<2> {
+    using type = RegularToArrayTypeMap_t<SpanType>;
+  };
+  template <>
+  struct PinHelper<1> {
+    using type = jobject;
+  };
+
+  using PinHelper_t = typename PinHelper<kRank>::type;
+
+  struct Iterator {
+    using iterator_category = std::random_access_iterator_tag;
+    using difference_type = std::size_t;
+    using value_type = PinHelper_t;
+    using pointer = PinHelper_t*;
+    using reference = PinHelper_t&;
+
+    Iterator(jobjectArray arr, std::size_t size, std::size_t idx)
+        : arr_(arr), size_(size), idx_(idx) {}
+
+    Iterator& operator++() {
+      idx_++;
+      return *this;
+    }
+
+    Iterator operator++(int) {
+      Iterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+
+    PinHelper_t operator*() const {
+      if constexpr (kRank >= 2) {
+        return static_cast<PinHelper_t>(
+            JniArrayHelper<jobject>::GetArrayElement(arr_, idx_));
+      } else {
+        return JniArrayHelper<SpanType>::GetArrayElement(arr_, idx_);
+      }
+    }
+
+    friend bool operator==(const Iterator& lhs, const Iterator& rhs) {
+      return (lhs.arr_ == rhs.arr_) && (lhs.size_ == rhs.size_) &&
+             (lhs.idx_ == rhs.idx_);
+    };
+
+    friend bool operator!=(const Iterator& lhs, const Iterator& rhs) {
+      return !(lhs == rhs);
+    };
+
+    friend std::size_t operator-(const Iterator& lhs, const Iterator& rhs) {
+      return lhs.idx_ - rhs.idx_;
+    };
+
+   private:
+    jobjectArray const arr_;
+    const std::size_t size_;
+    std::size_t idx_;
+  };
+
+  ArrayView(ArrayView&&) = delete;
+  ArrayView(const ArrayView&) = delete;
+
+  ArrayView(jobjectArray array, bool, std::size_t size)
+      : array_(array), size_(size) {}
+
+  Iterator begin() { return Iterator(array_, size_, 0); }
+  Iterator end() { return Iterator(array_, size_, size_); }
+
+ protected:
+  const jobjectArray array_;
+  const std::size_t size_;
 };
 
 // This CTAD guide is required for materialising new ArrayViews from |Pin()|
 // calls as move and copy constructors are deleted.
-template <typename SpanType>
-ArrayView(ArrayView<SpanType>&&) -> ArrayView<SpanType>;
+template <typename SpanType, std::size_t kRank>
+ArrayView(ArrayView<SpanType, kRank>&&) -> ArrayView<SpanType, kRank>;
 
 }  // namespace jni
 
@@ -3584,65 +3761,6 @@ struct NBitSequence<NBit<values, max_values, overflows>...> {
 
 }  // namespace jni::metaprogramming
 
-
-#include <optional>
-#include <string>
-#include <string_view>
-
-namespace jni {
-
-template <typename CrtpBase>
-class StringRefBase
-    : public RefBase<
-          JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>> {
- public:
-  using JniT = JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>;
-  using RefBaseT = RefBase<JniT>;
-  StringRefBase(jstring object) : RefBase<JniT>(object) {}
-
-  ~StringRefBase() {
-    if (object_ref_) {
-      static_cast<CrtpBase&>(*this).ClassSpecificDeleteObjectRef(object_ref_);
-    }
-  }
-};
-
-// Represents a UTF view into a jstring (see jni::String::Pin()).
-//
-// This class will immediately pin memory associated with the jstring, and
-// release on leaving scope. Note, this class will *always* make an expensive
-// copy, as strings are natively represented in Java as Unicode.
-//
-// (C++20 will offer a compatible std::string_view but C++17 does not).
-class UtfStringView {
- public:
-  UtfStringView(jstring java_string)
-      : java_string_(java_string),
-        chars_(java_string_
-                   ? JniEnv::GetEnv()->GetStringUTFChars(java_string,
-                                                         /*isCopy=*/nullptr)
-                   : nullptr) {}
-
-  ~UtfStringView() {
-    if (chars_) {
-      JniHelper::ReleaseStringUTFChars(java_string_, chars_);
-    }
-  }
-
-  UtfStringView(UtfStringView &&) = delete;
-  UtfStringView(const UtfStringView &) = delete;
-
-  // Returns a view into the pinned character string.
-  // Warning: std::string_view{nullptr} is undefined behaviour and may crash.
-  const std::string_view ToString() const { return std::string_view{chars_}; }
-
- private:
-  const jstring java_string_;
-  const char *chars_;
-};
-
-}  // namespace jni
-
 #include <type_traits>
 
 namespace jni {
@@ -3672,7 +3790,6 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
     template <std::size_t I>
     struct Val {
       static constexpr std::string_view val = Signature<
-          // Id<JniT_, IdType::OVERLOAD_PARAM, idx, secondary_idx, I>>::val;
           Id<JniT_, kChildIdType, idx, secondary_idx, I>>::val;
     };
 
@@ -3682,7 +3799,6 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
 
   struct ReturnHelper {
     static constexpr std::string_view val = Signature<
-        // Id<JniT_, IdType::OVERLOAD_PARAM, idx, secondary_idx, kNoIdx>>::val;
         Id<JniT_, kChildIdType, idx, secondary_idx, kNoIdx>>::val;
   };
 
@@ -3718,6 +3834,17 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
 
 template <typename T>
 static constexpr auto Signature_v = Signature<T>::val;
+
+}  // namespace jni
+
+namespace jni {
+
+// Provide this base tag to UserDefined to enable custom types.
+struct JniUserDefinedCorpusTag {};
+
+// Provide a partial specialization to this class to provide custom types.
+template <typename T>
+struct UserDefined;
 
 }  // namespace jni
 
@@ -3935,8 +4062,8 @@ class ArrayRef : public RefBase<JniT>,
   using Base = RefBase<JniT>;
   using Base::Base;
 
-  ArrayView<SpanType> Pin(bool copy_on_completion = true) {
-    return {Base::object_ref_, copy_on_completion};
+  ArrayView<SpanType, JniT::kRank> Pin(bool copy_on_completion = true) {
+    return {Base::object_ref_, copy_on_completion, Length()};
   }
 
   std::size_t Length() {
@@ -3952,12 +4079,17 @@ class ArrayRef<
     JniT, std::enable_if_t<std::is_same_v<typename JniT::SpanType, jobject>>>
     : public RefBase<JniT> {
  public:
-  using SpanType = typename JniT::SpanType;
+  using SpanType = jobject;
   using Base = RefBase<JniT>;
   using Base::Base;
 
   std::size_t Length() {
     return JniArrayHelper<jobject>::GetLength(Base::object_ref_);
+  }
+
+  // Object arrays cannot be efficiently pinned like primitive types can.
+  ArrayView<jobject, JniT::kRank> Pin() {
+    return {Base::object_ref_, false, Length()};
   }
 
   LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v> Get(
@@ -4141,43 +4273,6 @@ using CartesianProduct_t = typename CartesianProduct::template type<Tups...>;
 
 }  // namespace jni::metaprogramming
 
-
-namespace jni {
-
-// Represents and possibly builds a runtime Java String object.
-//
-// In order to use a string in memory (as opposed to only using it for function
-// arguments), "Pin" the string.
-//
-// Like jobjects, jstrings can be either local or global with the same ownership
-// semantics.
-class LocalString : public StringRefBase<LocalString> {
- public:
-  friend class StringRefBase<LocalString>;
-
-  LocalString(jobject java_string_as_object)
-      : StringRefBase<LocalString>(
-            static_cast<jstring>(java_string_as_object)) {}
-
-  LocalString(std::string_view str)
-      : LocalString(JniHelper::NewLocalString(str.data())) {}
-
-  explicit LocalString(RefBaseTag<jstring> &&rhs)
-      : LocalString(static_cast<jstring>(rhs.Release())) {}
-
-  // Returns a StringView which possibly performs an expensive pinning
-  // operation.  String objects can be pinned multiple times.
-  UtfStringView Pin() { return {RefBaseTag<jstring>::object_ref_}; }
-
- private:
-  // Invoked through CRTP on dtor.
-  void ClassSpecificDeleteObjectRef(jstring object_ref) {
-    JniHelper::DeleteLocalObject(object_ref);
-  }
-};
-
-}  // namespace jni
-
 #include <cstddef>
 #include <type_traits>
 
@@ -4193,7 +4288,6 @@ class GlobalObject;
 // Currently GlobalArrays do not exist, as reasoning about the lifecycles of the
 // underlying objects is non-trivial, e.g. a GlobalArray taking a local object
 // would result in a possibly unexpected extension of lifetime.
-// TODO(b/406948932): Add span views for construction.
 template <typename SpanType, std::size_t kRank_ = 1,
           const auto& class_v_ = kNoClassSpecified,
           const auto& class_loader_v_ = kDefaultClassLoader,
@@ -4497,34 +4591,127 @@ struct Id {
 
 }  // namespace jni
 
+#include <tuple>
+
 namespace jni {
 
-class GlobalString : public StringRefBase<GlobalString> {
- public:
-  using ClassT = decltype(kJavaLangString);
-  friend class StringRefBase<GlobalString>;
+// Provides the universe of keys, including user defined types if any.
+// Users define custom types by partially specialising UserDefined (see test).
+template <typename... Defaults>
+struct Corpus {
+  template <typename T, bool = ::jni::metaprogramming::Detect_v<
+                            UserDefined, JniUserDefinedCorpusTag>>
+  struct Helper {
+    using type = ::jni::metaprogramming::ConcatenateTup_t<
+        ::jni::metaprogramming::Detect_t<UserDefined, JniUserDefinedCorpusTag>,
+        std::tuple<Defaults...>>;
+  };
 
-  GlobalString(GlobalString &&local_string)
-      : StringRefBase<GlobalString>(
-            JniHelper::PromoteLocalToGlobalString(local_string.Release())) {}
+  template <typename T>
+  struct Helper<T, false> {
+    using type = std::tuple<Defaults...>;
+  };
 
-  GlobalString(std::string_view str)
-      : StringRefBase<GlobalString>(JniHelper::PromoteLocalToGlobalString(
-            JniHelper::NewLocalString(str.data()))) {}
-
-  // Returns a StringView which possibly performs an expensive pinning
-  // operation.  String objects can be pinned multiple times.
-  UtfStringView Pin() { return {RefBaseTag<jstring>::object_ref_}; }
-
- private:
-  // Invoked through CRTP on dtor.
-  void ClassSpecificDeleteObjectRef(jstring object_ref) {
-    JniHelper::DeleteGlobalString(object_ref);
-  }
+  template <typename T>
+  using type = typename Helper<T>::type;
 };
+
+template <typename T, typename... Defaults>
+using Corpus_t = typename Corpus<Defaults...>::template type<T>;
 
 }  // namespace jni
 
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+
+namespace jni {
+
+template <typename t1, typename t2 = void>
+struct Proxy;
+
+// Everything you are permitted to declare at method prototypes.
+// Note, if the size can reasonably differ, the jtype is enforced by virtue of
+// being a different type (i.e. you can't accidentally widen).
+using AllKeys =
+    Corpus_t<JniUserDefinedCorpusTag, void, jboolean, jbyte, jshort, jint,
+             jfloat, jlong, jchar, jdouble, jstring, jobject, jarray,
+             jobjectArray, jintArray, jbooleanArray, jbyteArray, jcharArray,
+             jshortArray, jdoubleArray, jfloatArray, jlongArray>;
+
+template <typename TUndecayed>
+struct ProxyHelper {
+  using T = std::decay_t<TUndecayed>;
+
+  // Metafunction that builds a list of a passable type to all it's possible
+  // passable types, which may not be the same.  E.g. jint => jint, but
+  // jstring => jstring, const char*, std::string_view, std::string, etc.
+  struct IndexToKey {
+    // Proxies can be indexed by their |AsArg|s or their |AsDecl|.
+    template <typename CDecl>
+    using type = metaprogramming::CartesianProduct_t<
+        std::tuple<CDecl>,
+        metaprogramming::UniqueSet_Tup<metaprogramming::ConcatenateTup_t<
+            typename Proxy<CDecl>::AsArg, typename Proxy<CDecl>::AsDecl>>>;
+  };
+
+  // Build a list of two element tuples (in preparation to build a map).  e.g.
+  // { {jint, int}, {jstring, const char*}, {jstring, std::string}, etc. }.
+  // Note that types may map to 1 or more types, such as jstring above.
+  using IndexToKeyAsTuples = metaprogramming::Reduce_t<
+      metaprogramming::Combine,
+      metaprogramming::InvokePerTupArg_t<IndexToKey, AllKeys>>;
+
+  // Collapse this list into a set of keys and values consumable by
+  // TypeToTypeMap.
+  using IndexToKeyMap = metaprogramming::TypeToTypeMapFromKeyValuesTup_t<
+      metaprogramming::Flatten_t<IndexToKeyAsTuples>>;
+
+  // When flipped, a type passed can be reverse indexed to select the same
+  // Proxy partial specialisation.
+  using KeyToIndex = metaprogramming::TypeToTypeMap_Invert<IndexToKeyMap>;
+
+  using Index =
+      metaprogramming::TypeToTypeMapQueryWithComparator_t<KeyToIndex,
+                                                          IsConvertibleKey<T>>;
+
+  using Proxy_t = Proxy<Index>;
+
+  using CDecl = typename Proxy_t::CDecl;
+
+  template <typename Id>
+  using AsReturn_t = typename Proxy_t::template AsReturn<Id>;
+
+  template <typename ParamSelection>
+  using AsArg_t = typename Proxy_t::AsArg;
+
+  using AsDecl_t = typename Proxy_t::AsDecl;
+};
+
+// Default Proxy, all types and values are pure passthrough.
+template <typename Key_>
+struct ProxyBase {
+  using Key = Key_;
+
+  using CDecl = Key_;
+
+  template <typename>
+  using AsReturn = Key_;
+
+  using AsArg = std::tuple<Key_>;
+  using AsDecl = std::tuple<Key_>;
+
+  template <typename T>
+  static auto ProxyAsArg(T&& t) {
+    return std::forward<T>(t);
+  }
+
+  template <typename InputParamSelectionT, typename T>
+  static constexpr bool kViable = IsConvertibleKey_v<Key_, T>;
+};
+
+}  // namespace jni
 
 #include <optional>
 #include <tuple>
@@ -5156,6 +5343,159 @@ inline void FieldHelper<jobject>::SetValue(const jobject object_ref,
 }  // namespace jni
 
 #include <string>
+#include <type_traits>
+
+namespace jni {
+
+class LocalString;
+
+template <typename JString>
+struct Proxy<JString,
+             typename std::enable_if_t<std::is_same_v<JString, jstring>>>
+    : public ProxyBase<JString> {
+  using AsArg =
+      std::tuple<std::string, jstring, char*, const char*, std::string_view>;
+
+  template <typename>
+  using AsReturn = LocalString;
+
+  template <typename T>
+  struct Helper {
+    static constexpr bool val = true;
+  };
+
+  template <typename OverloadSelection, typename T>
+  static constexpr bool kViable =
+      IsConvertibleKey<T>::template value<std::string> ||
+      IsConvertibleKey<T>::template value<jstring> ||
+      IsConvertibleKey<T>::template value<char*> ||
+      IsConvertibleKey<T>::template value<const char*> ||
+      IsConvertibleKey<T>::template value<std::string_view>;
+
+  // These leak local instances of strings.  Usually, RAII mechanisms would
+  // correctly release local instances, but here we are stripping that so it can
+  // be used in a method.  This could be obviated by wrapping the calling scope
+  // in a local stack frame.
+  static jstring ProxyAsArg(jstring s) { return s; }
+
+  template <typename T,
+            typename = std::enable_if_t<std::is_same_v<T, const char*> ||
+                                        std::is_same_v<T, std::string> ||
+                                        std::is_same_v<T, std::string_view>>>
+  static jstring ProxyAsArg(T s) {
+    if constexpr (std::is_same_v<T, const char*>) {
+      return JniHelper::NewLocalString(s);
+    } else {
+      return JniHelper::NewLocalString(s.data());
+    }
+  }
+};
+
+}  // namespace jni
+
+namespace jni {
+
+template <typename Overload>
+struct ArrayHelper;
+
+template <typename SpanType>
+struct ArrayRefPrimitiveTag;
+
+template <typename SpanType, std::size_t kRank, const auto& class_v_,
+          const auto& class_loader_v_, const auto& jvm_v_>
+class LocalArray;
+
+template <typename JArrayType>
+struct Proxy<JArrayType, typename std::enable_if_t<
+                             std::is_convertible_v<JArrayType, jarray>>>
+    : public ProxyBase<JArrayType> {
+  // Non-array primitive type (e.g. jintArray => jint).
+  using CDecl = ArrayToRegularTypeMap_t<JArrayType>;
+
+  // Primitive Array Types (e.g. if JArrayType is jintarray and T is too).
+  template <typename ParamSelection, typename T, typename Enable = void>
+  struct Helper {
+    static constexpr bool val =
+        (std::is_same_v<T, JArrayType> && ParamSelection::kRank == 1) ||
+        (std::is_same_v<T, jobjectArray> && ParamSelection::kRank >= 2);
+  };
+
+  // LocalArray.
+  template <typename ParamSelection, typename SpanType, std::size_t kRank,
+            const auto& class_v_, const auto& class_loader_v_,
+            const auto& jvm_v_>
+  struct Helper<ParamSelection, LocalArray<SpanType, kRank, class_v_,
+                                           class_loader_v_, jvm_v_>> {
+    static constexpr auto param_copy = FullArrayStripV(ParamSelection::Val());
+
+    static constexpr bool val =
+        (kRank == ParamSelection::kRank) &&
+        (std::is_same_v<SpanType, typename ParamSelection::RawValT> ||
+         (std::is_same_v<SpanType, jobjectArray> &&
+          ParamSelection::kRank >= 2) ||
+         (std::string_view{class_v_.name_} == NameOrNothing_v<param_copy>));
+  };
+
+  template <typename ParamSelection, typename T>
+  static constexpr bool kViable = Helper<ParamSelection, T>::val;
+
+  using AsDecl = std::tuple<ArrayTag<JArrayType>>;
+  using AsArg = std::tuple<JArrayType, RefBaseTag<JArrayType>,
+                           ArrayTag<JArrayType>, ArrayRefPrimitiveTag<CDecl>>;
+
+  template <typename Id>
+  using AsReturn = typename ArrayHelper<Id>::AsReturn;
+
+  static JArrayType ProxyAsArg(JArrayType arr) { return arr; };
+
+  template <typename T>
+  static JArrayType ProxyAsArg(T& t) {
+    return JArrayType{t};
+  };
+
+  template <typename T, typename = std::enable_if_t<
+                            std::is_base_of_v<RefBaseTag<JArrayType>, T>>>
+  static JArrayType ProxyAsArg(T&& t) {
+    return t.Release();
+  };
+};
+
+// This must be defined outside of Proxy so implicit definition doesn't occur.
+template <typename IdT>
+struct ArrayHelper {
+  template <const auto& t>
+  struct Helper {
+    static constexpr auto val = FullArrayStripV(t.raw_);
+
+    using StrippedCDecl = CDecl_t<std::decay_t<decltype(val)>>;
+    using ConvertedCDecl = RegularToArrayTypeMap_t<StrippedCDecl>;
+  };
+
+  static constexpr auto kVal{IdT::Materialize()};
+
+  static constexpr auto LocalArrayBuildFromArray() {
+    using RawT = typename IdT::RawMaterializeT;
+    constexpr std::size_t kRank = IdT::kMaterializedRank;
+
+    // TODO(b/143908983): Support multi-dimensional arrays.
+    if constexpr (!std::is_same_v<CDecl_t<RawT>, jobject>) {
+      return LocalArray<RawT, kRank, kNoClassSpecified, kDefaultClassLoader,
+                        kDefaultJvm>{nullptr};
+    } else {
+      return LocalArray<jobject, kRank, Helper<kVal>::val, kDefaultClassLoader,
+                        kDefaultJvm>{jobjectArray{nullptr}};
+    }
+  }
+
+  using StrippedCDecl = typename Helper<kVal>::StrippedCDecl;
+  using ConvertedCDecl = typename Helper<kVal>::ConvertedCDecl;
+
+  using AsReturn = decltype(LocalArrayBuildFromArray());
+};
+
+}  // namespace jni
+
+#include <string>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
@@ -5165,37 +5505,8 @@ namespace jni {
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class LocalObject;
 
-template <typename SpanType, std::size_t kRank, const auto& class_v_,
-          const auto& class_loader_v_, const auto& jvm_v_>
-class LocalArray;
-
-template <typename Overload>
-struct ArrayHelper;
-
 template <typename TUndecayed>
 struct ProxyHelper;
-
-// Default Proxy, all types and values are pure passthrough.
-template <typename Key_>
-struct ProxyBase {
-  using Key = Key_;
-
-  using CDecl = Key_;
-
-  template <typename>
-  using AsReturn = Key_;
-
-  using AsArg = std::tuple<Key_>;
-  using AsDecl = std::tuple<Key_>;
-
-  template <typename T>
-  static auto ProxyAsArg(T&& t) {
-    return std::forward<T>(t);
-  }
-
-  template <typename InputParamSelectionT, typename T>
-  static constexpr bool kViable = IsConvertibleKey_v<Key_, T>;
-};
 
 // Proxy is a metafunction that gives useful conversions from
 // types and forwards to a corresponding type that's viable as input.
@@ -5274,41 +5585,6 @@ struct Proxy<LongType,
   }
 };
 
-template <typename JString>
-struct Proxy<JString,
-             typename std::enable_if_t<std::is_same_v<JString, jstring>>>
-    : public ProxyBase<JString> {
-  using AsArg =
-      std::tuple<std::string, jstring, char*, const char*, std::string_view>;
-
-  template <typename>
-  using AsReturn = LocalString;
-
-  template <typename T>
-  struct Helper {
-    static constexpr bool val = true;
-  };
-
-  template <typename OverloadSelection, typename T>
-  static constexpr bool kViable =
-      IsConvertibleKey<T>::template value<std::string> ||
-      IsConvertibleKey<T>::template value<jstring> ||
-      IsConvertibleKey<T>::template value<char*> ||
-      IsConvertibleKey<T>::template value<const char*> ||
-      IsConvertibleKey<T>::template value<std::string_view>;
-
-  // These leak local instances of strings.  Usually, RAII mechanisms would
-  // correctly release local instances, but here we are stripping that so it can
-  // be used in a method.  This could be obviated by wrapping the calling scope
-  // in a local stack frame.
-  static jstring ProxyAsArg(jstring s) { return s; }
-  static jstring ProxyAsArg(const char* s) { return LocalString{s}.Release(); }
-  static jstring ProxyAsArg(std::string s) { return LocalString{s}.Release(); }
-  static jstring ProxyAsArg(std::string_view s) {
-    return LocalString{s}.Release();
-  }
-};
-
 ////////////////////////////////////////////////////////////////////////////////
 // Object Proxy Definitions.
 ////////////////////////////////////////////////////////////////////////////////
@@ -5365,174 +5641,8 @@ struct Proxy<JObject,
   };
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// Array Proxy Definitions.
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename SpanType>
-struct ArrayRefPrimitiveTag;
-
-template <typename JArrayType>
-struct Proxy<JArrayType, typename std::enable_if_t<
-                             std::is_convertible_v<JArrayType, jarray>>>
-    : public ProxyBase<JArrayType> {
-  // Non-array primitive type (e.g. jintArray => jint).
-  using CDecl = ArrayToRegularTypeMap_t<JArrayType>;
-
-  // Primitive Array Types (e.g. if JArrayType is jintarray and T is too).
-  template <typename ParamSelection, typename T, typename Enable = void>
-  struct Helper {
-    static constexpr bool val =
-        (std::is_same_v<T, JArrayType> && ParamSelection::kRank == 1) ||
-        (std::is_same_v<T, jobjectArray> && ParamSelection::kRank >= 2);
-  };
-
-  // LocalArray.
-  template <typename ParamSelection, typename SpanType, std::size_t kRank,
-            const auto& class_v_, const auto& class_loader_v_,
-            const auto& jvm_v_>
-  struct Helper<ParamSelection, LocalArray<SpanType, kRank, class_v_,
-                                           class_loader_v_, jvm_v_>> {
-    static constexpr auto param_copy = FullArrayStripV(ParamSelection::Val());
-
-    static constexpr bool val =
-        (kRank == ParamSelection::kRank) &&
-        (std::is_same_v<SpanType, typename ParamSelection::RawValT> ||
-         (std::is_same_v<SpanType, jobjectArray> &&
-          ParamSelection::kRank >= 2) ||
-         (std::string_view{class_v_.name_} == NameOrNothing_v<param_copy>));
-  };
-
-  template <typename ParamSelection, typename T>
-  static constexpr bool kViable = Helper<ParamSelection, T>::val;
-
-  using AsDecl = std::tuple<ArrayTag<JArrayType>>;
-  using AsArg = std::tuple<JArrayType, RefBaseTag<JArrayType>,
-                           ArrayTag<JArrayType>, ArrayRefPrimitiveTag<CDecl>>;
-
-  template <typename Id>
-  using AsReturn = typename ArrayHelper<Id>::AsReturn;
-
-  static JArrayType ProxyAsArg(JArrayType arr) { return arr; };
-
-  template <typename T>
-  static JArrayType ProxyAsArg(T& t) {
-    return JArrayType{t};
-  };
-
-  template <typename T, typename = std::enable_if_t<
-                            std::is_base_of_v<RefBaseTag<JArrayType>, T>>>
-  static JArrayType ProxyAsArg(T&& t) {
-    return t.Release();
-  };
-};
-
-// This must be defined outside of Proxy so implicit definition doesn't occur.
-template <typename IdT>
-struct ArrayHelper {
-  template <const auto& t>
-  struct Helper {
-    static constexpr auto val = FullArrayStripV(t.raw_type_);
-
-    using StrippedCDecl = CDecl_t<std::decay_t<decltype(val)>>;
-    using ConvertedCDecl = RegularToArrayTypeMap_t<StrippedCDecl>;
-  };
-
-  static constexpr auto kVal{IdT::Materialize()};
-
-  static constexpr auto LocalArrayBuildFromArray() {
-    using RawT = typename IdT::RawMaterializeT;
-    constexpr std::size_t kRank = IdT::kMaterializedRank;
-
-    // TODO(b/143908983): Support multi-dimensional arrays.
-    if constexpr (!std::is_same_v<CDecl_t<RawT>, jobject>) {
-      return LocalArray<RawT, kRank, kNoClassSpecified>{nullptr};
-    } else {
-      return LocalArray<jobject, kRank, Helper<kVal>::val>{
-          jobjectArray{nullptr}};
-    }
-  }
-
-  using StrippedCDecl = typename Helper<kVal>::StrippedCDecl;
-  using ConvertedCDecl = typename Helper<kVal>::ConvertedCDecl;
-
-  using AsReturn = decltype(LocalArrayBuildFromArray());
-};
-
 }  // namespace jni
 
-#include <string>
-#include <string_view>
-#include <type_traits>
-#include <utility>
-
-namespace jni {
-
-template <typename t1, typename t2 = void>
-struct Proxy;
-
-// Everything you are permitted to declare at method prototypes.
-// Note, if the size can reasonably differ, the jtype is enforced by virtue of
-// being a different type (i.e. you can't accidentally widen).
-using AllKeys =
-    std::tuple<void, jboolean, jbyte, jshort, jint, jfloat, jlong, jchar,
-               jdouble, jstring, jobject, jarray, jobjectArray, jintArray,
-               jbooleanArray, jbyteArray, jcharArray, jshortArray, jdoubleArray,
-               jfloatArray, jlongArray>;
-
-template <typename TUndecayed>
-struct ProxyHelper {
-  using T = std::decay_t<TUndecayed>;
-
-  // Metafunction that builds a list of a passable type to all it's possible
-  // passable types, which may not be the same.  E.g. jint => jint, but
-  // jstring => jstring, const char*, std::string_view, std::string, etc.
-  struct IndexToKey {
-    // Proxies can be indexed by their |AsArg|s or their |AsDecl|.
-    template <typename CDecl>
-    using type = metaprogramming::CartesianProduct_t<
-        std::tuple<CDecl>,
-        metaprogramming::UniqueSet_Tup<metaprogramming::ConcatenateTup_t<
-            typename Proxy<CDecl>::AsArg, typename Proxy<CDecl>::AsDecl>>>;
-  };
-
-  // Build a list of two element tuples (in preparation to build a map).  e.g.
-  // { {jint, int}, {jstring, const char*}, {jstring, std::string}, etc. }.
-  // Note that types may map to 1 or more types, such as jstring above.
-  using IndexToKeyAsTuples = metaprogramming::Reduce_t<
-      metaprogramming::Combine,
-      metaprogramming::InvokePerTupArg_t<IndexToKey, AllKeys>>;
-
-  // Collapse this list into a set of keys and values consumable by
-  // TypeToTypeMap.
-  using IndexToKeyMap = metaprogramming::TypeToTypeMapFromKeyValuesTup_t<
-      metaprogramming::Flatten_t<IndexToKeyAsTuples>>;
-
-  // When flipped, a type passed can be reverse indexed to select the same
-  // Proxy partial specialisation.
-  using KeyToIndex = metaprogramming::TypeToTypeMap_Invert<IndexToKeyMap>;
-
-  using Index =
-      metaprogramming::TypeToTypeMapQueryWithComparator_t<KeyToIndex,
-                                                          IsConvertibleKey<T>>;
-
-  using Proxy_t = Proxy<Index>;
-
-  using CDecl = typename Proxy_t::CDecl;
-
-  template <typename Id>
-  using AsReturn_t = typename Proxy_t::template AsReturn<Id>;
-
-  template <typename ParamSelection>
-  using AsArg_t = typename Proxy_t::AsArg;
-
-  using AsDecl_t = typename Proxy_t::AsDecl;
-};
-
-}  // namespace jni
-
-// Consumers of Proxy *must* include proxy defininitions after proxy.h. This is
-// because Arrays define themselves using the proxies of other types.
 
 namespace jni {
 
@@ -6204,7 +6314,8 @@ class ObjectRef
   }
 
  public:
-  explicit ObjectRef(RefBaseTag<jobject>&& rhs) : RefBase(std::move(rhs)) {}
+  explicit ObjectRef(RefBaseTag<typename JniT::StorageType>&& rhs)
+      : RefBase(std::move(rhs)) {}
 
   // Invoked through CRTP from InvocableMap.
   template <size_t I, typename... Args>
@@ -6239,7 +6350,7 @@ class ConstructorValidator : public ObjectRef<JniT> {
 
   // Objects can still be wrapped.  This could happen if a classloaded object
   // is built in Java and then passed through to JNI.
-  ConstructorValidator(jobject obj) : Base(obj) {}
+  ConstructorValidator(typename JniT::StorageType obj) : Base(obj) {}
 
   template <const auto& jvm_v, const auto& class_loader_v>
   friend class ClassLoaderRef;
@@ -6262,10 +6373,11 @@ class ConstructorValidator : public ObjectRef<JniT> {
   template <typename... Args,
             typename std::enable_if<sizeof...(Args) != 0, int>::type = 0>
   ConstructorValidator(Args&&... args)
-      : Base(Permutation_t<Args...>::OverloadRef::Invoke(
-                 Base::GetJClass(), Base::object_ref_,
-                 std::forward<Args>(args)...)
-                 .Release()) {
+      : Base(static_cast<typename JniT::StorageType>(
+            Permutation_t<Args...>::OverloadRef::Invoke(
+                Base::GetJClass(), Base::object_ref_,
+                std::forward<Args>(args)...)
+                .Release())) {
     static_assert(Permutation_t<Args...>::kIsValidArgSet,
                   "You have passed invalid arguments to construct this type.");
   }
@@ -6288,6 +6400,66 @@ using ObjectRefBuilder_t =
 
 }  // namespace jni
 
+#include <optional>
+#include <string>
+#include <string_view>
+
+namespace jni {
+
+template <typename CrtpBase>
+class StringRefBase
+    : public ConstructorValidator<
+          JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>> {
+ public:
+  using ValidT = ConstructorValidator<
+      JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>>;
+  using ValidT::ValidT;
+
+  StringRefBase(std::nullptr_t) : ValidT(jstring{nullptr}) {}
+  StringRefBase(jstring object) : ValidT(object) {}
+
+  ~StringRefBase() {
+    if (object_ref_) {
+      static_cast<CrtpBase&>(*this).ClassSpecificDeleteObjectRef(object_ref_);
+    }
+  }
+};
+
+// Represents a UTF view into a jstring (see jni::String::Pin()).
+//
+// This class will immediately pin memory associated with the jstring, and
+// release on leaving scope. Note, this class will *always* make an expensive
+// copy, as strings are natively represented in Java as Unicode.
+//
+// (C++20 will offer a compatible std::string_view but C++17 does not).
+class UtfStringView {
+ public:
+  UtfStringView(jstring java_string)
+      : java_string_(java_string),
+        chars_(java_string_
+                   ? JniEnv::GetEnv()->GetStringUTFChars(java_string,
+                                                         /*isCopy=*/nullptr)
+                   : nullptr) {}
+
+  ~UtfStringView() {
+    if (chars_) {
+      JniHelper::ReleaseStringUTFChars(java_string_, chars_);
+    }
+  }
+
+  UtfStringView(UtfStringView&&) = delete;
+  UtfStringView(const UtfStringView&) = delete;
+
+  // Returns a view into the pinned character string.
+  // Warning: std::string_view{nullptr} is undefined behaviour and may crash.
+  const std::string_view ToString() const { return std::string_view{chars_}; }
+
+ private:
+  const jstring java_string_;
+  const char* chars_;
+};
+
+}  // namespace jni
 
 #include <type_traits>
 
@@ -6331,6 +6503,40 @@ LocalObject(LocalObject<class_v_, class_loader_v_, jvm_v_>&&)
 
 namespace jni {
 
+// Represents and possibly builds a runtime Java String object.
+//
+// In order to use a string in memory (as opposed to only using it for function
+// arguments), "Pin" the string.
+//
+// Like jobjects, jstrings can be either local or global with the same ownership
+// semantics.
+class LocalString : public StringRefBase<LocalString> {
+ public:
+  using StringRefBase<LocalString>::StringRefBase;
+  friend class StringRefBase<LocalString>;
+
+  LocalString(jobject java_string_as_object)
+      : StringRefBase<LocalString>(
+            static_cast<jstring>(java_string_as_object)) {}
+
+  // Returns a StringView which possibly performs an expensive pinning
+  // operation.  String objects can be pinned multiple times.
+  UtfStringView Pin() { return {RefBaseTag<jstring>::object_ref_}; }
+
+ private:
+  // Invoked through CRTP on dtor.
+  void ClassSpecificDeleteObjectRef(jstring object_ref) {
+    JniHelper::DeleteLocalObject(object_ref);
+  }
+};
+
+}  // namespace jni
+
+namespace jni {
+
+template <const auto& jvm_v_, const auto& class_loader_v_>
+class ClassLoaderRef;
+
 // Pass this tag to allow Global object's constructor to promote for you.
 struct PromoteToGlobal {};
 
@@ -6344,6 +6550,9 @@ template <const auto& class_v_,
 class GlobalObject
     : public ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_> {
  public:
+  template <const auto& jvm_v, const auto& class_loader_v>
+  friend class ClassLoaderRef;
+
   using ObjectRefT = ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>;
   using ObjectRefT::ObjectRefT;
 
@@ -6394,6 +6603,10 @@ class GlobalObject
       JniHelper::DeleteGlobalObject(ObjectRefT::object_ref_);
     }
   }
+
+ private:
+  // Construction from jobject requires |PromoteToGlobal| or |AdoptGlobal|.
+  explicit GlobalObject(jobject obj) : ObjectRefT(obj) {}
 };
 
 template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
@@ -6401,7 +6614,6 @@ GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&&)
     -> GlobalObject<class_v, class_loader_v, jvm_v>;
 
 }  // namespace jni
-
 
 #include <type_traits>
 
@@ -6561,6 +6773,34 @@ class LocalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
  private:
   template <typename>
   friend class ObjectRef;
+};
+
+}  // namespace jni
+
+namespace jni {
+
+class GlobalString : public StringRefBase<GlobalString> {
+ public:
+  using StringRefBase<GlobalString>::StringRefBase;
+  friend class StringRefBase<GlobalString>;
+
+  GlobalString(jobject java_string_as_object)
+      : StringRefBase<GlobalString>(JniHelper::PromoteLocalToGlobalString(
+            static_cast<jstring>(java_string_as_object))) {}
+
+  GlobalString(LocalString&& local_string)
+      : StringRefBase<GlobalString>(
+            JniHelper::PromoteLocalToGlobalString(local_string.Release())) {}
+
+  // Returns a StringView which possibly performs an expensive pinning
+  // operation.  String objects can be pinned multiple times.
+  UtfStringView Pin() { return {RefBaseTag<jstring>::object_ref_}; }
+
+ private:
+  // Invoked through CRTP on dtor.
+  void ClassSpecificDeleteObjectRef(jstring object_ref) {
+    JniHelper::DeleteGlobalString(object_ref);
+  }
 };
 
 }  // namespace jni
