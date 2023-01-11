@@ -71,8 +71,7 @@ class ObjectRef
   ObjectRef& operator=(const ObjectRef& rhs) = delete;
 
   jclass GetJClass() const {
-    return ClassRef_t<JniT::jvm_v, JniT::class_loader_v, JniT::class_v>::
-        GetAndMaybeLoadClassRef(RefBase::object_ref_);
+    return ClassRef_t<JniT>::GetAndMaybeLoadClassRef(RefBase::object_ref_);
   }
 
  public:

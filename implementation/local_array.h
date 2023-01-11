@@ -51,7 +51,8 @@ class LocalArray
     : public ArrayRef<
           JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>> {
  public:
-  using ObjectClassRefT = ClassRef_t<jvm_v_, class_loader_v_, class_v_>;
+  using JniT_ = JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>;
+  using ObjectClassRefT = ClassRef_t<JniT_>;
 
   using Base =
       ArrayRef<JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;

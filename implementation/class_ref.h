@@ -53,9 +53,6 @@ class ClassRef {
   static_assert(kDefaultJvm != JniT::jvm_v,
                 "For default Jvm use DefaultClassRef.");
 
-  static const auto& GetClassLoader() { return JniT::GetClassLoader(); }
-
-  static const auto& GetClass() { return JniT::GetClass(); }
 
   template <typename Lambda>
   static void PrimeJClassFromClassLoader(Lambda lambda) {
@@ -65,7 +62,7 @@ class ClassRef {
   static jclass GetAndMaybeLoadClassRef(
       jobject optional_object_to_build_loader_from) {
     return class_ref_.LoadAndMaybeInit([=]() {
-      return LoadClassFromObject(GetClass().name_,
+      return LoadClassFromObject(JniT::GetClass().name_,
                                  optional_object_to_build_loader_from);
     });
   }
@@ -87,7 +84,7 @@ class ClassRef {
   static inline metaprogramming::DoubleLockedValue<jclass> class_ref_;
 };
 
-template <const auto& class_loader_v, const auto& class_v>
+template <const auto& class_v, const auto& class_loader_v>
 class DefaultClassRef {
  public:
   template <typename Lambda>
@@ -121,7 +118,7 @@ class DefaultClassRef {
 
 // Default class loader, default Jvm.
 template <const auto& class_v>
-class DefaultClassRef<kDefaultClassLoader, class_v> {
+class DefaultClassRef<class_v, kDefaultClassLoader> {
  public:
   static jclass GetAndMaybeLoadClassRef(jobject /*unused*/ = nullptr) {
     static metaprogramming::DoubleLockedValue<jclass> return_value;
@@ -150,12 +147,12 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref) {
   // on the object's class itself.  The class may not have been loaded yet,
   // and all you have is a jobject
   jclass java_lang_class_jclass =
-      DefaultClassRef<kDefaultClassLoader,
-                      kJavaLangClass>::GetAndMaybeLoadClassRef();
+      DefaultClassRef<kJavaLangClass,
+                      kDefaultClassLoader>::GetAndMaybeLoadClassRef();
 
   jclass java_lang_class_loader_jclass =
-      DefaultClassRef<kDefaultClassLoader,
-                      kJavaLangClassLoader>::GetAndMaybeLoadClassRef();
+      DefaultClassRef<kJavaLangClassLoader,
+                      kDefaultClassLoader>::GetAndMaybeLoadClassRef();
 
   jclass class_of_object_jclass = JniHelper::GetObjectClass(object_ref);
 
@@ -193,7 +190,7 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref) {
 //   2) Non-default JVM, default class loader.
 //   3) Default JVM, non-default class loader.
 //   4) Non-default JVM, non default class loader.
-template <const auto& jvm_v_, const auto& class_loader_v_, const auto& class_v_>
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 struct ClassRefSelector {
   using type =
       ClassRef<JniT<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_, 0,
@@ -203,24 +200,25 @@ struct ClassRefSelector {
                     >>;
 };
 
-template <const auto& class_loader_v_, const auto& class_v_>
-struct ClassRefSelector<kDefaultJvm, class_loader_v_, class_v_> {
-  using type = DefaultClassRef<class_loader_v_, class_v_>;
+template <const auto& class_v_, const auto& class_loader_v_>
+struct ClassRefSelector<class_v_, class_loader_v_, kDefaultJvm> {
+  using type = DefaultClassRef<class_v_, class_loader_v_>;
 };
 
-template <const auto& jvm_v_, const auto& class_v_>
-struct ClassRefSelector<jvm_v_, kDefaultClassLoader, class_v_> {
-  using type = DefaultClassRef<kDefaultClassLoader, class_v_>;
+template <const auto& class_v_, const auto& jvm_v_>
+struct ClassRefSelector<class_v_, kDefaultClassLoader, jvm_v_> {
+  using type = DefaultClassRef<class_v_, kDefaultClassLoader>;
 };
 
 template <const auto& class_v_>
-struct ClassRefSelector<kDefaultJvm, kDefaultClassLoader, class_v_> {
-  using type = DefaultClassRef<kDefaultClassLoader, class_v_>;
+struct ClassRefSelector<class_v_, kDefaultClassLoader, kDefaultJvm> {
+  using type = DefaultClassRef<class_v_, kDefaultClassLoader>;
 };
 
-template <const auto& jvm_v_, const auto& class_loader_v_, const auto& class_v_>
+template <typename JniT>
 using ClassRef_t =
-    typename ClassRefSelector<jvm_v_, class_loader_v_, class_v_>::type;
+    typename ClassRefSelector<JniT::class_v, JniT::class_loader_v,
+                              JniT::jvm_v>::type;
 
 }  // namespace jni
 

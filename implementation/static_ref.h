@@ -64,8 +64,7 @@ struct StaticRef
   using JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
 
   jclass GetJClass() const {
-    return ClassRef_t<JniT::jvm_v, JniT::class_loader_v,
-                      JniT::class_v>::GetAndMaybeLoadClassRef(nullptr);
+    return ClassRef_t<JniT>::GetAndMaybeLoadClassRef(nullptr);
   }
 
   template <size_t I, typename... Args>
