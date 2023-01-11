@@ -36,11 +36,29 @@ struct JniArrayHelperBase {
   }
 };
 
-template <typename SpannedType>
-struct JniArrayHelper {};
+// Rank 2+ arrays all behave like object arrays.
+template <typename SpannedType, std::size_t kRank>
+struct JniArrayHelper : public JniArrayHelperBase {
+  static inline jobjectArray NewArray(std::size_t size, jclass class_id,
+                                      jobject initial_element) {
+    return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
+                                                 initial_element);
+  }
+
+  // The API of fetching objects only permits accessing one object at a time.
+  static inline jobject GetArrayElement(jobjectArray array, std::size_t idx) {
+    return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
+  };
+
+  // The API of fetching objects only permits accessing one object at a time.
+  static inline void SetArrayElement(jobjectArray array, std::size_t idx,
+                                     SpannedType obj) {
+    jni::JniEnv::GetEnv()->SetObjectArrayElement(array, idx, obj);
+  };
+};
 
 template <>
-struct JniArrayHelper<jboolean> : public JniArrayHelperBase {
+struct JniArrayHelper<jboolean, 1> : public JniArrayHelperBase {
   using AsArrayType = jbooleanArray;
 
   static inline jbooleanArray NewArray(std::size_t size) {
@@ -64,7 +82,7 @@ struct JniArrayHelper<jboolean> : public JniArrayHelperBase {
 };
 
 template <>
-struct JniArrayHelper<jbyte> : public JniArrayHelperBase {
+struct JniArrayHelper<jbyte, 1> : public JniArrayHelperBase {
   using AsArrayType = jbyteArray;
 
   static inline jbyteArray NewArray(std::size_t size) {
@@ -87,7 +105,7 @@ struct JniArrayHelper<jbyte> : public JniArrayHelperBase {
 };
 
 template <>
-struct JniArrayHelper<jchar> : public JniArrayHelperBase {
+struct JniArrayHelper<jchar, 1> : public JniArrayHelperBase {
   using AsArrayType = jcharArray;
 
   static inline jcharArray NewArray(std::size_t size) {
@@ -110,7 +128,7 @@ struct JniArrayHelper<jchar> : public JniArrayHelperBase {
 };
 
 template <>
-struct JniArrayHelper<jshort> : public JniArrayHelperBase {
+struct JniArrayHelper<jshort, 1> : public JniArrayHelperBase {
   using AsArrayType = jshortArray;
 
   static inline jshortArray NewArray(std::size_t size) {
@@ -133,7 +151,7 @@ struct JniArrayHelper<jshort> : public JniArrayHelperBase {
 };
 
 template <>
-struct JniArrayHelper<jint> : public JniArrayHelperBase {
+struct JniArrayHelper<jint, 1> : public JniArrayHelperBase {
   using AsArrayType = jintArray;
 
   static inline jintArray NewArray(std::size_t size) {
@@ -156,7 +174,7 @@ struct JniArrayHelper<jint> : public JniArrayHelperBase {
 };
 
 template <>
-struct JniArrayHelper<jlong> : public JniArrayHelperBase {
+struct JniArrayHelper<jlong, 1> : public JniArrayHelperBase {
   using AsArrayType = jlongArray;
 
   static inline jlongArray NewArray(std::size_t size) {
@@ -179,7 +197,7 @@ struct JniArrayHelper<jlong> : public JniArrayHelperBase {
 };
 
 template <>
-struct JniArrayHelper<jfloat> : public JniArrayHelperBase {
+struct JniArrayHelper<jfloat, 1> : public JniArrayHelperBase {
   using AsArrayType = jfloatArray;
 
   static inline jfloatArray NewArray(std::size_t size) {
@@ -202,7 +220,7 @@ struct JniArrayHelper<jfloat> : public JniArrayHelperBase {
 };
 
 template <>
-struct JniArrayHelper<jdouble> : public JniArrayHelperBase {
+struct JniArrayHelper<jdouble, 1> : public JniArrayHelperBase {
   using AsArrayType = jdoubleArray;
 
   static inline jdoubleArray NewArray(std::size_t size) {
@@ -226,8 +244,8 @@ struct JniArrayHelper<jdouble> : public JniArrayHelperBase {
 
 // Note, this requires both a jclass and a sample jobject to build from which
 // is unlike any other new array construction.
-template <>
-struct JniArrayHelper<jobject> : public JniArrayHelperBase {
+template <std::size_t kRank>
+struct JniArrayHelper<jobject, kRank> : public JniArrayHelperBase {
   static inline jobjectArray NewArray(std::size_t size, jclass class_id,
                                       jobject initial_element) {
     return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
@@ -235,7 +253,6 @@ struct JniArrayHelper<jobject> : public JniArrayHelperBase {
   }
 
   // The API of fetching objects only permits accessing one object at a time.
-  // TODO CONST or at least nasty warning.
   static inline jobject GetArrayElement(jobjectArray array, std::size_t idx) {
     return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
   };

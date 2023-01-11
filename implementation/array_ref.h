@@ -47,7 +47,7 @@ class ArrayRef : public RefBase<JniT>,
   }
 
   std::size_t Length() {
-    return JniArrayHelper<SpanType>::GetLength(Base::object_ref_);
+    return JniArrayHelper<SpanType, JniT::kRank>::GetLength(Base::object_ref_);
   }
 };
 
@@ -64,7 +64,7 @@ class ArrayRef<
   using Base::Base;
 
   std::size_t Length() {
-    return JniArrayHelper<jobject>::GetLength(Base::object_ref_);
+    return JniArrayHelper<jobject, JniT::kRank>::GetLength(Base::object_ref_);
   }
 
   // Object arrays cannot be efficiently pinned like primitive types can.
@@ -74,7 +74,8 @@ class ArrayRef<
 
   LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v> Get(
       std::size_t idx) {
-    return {JniArrayHelper<jobject>::GetArrayElement(Base::object_ref_, idx)};
+    return {JniArrayHelper<jobject, JniT::kRank>::GetArrayElement(
+        Base::object_ref_, idx)};
   }
 
   // Note: Globals are not permitted in a local array because it makes reasoning
@@ -85,8 +86,8 @@ class ArrayRef<
   void Set(
       std::size_t idx,
       LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v>&& val) {
-    return JniArrayHelper<jobject>::SetArrayElement(Base::object_ref_, idx,
-                                                    val.Release());
+    return JniArrayHelper<jobject, JniT::kRank>::SetArrayElement(
+        Base::object_ref_, idx, val.Release());
   }
 };
 

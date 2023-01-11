@@ -77,12 +77,12 @@ class ArrayView {
   ArrayView(jarray array, bool copy_on_completion, std::size_t size)
       : array_(array),
         get_array_elements_result_(
-            JniArrayHelper<SpanType>::GetArrayElements(array)),
+            JniArrayHelper<SpanType, kRank>::GetArrayElements(array)),
         copy_on_completion_(copy_on_completion),
         size_(size) {}
 
   ~ArrayView() {
-    JniArrayHelper<SpanType>::ReleaseArrayElements(
+    JniArrayHelper<SpanType, kRank>::ReleaseArrayElements(
         array_, get_array_elements_result_.ptr_, copy_on_completion_);
   }
 
@@ -147,9 +147,9 @@ class ArrayView<
     PinHelper_t operator*() const {
       if constexpr (kRank >= 2) {
         return static_cast<PinHelper_t>(
-            JniArrayHelper<jobject>::GetArrayElement(arr_, idx_));
+            JniArrayHelper<jobject, kRank>::GetArrayElement(arr_, idx_));
       } else {
-        return JniArrayHelper<SpanType>::GetArrayElement(arr_, idx_);
+        return JniArrayHelper<SpanType, kRank>::GetArrayElement(arr_, idx_);
       }
     }
 

@@ -58,7 +58,7 @@ class LocalArray
   using Base::Base;
 
   LocalArray(std::size_t size)
-      : Base(JniArrayHelper<SpanType>::NewArray(size)) {}
+      : Base(JniArrayHelper<SpanType, kRank_>::NewArray(size)) {}
 
   LocalArray(LocalArray<SpanType, kRank_>&& rhs) : Base(rhs.Release()) {}
 
@@ -81,7 +81,7 @@ class LocalArray
   LocalArray(
       std::size_t size,
       const ObjectContainer<class_v, class_loader_v, jvm_v>& local_object)
-      : Base(JniArrayHelper<jobject>::NewArray(
+      : Base(JniArrayHelper<jobject, kRank_>::NewArray(
             size,
             ObjectClassRefT::GetAndMaybeLoadClassRef(
                 static_cast<jobject>(local_object)),
