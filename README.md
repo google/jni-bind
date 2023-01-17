@@ -32,6 +32,7 @@ It requires clang enabled at C++17 or later, is compatible with Android, and is 
   - [Forward Class Declarations](#forward-class-declarations)
   - [Multhreading](#multi-threading)
   - [Overloads](#overloads)
+  - [Statics](#statics)
   - [Class Loaders](#class-loaders)
   - [Arrays](#arrays)
 - [Upcoming Features](#upcoming-features)
@@ -371,6 +372,34 @@ Sample [method_test_jni.cc](javatests/com/jnibind/test/method_test_jni.cc), [Met
 ## Class Loaders
 
 *Documentation coming soon!*
+
+<a name="statics"></a>
+## Statics
+
+Statics are declared as an instance of [`jni::Static`](implementation/static.h) which is constructed with [`jni::Method`](implementation/method.h) and jni::Field instances (in that order). Unlike regular objects, you make the static invocation with `StaticRef`.
+
+```cpp
+static constexpr Class kSomeClass{"com/google/SomeClass"};
+
+static constexpr Class kClass{
+  "com/google/HasStaticMethods",
+  Static {
+    Method { "staticTakesInt", Return{}, Params<int>{}  },
+    Method { "staticTakesFloat", Return{}, Params<float>{} },
+    Field { "staticLongField", jlong{} },
+  },
+  // Some other field (comes after).
+  Field { "Foo", jint{}, }
+};
+
+StaticRef<kClass>{}("staticTakesInt", 123);
+StaticRef<kClass>{}("staticTakesFloat", 123.f);
+StaticRef<kClass>{}["staticLongField"].Set(123);
+```
+
+Statics will follow the rules laid out in [Type Conversion Rules](#type-conversion-rules). *Invalid static method names won't compile, and `jmethodID`s are cached on your behalf. Static method lookups are compile time, there is no hash lookup cost.*
+
+Sample [static_test_jni.cc](javatests/com/jnibind/test/static_test_jni.cc), [StaticTest.java](javatests/com/jnibind/test/StaticTest.java).
 
 <a name="arrays"></a>
 ## Arrays
