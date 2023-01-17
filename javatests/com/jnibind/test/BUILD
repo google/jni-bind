@@ -264,7 +264,10 @@ cc_library(
     name = "static_test_jni_impl",
     testonly = 1,
     srcs = ["static_test_jni.cc"],
-    deps = ["//:jni_bind"],
+    deps = [
+        ":object_test_helper_jni",
+        "//:jni_bind",
+    ],
     alwayslink = True,
 )
 
@@ -285,6 +288,7 @@ java_test(
     data = [":libstatic_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     deps = [
+        ":object_test_helper",
         "@maven//:com_google_truth_truth_1_1",
         "@maven//:junit_junit_4_13_1",
     ],

@@ -59,6 +59,10 @@ final class StaticTestHelper {
     return 1415.0;
   }
 
+  public static ObjectTestHelper objectFunc() {
+    return new ObjectTestHelper(1, 2, 3);
+  }
+
   public static String complexFunc(int a, float b, String c, long[][] d) {
     if (a == 1 && b == 2 && "3".equals(c) && d[4][5] == 6) {
       return "COMPLEX";
@@ -77,4 +81,5 @@ final class StaticTestHelper {
   public static long longField = 0;
   public static float floatField = 0;
   public static double doubleField = 0;
+  public static ObjectTestHelper objectField = null;
 }

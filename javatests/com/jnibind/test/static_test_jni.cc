@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "javatests/com/jnibind/test/object_test_helper_jni.h"
 #include "jni_bind.h"
 
 using jni::Array;
@@ -42,6 +43,7 @@ static constexpr Class kClass{
         Method{"doubleFunc", Return<jdouble>{}, Params{}},
         Method{"complexFunc", Return<jstring>{},
                Params{int{}, float{}, jstring{}, Array<jlong, 2>{}}},
+        Method{"objectFunc", Return{kObjectTestHelperClass}, Params{}},
 
         Field{"booleanField", jboolean{}},
         Field{"byteField", jbyte{}},
@@ -51,6 +53,7 @@ static constexpr Class kClass{
         Field{"longField", jlong{}},
         Field{"floatField", jfloat{}},
         Field{"doubleField", jdouble{}},
+        Field{"objectField", kObjectTestHelperClass},
     }};
 
 extern "C" {
@@ -107,6 +110,12 @@ JNIEXPORT jdouble JNICALL
 Java_com_jnibind_test_StaticTest_doubleMethodTestNative(JavaVM* pjvm,
                                                         void* reserved) {
   return StaticRef<kClass>{}("doubleFunc");
+}
+
+JNIEXPORT jobject JNICALL
+Java_com_jnibind_test_StaticTest_objectMethodTestNative(JavaVM* pjvm,
+                                                        void* reserved) {
+  return StaticRef<kClass>{}("objectFunc").Release();
 }
 
 JNIEXPORT jstring JNICALL
@@ -166,5 +175,13 @@ JNIEXPORT double JNICALL Java_com_jnibind_test_StaticTest_doubleFieldTestNative(
     JavaVM* pjvm, void* reserved, jdouble val) {
   StaticRef<kClass>{}["doubleField"].Set(val);
   return StaticRef<kClass>{}["doubleField"].Get();
+}
+
+JNIEXPORT jobject JNICALL
+Java_com_jnibind_test_StaticTest_objectFieldTestNative(JavaVM* pjvm,
+                                                       void* reserved,
+                                                       jobject val) {
+  StaticRef<kClass>{}["objectField"].Set(val);
+  return StaticRef<kClass>{}["objectField"].Get().Release();
 }
 }

@@ -16,6 +16,7 @@
 package com.jnibind.test;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -52,6 +53,8 @@ public final class StaticTest {
   native float floatMethodTestNative();
 
   native double doubleMethodTestNative();
+
+  native ObjectTestHelper objectMethodTestNative();
 
   native String complexMethodTestNative(int a, float b, String c, long[][] d);
 
@@ -98,6 +101,11 @@ public final class StaticTest {
   }
 
   @Test
+  public void objectMethod() {
+    assertTrue(objectMethodTestNative().isEqualTo(new ObjectTestHelper(1, 2, 3)));
+  }
+
+  @Test
   public void complexMethod() {
     long[][] longVal = new long[6][6];
     longVal[4][5] = 6;
@@ -123,6 +131,8 @@ public final class StaticTest {
   native float floatFieldTestNative(float val);
 
   native double doubleFieldTestNative(double val);
+
+  native ObjectTestHelper objectFieldTestNative(ObjectTestHelper val);
 
   @Test
   public void booleanField() {
@@ -162,5 +172,12 @@ public final class StaticTest {
   @Test
   public void doubleField() {
     assertThat(doubleFieldTestNative(1415.0)).isEqualTo(1415.0);
+  }
+
+  @Test
+  public void objectField() {
+    assertTrue(
+        objectFieldTestNative(new ObjectTestHelper(1, 2, 3))
+            .isEqualTo(new ObjectTestHelper(1, 2, 3)));
   }
 }
