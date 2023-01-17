@@ -26,6 +26,7 @@
 #include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jvm.h"
+#include "implementation/no_idx.h"
 #include "metaprogramming/vals_equal.h"
 
 namespace jni {
@@ -37,6 +38,15 @@ template <typename SpanType_, const auto& class_v_,
           std::size_t class_loader_idx_ = kNoIdx>
 struct JniT {
   static constexpr std::size_t kRank = kRank_;
+
+  static constexpr bool MinimallySpecified() {
+    return (class_v_ == kNoClassSpecified
+                ? true
+                : (class_idx_ == kNoIdx ? true : false)) &&
+           (class_loader_v_ == kDefaultClassLoader
+                ? true
+                : (class_loader_idx_ == kNoIdx ? true : false));
+  }
 
   static constexpr const auto& GetClassLoader() {
     if constexpr (class_loader_idx_ != kNoIdx) {
@@ -53,6 +63,8 @@ struct JniT {
       return class_v_;
     }
   }
+
+  static constexpr const auto& GetJvm() { return jvm_v_; }
 
   static constexpr auto GetStatic() {
     return FullArrayStripV(GetClass()).static_;
@@ -72,6 +84,64 @@ struct JniT {
   using StaticT = std::decay_t<decltype(GetStatic())>;
 
   static constexpr ClassT stripped_class_v{FullArrayStripV(GetClass())};
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Minimal Spanning type (allows perfect cacheing for fully specified jvm).
+  ////////////////////////////////////////////////////////////////////////////
+
+  // kNoIdx for default loader, then provided idx, then calculated idx.
+  static constexpr std::size_t MinimalClassIdx() {
+    if constexpr (class_idx_ != kNoIdx) {
+      // Fully specified (already).
+      return class_idx_;
+    } else if constexpr (class_loader_v_ == kDefaultClassLoader) {
+      // Partially specified.
+      return kNoIdx;
+    } else {
+      if constexpr (class_loader_v_.template IdxOfClass<class_v>() !=
+                    kClassNotInLoaderSetIdx) {
+        return class_loader_v_.template IdxOfClass<class_v>();
+      } else {
+        return kNoIdx;
+      }
+    }
+  }
+
+  // kNoIdx for default jvm, then provided idx, then calculated idx.
+  static constexpr std::size_t MinimalClassLoaderIdx() {
+    // Fully specified (already).
+    if constexpr (class_loader_idx_ != kNoIdx) {
+      return class_loader_idx_;
+    } else if constexpr (jvm_v_ == kDefaultJvm) {
+      // Partially specified.
+      return kNoIdx;
+    } else {
+      // Fully specified (derived).
+      return jvm_v_.template IdxOfClassLoader<class_loader_v>();
+    }
+  }
+
+  static constexpr auto& MinimalSpanningClass() {
+    if constexpr (MinimalClassIdx() == kNoIdx) {
+      // If idx uncomputable, use provided.
+      return class_v_;
+    } else {
+      return kNoClassSpecified;
+    }
+  }
+
+  static constexpr auto& MinimalSpanningClassLoader() {
+    if constexpr (MinimalClassLoaderIdx() == kNoIdx) {
+      // If idx uncomputable, use provided.
+      return class_loader_v_;
+    } else {
+      return kNoClassLoaderSpecified;
+    }
+  }
+
+  using MinimallySpanningType =
+      JniT<SpanType_, MinimalSpanningClass(), MinimalSpanningClassLoader(),
+           jvm_v_, kRank, MinimalClassIdx(), MinimalClassLoaderIdx()>;
 };
 
 template <typename T1, typename T2>
@@ -79,17 +149,24 @@ struct JniTEqual {
   static constexpr bool val = false;
 };
 
-template <typename SpanType1, const auto& class_v_1,
-          const auto& class_loader_v_1, const auto& jvm_v_1, typename SpanType2,
-          const auto& class_v_2, const auto& class_loader_v_2,
-          const auto& jvm_v_2>
-struct JniTEqual<JniT<SpanType1, class_v_1, class_loader_v_1, jvm_v_1>,
-                 JniT<SpanType2, class_v_2, class_loader_v_2, jvm_v_2>> {
+template <
+    typename SpanType1, const auto& class_v_1, const auto& class_loader_v_1,
+    const auto& jvm_v_1, std::size_t kRank_1, std::size_t class_idx_1,
+    std::size_t class_loader_idx_1,
+
+    typename SpanType2, const auto& class_v_2, const auto& class_loader_v_2,
+    const auto& jvm_v_2, std::size_t kRank_2, std::size_t class_idx_2,
+    std::size_t class_loader_idx_2>
+struct JniTEqual<JniT<SpanType1, class_v_1, class_loader_v_1, jvm_v_1, kRank_1,
+                      class_idx_1, class_loader_idx_1>,
+                 JniT<SpanType2, class_v_2, class_loader_v_2, jvm_v_2, kRank_2,
+                      class_idx_2, class_loader_idx_2>> {
   static constexpr bool val =
       std::is_same_v<SpanType1, SpanType2> &&
       metaprogramming::ValsEqual_cr_v<class_v_1, class_v_2> &&
       metaprogramming::ValsEqual_cr_v<class_loader_v_1, class_loader_v_2> &&
-      metaprogramming::ValsEqual_cr_v<jvm_v_1, jvm_v_2>;
+      metaprogramming::ValsEqual_cr_v<jvm_v_1, jvm_v_2> && kRank_1 == kRank_2 &&
+      class_idx_1 == class_idx_2 && class_loader_idx_1 == class_loader_idx_2;
 };
 
 template <typename T1, typename T2>

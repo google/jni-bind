@@ -19,6 +19,7 @@
 
 #include <tuple>
 
+#include "implementation/no_idx.h"
 #include "metaprogramming/modified_max.h"
 
 namespace jni {
@@ -77,6 +78,11 @@ class NullClassLoader {
   template <const auto&, bool ignore_default_loader = false>
   constexpr bool SupportedDirectlyOrIndirectly() const {
     return false;
+  }
+
+  template <const auto& class_v>
+  constexpr std::size_t IdxOfClass() const {
+    return kNoIdx;
   }
 
   template <const auto& possibly_supported_class>

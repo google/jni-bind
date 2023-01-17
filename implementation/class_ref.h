@@ -24,6 +24,7 @@
 #include "class_defs/java_lang_classes.h"
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
+#include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/invoke.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_type.h"
@@ -44,15 +45,18 @@ GetDefaultLoadedClassList() {
 
 static inline jclass LoadClassFromObject(const char* name, jobject object_ref);
 
-// Represents a fully specified class and class loader pair for a given Jvm.
-// Because this is fully specified, classes associated with this type of loader
-// can be programmatically torn down.
+// Represents a a jclass instance for a specific class. 4 flavours exist:
+//   1) Default JVM, default class loader.
+//   2) Non-default JVM, default class loader.
+//   3) Default JVM, non-default class loader.
+//   4) Non-default JVM, non default class loader (i.e. fully specified).
+//
+// Use |ClassRef_t| to provide |JniT| in its minimal form.
 template <typename JniT>
 class ClassRef {
  public:
-  static_assert(kDefaultJvm != JniT::jvm_v,
-                "For default Jvm use DefaultClassRef.");
-
+  static_assert(std::is_same_v<JniT, typename JniT::MinimallySpanningType>,
+                "JniT must be in its minimal form for best caching.");
 
   template <typename Lambda>
   static void PrimeJClassFromClassLoader(Lambda lambda) {
@@ -61,10 +65,22 @@ class ClassRef {
 
   static jclass GetAndMaybeLoadClassRef(
       jobject optional_object_to_build_loader_from) {
-    return class_ref_.LoadAndMaybeInit([=]() {
-      return LoadClassFromObject(JniT::GetClass().name_,
-                                 optional_object_to_build_loader_from);
-    });
+    // For the default classloader, storage in function local static.
+    if constexpr (JniT::GetClassLoader() == kDefaultClassLoader) {
+      static metaprogramming::DoubleLockedValue<jclass> return_value;
+      return return_value.LoadAndMaybeInit([]() {
+        GetDefaultLoadedClassList().push_back(&return_value);
+
+        return JniHelper::PromoteLocalToGlobalClass(
+            JniHelper::FindClass(JniT::GetClass().name_));
+      });
+    } else {
+      // For non default classloader, storage in class member.
+      return class_ref_.LoadAndMaybeInit([=]() {
+        return LoadClassFromObject(JniT::GetClass().name_,
+                                   optional_object_to_build_loader_from);
+      });
+    }
   }
 
   static jclass GetAlreadyLoadedClassRef() {
@@ -84,54 +100,6 @@ class ClassRef {
   static inline metaprogramming::DoubleLockedValue<jclass> class_ref_;
 };
 
-template <const auto& class_v, const auto& class_loader_v>
-class DefaultClassRef {
- public:
-  template <typename Lambda>
-  static void PrimeJClassFromClassLoader(Lambda lambda) {
-    class_ref_.LoadAndMaybeInit(lambda);
-  }
-
-  // Gets the class ref for class_v, possibly loading it in the process.
-  // Note, all class refs are pinned with GlobalRef and will be released
-  // when JvmRef is torn down.
-  //
-  // This function is threadsafe, although the result is immediately stale.
-  // This will never matter however, as part of the API's contract is call
-  // Jvm::Destroy on all threads and release all objects in order to transition
-  // to a new JVM.
-  static jclass GetAndMaybeLoadClassRef(
-      jobject optional_object_to_build_loader_from) {
-    return class_ref_.LoadAndMaybeInit([=]() {
-      GetDefaultLoadedClassList().push_back(&class_ref_);
-      return LoadClassFromObject(class_v.name_,
-                                 optional_object_to_build_loader_from);
-    });
-  }
-
- private:
-  // A global reference to a jclass object that is returned from FindClass.
-  // The variable has static storage because ClassIDs are static to the lifetime
-  // of a JVM.  See GetAndMaybeLoadClassRef and MaybeReleaseClassRef.
-  static inline metaprogramming::DoubleLockedValue<jclass> class_ref_;
-};
-
-// Default class loader, default Jvm.
-template <const auto& class_v>
-class DefaultClassRef<class_v, kDefaultClassLoader> {
- public:
-  static jclass GetAndMaybeLoadClassRef(jobject /*unused*/ = nullptr) {
-    static metaprogramming::DoubleLockedValue<jclass> return_value;
-    return return_value.LoadAndMaybeInit([]() {
-      // (b/174287131): This can be removed, but tests must be updated as they
-      // guarantee all globals must be unpinned which this will break.
-      GetDefaultLoadedClassList().push_back(&return_value);
-      return JniHelper::PromoteLocalToGlobalClass(
-          JniHelper::FindClass(class_v.name_));
-    });
-  }
-};
-
 // When we get an object_ref_ as a return value from a Java method, it may be
 // an instance of a subclass of ClassRefT. In this case, if we directly used
 // the object_ref_'s class, then we might incorrectly get member information
@@ -147,12 +115,11 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref) {
   // on the object's class itself.  The class may not have been loaded yet,
   // and all you have is a jobject
   jclass java_lang_class_jclass =
-      DefaultClassRef<kJavaLangClass,
-                      kDefaultClassLoader>::GetAndMaybeLoadClassRef();
+      ClassRef<JniT<jobject, kJavaLangClass>>::GetAndMaybeLoadClassRef(nullptr);
 
   jclass java_lang_class_loader_jclass =
-      DefaultClassRef<kJavaLangClassLoader,
-                      kDefaultClassLoader>::GetAndMaybeLoadClassRef();
+      ClassRef<JniT<jobject, kJavaLangClassLoader>>::GetAndMaybeLoadClassRef(
+          nullptr);
 
   jclass class_of_object_jclass = JniHelper::GetObjectClass(object_ref);
 
@@ -180,45 +147,8 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref) {
   return static_cast<jclass>(promote_jclass_of_correct_loader);
 }
 
-// Selects among either |ClassRef| (which can be reset) or |DefaultClassRef|
-// (which supports only Jvm during it's lifetime).
-//
-// jclass IDs are queried through FindClass for default class loaded
-// objects, but derived from class loaders otherwise.  There are 4 options:
-//
-//   1) Default JVM, default class loader.
-//   2) Non-default JVM, default class loader.
-//   3) Default JVM, non-default class loader.
-//   4) Non-default JVM, non default class loader.
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-struct ClassRefSelector {
-  using type =
-      ClassRef<JniT<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_, 0,
-                    class_loader_v_.template IdxOfClass<class_v_>(),
-                    jvm_v_.template IdxOfClassLoader<class_loader_v_>()
-
-                    >>;
-};
-
-template <const auto& class_v_, const auto& class_loader_v_>
-struct ClassRefSelector<class_v_, class_loader_v_, kDefaultJvm> {
-  using type = DefaultClassRef<class_v_, class_loader_v_>;
-};
-
-template <const auto& class_v_, const auto& jvm_v_>
-struct ClassRefSelector<class_v_, kDefaultClassLoader, jvm_v_> {
-  using type = DefaultClassRef<class_v_, kDefaultClassLoader>;
-};
-
-template <const auto& class_v_>
-struct ClassRefSelector<class_v_, kDefaultClassLoader, kDefaultJvm> {
-  using type = DefaultClassRef<class_v_, kDefaultClassLoader>;
-};
-
 template <typename JniT>
-using ClassRef_t =
-    typename ClassRefSelector<JniT::class_v, JniT::class_loader_v,
-                              JniT::jvm_v>::type;
+using ClassRef_t = ClassRef<typename JniT::MinimallySpanningType>;
 
 }  // namespace jni
 

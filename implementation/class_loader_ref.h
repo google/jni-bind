@@ -75,7 +75,7 @@ class ClassLoaderRef
     if constexpr (ParentLoaderForClass<class_loader_v_, class_v>() !=
                   kDefaultClassLoader) {
       ClassRef_t<JniT<jobject, class_v, class_loader_v_, jvm_v_,
-                      1>>::PrimeJClassFromClassLoader([=]() {
+                      0>>::PrimeJClassFromClassLoader([=]() {
         // Prevent the object (which is a runtime instance of a class) from
         // falling out of scope so it is not released.
         LocalObject loaded_class = (*this)("loadClass", class_v.name_);
@@ -100,6 +100,7 @@ class ClassLoaderRef
         BuildLocalObject<class_v>(std::forward<Params>(params)...);
     jobject promoted_local =
         JniHelper::PromoteLocalToGlobalObject(obj.Release());
+
     return GlobalObject<class_v,
                         ParentLoaderForClass<class_loader_v_, class_v>(),
                         JvmForLoader<class_v>()>{promoted_local};

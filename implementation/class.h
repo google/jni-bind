@@ -39,6 +39,9 @@ static constexpr struct NoClass {
   const Static<std::tuple<>, std::tuple<>> static_{};
   const std::tuple<> methods_{};
   const std::tuple<> fields_{};
+
+  constexpr bool operator==(const NoClass&) const { return true; }
+  constexpr bool operator!=(const NoClass&) const { return true; }
 } kNoClassSpecified;
 
 template <typename Constructors_, typename Static_, typename Methods_,
@@ -109,6 +112,9 @@ struct Class<std::tuple<Constructors_...>,
     // or return values before the class itself is defined.
     return std::string_view(name_) == std::string_view(rhs.name_);
   }
+
+  constexpr bool operator==(const NoClass&) const { return false; }
+  constexpr bool operator!=(const NoClass&) const { return false; }
 };
 
 template <typename... Params>

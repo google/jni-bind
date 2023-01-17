@@ -14,6 +14,7 @@ cc_library(
     hdrs = ["array.h"],
     deps = [
         ":array_type_conversion",
+        ":class",
         ":object",
         ":return",
         "//:jni_dep",
@@ -107,6 +108,7 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
+        ":default_class_loader",
         ":jni_type",
         ":jvm",
         ":method",
@@ -162,6 +164,7 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
+        ":default_class_loader",
         ":global_object",
         ":jni_type",
         ":jvm_ref",
@@ -246,7 +249,10 @@ cc_test(
 cc_library(
     name = "default_class_loader",
     hdrs = ["default_class_loader.h"],
-    deps = ["//metaprogramming:modified_max"],
+    deps = [
+        ":no_idx",
+        "//metaprogramming:modified_max",
+    ],
 )
 
 cc_library(
@@ -383,6 +389,7 @@ cc_library(
         ":class_loader",
         ":default_class_loader",
         ":jvm",
+        ":no_idx",
         "//metaprogramming:vals_equal",
     ],
 )
