@@ -387,6 +387,7 @@ static constexpr Class kClass{
     Method { "staticTakesInt", Return{}, Params<int>{}  },
     Method { "staticTakesFloat", Return{}, Params<float>{} },
     Field { "staticLongField", jlong{} },
+    Field { "staticObjectField", kSomeClass },
   },
   // Some other field (comes after).
   Field { "Foo", jint{}, }
@@ -395,6 +396,7 @@ static constexpr Class kClass{
 StaticRef<kClass>{}("staticTakesInt", 123);
 StaticRef<kClass>{}("staticTakesFloat", 123.f);
 StaticRef<kClass>{}["staticLongField"].Set(123);
+StaticRef<kClass>{}["staticObjectField"].Set(LocalObject<kSomeClass>{});
 ```
 
 Statics will follow the rules laid out in [Type Conversion Rules](#type-conversion-rules). *Invalid static method names won't compile, and `jmethodID`s are cached on your behalf. Static method lookups are compile time, there is no hash lookup cost.*
