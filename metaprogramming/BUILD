@@ -595,6 +595,11 @@ cc_test(
 )
 
 cc_library(
+    name = "name_constants",
+    hdrs = ["name_constants.h"],
+)
+
+cc_library(
     name = "n_bit",
     hdrs = ["n_bit.h"],
 )

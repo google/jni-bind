@@ -25,6 +25,7 @@
 #include "implementation/object.h"
 #include "implementation/return.h"
 #include "implementation/void.h"
+#include "metaprogramming/name_constants.h"
 #include "metaprogramming/repeat_string.h"
 #include "metaprogramming/string_concatenate.h"
 
@@ -88,12 +89,15 @@ struct SelectorStaticInfo {
 
   static constexpr std::string_view kEmptyStr = "";
   static constexpr std::string_view kModifierStr =
-      (kRank == 0) ? "" : metaprogramming::RepeatString_v<kRank, kLeftBracket>;
+      (kRank == 0) ? ""
+                   : metaprogramming::RepeatString_v<
+                         kRank, metaprogramming::Constants::left_bracket>;
 
   static constexpr std::string_view UndecoratedTypeName() {
     if constexpr (kIsObject) {
       return metaprogramming::StringConcatenate_v<
-          kLetterL, kTypeNameOrNothingIfNotAnObject, kSemiColon>;
+          metaprogramming::Constants::L, kTypeNameOrNothingIfNotAnObject,
+          metaprogramming::Constants::semi_colon>;
     } else if constexpr (kIsVoid) {
       return JavaTypeToString<void>();
     } else {

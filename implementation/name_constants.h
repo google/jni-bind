@@ -37,19 +37,7 @@ struct NameOrNothing<val_, std::void_t<decltype(val_.name_)>> {
 template <const auto& val>
 static constexpr auto NameOrNothing_v = NameOrNothing<val>::val;
 
-////////////////////////////////////////////////////////////////////////////////
-// Constants for signature generation.
-////////////////////////////////////////////////////////////////////////////////
-
-static constexpr std::string_view kLeftBracket{"["};
-static constexpr std::string_view kRightBracket{"]"};
-static constexpr std::string_view kLeftParenthesis{"("};
-static constexpr std::string_view kRightParenthesis{")"};
 static constexpr std::string_view kInit{"<init>"};
-static constexpr std::string_view kComma{","};
-static constexpr std::string_view kSemiColon{";"};
-static constexpr std::string_view kLetterL{"L"};
-static constexpr std::string_view kLetterV{"V"};
 
 }  // namespace jni
 
