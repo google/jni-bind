@@ -849,6 +849,7 @@ cc_library(
         ":return",
         ":void",
         "//implementation/jni_helper:jni_typename_to_string",
+        "//metaprogramming:repeat_string",
         "//metaprogramming:string_concatenate",
     ],
 )

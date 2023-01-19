@@ -740,6 +740,21 @@ cc_test(
 )
 
 cc_library(
+    name = "repeat_string",
+    hdrs = ["repeat_string.h"],
+    deps = [":string_concatenate"],
+)
+
+cc_test(
+    name = "repeat_string_test",
+    srcs = ["repeat_string_test.cc"],
+    deps = [
+        ":repeat_string",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "reverse",
     hdrs = ["reverse.h"],
     deps = [

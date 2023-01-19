@@ -25,6 +25,7 @@
 #include "implementation/object.h"
 #include "implementation/return.h"
 #include "implementation/void.h"
+#include "metaprogramming/repeat_string.h"
 #include "metaprogramming/string_concatenate.h"
 
 namespace jni {
@@ -85,21 +86,9 @@ struct SelectorStaticInfo {
   static constexpr std::string_view kTypeNameOrNothingIfNotAnObject =
       TypeNameOrNothingIfNotAnObject();
 
-  template <std::size_t repeat_cnt>
-  struct Repeat {
-    static constexpr std::string_view val =
-        metaprogramming::StringConcatenate_v<kLeftBracket,
-                                             Repeat<repeat_cnt - 1>::val>;
-  };
-
-  template <>
-  struct Repeat<0> {
-    static constexpr std::string_view val = "";
-  };
-
   static constexpr std::string_view kEmptyStr = "";
   static constexpr std::string_view kModifierStr =
-      (kRank == 0) ? "" : Repeat<kRank>::val;
+      (kRank == 0) ? "" : metaprogramming::RepeatString_v<kRank, kLeftBracket>;
 
   static constexpr std::string_view UndecoratedTypeName() {
     if constexpr (kIsObject) {
