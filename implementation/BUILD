@@ -807,6 +807,7 @@ cc_library(
         ":no_idx",
         ":proxy_convenience_aliases",
         ":selector_static_info",
+        "//metaprogramming:name_constants",
     ],
 )
 
@@ -849,6 +850,7 @@ cc_library(
         ":return",
         ":void",
         "//implementation/jni_helper:jni_typename_to_string",
+        "//metaprogramming:name_constants",
         "//metaprogramming:repeat_string",
         "//metaprogramming:string_concatenate",
     ],

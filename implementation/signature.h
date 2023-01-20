@@ -26,6 +26,7 @@
 #include "implementation/no_idx.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/selector_static_info.h"
+#include "metaprogramming/name_constants.h"
 
 namespace jni {
 
@@ -79,11 +80,13 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
       using Idxs = std::make_index_sequence<IdT::NumParams()>;
       if constexpr (IdT::kIsConstructor) {
         return metaprogramming::StringConcatenate_v<
-            kLeftParenthesis, Helper<Idxs>::val, kRightParenthesis, kLetterV>;
+            metaprogramming::Constants::left_parenthesis, Helper<Idxs>::val,
+            metaprogramming::Constants::right_parenthesis,
+            metaprogramming::Constants::V>;
       } else {
         return metaprogramming::StringConcatenate_v<
-            kLeftParenthesis, Helper<Idxs>::val, kRightParenthesis,
-            ReturnHelper::val>;
+            metaprogramming::Constants::left_parenthesis, Helper<Idxs>::val,
+            metaprogramming::Constants::right_parenthesis, ReturnHelper::val>;
       }
     } else if constexpr (kIdType_ == IdType::OVERLOAD_PARAM ||
                          kIdType_ == IdType::STATIC_OVERLOAD_PARAM) {
