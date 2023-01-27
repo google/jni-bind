@@ -206,14 +206,14 @@ struct Id {
   using MaterializeT = std::decay_t<decltype(Materialize())>;
   using RawMaterializeT = ArrayStrip_t<MaterializeT>;
   static constexpr std::size_t kMaterializedRank =
-      Rankifier<MaterializeT>::Rank(Materialize());
+      Rankifier::Rank(Materialize());
   using MaterializeCDeclT = std::decay_t<VoidIfVoid_t<decltype(Materialize())>>;
 
   using RawValT = ArrayStrip_t<std::decay_t<decltype(Val())>>;
   using UnstrippedRawVal = std::decay_t<decltype(Val())>;
   using CDecl = CDecl_t<VoidIfVoid_t<MaterializeT>>;
 
-  static constexpr std::size_t kRank = Rankifier<RawValT>::Rank(Val());
+  static constexpr std::size_t kRank = Rankifier::Rank(Val());
   static constexpr Return kObjectWhenConstructed{root};
 
   static constexpr const char* Name() {

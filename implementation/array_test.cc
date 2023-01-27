@@ -90,11 +90,11 @@ static_assert(std::is_same_v<ArrRank2T, Array<jint, 2>>);
 static_assert(std::is_same_v<ArrRank3T, Array<jint, 3>>);
 static_assert(std::is_same_v<ArrRank4T, Array<jint, 4>>);
 
-static_assert(Rankifier<ArrRank0T>::Rank(kArrRank0) == 0);
-static_assert(Rankifier<ArrRank1T>::Rank(kArrRank1) == 1);
-static_assert(Rankifier<ArrRank2T>::Rank(kArrRank2) == 2);
-static_assert(Rankifier<ArrRank3T>::Rank(kArrRank3) == 3);
-static_assert(Rankifier<ArrRank4T>::Rank(kArrRank4) == 4);
+static_assert(Rankifier::Rank(kArrRank0) == 0);
+static_assert(Rankifier::Rank(kArrRank1) == 1);
+static_assert(Rankifier::Rank(kArrRank2) == 2);
+static_assert(Rankifier::Rank(kArrRank3) == 3);
+static_assert(Rankifier::Rank(kArrRank4) == 4);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Strip Tests.

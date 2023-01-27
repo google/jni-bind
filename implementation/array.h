@@ -127,10 +127,7 @@ Array(RawType, Rank<kRank>) -> Array<RawType, kRank>;
 ////////////////////////////////////////////////////////////////////////////////
 // Rank Utilities.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename T>
 struct Rankifier {
-  static constexpr bool kComputableRank = true;
-
   template <typename SpanType_>
   struct Helper;
 
@@ -146,16 +143,6 @@ struct Rankifier {
     } else {
       return 0;
     }
-  }
-};
-
-template <>
-struct Rankifier<void> {
-  static constexpr bool kComputableRank = false;
-
-  template <typename ArrayT>
-  constexpr std::size_t Rank(const ArrayT& maybe_array) {
-    return 0;
   }
 };
 
