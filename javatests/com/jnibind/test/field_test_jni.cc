@@ -35,6 +35,7 @@ constexpr Class kFieldTestHelper {
     Field{"intField", jint{}},
     Field{"floatField", jfloat{}},
     Field{"doubleField", jdouble{}},
+    Field{"objectField", kObjectTestHelperClass},
 };
 
 constexpr Class kFieldTest {
