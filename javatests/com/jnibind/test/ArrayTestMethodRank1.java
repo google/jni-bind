@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Exercises array functionality arcross rJNI. */
+/** Exercises array functionality across rJNI. */
 @RunWith(JUnit4.class)
 public class ArrayTestMethodRank1 {
   static {
