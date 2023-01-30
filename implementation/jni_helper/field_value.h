@@ -24,7 +24,8 @@
 
 namespace jni {
 
-template <typename Raw, std::size_t kRank = 0, bool kStatic = false>
+template <typename Raw, std::size_t kRank = 0, bool kStatic = false,
+          typename Enable = void>
 struct FieldHelper {
   static Raw GetValue(jobject object_ref, jfieldID field_ref_);
 
@@ -32,10 +33,10 @@ struct FieldHelper {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Rank 0 types, i.e. the primitive type itself (e.g. int).
+// Rank 0: Primitive types (e.g. int).
 ////////////////////////////////////////////////////////////////////////////////
 template <>
-struct FieldHelper<jboolean, 0, false> {
+struct FieldHelper<jboolean, 0, false, void> {
   static inline jboolean GetValue(const jobject object_ref,
                                   const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetBooleanField(object_ref, field_ref_);
@@ -48,7 +49,7 @@ struct FieldHelper<jboolean, 0, false> {
 };
 
 template <>
-struct FieldHelper<jbyte, 0, false> {
+struct FieldHelper<jbyte, 0, false, void> {
   static inline jbyte GetValue(const jobject object_ref,
                                const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetByteField(object_ref, field_ref_);
@@ -61,7 +62,7 @@ struct FieldHelper<jbyte, 0, false> {
 };
 
 template <>
-struct FieldHelper<jchar, 0, false> {
+struct FieldHelper<jchar, 0, false, void> {
   static inline jchar GetValue(const jobject object_ref,
                                const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetCharField(object_ref, field_ref_);
@@ -74,7 +75,7 @@ struct FieldHelper<jchar, 0, false> {
 };
 
 template <>
-struct FieldHelper<jshort, 0, false> {
+struct FieldHelper<jshort, 0, false, void> {
   static inline jshort GetValue(const jobject object_ref,
                                 const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetShortField(object_ref, field_ref_);
@@ -87,7 +88,7 @@ struct FieldHelper<jshort, 0, false> {
 };
 
 template <>
-struct FieldHelper<jint, 0, false> {
+struct FieldHelper<jint, 0, false, void> {
   static inline jint GetValue(const jobject object_ref,
                               const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetIntField(object_ref, field_ref_);
@@ -100,7 +101,7 @@ struct FieldHelper<jint, 0, false> {
 };
 
 template <>
-struct FieldHelper<jlong, 0, false> {
+struct FieldHelper<jlong, 0, false, void> {
   static inline jlong GetValue(const jobject object_ref,
                                const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetLongField(object_ref, field_ref_);
@@ -113,7 +114,7 @@ struct FieldHelper<jlong, 0, false> {
 };
 
 template <>
-struct FieldHelper<jfloat, 0, false> {
+struct FieldHelper<jfloat, 0, false, void> {
   static inline jfloat GetValue(const jobject object_ref,
                                 const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetFloatField(object_ref, field_ref_);
@@ -126,7 +127,7 @@ struct FieldHelper<jfloat, 0, false> {
 };
 
 template <>
-struct FieldHelper<jdouble, 0, false> {
+struct FieldHelper<jdouble, 0, false, void> {
   static inline jdouble GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetDoubleField(object_ref, field_ref_);
@@ -139,7 +140,7 @@ struct FieldHelper<jdouble, 0, false> {
 };
 
 template <>
-struct FieldHelper<jobject, 0, false> {
+struct FieldHelper<jobject, 0, false, void> {
   static inline jobject GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_);
@@ -148,6 +149,75 @@ struct FieldHelper<jobject, 0, false> {
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jobject&& new_value) {
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1: Single dimension arrays (e.g. int[]).
+////////////////////////////////////////////////////////////////////////////////
+template <typename ArrayType>
+struct BaseFieldArrayHelper {
+  static inline ArrayType GetValue(const jobject object_ref,
+                                   const jfieldID field_ref_) {
+    return static_cast<ArrayType>(
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, ArrayType&& value) {
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
+  }
+};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, false, void>
+    : BaseFieldArrayHelper<jbooleanArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, false, void>
+    : BaseFieldArrayHelper<jbyteArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, false, void>
+    : BaseFieldArrayHelper<jcharArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, false, void>
+    : BaseFieldArrayHelper<jshortArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jint>, kRank, false, void>
+    : BaseFieldArrayHelper<jintArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, false, void>
+    : BaseFieldArrayHelper<jlongArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, false, void>
+    : BaseFieldArrayHelper<jfloatArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, false, void>
+    : BaseFieldArrayHelper<jdoubleArray> {};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1: jobjects.
+// Rank 2+: Multi-dimension arrays (e.g. int[][], int[][][]).
+////////////////////////////////////////////////////////////////////////////////
+template <typename T, std::size_t kRank>
+struct FieldHelper<
+    T, kRank, false,
+    std::enable_if_t<(std::is_same_v<jobject, T> || (kRank > 1))> > {
+  static inline jobjectArray GetValue(const jobject object_ref,
+                                      const jfieldID field_ref_) {
+    return static_cast<jobjectArray>(
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jobjectArray&& value) {
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
   }
 };
 

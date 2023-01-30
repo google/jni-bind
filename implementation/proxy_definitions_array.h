@@ -105,7 +105,6 @@ struct ArrayHelper {
     using RawT = typename IdT::RawMaterializeT;
     constexpr std::size_t kRank = IdT::kMaterializedRank;
 
-    // TODO(b/143908983): Support multi-dimensional arrays.
     if constexpr (!std::is_same_v<CDecl_t<RawT>, jobject>) {
       return LocalArray<RawT, kRank, kNoClassSpecified, kDefaultClassLoader,
                         kDefaultJvm>{nullptr};

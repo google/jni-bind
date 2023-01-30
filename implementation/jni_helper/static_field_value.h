@@ -25,10 +25,10 @@
 namespace jni {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Static Fields.
+// Rank 0: Static primitive types (e.g. int).
 ////////////////////////////////////////////////////////////////////////////////
 template <>
-struct FieldHelper<jboolean, 0, true> {
+struct FieldHelper<jboolean, 0, true, void> {
   static inline jboolean GetValue(const jclass clazz,
                                   const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetStaticBooleanField(clazz, field_ref_);
@@ -41,7 +41,7 @@ struct FieldHelper<jboolean, 0, true> {
 };
 
 template <>
-struct FieldHelper<jbyte, 0, true> {
+struct FieldHelper<jbyte, 0, true, void> {
   static inline jbyte GetValue(const jclass clazz, const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetStaticByteField(clazz, field_ref_);
   }
@@ -53,7 +53,7 @@ struct FieldHelper<jbyte, 0, true> {
 };
 
 template <>
-struct FieldHelper<jchar, 0, true> {
+struct FieldHelper<jchar, 0, true, void> {
   static inline jchar GetValue(const jclass clazz, const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetStaticCharField(clazz, field_ref_);
   }
@@ -65,7 +65,7 @@ struct FieldHelper<jchar, 0, true> {
 };
 
 template <>
-struct FieldHelper<jshort, 0, true> {
+struct FieldHelper<jshort, 0, true, void> {
   static inline jshort GetValue(const jclass clazz, const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetStaticShortField(clazz, field_ref_);
   }
@@ -77,7 +77,7 @@ struct FieldHelper<jshort, 0, true> {
 };
 
 template <>
-struct FieldHelper<jint, 0, true> {
+struct FieldHelper<jint, 0, true, void> {
   static inline jint GetValue(const jclass clazz, const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetStaticIntField(clazz, field_ref_);
   }
@@ -89,7 +89,7 @@ struct FieldHelper<jint, 0, true> {
 };
 
 template <>
-struct FieldHelper<jlong, 0, true> {
+struct FieldHelper<jlong, 0, true, void> {
   static inline jlong GetValue(const jclass clazz, const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetStaticLongField(clazz, field_ref_);
   }
@@ -101,7 +101,7 @@ struct FieldHelper<jlong, 0, true> {
 };
 
 template <>
-struct FieldHelper<jfloat, 0, true> {
+struct FieldHelper<jfloat, 0, true, void> {
   static inline jfloat GetValue(const jclass clazz, const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetStaticFloatField(clazz, field_ref_);
   }
@@ -113,7 +113,7 @@ struct FieldHelper<jfloat, 0, true> {
 };
 
 template <>
-struct FieldHelper<jdouble, 0, true> {
+struct FieldHelper<jdouble, 0, true, void> {
   static inline jdouble GetValue(const jclass clazz,
                                  const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetStaticDoubleField(clazz, field_ref_);
@@ -126,7 +126,7 @@ struct FieldHelper<jdouble, 0, true> {
 };
 
 template <>
-struct FieldHelper<jobject, 0, true> {
+struct FieldHelper<jobject, 0, true, void> {
   static inline jobject GetValue(const jclass clazz,
                                  const jfieldID field_ref_) {
     return jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_);
@@ -135,6 +135,75 @@ struct FieldHelper<jobject, 0, true> {
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jobject&& new_value) {
     jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1: Static single dimension arrays (e.g. int[]).
+////////////////////////////////////////////////////////////////////////////////
+template <typename ArrayType>
+struct StaticBaseFieldArrayHelper {
+  static inline ArrayType GetValue(const jobject object_ref,
+                                   const jfieldID field_ref_) {
+    return static_cast<ArrayType>(
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, ArrayType&& value) {
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
+  }
+};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jbooleanArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jbyteArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jcharArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jshortArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jint>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jintArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jlongArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jfloatArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jdoubleArray> {};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1: Static jobjects.
+// Rank 2+: Static multi-dimension arrays (e.g. int[][], int[][][]).
+////////////////////////////////////////////////////////////////////////////////
+template <typename T, std::size_t kRank>
+struct FieldHelper<
+    T, kRank, true,
+    std::enable_if_t<(std::is_same_v<jobject, T> || (kRank > 1))> > {
+  static inline jobjectArray GetValue(const jclass clazz,
+                                      const jfieldID field_ref_) {
+    return static_cast<jobjectArray>(
+        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jobjectArray&& value) {
+    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, value);
   }
 };
 

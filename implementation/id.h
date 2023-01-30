@@ -197,6 +197,8 @@ struct Id {
       }
     } else if constexpr (kIdType == IdType::FIELD) {
       return std::get<kIdx>(root.fields_).raw_;
+    } else if constexpr (kIdType == IdType::STATIC_FIELD) {
+      return std::get<kIdx>(root.static_.fields_).raw_;
     } else {
       // Not implemented.
       return Void{};

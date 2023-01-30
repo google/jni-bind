@@ -83,28 +83,28 @@ class FieldRef {
   using ProxyForField = Proxy_t<typename IdT::RawValT>;
   using CDeclForField = CDecl_t<typename IdT::RawValT>;
   using RawT = typename IdT::RawValT;
+  using ReturnProxied = Return_t<typename IdT::MaterializeCDeclT, IdT>;
 
-  Return_t<typename IdT::RawValT, IdT> Get() {
+  const auto& SelfVal() {
     if constexpr (IdT::kIsStatic) {
-      return {FieldHelper<CDeclForField, 0, true>::GetValue(
-          class_ref_, GetFieldID(class_ref_))};
+      return class_ref_;
     } else {
-      return {FieldHelper<CDeclForField>::GetValue(object_ref_,
-                                                   GetFieldID(class_ref_))};
+      return object_ref_;
     }
+  }
+
+  ReturnProxied Get() {
+    return {FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
+                        IdT::kIsStatic>::GetValue(SelfVal(),
+                                                  GetFieldID(class_ref_))};
   }
 
   template <typename T>
   void Set(T&& value) {
-    if constexpr (IdT::kIsStatic) {
-      FieldHelper<CDecl_t<typename IdT::RawValT>, 0, true>::SetValue(
-          class_ref_, GetFieldID(class_ref_),
-          ProxyForField::ProxyAsArg(std::forward<T>(value)));
-    } else {
-      FieldHelper<CDecl_t<typename IdT::RawValT>>::SetValue(
-          object_ref_, GetFieldID(class_ref_),
-          ProxyForField::ProxyAsArg(std::forward<T>(value)));
-    }
+    FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
+                IdT::kIsStatic>::SetValue(SelfVal(), GetFieldID(class_ref_),
+                                          ProxyForField::ProxyAsArg(
+                                              std::forward<T>(value)));
   }
 
  private:
