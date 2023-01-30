@@ -48,12 +48,12 @@ TEST_F(JniTest, InvokeHelper_InvokesBooleanMethod) {
       .WillOnce(Return(true));
 
   EXPECT_EQ(
-      (InvokeHelper<jboolean, 1, false>::Invoke(object, nullptr, method, 1)),
+      (InvokeHelper<jboolean, 0, false>::Invoke(object, nullptr, method, 1)),
       true);
   EXPECT_EQ(
-      (InvokeHelper<jboolean, 1, false>::Invoke(object, nullptr, method, 1, 2)),
+      (InvokeHelper<jboolean, 0, false>::Invoke(object, nullptr, method, 1, 2)),
       false);
-  EXPECT_EQ((InvokeHelper<jboolean, 1, false>::Invoke(object, nullptr, method,
+  EXPECT_EQ((InvokeHelper<jboolean, 0, false>::Invoke(object, nullptr, method,
                                                       1, 2, 3)),
             true);
 }
@@ -65,13 +65,13 @@ TEST_F(JniTest, InvokeHelper_InvokesIntMethod) {
       .Times(3)
       .WillRepeatedly(Return(123));
 
-  EXPECT_EQ((InvokeHelper<jint, 1, false>::Invoke(object, nullptr, method, 1)),
+  EXPECT_EQ((InvokeHelper<jint, 0, false>::Invoke(object, nullptr, method, 1)),
             123);
   EXPECT_EQ(
-      (InvokeHelper<jint, 1, false>::Invoke(object, nullptr, method, 1, 2)),
+      (InvokeHelper<jint, 0, false>::Invoke(object, nullptr, method, 1, 2)),
       123);
   EXPECT_EQ(
-      (InvokeHelper<jint, 1, false>::Invoke(object, nullptr, method, 1, 2, 3)),
+      (InvokeHelper<jint, 0, false>::Invoke(object, nullptr, method, 1, 2, 3)),
       123);
 }
 
@@ -82,13 +82,13 @@ TEST_F(JniTest, InvokeHelper_InvokesLongMethod) {
       .Times(3)
       .WillRepeatedly(Return(123L));
 
-  EXPECT_EQ((InvokeHelper<jlong, 1, false>::Invoke(object, nullptr, method, 1)),
+  EXPECT_EQ((InvokeHelper<jlong, 0, false>::Invoke(object, nullptr, method, 1)),
             123L);
   EXPECT_EQ(
-      (InvokeHelper<jlong, 1, false>::Invoke(object, nullptr, method, 1, 2)),
+      (InvokeHelper<jlong, 0, false>::Invoke(object, nullptr, method, 1, 2)),
       123L);
   EXPECT_EQ(
-      (InvokeHelper<jlong, 1, false>::Invoke(object, nullptr, method, 1, 2, 3)),
+      (InvokeHelper<jlong, 0, false>::Invoke(object, nullptr, method, 1, 2, 3)),
       123L);
 }
 
@@ -100,12 +100,12 @@ TEST_F(JniTest, InvokeHelper_InvokesFloatMethod) {
       .WillRepeatedly(Return(123));
 
   EXPECT_EQ(
-      (InvokeHelper<jfloat, 1, false>::Invoke(object, nullptr, method, 1)),
+      (InvokeHelper<jfloat, 0, false>::Invoke(object, nullptr, method, 1)),
       123);
   EXPECT_EQ(
-      (InvokeHelper<jfloat, 1, false>::Invoke(object, nullptr, method, 1, 2)),
+      (InvokeHelper<jfloat, 0, false>::Invoke(object, nullptr, method, 1, 2)),
       123);
-  EXPECT_EQ((InvokeHelper<jfloat, 1, false>::Invoke(object, nullptr, method, 1,
+  EXPECT_EQ((InvokeHelper<jfloat, 0, false>::Invoke(object, nullptr, method, 1,
                                                     2, 3)),
             123);
 }
@@ -119,12 +119,12 @@ TEST_F(JniTest, InvokeHelper_InvokesObjectMethod) {
       .WillRepeatedly(Return(result));
 
   EXPECT_EQ(
-      (InvokeHelper<jobject, 1, false>::Invoke(object, nullptr, method, 1)),
+      (InvokeHelper<jobject, 0, false>::Invoke(object, nullptr, method, 1)),
       result);
   EXPECT_EQ(
-      (InvokeHelper<jobject, 1, false>::Invoke(object, nullptr, method, 1, 2)),
+      (InvokeHelper<jobject, 0, false>::Invoke(object, nullptr, method, 1, 2)),
       result);
-  EXPECT_EQ((InvokeHelper<jobject, 1, false>::Invoke(object, nullptr, method, 1,
+  EXPECT_EQ((InvokeHelper<jobject, 0, false>::Invoke(object, nullptr, method, 1,
                                                      2, 3)),
             result);
 }

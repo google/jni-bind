@@ -97,7 +97,7 @@ struct OverloadRef {
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
       return static_cast<ReturnProxied>(
-          InvokeHelper<typename ReturnIdT::CDecl, kRank + 1, kStatic>::Invoke(
+          InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(
               object, clazz, mthd,
               Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...));
     }

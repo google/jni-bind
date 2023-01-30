@@ -28,7 +28,8 @@ template <typename ReturnType, std::size_t kRank, bool kStatic>
 class InvokeHelper {};
 
 ////////////////////////////////////////////////////////////////////////////////
-// Rank 0 type (aka void).
+// Rank 0 type: void
+//    void is special, but for symmetry it uses rank 0 with primitives.
 ////////////////////////////////////////////////////////////////////////////////
 template <>
 struct InvokeHelper<void, 0, false> {
@@ -40,10 +41,10 @@ struct InvokeHelper<void, 0, false> {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Rank 1 types, i.e. the primitive type itself (e.g. int).
+// Rank 0 types, i.e. the primitive type itself (e.g. int).
 ////////////////////////////////////////////////////////////////////////////////
 template <>
-struct InvokeHelper<jboolean, 1, false> {
+struct InvokeHelper<jboolean, 0, false> {
   template <typename... Ts>
   static jboolean Invoke(jobject object, jclass, jmethodID method_id,
                          Ts&&... ts) {
@@ -53,7 +54,7 @@ struct InvokeHelper<jboolean, 1, false> {
 };
 
 template <>
-struct InvokeHelper<jint, 1, false> {
+struct InvokeHelper<jint, 0, false> {
   template <typename... Ts>
   static jint Invoke(jobject object, jclass, jmethodID method_id, Ts&&... ts) {
     return jni::JniEnv::GetEnv()->CallIntMethod(object, method_id,
@@ -62,7 +63,7 @@ struct InvokeHelper<jint, 1, false> {
 };
 
 template <>
-struct InvokeHelper<jlong, 1, false> {
+struct InvokeHelper<jlong, 0, false> {
   template <typename... Ts>
   static jlong Invoke(jobject object, jclass, jmethodID method_id, Ts&&... ts) {
     return jni::JniEnv::GetEnv()->CallLongMethod(object, method_id,
@@ -71,7 +72,7 @@ struct InvokeHelper<jlong, 1, false> {
 };
 
 template <>
-struct InvokeHelper<jfloat, 1, false> {
+struct InvokeHelper<jfloat, 0, false> {
   template <typename... Ts>
   static jfloat Invoke(jobject object, jclass, jmethodID method_id,
                        Ts&&... ts) {
@@ -81,7 +82,7 @@ struct InvokeHelper<jfloat, 1, false> {
 };
 
 template <>
-struct InvokeHelper<jdouble, 1, false> {
+struct InvokeHelper<jdouble, 0, false> {
   template <typename... Ts>
   static jdouble Invoke(jobject object, jclass, jmethodID method_id,
                         Ts&&... ts) {
@@ -91,7 +92,7 @@ struct InvokeHelper<jdouble, 1, false> {
 };
 
 template <>
-struct InvokeHelper<jobject, 1, false> {
+struct InvokeHelper<jobject, 0, false> {
   // This always returns a local reference which should be embedded in type
   // information wherever this is used.
   template <typename... Ts>
@@ -103,7 +104,7 @@ struct InvokeHelper<jobject, 1, false> {
 };
 
 template <>
-struct InvokeHelper<jstring, 1, false> {
+struct InvokeHelper<jstring, 0, false> {
   template <typename... Ts>
   static jobject Invoke(jobject object, jclass, jmethodID method_id,
                         Ts&&... ts) {
@@ -113,10 +114,10 @@ struct InvokeHelper<jstring, 1, false> {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Rank 2 types, i.e. single dimension arrays (e.g. int[]).
+// Rank 1 types, i.e. single dimension arrays (e.g. int[]).
 ////////////////////////////////////////////////////////////////////////////////
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank == 2), jboolean>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, false> {
   template <typename... Ts>
   static jbooleanArray Invoke(jobject object, jclass, jmethodID method_id,
                               Ts&&... ts) {
@@ -126,7 +127,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 2), jboolean>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank == 2), jbyte>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, false> {
   template <typename... Ts>
   static jbyteArray Invoke(jobject object, jclass, jmethodID method_id,
                            Ts&&... ts) {
@@ -136,7 +137,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 2), jbyte>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank == 2), jchar>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, false> {
   template <typename... Ts>
   static jcharArray Invoke(jobject object, jclass, jmethodID method_id,
                            Ts&&... ts) {
@@ -146,7 +147,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 2), jchar>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank == 2), jshort>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, false> {
   template <typename... Ts>
   static jshortArray Invoke(jobject object, jclass, jmethodID method_id,
                             Ts&&... ts) {
@@ -156,7 +157,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 2), jshort>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank == 2), jint>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank == 1), jint>, kRank, false> {
   template <typename... Ts>
   static jintArray Invoke(jobject object, jclass, jmethodID method_id,
                           Ts&&... ts) {
@@ -166,7 +167,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 2), jint>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank == 2), jfloat>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, false> {
   template <typename... Ts>
   static jfloatArray Invoke(jobject object, jclass, jmethodID method_id,
                             Ts&&... ts) {
@@ -176,7 +177,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 2), jfloat>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank == 2), jdouble>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, false> {
   template <typename... Ts>
   static jdoubleArray Invoke(jobject object, jclass, jmethodID method_id,
                              Ts&&... ts) {
@@ -186,7 +187,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 2), jdouble>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank == 2), jlong>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, false> {
   template <typename... Ts>
   static jlongArray Invoke(jobject object, jclass, jmethodID method_id,
                            Ts&&... ts) {
@@ -196,7 +197,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 2), jlong>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank == 2), jarray>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank == 1), jarray>, kRank, false> {
   // Arrays of arrays (which this invoke represents) return object arrays
   // (arrays themselves are objects, ergo object arrays).
   template <typename... Ts>
@@ -208,7 +209,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 2), jarray>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank == 2), jobject>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank == 1), jobject>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
                              Ts&&... ts) {
@@ -218,10 +219,10 @@ struct InvokeHelper<std::enable_if_t<(kRank == 2), jobject>, kRank, false> {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Rank 3+ types, i.e. multi-dimension arrays (e.g. int[][], int[][][]).
+// Rank 2+ types, i.e. multi-dimension arrays (e.g. int[][], int[][][]).
 ////////////////////////////////////////////////////////////////////////////////
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank > 2), jboolean>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank > 1), jboolean>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
                              Ts&&... ts) {
@@ -231,7 +232,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 2), jboolean>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank > 2), jbyte>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank > 1), jbyte>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
                              Ts&&... ts) {
@@ -241,7 +242,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 2), jbyte>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank > 2), jchar>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank > 1), jchar>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
                              Ts&&... ts) {
@@ -251,7 +252,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 2), jchar>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank > 2), jshort>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank > 1), jshort>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
                              Ts&&... ts) {
@@ -261,7 +262,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 2), jshort>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank > 2), jint>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank > 1), jint>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
                              Ts&&... ts) {
@@ -271,7 +272,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 2), jint>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank > 2), jfloat>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank > 1), jfloat>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
                              Ts&&... ts) {
@@ -281,7 +282,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 2), jfloat>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank > 2), jdouble>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank > 1), jdouble>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
                              Ts&&... ts) {
@@ -291,7 +292,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 2), jdouble>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank > 2), jlong>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank > 1), jlong>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
                              Ts&&... ts) {
@@ -301,7 +302,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 2), jlong>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank > 2), jarray>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank > 1), jarray>, kRank, false> {
   // Arrays of arrays (which this invoke represents) return object arrays
   // (arrays themselves are objects, ergo object arrays).
   template <typename... Ts>
@@ -313,7 +314,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 2), jarray>, kRank, false> {
 };
 
 template <std::size_t kRank>
-struct InvokeHelper<std::enable_if_t<(kRank > 2), jobject>, kRank, false> {
+struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
                              Ts&&... ts) {
