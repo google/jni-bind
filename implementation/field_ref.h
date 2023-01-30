@@ -86,7 +86,7 @@ class FieldRef {
 
   Return_t<typename IdT::RawValT, IdT> Get() {
     if constexpr (IdT::kIsStatic) {
-      return {StaticFieldHelper<CDeclForField>::GetValue(
+      return {FieldHelper<CDeclForField, 0, true>::GetValue(
           class_ref_, GetFieldID(class_ref_))};
     } else {
       return {FieldHelper<CDeclForField>::GetValue(object_ref_,
@@ -97,7 +97,7 @@ class FieldRef {
   template <typename T>
   void Set(T&& value) {
     if constexpr (IdT::kIsStatic) {
-      StaticFieldHelper<CDecl_t<typename IdT::RawValT>>::SetValue(
+      FieldHelper<CDecl_t<typename IdT::RawValT>, 0, true>::SetValue(
           class_ref_, GetFieldID(class_ref_),
           ProxyForField::ProxyAsArg(std::forward<T>(value)));
     } else {

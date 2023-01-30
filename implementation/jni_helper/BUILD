@@ -122,6 +122,7 @@ cc_library(
     name = "static_field_value",
     hdrs = ["static_field_value.h"],
     deps = [
+        ":field_value_getter",
         ":jni_env",
         "//:jni_dep",
     ],
