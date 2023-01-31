@@ -50,6 +50,8 @@ public class FieldTest {
 
   @Test
   public void intTest() {
+    assertThat(rJniTestHelper.intField).isEqualTo(0);
+
     assertThat(jniIntField(rJniTestHelper, 12345)).isEqualTo(12345);
     assertThat(rJniTestHelper.intField).isEqualTo(12345);
 
@@ -65,6 +67,8 @@ public class FieldTest {
 
   @Test
   public void floatTests() {
+    assertThat(rJniTestHelper.floatField).isEqualTo(0);
+
     assertThat(jniFloatField(rJniTestHelper, 12345)).isEqualTo(12345);
     assertThat(rJniTestHelper.floatField).isEqualTo(12345);
 
@@ -80,6 +84,8 @@ public class FieldTest {
 
   @Test
   public void doubleTests() {
+    assertThat(rJniTestHelper.doubleField).isEqualTo(0);
+
     assertThat(jniDoubleField(rJniTestHelper, 12345)).isEqualTo(12345);
     assertThat(rJniTestHelper.doubleField).isEqualTo(12345);
 
@@ -88,6 +94,17 @@ public class FieldTest {
 
     assertThat(jniDoubleField(rJniTestHelper, Double.MIN_VALUE)).isEqualTo(Double.MIN_VALUE);
     assertThat(rJniTestHelper.doubleField).isEqualTo(Double.MIN_VALUE);
+  }
+
+  /** String Field Test. */
+  native String jniStringField(FieldTestHelper mockFieldTestHelper, String val);
+
+  @Test
+  public void stringTests() {
+    assertThat(rJniTestHelper.stringField).isEmpty();
+
+    assertThat(jniStringField(rJniTestHelper, "ABC")).isEqualTo("ABC");
+    assertThat(rJniTestHelper.stringField).isEqualTo("ABC");
   }
 
   /** Object Field Tests. */

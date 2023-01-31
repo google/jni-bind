@@ -24,6 +24,7 @@ public class FieldTestHelper {
   public int intField = 0;
   public float floatField = 0;
   public double doubleField = 0;
+  public String stringField = "";
 
   FieldTestHelper() {}
 
@@ -36,6 +37,7 @@ public class FieldTestHelper {
   boolean isEqualTo(FieldTestHelper rhs) {
     return intField == rhs.intField
         && floatField == rhs.floatField
-        && doubleField == rhs.doubleField;
+        && doubleField == rhs.doubleField
+        && stringField.equals(rhs.stringField);
   }
 }

@@ -34,6 +34,7 @@ TEST(TypeToString, CompilesBasicTypeTests) {
   static_assert(JavaTypeToString<jlong>() == "J"sv);
   static_assert(JavaTypeToString<jfloat>() == "F"sv);
   static_assert(JavaTypeToString<jdouble>() == "D"sv);
+  static_assert(JavaTypeToString<jstring>() == "Ljava/lang/String;"sv);
 }
 
 }  // namespace

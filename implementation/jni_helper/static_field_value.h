@@ -138,6 +138,20 @@ struct FieldHelper<jobject, 0, true, void> {
   }
 };
 
+template <>
+struct FieldHelper<jstring, 0, true, void> {
+  static inline jstring GetValue(const jclass clazz,
+                                 const jfieldID field_ref_) {
+    return reinterpret_cast<jstring>(
+        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jstring&& new_value) {
+    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+  }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Rank 1: Static single dimension arrays (e.g. int[]).
 ////////////////////////////////////////////////////////////////////////////////

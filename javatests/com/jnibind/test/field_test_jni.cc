@@ -35,6 +35,7 @@ constexpr Class kFieldTestHelper {
     Field{"intField", jint{}},
     Field{"floatField", jfloat{}},
     Field{"doubleField", jdouble{}},
+    Field{"stringField", jstring{}},
 };
 
 constexpr Class kFieldTest {
@@ -75,6 +76,13 @@ JNIEXPORT jdouble JNICALL Java_com_jnibind_test_FieldTest_jniDoubleField(
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
   rjni_test_helper["doubleField"].Set(jdouble{val});
   return rjni_test_helper["doubleField"].Get();
+}
+
+JNIEXPORT jstring JNICALL Java_com_jnibind_test_FieldTest_jniStringField(
+    JNIEnv* env, jclass, jobject object, jstring val) {
+  LocalObject<kFieldTestHelper> rjni_test_helper{object};
+  rjni_test_helper["stringField"].Set(val);
+  return rjni_test_helper["stringField"].Get().Release();
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_FieldTest_jniObjectFieldSet(

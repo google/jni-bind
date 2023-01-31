@@ -152,6 +152,20 @@ struct FieldHelper<jobject, 0, false, void> {
   }
 };
 
+template <>
+struct FieldHelper<jstring, 0, false, void> {
+  static inline jstring GetValue(const jobject object_ref,
+                                 const jfieldID field_ref_) {
+    return reinterpret_cast<jstring>(
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jstring&& new_value) {
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
+  }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Rank 1: Single dimension arrays (e.g. int[]).
 ////////////////////////////////////////////////////////////////////////////////
