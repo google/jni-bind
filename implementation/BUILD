@@ -342,6 +342,7 @@ cc_library(
     name = "global_string",
     hdrs = ["global_string.h"],
     deps = [
+        ":global_object",
         ":local_string",
         ":ref_base",
         ":string_ref",
@@ -516,6 +517,7 @@ cc_library(
     name = "local_string",
     hdrs = ["local_string.h"],
     deps = [
+        ":local_object",
         ":ref_base",
         ":string_ref",
         "//:jni_dep",

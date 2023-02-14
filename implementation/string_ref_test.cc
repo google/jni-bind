@@ -19,6 +19,12 @@
 
 namespace {
 
+using ::jni::AdoptGlobal;
+using ::jni::GlobalString;
+using ::jni::kJavaLangString;
+using ::jni::LocalObject;
+using ::jni::LocalString;
+using ::jni::UtfStringView;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::Return;
@@ -33,42 +39,50 @@ static constexpr jni::Class kClass{
 ////////////////////////////////////////////////////////////////////////////////
 // Local String Tests.
 ////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, LocalString_NullPtrT) { jni::LocalString str{nullptr}; }
+TEST_F(JniTest, LocalString_NullPtrT) { LocalString str{nullptr}; }
 
 TEST_F(JniTest, LocalString_NullWorks) {
-  jni::LocalString str{jstring{nullptr}};
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(0);
+  LocalString str{jstring{nullptr}};
+}
+
+TEST_F(JniTest, LocalString_ConstructsFromObject) {
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(1);
+  LocalObject<kJavaLangString> undecorated_object{
+      reinterpret_cast<jobject>(0xabcde)};
+  LocalString decorated_object{std::move(undecorated_object)};
 }
 
 TEST_F(JniTest, LocalString_ConstructsFromOutputOfMethod) {
-  jni::LocalObject<kClass> obj{};
-  jni::LocalString str{obj("Foo")};
+  LocalObject<kClass> obj{};
+  LocalString str{obj("Foo")};
 }
 
 TEST_F(JniTest, LocalString_ConstructsFromByteArray) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("([B)V")));
-  jni::LocalString str{reinterpret_cast<jbyteArray>(0xabcde)};
+  LocalString str{reinterpret_cast<jbyteArray>(0xabcde)};
 }
 
 TEST_F(JniTest, LocalString_CreatesFromCharPtr) {
-  jni::LocalString str{"TestString"};
+  LocalString str{"TestString"};
 }
 
 TEST_F(JniTest, LocalString_CreatesFromStringView) {
   EXPECT_CALL(*env_, NewStringUTF(StrEq("TestString")))
       .WillOnce(Return(FakeJString()));
   EXPECT_CALL(*env_, DeleteLocalRef);
-  jni::LocalString str{std::string_view{char_ptr}};
+  LocalString str{std::string_view{char_ptr}};
 }
 
 TEST_F(JniTest, LocalString_CreatesFromString) {
   EXPECT_CALL(*env_, NewStringUTF(StrEq("TestString")))
       .WillOnce(Return(FakeJString()));
   EXPECT_CALL(*env_, DeleteLocalRef);
-  jni::LocalString str{std::string{"TestString"}};
+  LocalString str{std::string{"TestString"}};
 }
 
 TEST_F(JniTest, LocalString_CreatesFromCharPtrForGlobals) {
-  jni::GlobalString str{"TestString"};
+  GlobalString str{"TestString"};
 }
 
 TEST_F(JniTest, LocalString_PinsAndUnpinsMemoryForLocals) {
@@ -78,58 +92,63 @@ TEST_F(JniTest, LocalString_PinsAndUnpinsMemoryForLocals) {
   EXPECT_CALL(*env_, GetStringUTFChars(_, nullptr)).WillOnce(Return(char_ptr));
   EXPECT_CALL(*env_, ReleaseStringUTFChars(_, char_ptr));
 
-  jni::LocalString str{"TestLocalString"};
-  jni::UtfStringView utf_string_view = str.Pin();
+  LocalString str{"TestLocalString"};
+  UtfStringView utf_string_view = str.Pin();
   EXPECT_EQ(utf_string_view.ToString().data(), char_ptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global String Tests.
 ////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, GlobalString_NullPtrT) { jni::GlobalString str{nullptr}; }
+TEST_F(JniTest, GlobalString_NullPtrT) { GlobalString str{nullptr}; }
 
-TEST_F(JniTest, GlobalString_NullWorks) {
-  jni::GlobalString str{jstring{nullptr}};
+TEST_F(JniTest, GlobalString_NullWorks) { GlobalString str{jstring{nullptr}}; }
+
+TEST_F(JniTest, GlobalString_ConstructsFromObject) {
+  EXPECT_CALL(*env_, DeleteGlobalRef).Times(1);
+  jni::GlobalObject<kJavaLangString> undecorated_object{
+      AdoptGlobal{}, reinterpret_cast<jobject>(0xabcde)};
+  GlobalString decorated_object{std::move(undecorated_object)};
 }
 
 TEST_F(JniTest, GlobalString_GlobalsReleaseWithGlobalMechanism) {
   EXPECT_CALL(*env_, DeleteGlobalRef);
 
-  jni::GlobalString str{FakeJString()};
+  GlobalString str{FakeJString()};
 }
 
 TEST_F(JniTest, GlobalString_ConstructsFromOutputOfMethod) {
-  jni::LocalObject<kClass> obj{};
-  jni::GlobalString str{obj("Foo")};
+  LocalObject<kClass> obj{};
+  GlobalString str{obj("Foo")};
 }
 
 TEST_F(JniTest, GlobalString_ConstructsFromByteArray) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("([B)V")));
-  jni::GlobalString str{reinterpret_cast<jbyteArray>(0xabcde)};
+  GlobalString str{reinterpret_cast<jbyteArray>(0xabcde)};
 }
 
 TEST_F(JniTest, GlobalString_CreatesFromCharPtr) {
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("<init>"), StrEq("(Ljava/lang/String;)V")));
-  jni::GlobalString str{"TestString"};
+  GlobalString str{"TestString"};
 }
 
 TEST_F(JniTest, GlobalString_CreatesFromStringView) {
   EXPECT_CALL(*env_, NewStringUTF(StrEq("TestString")))
       .WillOnce(Return(FakeJString()));
-  jni::GlobalString str{std::string_view{char_ptr}};
+  GlobalString str{std::string_view{char_ptr}};
 }
 
 TEST_F(JniTest, GlobalString_CreatesFromString) {
   EXPECT_CALL(*env_, NewStringUTF(StrEq("TestString")))
       .WillOnce(Return(FakeJString()));
-  jni::GlobalString str{std::string{"TestString"}};
+  GlobalString str{std::string{"TestString"}};
 }
 
 TEST_F(JniTest, GlobalString_CreatesFromCharPtrForGlobals) {
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("<init>"), StrEq("(Ljava/lang/String;)V")));
-  jni::GlobalString str{"TestString"};
+  GlobalString str{"TestString"};
 }
 
 TEST_F(JniTest, GlobalString_PinsAndUnpinsMemoryForLocals) {
@@ -139,8 +158,8 @@ TEST_F(JniTest, GlobalString_PinsAndUnpinsMemoryForLocals) {
   EXPECT_CALL(*env_, GetStringUTFChars(_, nullptr)).WillOnce(Return(char_ptr));
   EXPECT_CALL(*env_, ReleaseStringUTFChars(_, char_ptr));
 
-  jni::GlobalString str{"TestGlobalString"};
-  jni::UtfStringView utf_string_view = str.Pin();
+  GlobalString str{"TestGlobalString"};
+  UtfStringView utf_string_view = str.Pin();
   EXPECT_EQ(utf_string_view.ToString().data(), char_ptr);
 }
 

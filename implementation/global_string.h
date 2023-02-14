@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_GLOBAL_STRING_H_
 #define JNI_BIND_GLOBAL_STRING_H_
 
+#include "implementation/global_object.h"
 #include "implementation/local_string.h"
 #include "implementation/ref_base.h"
 #include "implementation/string_ref.h"
@@ -32,6 +33,11 @@ class GlobalString : public StringRefBase<GlobalString> {
   GlobalString(jobject java_string_as_object)
       : StringRefBase<GlobalString>(JniHelper::PromoteLocalToGlobalString(
             static_cast<jstring>(java_string_as_object))) {}
+
+  GlobalString(GlobalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>
+                   &&global_string)
+      : StringRefBase<GlobalString>(
+            static_cast<jstring>(global_string.Release())) {}
 
   GlobalString(LocalString &&local_string)
       : StringRefBase<GlobalString>(

@@ -18,6 +18,7 @@
 #define JNI_BIND_LOCAL_STRING_H_
 
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/local_object.h"
 #include "implementation/ref_base.h"
 #include "implementation/string_ref.h"
 #include "jni_dep.h"
@@ -36,9 +37,14 @@ class LocalString : public StringRefBase<LocalString> {
   using StringRefBase<LocalString>::StringRefBase;
   friend class StringRefBase<LocalString>;
 
+  // Constructors to support the that jstring and jobject are interchangeable.
   LocalString(jobject java_string_as_object)
       : StringRefBase<LocalString>(
             static_cast<jstring>(java_string_as_object)) {}
+
+  LocalString(
+      LocalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>&& obj)
+      : StringRefBase<LocalString>(static_cast<jstring>(obj.Release())) {}
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
