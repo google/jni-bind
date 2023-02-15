@@ -15,7 +15,7 @@
  */
 
 /*******************************************************************************
- * JNI Bind Version 0.5.
+ * JNI Bind Version 0.9.2.
  * Alpha Public Release.
  ********************************************************************************
  * This header is the single header version which you can use to quickly test or
@@ -1635,18 +1635,28 @@ using PrimitiveKeys =
 // using JNI Bind (e.g. LocalArray<jint>, not LocalArray<jintArray>).
 using RegularToArrayTypeMap = metaprogramming::TypeToTypeMap<
     std::tuple<jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jboolean,
-               jobject, jarray>,
+               jobject, jstring, jarray>,
     std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
-               jfloatArray, jdoubleArray, jbooleanArray, jobjectArray, jarray>>;
+               jfloatArray, jdoubleArray, jbooleanArray, jobjectArray,
+               jobjectArray, jarray>>;
 
 // Given a type, returns the corresponding array type (e.g. jint => jintArray).
 template <typename T>
 using RegularToArrayTypeMap_t =
     metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap, T>;
 
+// Array to CDecl type used for invocation.
+// Defined separately since this map is not invertible (jobject, jstring =>
+// jobject).
+using ArrayToRegularTypeMap = metaprogramming::TypeToTypeMap<
+    std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
+               jfloatArray, jdoubleArray, jbooleanArray, jobjectArray, jarray>,
+    std::tuple<jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jboolean,
+               jobject, jarray>>;
+
 template <typename T>
 using ArrayToRegularTypeMap_t =
-    metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap::Invert, T>;
+    metaprogramming::TypeToTypeMapQuery_t<ArrayToRegularTypeMap, T>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Storage Helper Metafunction.
@@ -3727,11 +3737,12 @@ class ArrayView {
   const std::size_t size_;
 };
 
-// Object arrays, or arrays with rank > 1 (which are object arrays).
+// Object arrays, or arrays with rank > 1 (which are object arrays), or strings.
 template <typename SpanType, std::size_t kRank>
 class ArrayView<
     SpanType, kRank,
-    std::enable_if_t<(kRank > 1) || std::is_same_v<SpanType, jobject>>> {
+    std::enable_if_t<(kRank > 1) || std::is_same_v<SpanType, jobject> ||
+                     std::is_same_v<SpanType, jstring>>> {
  public:
   // Metafunction that returns the type after a single dereference.
   template <std::size_t>
@@ -4156,6 +4167,9 @@ class ArrayRef : public RefBase<JniT>,
   using Base = RefBase<JniT>;
   using Base::Base;
 
+  ArrayRef(std::size_t size)
+      : Base(JniArrayHelper<SpanType, JniT::kRank>::NewArray(size)) {}
+
   ArrayView<SpanType, JniT::kRank> Pin(bool copy_on_completion = true) {
     return {Base::object_ref_, copy_on_completion, Length()};
   }
@@ -4397,9 +4411,6 @@ class LocalArray
   using Base =
       ArrayRef<JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
   using Base::Base;
-
-  LocalArray(std::size_t size)
-      : Base(JniArrayHelper<SpanType, kRank_>::NewArray(size)) {}
 
   LocalArray(LocalArray<SpanType, kRank_>&& rhs) : Base(rhs.Release()) {}
 
@@ -4851,6 +4862,20 @@ struct FieldHelper<jobject, 0, false, void> {
   }
 };
 
+template <>
+struct FieldHelper<jstring, 0, false, void> {
+  static inline jstring GetValue(const jobject object_ref,
+                                 const jfieldID field_ref_) {
+    return reinterpret_cast<jstring>(
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jstring&& new_value) {
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
+  }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Rank 1: Single dimension arrays (e.g. int[]).
 ////////////////////////////////////////////////////////////////////////////////
@@ -4901,13 +4926,14 @@ struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, false, void>
     : BaseFieldArrayHelper<jdoubleArray> {};
 
 ////////////////////////////////////////////////////////////////////////////////
-// Rank 1: jobjects.
+// Rank 1: jobjects & jstrings.
 // Rank 2+: Multi-dimension arrays (e.g. int[][], int[][][]).
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T, std::size_t kRank>
 struct FieldHelper<
     T, kRank, false,
-    std::enable_if_t<(std::is_same_v<jobject, T> || (kRank > 1))>> {
+    std::enable_if_t<(std::is_same_v<jobject, T> ||
+                      std::is_same_v<jstring, T> || (kRank > 1))>> {
   static inline jobjectArray GetValue(const jobject object_ref,
                                       const jfieldID field_ref_) {
     return static_cast<jobjectArray>(
@@ -5148,6 +5174,20 @@ struct FieldHelper<jobject, 0, true, void> {
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jobject&& new_value) {
+    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+  }
+};
+
+template <>
+struct FieldHelper<jstring, 0, true, void> {
+  static inline jstring GetValue(const jclass clazz,
+                                 const jfieldID field_ref_) {
+    return reinterpret_cast<jstring>(
+        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jstring&& new_value) {
     jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
   }
 };
@@ -5573,6 +5613,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, true> {
 
 }  // namespace jni
 
+#include <iterator>
 #include <string>
 #include <type_traits>
 
@@ -5580,20 +5621,30 @@ namespace jni {
 
 class LocalString;
 
+template <typename SpanType, std::size_t kRank, const auto& class_v_,
+          const auto& class_loader_v_, const auto& jvm_v_>
+class LocalArray;
+
 template <typename JString>
 struct Proxy<JString,
              typename std::enable_if_t<std::is_same_v<JString, jstring>>>
     : public ProxyBase<JString> {
+  template <typename Id, std::size_t kRank>
+  struct Helper {
+    using type = LocalArray<jstring, kRank, kJavaLangString,
+                            kDefaultClassLoader, kDefaultJvm>;
+  };
+
+  template <typename Id>
+  struct Helper<Id, 0> {
+    using type = LocalString;
+  };
+
   using AsArg =
       std::tuple<std::string, jstring, char*, const char*, std::string_view>;
 
-  template <typename>
-  using AsReturn = LocalString;
-
-  template <typename T>
-  struct Helper {
-    static constexpr bool val = true;
-  };
+  template <typename Id>
+  using AsReturn = typename Helper<Id, Id::kRank>::type;
 
   template <typename OverloadSelection, typename T>
   static constexpr bool kViable =
@@ -6744,9 +6795,14 @@ class LocalString : public StringRefBase<LocalString> {
   using StringRefBase<LocalString>::StringRefBase;
   friend class StringRefBase<LocalString>;
 
+  // Constructors to support the that jstring and jobject are interchangeable.
   LocalString(jobject java_string_as_object)
       : StringRefBase<LocalString>(
             static_cast<jstring>(java_string_as_object)) {}
+
+  LocalString(
+      LocalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>&& obj)
+      : StringRefBase<LocalString>(static_cast<jstring>(obj.Release())) {}
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
@@ -7005,6 +7061,52 @@ class LocalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
 
 }  // namespace jni
 
+#include <cstddef>
+#include <type_traits>
+
+namespace jni {
+
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+class LocalObject;
+
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+class GlobalObject;
+
+template <std::size_t kRank_, const auto& class_v_, const auto& class_loader_v_,
+          const auto& jvm_v_>
+class LocalArray<jstring, kRank_, class_v_, class_loader_v_, jvm_v_>
+    : public LocalArray<jobject, kRank_, kJavaLangString, kDefaultClassLoader,
+                        kDefaultJvm> {
+ public:
+  using Base = LocalArray<jobject, kRank_, kJavaLangString, kDefaultClassLoader,
+                          kDefaultJvm>;
+
+  using Base::Base;
+  using StringJniT =
+      JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>;
+
+  LocalArray(std::size_t size)
+      : Base(JniArrayHelper<jobject, kRank_>::NewArray(
+            size, ClassRef<StringJniT>::GetAndMaybeLoadClassRef(nullptr),
+            nullptr)) {}
+
+  // Note: Globals are not permitted in a `LocalArray` because it makes
+  // reasoning about them confusing.
+  void Set(
+      std::size_t idx,
+      LocalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>&& val) {
+    return JniArrayHelper<jobject, kRank_>::SetArrayElement(Base::object_ref_,
+                                                            idx, val.Release());
+  }
+
+  void Set(std::size_t idx, LocalString&& val) {
+    return JniArrayHelper<jobject, kRank_>::SetArrayElement(Base::object_ref_,
+                                                            idx, val.Release());
+  }
+};
+
+}  // namespace jni
+
 namespace jni {
 
 class GlobalString : public StringRefBase<GlobalString> {
@@ -7015,6 +7117,11 @@ class GlobalString : public StringRefBase<GlobalString> {
   GlobalString(jobject java_string_as_object)
       : StringRefBase<GlobalString>(JniHelper::PromoteLocalToGlobalString(
             static_cast<jstring>(java_string_as_object))) {}
+
+  GlobalString(GlobalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>&&
+                   global_string)
+      : StringRefBase<GlobalString>(
+            static_cast<jstring>(global_string.Release())) {}
 
   GlobalString(LocalString&& local_string)
       : StringRefBase<GlobalString>(
