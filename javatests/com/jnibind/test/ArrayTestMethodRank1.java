@@ -27,9 +27,9 @@ import org.junit.runners.JUnit4;
 
 /** Exercises array functionality arcross rJNI. */
 @RunWith(JUnit4.class)
-public class ArrayTest {
+public class ArrayTestMethodRank1 {
   static {
-    System.loadLibrary("array_test_jni");
+    System.loadLibrary("array_test_method_rank_1_jni");
   }
 
   @AfterClass
@@ -39,27 +39,27 @@ public class ArrayTest {
 
   static native void jniTearDown();
 
-  native void nativeBooleanTests(ArrayTest arrayTest, boolean[] intArray);
+  native void nativeBooleanTests(ArrayTestMethodRank1 arrayTest, boolean[] intArray);
 
-  native void nativeByteTests(ArrayTest arrayTest, byte[] byteArray);
+  native void nativeByteTests(ArrayTestMethodRank1 arrayTest, byte[] byteArray);
 
-  native void nativeCharTests(ArrayTest arrayTest, char[] charArray);
+  native void nativeCharTests(ArrayTestMethodRank1 arrayTest, char[] charArray);
 
-  native void nativeShortTests(ArrayTest arrayTest, short[] shortArray);
+  native void nativeShortTests(ArrayTestMethodRank1 arrayTest, short[] shortArray);
 
-  native void nativeIntTests(ArrayTest arrayTest, int[] intArray);
+  native void nativeIntTests(ArrayTestMethodRank1 arrayTest, int[] intArray);
 
-  native void nativeLongTests(ArrayTest arrayTest, long[] longArray);
+  native void nativeLongTests(ArrayTestMethodRank1 arrayTest, long[] longArray);
 
-  native void nativeFloatTests(ArrayTest arrayTest, float[] floatArray);
+  native void nativeFloatTests(ArrayTestMethodRank1 arrayTest, float[] floatArray);
 
-  native void nativeDoubleTests(ArrayTest arrayTest, double[] doubleArray);
+  native void nativeDoubleTests(ArrayTestMethodRank1 arrayTest, double[] doubleArray);
 
-  native void nativeStringTests(ArrayTest arrayTest, String[] stringArray);
+  native void nativeStringTests(ArrayTestMethodRank1 arrayTest, String[] stringArray);
 
-  native void nativeObjectTests(ArrayTest arrayTest, ObjectTestHelper[] objectArray);
+  native void nativeObjectTests(ArrayTestMethodRank1 arrayTest, ObjectTestHelper[] objectArray);
 
-  void rJniBooleanArray(boolean testForTrue, boolean[] arr) {
+  void booleanArray(boolean testForTrue, boolean[] arr) {
     for (int i = 0; i < arr.length; i++) {
       if (testForTrue) {
         assertTrue(arr[i]);
@@ -69,56 +69,56 @@ public class ArrayTest {
     }
   }
 
-  void rJniByteArray(byte baseOffset, byte[] arr) {
+  void byteArray(byte baseOffset, byte[] arr) {
     for (int i = 0; i < arr.length; i++) {
       assertEquals(i + baseOffset, arr[i]);
     }
   }
 
-  void rJniCharArray(char baseOffset, char[] arr) {
+  void charArray(char baseOffset, char[] arr) {
     for (int i = 0; i < arr.length; i++) {
       assertEquals(i + baseOffset, arr[i]);
     }
   }
 
-  void rJniShortArray(short baseOffset, short[] arr) {
+  void shortArray(short baseOffset, short[] arr) {
     for (int i = 0; i < arr.length; i++) {
       assertEquals(i + baseOffset, arr[i]);
     }
   }
 
-  void rJniIntArray(int baseOffset, int[] arr) {
+  void intArray(int baseOffset, int[] arr) {
     for (int i = 0; i < arr.length; i++) {
       assertEquals(i + baseOffset, arr[i]);
     }
   }
 
-  void rJniLongArray(long baseOffset, long[] arr) {
+  void longArray(long baseOffset, long[] arr) {
     for (int i = 0; i < arr.length; i++) {
       assertEquals(i + baseOffset, arr[i]);
     }
   }
 
-  void rJniFloatArray(float baseOffset, float[] arr) {
+  void floatArray(float baseOffset, float[] arr) {
     for (int i = 0; i < arr.length; i++) {
       assertEquals(i + baseOffset, arr[i], 1.f);
     }
   }
 
-  void rJniDoubleArray(double baseOffset, double[] arr) {
+  void doubleArray(double baseOffset, double[] arr) {
     for (int i = 0; i < arr.length; i++) {
       assertEquals((double) i + baseOffset, arr[i], 0);
     }
   }
 
-  void rJniStringArray(String[] arr) {
+  void stringArray(String[] arr) {
     assertEquals(3, arr.length);
     assertEquals("Foo", arr[0]);
     assertEquals("Baz", arr[1]);
     assertEquals("Bar", arr[2]);
   }
 
-  void rJniObjectArray(int objectMemberOffset, ObjectTestHelper[] arr) {
+  void objectArray(int objectMemberOffset, ObjectTestHelper[] arr) {
     for (int i = 0; i < arr.length; i++) {
       int idxPlusOffset = i + objectMemberOffset;
       ObjectTestHelper dummyThatMatchesIdx =
