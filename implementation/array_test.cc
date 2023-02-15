@@ -179,8 +179,7 @@ TEST_F(JniTest, Array_HandlesSingleObjectArray) {
 
 TEST_F(JniTest, Array_HandlesSingleBoolAsParamWithRankfulReturnType) {
   static constexpr Class kClass{
-      "ClassThatReturnsArrays",
-      Method{"Foo", jni::Return<int>{}, Params{Array{jboolean{}}}}};
+      "kClass", Method{"Foo", jni::Return<int>{}, Params{Array{jboolean{}}}}};
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([Z)I")));
 
@@ -190,8 +189,7 @@ TEST_F(JniTest, Array_HandlesSingleBoolAsParamWithRankfulReturnType) {
 
 TEST_F(JniTest, Array_HandlesSingleBoolAsParamWithVoidReturnT) {
   static constexpr Class kClass{
-      "ClassThatReturnsArrays",
-      Method{"Foo", jni::Return{}, Params{Array{jboolean{}}}}
+      "kClass", Method{"Foo", jni::Return{}, Params{Array{jboolean{}}}}
 
   };
 
@@ -205,7 +203,7 @@ TEST_F(JniTest, Array_HandlesSingleBoolAsParamWithVoidReturnT) {
 
 TEST_F(JniTest, Array_HandlesMultipleBoolAsParam) {
   static constexpr Class kClass{
-      "ClassThatReturnsArrays",
+      "kClass",
       Method{"Z", jni::Return{}, Params{Array{jboolean{}}}},
       Method{"ZZ", jni::Return{}, Params{Array{jboolean{}}, Array{jboolean{}}}},
       Method{"ZZZ", jni::Return{},
@@ -226,7 +224,7 @@ TEST_F(JniTest, Array_HandlesMultipleBoolAsParam) {
 
 TEST_F(JniTest, Array_HandlesComplexArrays) {
   static constexpr Class kClass{
-      "ClassThatReturnsArrays",
+      "kClass",
       Method{"Foo", jni::Return{Array{kClass2}},
              Params{Array{jint{}}, Array{jboolean{}}}},
   };
@@ -253,8 +251,7 @@ TEST_F(JniTest, Array_AllowsRValuesOfLocalArrays) {
 
 TEST_F(JniTest, Array_HandlesSingle2DIntAsReturnT) {
   static constexpr Class kClass{
-      "ClassThatReturnsArrays",
-      Method{"I", jni::Return{Array<jint, 2>{}}, Params{}}};
+      "kClass", Method{"I", jni::Return{Array<jint, 2>{}}, Params{}}};
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("I"), StrEq("()[[I")));
 
@@ -264,8 +261,7 @@ TEST_F(JniTest, Array_HandlesSingle2DIntAsReturnT) {
 
 TEST_F(JniTest, Array_HandlesSingle2DIntAsParamWithRankfulReturnT) {
   static constexpr Class kClass{
-      "ClassThatReturnsArrays",
-      Method{"I", jni::Return<int>{}, Params{Array<jint, 2>{}}}};
+      "kClass", Method{"I", jni::Return<int>{}, Params{Array<jint, 2>{}}}};
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("I"), StrEq("([[I)I")));
 
@@ -277,7 +273,7 @@ TEST_F(JniTest, Array_HandlesSingle2DIntAsParamWithRankfulReturnT) {
 
 TEST_F(JniTest, Array_HandlesSingle2DClassAsReturn) {
   static constexpr Class kClass{
-      "ClassThatReturnsArrays",
+      "kClass",
       Method{"Foo", jni::Return{Array{kClass2, Rank<2>{}}}, Params{}}};
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("()[[LkClass2;")));
@@ -320,7 +316,7 @@ TEST_F(JniTest, Array_HandlesSingleUndefinedClassAsParam) {
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, Array_LooksUpCorrectSignaturesForReturns) {
   static constexpr Class kClass{
-      "ClassThatReturnsArrays",
+      "kClass",
       Method{"BoolArray", jni::Return{Array{jboolean{}}}, Params{}},
       Method{"ByteArray", jni::Return{Array{jbyte{}}}, Params{}},
       Method{"CharArray", jni::Return{Array{jchar{}}}, Params{}},
@@ -360,7 +356,7 @@ TEST_F(JniTest, Array_LooksUpCorrectSignaturesForReturns) {
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, Array_CorrectReturnSignatureForStrings) {
   static constexpr Class kClass{
-      "ClassThatReturnsArrays",
+      "kClass",
       Method{"StringArray", jni::Return{Array{jstring{}}}, Params{}},
   };
 
@@ -372,7 +368,7 @@ TEST_F(JniTest, Array_CorrectReturnSignatureForStrings) {
 
 TEST_F(JniTest, Array_CorrectParamSignatureForStrings) {
   static constexpr Class kClass{
-      "ClassThatReturnsArrays",
+      "kClass",
       Method{"StringArray", jni::Return{}, Params{Array{jstring{}}}},
   };
 
@@ -388,7 +384,7 @@ TEST_F(JniTest, Array_CorrectParamSignatureForStrings) {
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, Array_FieldTests) {
   static constexpr Class kClass{
-      "ClassThatReturnsArrays",
+      "kClass",
       Field{"BoolArray", Array{jboolean{}}},
       Field{"ByteArray", Array{jbyte{}}},
       Field{"CharArray", Array{jchar{}}},
@@ -436,7 +432,7 @@ TEST_F(JniTest, Array_FieldTests) {
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, Array_CorrectFieldSignatureForStrings) {
   static constexpr Class kClass{
-      "ClassThatReturnsArrays",
+      "kClass",
       Field{"StringArrayRank1", Array{jstring{}}},
       Field{"StringArrayRank2", Array{jstring{}, Rank<2>{}}},
       Field{"StringArrayRank3", Array{jstring{}, Rank<3>{}}},
