@@ -24,6 +24,7 @@ using jni::ArrayView;
 using jni::Class;
 using jni::LocalArray;
 using jni::LocalObject;
+using jni::LocalString;
 using jni::Method;
 using jni::Params;
 using jni::Return;
@@ -41,6 +42,7 @@ static constexpr Class kArrayTest {
     Method {"rJniLongArray", Return<void>{}, Params{jlong{}, Array{jlong{}}}},
     Method {"rJniFloatArray", Return<void>{}, Params{float{}, Array{jfloat{}}}},
     Method {"rJniDoubleArray", Return<void>{}, Params{jdouble{}, Array{jdouble{}}}},
+    Method {"rJniStringArray", Return<void>{}, Params{Array{jstring{}}}},
     Method {"rJniObjectArray", Return<void>{}, Params{int{}, Array{kObjectTestHelperClass}}},
 };
 // clang-format on
@@ -333,6 +335,41 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeDoubleTests(
     val += 5;
   }
   rjni_test_helper("rJniDoubleArray", jdouble{5 * 2}, new_array);
+}
+
+JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeStringTests(
+    JNIEnv* env, jclass, jobject test_fixture, jobjectArray object_array) {
+  LocalObject<kArrayTest> rjni_test_helper{test_fixture};
+
+  // Simple lvalue pass through works as expected.
+  LocalArray<jstring> local_arr{object_array};
+  rjni_test_helper("rJniStringArray", local_arr);
+
+  // TODO(b/143908983): Currently not possible to write.
+  // Simple rvalue pass through works as expected.
+  /*
+  rjni_test_helper("rJniStringArray",
+                   LocalArray<jstring>{
+                       { "Foo", std::string{"baz"}, LocalString{"Baz"} }
+                   });
+  */
+
+  // Building a new array, and setting all the values by hand works.
+  LocalArray<jstring> new_array{3};
+  new_array.Set(0, LocalString{"Foo"});
+  new_array.Set(1, LocalString{"Baz"});
+  new_array.Set(2, LocalString{"Bar"});
+  rjni_test_helper("rJniStringArray", new_array);
+
+  // And it can be iterated over.
+  std::size_t i = 0;
+  LocalArray<jstring> validator_array{3};
+  for (LocalString val : new_array.Pin()) {
+    validator_array.Set(i, std::move(val));
+    i++;
+  }
+
+  rjni_test_helper("rJniStringArray", validator_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTest_nativeObjectTests(

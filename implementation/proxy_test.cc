@@ -38,7 +38,10 @@ namespace jni {
 static constexpr Class kClass{
     "kClass", jni::Method{"Bar", jni::Return<void>{}, jni::Params{}}};
 static constexpr Class kClass2{
-    "kClass2", jni::Method{"Foo", jni::Return{kClass}, jni::Params{}}};
+    "kClass2",
+    jni::Method{"ReturnsObj", jni::Return{kClass}, jni::Params{}},
+};
+
 static constexpr ClassLoader kClassLoader{kDefaultClassLoader,
                                           SupportedClassSet{kClass}};
 
@@ -53,14 +56,6 @@ static_assert(std::is_same_v<Proxy_t<jchar>::CDecl, jchar>);
 static_assert(std::is_same_v<Proxy_t<jshort>::CDecl, jshort>);
 static_assert(std::is_same_v<Proxy_t<jlong>::CDecl, jlong>);
 static_assert(std::is_same_v<Proxy_t<jdouble>::CDecl, jdouble>);
-
-////////////////////////////////////////////////////////////////////////////////
-// String Tests.
-////////////////////////////////////////////////////////////////////////////////
-static_assert(std::is_same_v<Proxy_t<const char*>::CDecl, jstring>);
-static_assert(std::is_same_v<decltype("Foo"), char const (&)[4]>);
-static_assert(std::is_same_v<Proxy_t<const char (&)[4]>::CDecl, jstring>);
-
 static_assert(std::is_same_v<Proxy_t<const char*>::CDecl, jstring>);
 static_assert(std::is_same_v<Proxy_t<std::string_view>::CDecl, jstring>);
 static_assert(std::is_same_v<Proxy_t<std::string>::CDecl, jstring>);
@@ -68,7 +63,7 @@ static_assert(std::is_same_v<Proxy_t<std::string>::CDecl, jstring>);
 ////////////////////////////////////////////////////////////////////////////////
 // Object Tests.
 ////////////////////////////////////////////////////////////////////////////////
-void Foo() {
+void ReturnsObj() {
   LocalObject<kClass> obj;
 
   static_assert(std::is_same_v<Proxy_t<decltype(kClass)>::CDecl, jobject>);
@@ -171,8 +166,6 @@ static_assert(std::is_same_v<AsDecl_t<std::string>, std::tuple<jstring>>);
 // Types as return values.
 ////////////////////////////////////////////////////////////////////////////////
 
-// The second type for Return_t is the overload which allows for rich decoration
-// of return arguments (only applicable for class return types).
 struct DummyOverload {};
 
 static_assert(std::is_same_v<Return_t<void, DummyOverload>, void>);
@@ -183,12 +176,6 @@ static_assert(std::is_same_v<Return_t<jchar, DummyOverload>, jchar>);
 static_assert(std::is_same_v<Return_t<jshort, DummyOverload>, jshort>);
 static_assert(std::is_same_v<Return_t<jlong, DummyOverload>, jlong>);
 static_assert(std::is_same_v<Return_t<jdouble, DummyOverload>, jdouble>);
-static_assert(
-    std::is_same_v<Return_t<const char*, DummyOverload>, LocalString>);
-static_assert(
-    std::is_same_v<Return_t<std::string_view, DummyOverload>, LocalString>);
-static_assert(
-    std::is_same_v<Return_t<std::string, DummyOverload>, LocalString>);
 
 // Objects are better tested through the convertability of their output.
 TEST_F(JniTest, MaterializationTests) {
@@ -203,21 +190,21 @@ TEST_F(JniTest, MaterializationTests) {
 
   // Objects can be rvalues (here an x-value).
   LocalObject<kClass2> generator_obj{};
-  LocalObject<kClass> local_1{generator_obj("Foo")};
+  LocalObject<kClass> local_1{generator_obj("ReturnsObj")};
 
   // Objects can also be described with no actual class definition.
   // These objects won't be usable, but they are "name-safe".
-  LocalObject local_2{generator_obj("Foo")};
+  LocalObject local_2{generator_obj("ReturnsObj")};
 
   // doesn't compile because of invalid class (good).
-  // LocalObject<kClass2> local_3 { generator_obj("Foo") }; }
+  // LocalObject<kClass2> local_3 { generator_obj("ReturnsObj") }; }
 
   // Globals can be built from locals.
-  GlobalObject<kClass> global_1{generator_obj("Foo")};
+  GlobalObject<kClass> global_1{generator_obj("ReturnsObj")};
   global_1("Bar");
 
   // Globals can be built from expiring locals without a full type.
-  GlobalObject global_2{generator_obj("Foo")};
+  GlobalObject global_2{generator_obj("ReturnsObj")};
 
   // But they lack sufficient definition to have any invocation!
   // global_2("Bar");

@@ -48,18 +48,28 @@ using PrimitiveKeys =
 // using JNI Bind (e.g. LocalArray<jint>, not LocalArray<jintArray>).
 using RegularToArrayTypeMap = metaprogramming::TypeToTypeMap<
     std::tuple<jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jboolean,
-               jobject, jarray>,
+               jobject, jstring, jarray>,
     std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
-               jfloatArray, jdoubleArray, jbooleanArray, jobjectArray, jarray>>;
+               jfloatArray, jdoubleArray, jbooleanArray, jobjectArray,
+               jobjectArray, jarray>>;
 
 // Given a type, returns the corresponding array type (e.g. jint => jintArray).
 template <typename T>
 using RegularToArrayTypeMap_t =
     metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap, T>;
 
+// Array to CDecl type used for invocation.
+// Defined separately since this map is not invertible (jobject, jstring =>
+// jobject).
+using ArrayToRegularTypeMap = metaprogramming::TypeToTypeMap<
+    std::tuple<jbyteArray, jcharArray, jshortArray, jintArray, jlongArray,
+               jfloatArray, jdoubleArray, jbooleanArray, jobjectArray, jarray>,
+    std::tuple<jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jboolean,
+               jobject, jarray>>;
+
 template <typename T>
 using ArrayToRegularTypeMap_t =
-    metaprogramming::TypeToTypeMapQuery_t<RegularToArrayTypeMap::Invert, T>;
+    metaprogramming::TypeToTypeMapQuery_t<ArrayToRegularTypeMap, T>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Storage Helper Metafunction.

@@ -132,6 +132,7 @@ TEST_F(JniTest, Array_HandlesSingleIntArray) {
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("IntArray"), StrEq("()[I")));
   LocalArray<int> a = obj("IntArray");
+  LocalArray<int> b{a.Release()};
 }
 
 TEST_F(JniTest, Array_ConstructsFromRValue) {
@@ -354,6 +355,35 @@ TEST_F(JniTest, Array_LooksUpCorrectSignaturesForReturns) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Methods: String Tests.
+//  These are isolated since they are special composite types.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, Array_CorrectReturnSignatureForStrings) {
+  static constexpr Class kClass{
+      "ClassThatReturnsArrays",
+      Method{"StringArray", jni::Return{Array{jstring{}}}, Params{}},
+  };
+
+  LocalObject<kClass> obj{jobject{nullptr}};
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("StringArray"),
+                                 StrEq("()[Ljava/lang/String;")));
+  LocalArray<jstring> arr = obj("StringArray");
+}
+
+TEST_F(JniTest, Array_CorrectParamSignatureForStrings) {
+  static constexpr Class kClass{
+      "ClassThatReturnsArrays",
+      Method{"StringArray", jni::Return{}, Params{Array{jstring{}}}},
+  };
+
+  LocalObject<kClass> obj{jobject{nullptr}};
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("StringArray"),
+                                 StrEq("([Ljava/lang/String;)V")));
+  LocalArray<jstring> arr{2};
+  obj("StringArray", arr);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Fields.
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, Array_FieldTests) {
@@ -399,6 +429,30 @@ TEST_F(JniTest, Array_FieldTests) {
   obj["ObjectArrayRank1"].Get();
   obj["ObjectArrayRank2"].Get();
   obj["ObjectArrayRank3"].Get();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Fields: String Tests.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, Array_CorrectFieldSignatureForStrings) {
+  static constexpr Class kClass{
+      "ClassThatReturnsArrays",
+      Field{"StringArrayRank1", Array{jstring{}}},
+      Field{"StringArrayRank2", Array{jstring{}, Rank<2>{}}},
+      Field{"StringArrayRank3", Array{jstring{}, Rank<3>{}}},
+  };
+
+  LocalObject<kClass> obj{jobject{nullptr}};
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("StringArrayRank1"),
+                                StrEq("[Ljava/lang/String;")));
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("StringArrayRank2"),
+                                StrEq("[[Ljava/lang/String;")));
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("StringArrayRank3"),
+                                StrEq("[[[Ljava/lang/String;")));
+
+  LocalArray<jstring> arr1 = obj["StringArrayRank1"].Get();
+  LocalArray<jstring, 2> arr2 = obj["StringArrayRank2"].Get();
+  LocalArray<jstring, 3> arr3 = obj["StringArrayRank3"].Get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -464,10 +464,32 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "local_array_string",
+    hdrs = ["local_array_string.h"],
+    deps = [
+        ":array",
+        ":array_ref",
+        ":class",
+        ":class_ref",
+        ":default_class_loader",
+        ":jni_type",
+        ":jvm",
+        ":local_array",
+        ":local_object",
+        ":local_string",
+        ":object",
+        "//:jni_dep",
+        "//implementation/jni_helper",
+        "//implementation/jni_helper:jni_array_helper",
+    ],
+)
+
 cc_test(
     name = "local_array_test",
     srcs = ["local_array_test.cc"],
     deps = [
+        ":local_array_string",
         "//:jni_bind",
         "//:jni_test",
         "//:mock_jni_env",

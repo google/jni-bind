@@ -16,6 +16,7 @@
 #ifndef JNI_BIND_IMPLEMENTATION_PROXY_DEFINITIONS_STRING_H_
 #define JNI_BIND_IMPLEMENTATION_PROXY_DEFINITIONS_STRING_H_
 
+#include <iterator>
 #include <string>
 #include <type_traits>
 
@@ -28,20 +29,30 @@ namespace jni {
 
 class LocalString;
 
+template <typename SpanType, std::size_t kRank, const auto& class_v_,
+          const auto& class_loader_v_, const auto& jvm_v_>
+class LocalArray;
+
 template <typename JString>
 struct Proxy<JString,
              typename std::enable_if_t<std::is_same_v<JString, jstring>>>
     : public ProxyBase<JString> {
+  template <typename Id, std::size_t kRank>
+  struct Helper {
+    using type = LocalArray<jstring, kRank, kJavaLangString,
+                            kDefaultClassLoader, kDefaultJvm>;
+  };
+
+  template <typename Id>
+  struct Helper<Id, 0> {
+    using type = LocalString;
+  };
+
   using AsArg =
       std::tuple<std::string, jstring, char*, const char*, std::string_view>;
 
-  template <typename>
-  using AsReturn = LocalString;
-
-  template <typename T>
-  struct Helper {
-    static constexpr bool val = true;
-  };
+  template <typename Id>
+  using AsReturn = typename Helper<Id, Id::kRank>::type;
 
   template <typename OverloadSelection, typename T>
   static constexpr bool kViable =

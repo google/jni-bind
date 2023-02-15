@@ -101,11 +101,12 @@ class ArrayView {
   const std::size_t size_;
 };
 
-// Object arrays, or arrays with rank > 1 (which are object arrays).
+// Object arrays, or arrays with rank > 1 (which are object arrays), or strings.
 template <typename SpanType, std::size_t kRank>
 class ArrayView<
     SpanType, kRank,
-    std::enable_if_t<(kRank > 1) || std::is_same_v<SpanType, jobject>>> {
+    std::enable_if_t<(kRank > 1) || std::is_same_v<SpanType, jobject> ||
+                     std::is_same_v<SpanType, jstring>>> {
  public:
   // Metafunction that returns the type after a single dereference.
   template <std::size_t>

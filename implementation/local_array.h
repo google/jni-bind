@@ -58,8 +58,6 @@ class LocalArray
       ArrayRef<JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
   using Base::Base;
 
-  LocalArray(std::size_t size)
-      : Base(JniArrayHelper<SpanType, kRank_>::NewArray(size)) {}
 
   LocalArray(LocalArray<SpanType, kRank_>&& rhs) : Base(rhs.Release()) {}
 

@@ -45,6 +45,7 @@ cc_library(
         "//implementation:jvm",
         "//implementation:jvm_ref",
         "//implementation:local_array",
+        "//implementation:local_array_string",
         "//implementation:local_class_loader",
         "//implementation:local_object",
         "//implementation:local_string",

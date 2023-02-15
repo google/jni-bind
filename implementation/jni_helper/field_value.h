@@ -216,13 +216,14 @@ struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, false, void>
     : BaseFieldArrayHelper<jdoubleArray> {};
 
 ////////////////////////////////////////////////////////////////////////////////
-// Rank 1: jobjects.
+// Rank 1: jobjects & jstrings.
 // Rank 2+: Multi-dimension arrays (e.g. int[][], int[][][]).
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T, std::size_t kRank>
 struct FieldHelper<
     T, kRank, false,
-    std::enable_if_t<(std::is_same_v<jobject, T> || (kRank > 1))> > {
+    std::enable_if_t<(std::is_same_v<jobject, T> ||
+                      std::is_same_v<jstring, T> || (kRank > 1))> > {
   static inline jobjectArray GetValue(const jobject object_ref,
                                       const jfieldID field_ref_) {
     return static_cast<jobjectArray>(

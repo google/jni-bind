@@ -54,6 +54,7 @@
 #include "implementation/global_string.h"
 #include "implementation/jvm_ref.h"
 #include "implementation/local_array.h"
+#include "implementation/local_array_string.h"
 #include "implementation/local_class_loader.h"
 #include "implementation/local_object.h"
 #include "implementation/local_string.h"

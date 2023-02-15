@@ -42,6 +42,9 @@ class ArrayRef : public RefBase<JniT>,
   using Base = RefBase<JniT>;
   using Base::Base;
 
+  ArrayRef(std::size_t size)
+      : Base(JniArrayHelper<SpanType, JniT::kRank>::NewArray(size)) {}
+
   ArrayView<SpanType, JniT::kRank> Pin(bool copy_on_completion = true) {
     return {Base::object_ref_, copy_on_completion, Length()};
   }

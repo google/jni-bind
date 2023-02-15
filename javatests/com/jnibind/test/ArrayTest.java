@@ -55,6 +55,8 @@ public class ArrayTest {
 
   native void nativeDoubleTests(ArrayTest arrayTest, double[] doubleArray);
 
+  native void nativeStringTests(ArrayTest arrayTest, String[] stringArray);
+
   native void nativeObjectTests(ArrayTest arrayTest, ObjectTestHelper[] objectArray);
 
   void rJniBooleanArray(boolean testForTrue, boolean[] arr) {
@@ -107,6 +109,13 @@ public class ArrayTest {
     for (int i = 0; i < arr.length; i++) {
       assertEquals((double) i + baseOffset, arr[i], 0);
     }
+  }
+
+  void rJniStringArray(String[] arr) {
+    assertEquals(3, arr.length);
+    assertEquals("Foo", arr[0]);
+    assertEquals("Baz", arr[1]);
+    assertEquals("Bar", arr[2]);
   }
 
   void rJniObjectArray(int objectMemberOffset, ObjectTestHelper[] arr) {
@@ -164,6 +173,12 @@ public class ArrayTest {
   public void doubleTests() {
     double[] arr = {0, 1, 2, 3, 4, 5};
     nativeDoubleTests(this, arr);
+  }
+
+  @Test
+  public void stringTests() {
+    String[] arr = {"Foo", "Baz", "Bar"};
+    nativeStringTests(this, arr);
   }
 
   @Test

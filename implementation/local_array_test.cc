@@ -25,8 +25,10 @@ using ::jni::Array;
 using ::jni::CDecl_t;
 using ::jni::Class;
 using ::jni::GlobalObject;
+using ::jni::kJavaLangString;
 using ::jni::LocalArray;
 using ::jni::LocalObject;
+using ::jni::LocalString;
 using ::jni::Method;
 using ::jni::Params;
 using ::jni::test::JniTest;
@@ -36,6 +38,7 @@ using ::testing::StrEq;
 
 static constexpr Class kClass{"kClass"};
 
+jstring FakeJString() { return reinterpret_cast<jstring>(0xFEFEFEFEFE); }
 jintArray FakeJIntArray() { return reinterpret_cast<jintArray>(0xDADADADADA); }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +89,16 @@ TEST_F(JniTest, LocalArray_ConstructsObjectsForLValues) {
   // Unlike POD, objects are constructed with a size, a jclass, and an init
   // object.  This makes for a slightly different API then other objects.
   EXPECT_CALL(*env_, NewObjectArray(5, _, _));
+
+  LocalObject<kClass> default_object{};
+  LocalArray<jobject, 1, kClass> local_object_array{5, default_object};
+}
+
+// Same as above for jstring.
+TEST_F(JniTest, LocalStringArray_ConstructsObjectsForLValues) {
+  // Unlike POD, objects are constructed with a size, a jclass, and an init
+  // object.  This makes for a slightly different API then other objects.
+  EXPECT_CALL(*env_, NewObjectArray);
 
   LocalObject<kClass> default_object{};
   LocalArray<jobject, 1, kClass> local_object_array{5, default_object};
@@ -202,6 +215,43 @@ TEST_F(JniTest, Array_DifferentiatesWithOverloads) {
 
   LocalObject<kClass> obj{jobject{nullptr}};
   obj("Foo", LocalArray<jobject, 1, kClass2>{123, LocalObject<kClass2>{}});
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// String Array Tests.
+// Strings are unusual in that they have their own type (jstring) but are
+// almost completely objects otherwise.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, Array_CorrectSignatureForStringParams) {
+  static constexpr Class kClass{
+      "ClassThatReturnsArrays",
+      Method{"StringArray", jni::Return{}, jni::Params{Array{jstring{}}}},
+  };
+
+  LocalObject<kClass> obj{jobject{nullptr}};
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("StringArray"),
+                                 StrEq("([Ljava/lang/String;)V")));
+
+  LocalArray<jstring> arr{3};
+  obj("StringArray", arr);
+}
+
+TEST_F(JniTest, Array_LocalVanillaObjectRValuesCanBeSet) {
+  EXPECT_CALL(*env_, DeleteLocalRef(_)).Times(2);  // array, in place obj
+  EXPECT_CALL(*env_, DeleteLocalRef(FakeJString())).Times(0);
+
+  LocalArray<jobject, 1, kJavaLangString> arr{
+      3, LocalObject<kJavaLangString>{"Foo"}};
+  arr.Set(0, LocalObject<kJavaLangString>{FakeJString()});
+}
+
+TEST_F(JniTest, Array_LocalStringRValuesCanBeSet) {
+  EXPECT_CALL(*env_, DeleteLocalRef(_))
+      .Times(1);  // array (object is moved from)
+  EXPECT_CALL(*env_, DeleteLocalRef(FakeJString())).Times(0);
+
+  LocalArray<jstring> arr{3};
+  arr.Set(0, LocalString{FakeJString()});
 }
 
 }  // namespace
