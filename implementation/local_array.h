@@ -58,7 +58,6 @@ class LocalArray
       ArrayRef<JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
   using Base::Base;
 
-
   LocalArray(LocalArray<SpanType, kRank_>&& rhs) : Base(rhs.Release()) {}
 
   template <std::size_t kRank, const auto& class_v, const auto& class_loader_v,

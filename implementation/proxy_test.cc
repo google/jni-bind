@@ -76,7 +76,7 @@ void ReturnsObj() {
 ////////////////////////////////////////////////////////////////////////////////
 // Array Index Lookup Tests.
 // For compile time argument viability see |method_selection_test.cc|.
-// For runtime testing see |array_test.cc|.
+// For runtime testing see |array_test.cc| and |local_array_test.cc|.
 ////////////////////////////////////////////////////////////////////////////////
 
 // Rank 1 undecorated types.
@@ -105,6 +105,8 @@ static_assert(std::is_same_v<Index_t<Array<std::decay_t<decltype(kClass)>>>,
                              jobjectArray>);
 
 // Rank 1 decorated arguments.
+static_assert(
+    std::is_same_v<Index_t<RefBaseTag<jbooleanArray>>, jbooleanArray>);
 static_assert(std::is_same_v<Index_t<RefBaseTag<jbyteArray>>, jbyteArray>);
 static_assert(std::is_same_v<Index_t<RefBaseTag<jcharArray>>, jcharArray>);
 static_assert(std::is_same_v<Index_t<RefBaseTag<jshortArray>>, jshortArray>);
@@ -112,10 +114,8 @@ static_assert(std::is_same_v<Index_t<RefBaseTag<jintArray>>, jintArray>);
 static_assert(std::is_same_v<Index_t<RefBaseTag<jfloatArray>>, jfloatArray>);
 static_assert(std::is_same_v<Index_t<RefBaseTag<jdoubleArray>>, jdoubleArray>);
 static_assert(std::is_same_v<Index_t<RefBaseTag<jlongArray>>, jlongArray>);
-static_assert(
-    std::is_same_v<Index_t<RefBaseTag<jbooleanArray>>, jbooleanArray>);
-static_assert(std::is_same_v<Index_t<RefBaseTag<jarray>>, jarray>);
 static_assert(std::is_same_v<Index_t<RefBaseTag<jobjectArray>>, jobjectArray>);
+static_assert(std::is_same_v<Index_t<RefBaseTag<jarray>>, jarray>);
 
 // Rank 2 decorated declarations.
 static_assert(std::is_same_v<Index_t<Array<jbyte, 2>>, jbyteArray>);

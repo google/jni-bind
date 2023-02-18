@@ -74,6 +74,7 @@ class FieldRef {
         return jni::JniHelper::GetStaticFieldID(clazz, IdT::Name(),
                                                 Signature_v<IdT>.data());
       } else {
+        printf("jif clazz  %i ", clazz);
         return jni::JniHelper::GetFieldID(clazz, IdT::Name(),
                                           Signature_v<IdT>.data());
       }

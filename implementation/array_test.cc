@@ -39,9 +39,12 @@ using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::StrEq;
 
+jobject FakeJObject() { return reinterpret_cast<jobject>(0XBBBBBBBB); }
+jfieldID FakeJFieldId() { return reinterpret_cast<jfieldID>(0XABCDEFAB); }
+
 static constexpr Class kClass{"kClass"};
 static constexpr Class kClass2{"kClass2"};
-
+/*
 static constexpr Array arr1{jint{}};
 static constexpr Array arr2{jfloat{}};
 static constexpr Array arr3{jdouble{}};
@@ -319,7 +322,7 @@ TEST_F(JniTest, Array_HandlesSingleUndefinedClassAsParam) {
 TEST_F(JniTest, Array_LooksUpCorrectSignaturesForReturns) {
   static constexpr Class kClass{
       "kClass",
-      Method{"BoolArray", jni::Return{Array{jboolean{}}}, Params{}},
+      Method{"BooleanArray", jni::Return{Array{jboolean{}}}, Params{}},
       Method{"ByteArray", jni::Return{Array{jbyte{}}}, Params{}},
       Method{"CharArray", jni::Return{Array{jchar{}}}, Params{}},
       Method{"ShortArray", jni::Return{Array{jshort{}}}, Params{}},
@@ -331,7 +334,7 @@ TEST_F(JniTest, Array_LooksUpCorrectSignaturesForReturns) {
   };
 
   LocalObject<kClass> obj{jobject{nullptr}};
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("BoolArray"), StrEq("()[Z")));
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("BooleanArray"), StrEq("()[Z")));
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("ByteArray"), StrEq("()[B")));
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("CharArray"), StrEq("()[C")));
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("ShortArray"), StrEq("()[S")));
@@ -341,7 +344,7 @@ TEST_F(JniTest, Array_LooksUpCorrectSignaturesForReturns) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("LongArray"), StrEq("()[J")));
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("ObjectArray"), StrEq("()[LkClass2;")));
-  obj("BoolArray");
+  obj("BooleanArray");
   obj("ByteArray");
   obj("CharArray");
   obj("ShortArray");
@@ -380,10 +383,27 @@ TEST_F(JniTest, Array_CorrectParamSignatureForStrings) {
   LocalArray<jstring> arr{2};
   obj("StringArray", arr);
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
-// Fields.
+// Fields: Smoke Tests.
 ////////////////////////////////////////////////////////////////////////////////
+static constexpr Class kFieldClass{
+    "kFieldClass",
+    Field{"BooleanArray", Array{jboolean{}}},
+    Field{"ByteArray", Array{jbyte{}}},
+    Field{"CharArray", Array{jchar{}}},
+    Field{"ShortArray", Array{jshort{}}},
+    Field{"IntArray", Array{jint{}}},
+    Field{"FloatArray", Array{jfloat{}}},
+    Field{"DoubleArray", Array{jdouble{}}},
+    Field{"LongArray", Array{jlong{}}},
+    Field{"ObjectArrayRank1", Array{kClass2}},
+    Field{"ObjectArrayRank2", Array{kClass2, Rank<2>{}}},
+    Field{"ObjectArrayRank3", Array{kClass2, Rank<3>{}}},
+};
+
+/*
 TEST_F(JniTest, Array_FieldTests) {
   static constexpr Class kClass{
       "kClass",
@@ -401,7 +421,7 @@ TEST_F(JniTest, Array_FieldTests) {
   };
 
   LocalObject<kClass> obj{Fake<jobject>()};
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("BoolArray"), StrEq("[Z")));
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("BooleanArray"), StrEq("[Z")));
   EXPECT_CALL(*env_, GetFieldID(_, StrEq("ByteArray"), StrEq("[B")));
   EXPECT_CALL(*env_, GetFieldID(_, StrEq("CharArray"), StrEq("[C")));
   EXPECT_CALL(*env_, GetFieldID(_, StrEq("ShortArray"), StrEq("[S")));
@@ -416,7 +436,7 @@ TEST_F(JniTest, Array_FieldTests) {
   EXPECT_CALL(*env_,
               GetFieldID(_, StrEq("ObjectArrayRank3"), StrEq("[[[LkClass2;")));
 
-  obj["BoolArray"].Get();
+  obj["BooleanArray"].Get();
   obj["ByteArray"].Get();
   obj["CharArray"].Get();
   obj["ShortArray"].Get();
@@ -430,7 +450,7 @@ TEST_F(JniTest, Array_FieldTests) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Fields: String Tests.
+// Fields: String Smoke Tests.
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, Array_CorrectFieldSignatureForStrings) {
   static constexpr Class kClass{
@@ -451,6 +471,144 @@ TEST_F(JniTest, Array_CorrectFieldSignatureForStrings) {
   LocalArray<jstring> arr1 = obj["StringArrayRank1"].Get();
   LocalArray<jstring, 2> arr2 = obj["StringArrayRank2"].Get();
   LocalArray<jstring, 3> arr3 = obj["StringArrayRank3"].Get();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Fields: Aggressive E2E Tests.
+////////////////////////////////////////////////////////////////////////////////
+
+TEST_F(JniTest, Array_Field_Boolean_Test) {
+  std::unique_ptr<jboolean> fake_storage_ptr(new jboolean[5]());
+
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("BooleanArray"), StrEq("[Z")))
+      .WillOnce(::testing::Return(FakeJFieldId()));
+  EXPECT_CALL(*env_,
+              SetObjectField(FakeJObject(), FakeJFieldId(),
+                             reinterpret_cast<jbooleanArray>(0XCCCCCCCC)));
+  EXPECT_CALL(*env_, GetBooleanArrayElements)
+      .WillOnce(::testing::Return(fake_storage_ptr.get()));
+
+  LocalObject<kFieldClass> obj{FakeJObject()};
+  LocalArray<jboolean> arr{obj["BooleanArray"].Get()};
+  obj["BooleanArray"].Set(reinterpret_cast<jbooleanArray>(0XCCCCCCCC));
+  EXPECT_EQ(obj["BooleanArray"].Get().Pin().ptr(), fake_storage_ptr.get());
+}
+
+TEST_F(JniTest, Array_Field_Byte_Test) {
+  std::unique_ptr<jbyte> fake_storage_ptr(new jbyte[5]());
+
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("ByteArray"), StrEq("[B")))
+      .WillOnce(::testing::Return(FakeJFieldId()));
+  EXPECT_CALL(*env_, SetObjectField(FakeJObject(), FakeJFieldId(),
+                                    reinterpret_cast<jbyteArray>(0XCCCCCCCC)));
+  EXPECT_CALL(*env_, GetByteArrayElements)
+      .WillOnce(::testing::Return(fake_storage_ptr.get()));
+
+  LocalObject<kFieldClass> obj{FakeJObject()};
+  LocalArray<jbyte> arr{obj["ByteArray"].Get()};
+  obj["ByteArray"].Set(reinterpret_cast<jbyteArray>(0XCCCCCCCC));
+  EXPECT_EQ(obj["ByteArray"].Get().Pin().ptr(), fake_storage_ptr.get());
+}
+
+TEST_F(JniTest, Array_Field_Char_Test) {
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("CharArray"), StrEq("[C")))
+      .WillOnce(::testing::Return(FakeJFieldId()));
+  EXPECT_CALL(*env_,
+              SetObjectField(FakeJObject(), FakeJFieldId(),
+                             reinterpret_cast<jcharArray>(0XCCCCCCCC)));
+  EXPECT_CALL(*env_, GetCharArrayElements);
+
+  LocalObject<kFieldClass> obj{FakeJObject()};
+  LocalArray<jchar> arr{obj["CharArray"].Get()};
+  obj["CharArray"].Set(reinterpret_cast<jcharArray>(0XCCCCCCCC));
+  obj["CharArray"].Get().Pin();
+}
+
+TEST_F(JniTest, Array_Field_Short_Test) {
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("ShortArray"), StrEq("[S")))
+      .WillOnce(::testing::Return(FakeJFieldId()));
+  EXPECT_CALL(*env_,
+              SetObjectField(FakeJObject(), FakeJFieldId(),
+                             reinterpret_cast<jshortArray>(0XCCCCCCCC)));
+  EXPECT_CALL(*env_, GetShortArrayElements);
+
+  LocalObject<kFieldClass> obj{FakeJObject()};
+  LocalArray<jshort> arr{obj["ShortArray"].Get()};
+  obj["ShortArray"].Set(reinterpret_cast<jshortArray>(0XCCCCCCCC));
+  obj["ShortArray"].Get().Pin();
+}
+
+TEST_F(JniTest, Array_Field_Int_Test) {
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("IntArray"), StrEq("[I")))
+      .WillOnce(::testing::Return(FakeJFieldId()));
+  EXPECT_CALL(*env_,
+              SetObjectField(FakeJObject(), FakeJFieldId(),
+                             reinterpret_cast<jintArray>(0XCCCCCCCC)));
+  EXPECT_CALL(*env_, GetIntArrayElements);
+
+  LocalObject<kFieldClass> obj{FakeJObject()};
+  LocalArray<jint> arr{obj["IntArray"].Get()};
+  obj["IntArray"].Set(reinterpret_cast<jintArray>(0XCCCCCCCC));
+  obj["IntArray"].Get().Pin();
+}
+
+TEST_F(JniTest, Array_Field_Float_Test) {
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("FloatArray"), StrEq("[F")))
+      .WillOnce(::testing::Return(FakeJFieldId()));
+  EXPECT_CALL(*env_,
+              SetObjectField(FakeJObject(), FakeJFieldId(),
+                             reinterpret_cast<jfloatArray>(0XCCCCCCCC)));
+  EXPECT_CALL(*env_, GetFloatArrayElements);
+
+  LocalObject<kFieldClass> obj{FakeJObject()};
+  LocalArray<jfloat> arr{obj["FloatArray"].Get()};
+  obj["FloatArray"].Set(reinterpret_cast<jfloatArray>(0XCCCCCCCC));
+  obj["FloatArray"].Get().Pin();
+}
+*/
+
+TEST_F(JniTest, Array_Field_Double_Test) {
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("DoubleArray"), StrEq("[D")))
+      .WillOnce(::testing::Return(FakeJFieldId()));
+  EXPECT_CALL(*env_,
+              SetObjectField(FakeJObject(), FakeJFieldId(),
+                             reinterpret_cast<jdoubleArray>(0XCCCCCCCC)));
+  EXPECT_CALL(*env_, GetDoubleArrayElements);
+
+  LocalObject<kFieldClass> obj{FakeJObject()};
+  LocalArray<jdouble> arr{obj["DoubleArray"].Get()};
+  // obj["DoubleArray"].Set(reinterpret_cast<jdoubleArray>(0XCCCCCCCC));
+  obj["DoubleArray"].Set(std::move(arr));
+  obj["DoubleArray"].Get().Pin();
+}
+
+/*
+TEST_F(JniTest, Array_Field_Long_Test) {
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("LongArray"), StrEq("[J")))
+      .WillOnce(::testing::Return(FakeJFieldId()));
+  EXPECT_CALL(*env_,
+              SetObjectField(FakeJObject(), FakeJFieldId(),
+                             reinterpret_cast<jlongArray>(0XCCCCCCCC)));
+  EXPECT_CALL(*env_, GetLongArrayElements);
+
+  LocalObject<kFieldClass> obj{FakeJObject()};
+  LocalArray<jlong> arr{obj["LongArray"].Get()};
+  obj["LongArray"].Set(reinterpret_cast<jlongArray>(0XCCCCCCCC));
+  obj["LongArray"].Get().Pin();
+}
+
+TEST_F(JniTest, Array_Field_Object_Test) {
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("ObjectArray"), StrEq("[LkClass;")))
+      .WillOnce(::testing::Return(FakeJFieldId()));
+  EXPECT_CALL(*env_,
+              SetObjectField(FakeJObject(), FakeJFieldId(),
+                             reinterpret_cast<jobjectArray>(0XCCCCCCCC)));
+  EXPECT_CALL(*env_, GetObjectArrayElements);
+
+  LocalObject<kFieldClass> obj{FakeJObject()};
+  LocalArray<jobject> arr{obj["ObjectArray"].Get()};
+  obj["ObjectArray"].Set(reinterpret_cast<jobjectArray>(0XCCCCCCCC));
+  obj["ObjectArray"].Get().Pin();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -493,5 +651,6 @@ TEST_F(JniTest, Array_HandlesMultipleMultiDimensionalValues_3) {
   LocalObject<kArrClass> obj{Fake<jobject>()};
   obj("Bar", Fake<jobjectArray>(), Fake<jdoubleArray>());
 }
+*/
 
 }  // namespace

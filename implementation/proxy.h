@@ -48,9 +48,7 @@ namespace jni {
 template <typename t1, typename t2 = void>
 struct Proxy;
 
-// Everything you are permitted to declare at method prototypes.
-// Note, if the size can reasonably differ, the jtype is enforced by virtue of
-// being a different type (i.e. you can't accidentally widen).
+// CDecls for all declarable types (these index into proxy definitions).
 using AllKeys =
     Corpus_t<JniUserDefinedCorpusTag, void, jboolean, jbyte, jshort, jint,
              jfloat, jlong, jchar, jdouble, jstring, jobject, jarray,

@@ -28,6 +28,7 @@ cc_library(
     hdrs = ["array_ref.h"],
     deps = [
         ":array",
+        ":array_type_conversion",
         ":array_view",
         ":class",
         ":default_class_loader",
@@ -502,7 +503,6 @@ cc_test(
         ":local_array_string",
         "//:jni_bind",
         "//:jni_test",
-        "//:mock_jni_env",
         "@googletest//:gtest_main",
     ],
 )
