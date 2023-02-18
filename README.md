@@ -141,7 +141,7 @@ The simplest way to from the `JavaVM*` in your `JNI_OnLoad` call. **This object'
 
 ```cpp
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
-  static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm {pjvm};
+  static auto jvm{std::make_unique<jni::JvmRef<jni::kDefaultJvm>>(pjvm)};
   return JNI_VERSION_1_6;
 }
 ```
