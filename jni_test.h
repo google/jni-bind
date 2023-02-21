@@ -40,9 +40,6 @@ inline jclass AsGlobal(jclass clazz) {
 const jclass kDefaultClassForTests =
     reinterpret_cast<jclass>(0xCDCDCDCDAAAAAAAA);
 
-const jmethodID kDefaultMethodID =
-    reinterpret_cast<jmethodID>(0xDEDEDEDEDEDEDEDE);
-
 inline jobject AsGlobal(jobject object) {
   // Strangely the use of nullptr plus an integral constant causes sanitizer
   // failures.  nullptr is only used as a null (which mock NewObject returns).
@@ -99,20 +96,19 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
 
     ON_CALL(*env_, GetMethodID(testing::_, testing::_, testing::_))
         .WillByDefault(
-            testing::Invoke([&](jclass clazz, const char* name,
-                                const char* sig) { return kDefaultMethodID; }));
+            testing::Return(reinterpret_cast<jmethodID>(0xDEDEDEDEDEDEDEDE)));
+
+    ON_CALL(*env_, GetFieldID(testing::_, testing::_, testing::_))
+        .WillByDefault(
+            testing::Return(reinterpret_cast<jfieldID>(0xBEBEBEBEBEBEBEBE)));
 
     ON_CALL(*env_, NewObjectArray)
         .WillByDefault(
-            testing::Invoke([&](jsize sz, jclass clazz, jobject obj) {
-              return reinterpret_cast<jobjectArray>(0xBABABABABA);
-            }));
+            testing::Return(reinterpret_cast<jobjectArray>(0xBABABABABA)));
 
     ON_CALL(*env_, NewObjectV)
-        .WillByDefault(testing::Invoke(
-            [&](jclass clazz, jmethodID methodID, va_list args) {
-              return reinterpret_cast<jobject>(0xDADADADADA);
-            }));
+        .WillByDefault(
+            testing::Return(reinterpret_cast<jobject>(0xDADADADADA)));
 
     ON_CALL(*env_, NewGlobalRef(testing::_))
         .WillByDefault(testing::Invoke([&](jobject object) {
