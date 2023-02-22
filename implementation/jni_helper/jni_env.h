@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_JNI_HELPER_JNI_ENV_H_
 #define JNI_BIND_JNI_HELPER_JNI_ENV_H_
 
+#include <cassert>
+
 #include "jni_dep.h"
 
 namespace jni {
@@ -45,7 +47,10 @@ class ThreadGuard;
 // result in unnecessary and excessive writes.
 class JniEnv {
  public:
-  static inline JNIEnv* GetEnv() { return env_; }
+  static inline JNIEnv* GetEnv() {
+    assert(env_ != nullptr && "remember to create a jni::JvmRef");
+    return env_;
+  }
 
  protected:
   template <const auto& jvm_v_>
