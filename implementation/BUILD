@@ -256,6 +256,13 @@ cc_library(
 )
 
 cc_library(
+    name = "fake_test_constants",
+    testonly = True,
+    hdrs = ["fake_test_constants.h"],
+    deps = ["//:jni_bind"],
+)
+
+cc_library(
     name = "field",
     hdrs = ["field.h"],
     deps = [":params"],
