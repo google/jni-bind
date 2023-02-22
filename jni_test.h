@@ -57,6 +57,9 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
   // Notably, there is no TearDown call that calls Jvm::Destroy, but this is
   // fine, as calling DetachCurrentThread doesn't matter for unit testing.
   void SetUp() override {
+    using ::testing::_;
+    using ::testing::Return;
+
     jvm_ = std::make_unique<MockJvm>();
     env_ = std::make_unique<MockJniEnv>();
 
@@ -67,12 +70,12 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
                                      decltype(&JavaVM::AttachCurrentThread), 1>,
                                  void**>);
 
-    ON_CALL(*jvm_, GetEnv(testing::_, testing::_))
+    ON_CALL(*jvm_, GetEnv)
         .WillByDefault(testing::Invoke([&](void** out_env, int vs_code) {
           *reinterpret_cast<JNIEnv**>(out_env) = env_.get();
           return JNI_OK;
         }));
-    ON_CALL(*jvm_, AttachCurrentThread(testing::_, testing::_))
+    ON_CALL(*jvm_, AttachCurrentThread)
         .WillByDefault(testing::Invoke([&](void** out_env, void*) {
           *reinterpret_cast<JNIEnv**>(out_env) = env_.get();
           return JNI_OK;
@@ -91,26 +94,17 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
     // they are null, so this causes behaviour unreflective of the tests that
     // exercise FindClass code.  You can delete this block and |TearDown|, and
     // only those tests will fail.
-    ON_CALL(*env_, FindClass(testing::_))
-        .WillByDefault(testing::Return(kDefaultClassForTests));
-
-    ON_CALL(*env_, GetMethodID(testing::_, testing::_, testing::_))
-        .WillByDefault(
-            testing::Return(reinterpret_cast<jmethodID>(0xDEDEDEDEDEDEDEDE)));
-
-    ON_CALL(*env_, GetFieldID(testing::_, testing::_, testing::_))
-        .WillByDefault(
-            testing::Return(reinterpret_cast<jfieldID>(0xBEBEBEBEBEBEBEBE)));
-
+    ON_CALL(*env_, FindClass).WillByDefault(Return(kDefaultClassForTests));
+    ON_CALL(*env_, GetMethodID)
+        .WillByDefault(Return(reinterpret_cast<jmethodID>(0xDEDEDEDEDEDEDEDE)));
+    ON_CALL(*env_, GetFieldID)
+        .WillByDefault(Return(reinterpret_cast<jfieldID>(0xBEBEBEBEBEBEBEBE)));
     ON_CALL(*env_, NewObjectArray)
-        .WillByDefault(
-            testing::Return(reinterpret_cast<jobjectArray>(0xBABABABABA)));
-
+        .WillByDefault(Return(reinterpret_cast<jobjectArray>(0xBABABABABABA)));
     ON_CALL(*env_, NewObjectV)
-        .WillByDefault(
-            testing::Return(reinterpret_cast<jobject>(0xDADADADADA)));
+        .WillByDefault(Return(reinterpret_cast<jobject>(0xDADADADADADADA)));
 
-    ON_CALL(*env_, NewGlobalRef(testing::_))
+    ON_CALL(*env_, NewGlobalRef)
         .WillByDefault(testing::Invoke([&](jobject object) {
           jobject return_value = AsGlobal(object);
           if (return_value == AsGlobal(kDefaultClassForTests)) {
@@ -123,9 +117,6 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
 
   void TearDown() override {
     if (!default_globals_made_that_should_be_released_.empty()) {
-      const jclass kDefaultClassForTests =
-          reinterpret_cast<jclass>(0xCDCDCDCDAAAAAAAA);
-
       EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(kDefaultClassForTests)))
           .Times(default_globals_made_that_should_be_released_.size());
     }
