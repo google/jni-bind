@@ -150,6 +150,7 @@ cc_test(
     name = "class_loader_test",
     srcs = ["class_loader_test.cc"],
     deps = [
+        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
         "@googletest//:gtest_main",
@@ -187,9 +188,9 @@ cc_test(
     name = "class_loader_ref_test",
     srcs = ["class_loader_ref_test.cc"],
     deps = [
+        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
-        "//:mock_jni_env",
         "@googletest//:gtest_main",
     ],
 )
@@ -259,7 +260,7 @@ cc_library(
     name = "fake_test_constants",
     testonly = True,
     hdrs = ["fake_test_constants.h"],
-    deps = ["//:jni_bind"],
+    deps = ["//:jni_dep"],
 )
 
 cc_library(
@@ -496,6 +497,7 @@ cc_test(
     name = "local_array_test",
     srcs = ["local_array_test.cc"],
     deps = [
+        ":fake_test_constants",
         ":local_array_string",
         "//:jni_bind",
         "//:jni_test",
@@ -594,9 +596,9 @@ cc_test(
     name = "method_ref_test",
     srcs = ["method_ref_test.cc"],
     deps = [
+        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
-        "//:mock_jni_env",
         "@googletest//:gtest_main",
     ],
 )

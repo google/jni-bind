@@ -37,9 +37,9 @@ using ::jni::Params;
 using ::jni::Return;
 using ::jni::SupportedClassSet;
 using ::jni::test::AsGlobal;
+using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::jni::test::JniTestWithNoDefaultJvmRef;
-using ::jni::test::kDefaultClassForTests;
 using ::testing::_;
 using ::testing::Eq;
 using ::testing::InSequence;
@@ -60,7 +60,7 @@ class JniTestForClassLoaders : public JniTestWithNoDefaultJvmRef {
     ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
         .WillByDefault(
             testing::Invoke([&](jobject obj, jmethodID methodID, va_list) {
-              return kDefaultClassForTests;
+              return Fake<jclass>();
             }));
   }
 };
@@ -247,10 +247,8 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   static constexpr Class kTestClass4{"TestClass4"};
 
   ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
-      .WillByDefault(
-          testing::Invoke([&](jobject obj, jmethodID methodID, va_list) {
-            return kDefaultClassForTests;
-          }));
+      .WillByDefault(testing::Invoke([&](jobject obj, jmethodID methodID,
+                                         va_list) { return Fake<jclass>(); }));
 
   static constexpr ClassLoader kClassLoader{
       kNullClassLoader,
@@ -278,10 +276,8 @@ TEST_F(JniTestWithNoDefaultJvmRef,
       "TestClass2", Method{"Foo", Return{}, Params{kTestClass1}}};
 
   ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
-      .WillByDefault(
-          testing::Invoke([&](jobject obj, jmethodID methodID, va_list) {
-            return kDefaultClassForTests;
-          }));
+      .WillByDefault(testing::Invoke([&](jobject obj, jmethodID methodID,
+                                         va_list) { return Fake<jclass>(); }));
 
   static constexpr ClassLoader kClassLoader{kNullClassLoader,
                                             SupportedClassSet{kTestClass1}};
@@ -306,10 +302,8 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   static constexpr Class kTestClass1{"TestClass1"};
 
   ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
-      .WillByDefault(
-          testing::Invoke([&](jobject obj, jmethodID methodID, va_list) {
-            return kDefaultClassForTests;
-          }));
+      .WillByDefault(testing::Invoke([&](jobject obj, jmethodID methodID,
+                                         va_list) { return Fake<jclass>(); }));
 
   static constexpr ClassLoader kClassLoader{kDefaultClassLoader,
                                             SupportedClassSet{}};

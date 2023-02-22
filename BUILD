@@ -79,7 +79,6 @@ cc_library(
 ################################################################################
 # Testing Targets.
 ################################################################################
-
 cc_library(
     name = "jni_test",
     testonly = 1,
@@ -90,6 +89,7 @@ cc_library(
         ":jni_dep",
         ":mock_jni_env",
         ":mock_jvm",
+        "//implementation:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )

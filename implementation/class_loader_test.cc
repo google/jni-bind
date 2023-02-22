@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
+#include "implementation/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 

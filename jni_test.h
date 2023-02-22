@@ -19,6 +19,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "implementation/fake_test_constants.h"
 #include "mock_jni_env.h"
 #include "mock_jvm.h"
 
@@ -37,14 +38,11 @@ inline jclass AsGlobal(jclass clazz) {
   return reinterpret_cast<jclass>(clazz + 1);
 }
 
-const jclass kDefaultClassForTests =
-    reinterpret_cast<jclass>(0xCDCDCDCDAAAAAAAA);
-
 inline jobject AsGlobal(jobject object) {
   // Strangely the use of nullptr plus an integral constant causes sanitizer
   // failures.  nullptr is only used as a null (which mock NewObject returns).
   if (object == nullptr) {
-    return reinterpret_cast<jclass>(0xA1111A);
+    return Fake<jclass>();
   } else {
     return reinterpret_cast<jclass>(object + 1);
   }
@@ -94,20 +92,16 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
     // they are null, so this causes behaviour unreflective of the tests that
     // exercise FindClass code.  You can delete this block and |TearDown|, and
     // only those tests will fail.
-    ON_CALL(*env_, FindClass).WillByDefault(Return(kDefaultClassForTests));
-    ON_CALL(*env_, GetMethodID)
-        .WillByDefault(Return(reinterpret_cast<jmethodID>(0xDEDEDEDEDEDEDEDE)));
-    ON_CALL(*env_, GetFieldID)
-        .WillByDefault(Return(reinterpret_cast<jfieldID>(0xBEBEBEBEBEBEBEBE)));
-    ON_CALL(*env_, NewObjectArray)
-        .WillByDefault(Return(reinterpret_cast<jobjectArray>(0xBABABABABABA)));
-    ON_CALL(*env_, NewObjectV)
-        .WillByDefault(Return(reinterpret_cast<jobject>(0xDADADADADADADA)));
+    ON_CALL(*env_, FindClass).WillByDefault(Return(Fake<jclass>()));
+    ON_CALL(*env_, GetMethodID).WillByDefault(Return(Fake<jmethodID>()));
+    ON_CALL(*env_, GetFieldID).WillByDefault(Return(Fake<jfieldID>()));
+    ON_CALL(*env_, NewObjectArray).WillByDefault(Return(Fake<jobjectArray>()));
+    ON_CALL(*env_, NewObjectV).WillByDefault(Return(Fake<jobject>()));
 
     ON_CALL(*env_, NewGlobalRef)
         .WillByDefault(testing::Invoke([&](jobject object) {
           jobject return_value = AsGlobal(object);
-          if (return_value == AsGlobal(kDefaultClassForTests)) {
+          if (return_value == AsGlobal(Fake<jclass>())) {
             default_globals_made_that_should_be_released_.push_back(
                 return_value);
           }
@@ -117,7 +111,7 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
 
   void TearDown() override {
     if (!default_globals_made_that_should_be_released_.empty()) {
-      EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(kDefaultClassForTests)))
+      EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jclass>())))
           .Times(default_globals_made_that_should_be_released_.size());
     }
 

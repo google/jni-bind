@@ -17,7 +17,7 @@
 #ifndef JNI_BIND_FAKE_TEST_CONSTANTS_H_
 #define JNI_BIND_FAKE_TEST_CONSTANTS_H_
 
-#include "jni_bind.h"
+#include "jni_dep.h"
 
 namespace jni::test {
 
@@ -182,13 +182,6 @@ struct FakeImpl<jobjectArray> {
     return reinterpret_cast<jobjectArray>(0xEEEEEFFFFFFF + offset);
   }
 };
-
-////////////////////////////////////////////////////////////////////////////////
-// Fake simple classes (names only).
-////////////////////////////////////////////////////////////////////////////////
-static constexpr jni::Class kClass1{"kClass1"};
-static constexpr jni::Class kClass2{"kClass2"};
-static constexpr jni::Class kClass3{"kClass3"};
 
 }  // namespace jni::test
 
