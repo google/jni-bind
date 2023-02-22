@@ -31,11 +31,13 @@
 
 namespace jni::test {
 
+static constexpr std::size_t kGlobalOffset = 0xBABA0000000000;
+
 // "Translates" a fake local object into its global counterpart.
 // This obviously isn't doing anything meaningful, however, it provides distinct
 // values for anything faking a promotion to a global.
 inline jclass AsGlobal(jclass clazz) {
-  return reinterpret_cast<jclass>(clazz + 1);
+  return reinterpret_cast<jclass>(clazz + kGlobalOffset);
 }
 
 inline jobject AsGlobal(jobject object) {
@@ -44,7 +46,7 @@ inline jobject AsGlobal(jobject object) {
   if (object == nullptr) {
     return Fake<jclass>();
   } else {
-    return reinterpret_cast<jclass>(object + 1);
+    return reinterpret_cast<jclass>(object + kGlobalOffset);
   }
 }
 

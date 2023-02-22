@@ -15,6 +15,7 @@
  */
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "implementation/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
@@ -33,8 +34,9 @@ using ::jni::LocalObject;
 using ::jni::Method;
 using ::jni::OverloadRef;
 using ::jni::Params;
-using ::jni::Return;
 using ::jni::Rank;
+using ::jni::Return;
+using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::Eq;
@@ -50,10 +52,8 @@ TEST_F(JniTest, MethodRef_DoesntStaticCrossTalkWithTagUse) {
   static constexpr Method m{"FooV", Return<void>{}, Params{jint{}}};
   static constexpr Class kSomeClass{"someClass", m};
 
-  const jclass clazz{reinterpret_cast<jclass>(0XAAAAA)};
-  const jobject object{reinterpret_cast<jobject>(0XBBBBBB)};
-
-  MethodRefT_t<kDefaultClassLoader, kSomeClass, 0>::Invoke(clazz, object, 123);
+  MethodRefT_t<kDefaultClassLoader, kSomeClass, 0>::Invoke(
+      Fake<jclass>(), Fake<jobject>(), 123);
 }
 
 TEST_F(JniTest, MethodRef_CallsGetMethodCorrectlyForSingleMethod) {
@@ -61,15 +61,13 @@ TEST_F(JniTest, MethodRef_CallsGetMethodCorrectlyForSingleMethod) {
   static constexpr Class c{"SimpleClass", m1};
 
   InSequence seq;
-  const jclass clazz{reinterpret_cast<jclass>(0XABABA)};
-  const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
+  EXPECT_CALL(*env_,
+              GetMethodID(Eq(Fake<jclass>()), StrEq("FooV"), StrEq("()V")))
+      .WillOnce(testing::Return(Fake<jmethodID>()));
+  EXPECT_CALL(*env_, CallVoidMethodV(Fake<jobject>(), Fake<jmethodID>(), _));
 
-  const jmethodID fake_jmethod_1{reinterpret_cast<jmethodID>(0XBBBBBB)};
-  EXPECT_CALL(*env_, GetMethodID(Eq(clazz), StrEq("FooV"), StrEq("()V")))
-      .WillOnce(testing::Return(fake_jmethod_1));
-  EXPECT_CALL(*env_, CallVoidMethodV(object, fake_jmethod_1, _));
-
-  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(clazz, object);
+  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(Fake<jclass>(),
+                                                  Fake<jobject>());
 }
 
 TEST_F(JniTest, MethodRef_ReturnWithObject) {
@@ -78,16 +76,13 @@ TEST_F(JniTest, MethodRef_ReturnWithObject) {
   static constexpr Class c{"someClass", m1};
 
   InSequence seq;
-  const jclass clazz{reinterpret_cast<jclass>(0XABABA)};
-  const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
+  EXPECT_CALL(*env_, GetMethodID(Eq(Fake<jclass>()), StrEq("FooV"),
+                                 StrEq("()LsomeClass2;")))
+      .WillOnce(testing::Return(Fake<jmethodID>()));
+  EXPECT_CALL(*env_, CallObjectMethodV(Fake<jobject>(), Fake<jmethodID>(), _));
 
-  const jmethodID fake_jmethod_1{reinterpret_cast<jmethodID>(0XBBBBBB)};
-  EXPECT_CALL(*env_,
-              GetMethodID(Eq(clazz), StrEq("FooV"), StrEq("()LsomeClass2;")))
-      .WillOnce(testing::Return(fake_jmethod_1));
-  EXPECT_CALL(*env_, CallObjectMethodV(object, fake_jmethod_1, _));
-
-  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(clazz, object);
+  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(Fake<jclass>(),
+                                                  Fake<jobject>());
 }
 
 TEST_F(JniTest, MethodRef_ReturnWithRank1Object) {
@@ -96,16 +91,13 @@ TEST_F(JniTest, MethodRef_ReturnWithRank1Object) {
   static constexpr Class c{"someClass", m1};
 
   InSequence seq;
-  const jclass clazz{reinterpret_cast<jclass>(0XABABA)};
-  const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
+  EXPECT_CALL(*env_, GetMethodID(Eq(Fake<jclass>()), StrEq("FooV"),
+                                 StrEq("()[LsomeClass2;")))
+      .WillOnce(testing::Return(Fake<jmethodID>()));
+  EXPECT_CALL(*env_, CallObjectMethodV(Fake<jobject>(), Fake<jmethodID>(), _));
 
-  const jmethodID fake_jmethod_1{reinterpret_cast<jmethodID>(0XBBBBBB)};
-  EXPECT_CALL(*env_,
-              GetMethodID(Eq(clazz), StrEq("FooV"), StrEq("()[LsomeClass2;")))
-      .WillOnce(testing::Return(fake_jmethod_1));
-  EXPECT_CALL(*env_, CallObjectMethodV(object, fake_jmethod_1, _));
-
-  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(clazz, object);
+  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(Fake<jclass>(),
+                                                  Fake<jobject>());
 }
 
 TEST_F(JniTest, MethodRef_ReturnWithRank2Object) {
@@ -115,16 +107,13 @@ TEST_F(JniTest, MethodRef_ReturnWithRank2Object) {
   static constexpr Class c{"someClass", m1};
 
   InSequence seq;
-  const jclass clazz{reinterpret_cast<jclass>(0XABABA)};
-  const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
+  EXPECT_CALL(*env_, GetMethodID(Eq(Fake<jclass>()), StrEq("FooV"),
+                                 StrEq("()[[LsomeClass2;")))
+      .WillOnce(testing::Return(Fake<jmethodID>()));
+  EXPECT_CALL(*env_, CallObjectMethodV(Fake<jobject>(), Fake<jmethodID>(), _));
 
-  const jmethodID fake_jmethod_1{reinterpret_cast<jmethodID>(0XBBBBBB)};
-  EXPECT_CALL(*env_,
-              GetMethodID(Eq(clazz), StrEq("FooV"), StrEq("()[[LsomeClass2;")))
-      .WillOnce(testing::Return(fake_jmethod_1));
-  EXPECT_CALL(*env_, CallObjectMethodV(object, fake_jmethod_1, _));
-
-  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(clazz, object);
+  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(Fake<jclass>(),
+                                                  Fake<jobject>());
 }
 
 TEST_F(JniTest, MethodRef_ReturnWithNoParams) {
@@ -134,27 +123,27 @@ TEST_F(JniTest, MethodRef_ReturnWithNoParams) {
   static constexpr Class c{"someClass", m1, m2, m3};
 
   InSequence seq;
-  const jclass clazz{reinterpret_cast<jclass>(0XABABA)};
-  const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
+  EXPECT_CALL(*env_,
+              GetMethodID(Eq(Fake<jclass>()), StrEq("FooV"), StrEq("()V")))
+      .WillOnce(testing::Return(Fake<jmethodID>(1)));
+  EXPECT_CALL(*env_, CallVoidMethodV(Fake<jobject>(), Fake<jmethodID>(1), _));
 
-  const jmethodID fake_jmethod_1{reinterpret_cast<jmethodID>(0XBBBBBB)};
-  EXPECT_CALL(*env_, GetMethodID(Eq(clazz), StrEq("FooV"), StrEq("()V")))
-      .WillOnce(testing::Return(fake_jmethod_1));
-  EXPECT_CALL(*env_, CallVoidMethodV(object, fake_jmethod_1, _));
+  EXPECT_CALL(*env_,
+              GetMethodID(Eq(Fake<jclass>()), StrEq("BarI"), StrEq("()I")))
+      .WillOnce(testing::Return(Fake<jmethodID>(2)));
+  EXPECT_CALL(*env_, CallIntMethodV(Fake<jobject>(), Fake<jmethodID>(2), _));
 
-  const jmethodID fake_jmethod_2{reinterpret_cast<jmethodID>(0XCCCCCC)};
-  EXPECT_CALL(*env_, GetMethodID(Eq(clazz), StrEq("BarI"), StrEq("()I")))
-      .WillOnce(testing::Return(fake_jmethod_2));
-  EXPECT_CALL(*env_, CallIntMethodV(object, fake_jmethod_2, _));
+  EXPECT_CALL(*env_,
+              GetMethodID(Eq(Fake<jclass>()), StrEq("BazF"), StrEq("()F")))
+      .WillOnce(testing::Return(Fake<jmethodID>(3)));
+  EXPECT_CALL(*env_, CallFloatMethodV(Fake<jobject>(), Fake<jmethodID>(3), _));
 
-  const jmethodID fake_jmethod_3{reinterpret_cast<jmethodID>(0XDDDDDD)};
-  EXPECT_CALL(*env_, GetMethodID(Eq(clazz), StrEq("BazF"), StrEq("()F")))
-      .WillOnce(testing::Return(fake_jmethod_3));
-  EXPECT_CALL(*env_, CallFloatMethodV(object, fake_jmethod_3, _));
-
-  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(clazz, object);
-  MethodRefT_t<kDefaultClassLoader, c, 1>::Invoke(clazz, object);
-  MethodRefT_t<kDefaultClassLoader, c, 2>::Invoke(clazz, object);
+  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(Fake<jclass>(),
+                                                  Fake<jobject>());
+  MethodRefT_t<kDefaultClassLoader, c, 1>::Invoke(Fake<jclass>(),
+                                                  Fake<jobject>());
+  MethodRefT_t<kDefaultClassLoader, c, 2>::Invoke(Fake<jclass>(),
+                                                  Fake<jobject>());
 }
 
 TEST_F(JniTest, MethodRef_SingleParam) {
@@ -164,29 +153,29 @@ TEST_F(JniTest, MethodRef_SingleParam) {
   static constexpr Class c{"someClass", m1, m2, m3};
 
   InSequence seq;
-  const jclass clazz{reinterpret_cast<jclass>(0XAAAAAA)};
-  const jobject object{reinterpret_cast<jobject>(0XBBBBBB)};
-  const jmethodID fake_jmethod_1{reinterpret_cast<jmethodID>(0XCCCCCC)};
-
-  EXPECT_CALL(*env_, GetMethodID(Eq(clazz), StrEq("SomeFunc1"), StrEq("(I)V")))
-      .WillOnce(testing::Return(fake_jmethod_1));
+  EXPECT_CALL(
+      *env_, GetMethodID(Eq(Fake<jclass>()), StrEq("SomeFunc1"), StrEq("(I)V")))
+      .WillOnce(testing::Return(Fake<jmethodID>(1)));
   // There is no clear way to test variable vaargs type arguments using Gmock,
   // but at least we can test the correct method is called.
-  EXPECT_CALL(*env_, CallVoidMethodV(object, fake_jmethod_1, _));
+  EXPECT_CALL(*env_, CallVoidMethodV(Fake<jobject>(), Fake<jmethodID>(1), _));
 
-  const jmethodID fake_jmethod_2{reinterpret_cast<jmethodID>(0XDDDDDD)};
-  EXPECT_CALL(*env_, GetMethodID(Eq(clazz), StrEq("SomeFunc2"), StrEq("(F)I")))
-      .WillOnce(testing::Return(fake_jmethod_2));
-  EXPECT_CALL(*env_, CallIntMethodV(object, fake_jmethod_2, _));
+  EXPECT_CALL(
+      *env_, GetMethodID(Eq(Fake<jclass>()), StrEq("SomeFunc2"), StrEq("(F)I")))
+      .WillOnce(testing::Return(Fake<jmethodID>(2)));
+  EXPECT_CALL(*env_, CallIntMethodV(Fake<jobject>(), Fake<jmethodID>(2), _));
 
-  const jmethodID fake_jmethod_3{reinterpret_cast<jmethodID>(0XEEEEEE)};
-  EXPECT_CALL(*env_, GetMethodID(Eq(clazz), StrEq("SomeFunc3"), StrEq("(F)F")))
-      .WillOnce(testing::Return(fake_jmethod_3));
-  EXPECT_CALL(*env_, CallFloatMethodV(object, fake_jmethod_3, _));
+  EXPECT_CALL(
+      *env_, GetMethodID(Eq(Fake<jclass>()), StrEq("SomeFunc3"), StrEq("(F)F")))
+      .WillOnce(testing::Return(Fake<jmethodID>(3)));
+  EXPECT_CALL(*env_, CallFloatMethodV(Fake<jobject>(), Fake<jmethodID>(3), _));
 
-  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(clazz, object, 1);
-  MethodRefT_t<kDefaultClassLoader, c, 1>::Invoke(clazz, object, 1.234f);
-  MethodRefT_t<kDefaultClassLoader, c, 2>::Invoke(clazz, object, 5.6789f);
+  MethodRefT_t<kDefaultClassLoader, c, 0>::Invoke(Fake<jclass>(),
+                                                  Fake<jobject>(), 1);
+  MethodRefT_t<kDefaultClassLoader, c, 1>::Invoke(Fake<jclass>(),
+                                                  Fake<jobject>(), 1.234f);
+  MethodRefT_t<kDefaultClassLoader, c, 2>::Invoke(Fake<jclass>(),
+                                                  Fake<jobject>(), 5.6789f);
 }
 
 TEST_F(JniTest, MethodRef_ReturnsObjects) {
@@ -196,10 +185,8 @@ TEST_F(JniTest, MethodRef_ReturnsObjects) {
       Method{"Foo", Return{c1}, Params<jint>{}},
   };
 
-  const jobject local_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
-
   // Note, class refs are not released, so Times() != 2.
-  EXPECT_CALL(*env_, NewObjectV).WillOnce(testing::Return(local_jobject));
+  EXPECT_CALL(*env_, NewObjectV).WillOnce(testing::Return(Fake<jobject>()));
 
   GlobalObject<kClass> global_object{};
   LocalObject<c1> new_obj{global_object("Foo", 5)};
@@ -212,11 +199,8 @@ TEST_F(JniTest, MethodRef_PassesObjects) {
       Method{"Foo", Return<jint>{}, Params{c1}},
   };
 
-  const jobject local_instance{reinterpret_cast<jobject>(0XAAAAAA)};
-  const jobject global_c1_instance{reinterpret_cast<jobject>(0XBBBBBB)};
-
-  LocalObject<c1> local_object{local_instance};
-  GlobalObject<kClass> global_object{AdoptGlobal{}, global_c1_instance};
+  LocalObject<c1> local_object{Fake<jobject>()};
+  GlobalObject<kClass> global_object{AdoptGlobal{}, Fake<jobject>(100)};
 
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("Foo"), StrEq("(Lcom/google/Bazz;)I")));
@@ -235,13 +219,11 @@ TEST_F(JniTest, MethodRef_PassesAndReturnsMultipleObjects) {
       Method{"Foo", Return{c1}, Params{c1, c2, c3, c4}},
   };
 
-  const jobject fake_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
-
-  LocalObject<c1> obj1{fake_jobject};
-  LocalObject<c2> obj2{fake_jobject};
-  LocalObject<c3> obj3{fake_jobject};
-  LocalObject<c4> obj4{fake_jobject};
-  LocalObject<class_under_test> object_under_test{fake_jobject};
+  LocalObject<c1> obj1{Fake<jobject>(1)};
+  LocalObject<c2> obj2{Fake<jobject>(2)};
+  LocalObject<c3> obj3{Fake<jobject>(3)};
+  LocalObject<c4> obj4{Fake<jobject>(4)};
+  LocalObject<class_under_test> object_under_test{Fake<jobject>(5)};
 
   LocalObject<c1> obj5{object_under_test("Foo", obj1, obj2, obj3, obj4)};
 }
@@ -263,13 +245,11 @@ TEST_F(JniTest, MethodRef_SupportsForwardDefines) {
       Method{"m4", Return{Class{"kClass2"}}, Params{}},
   };
 
-  const jobject fake_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
+  LocalObject<kClass1> c1_obj1{Fake<jobject>(1)};
+  LocalObject<kClass1> c1_obj2{Fake<jobject>(2)};
 
-  LocalObject<kClass1> c1_obj1{fake_jobject};
-  LocalObject<kClass1> c1_obj2{fake_jobject};
-
-  LocalObject<kClass2> c2_obj1{fake_jobject};
-  LocalObject<kClass2> c2_obj2{fake_jobject};
+  LocalObject<kClass2> c2_obj1{Fake<jobject>(3)};
+  LocalObject<kClass2> c2_obj2{Fake<jobject>(4)};
 
   c1_obj1("m1", c1_obj1);
   c1_obj1("m2", c2_obj1);
@@ -296,9 +276,7 @@ TEST_F(JniTest, MethodRef_SupportsStrings) {
       Method{"Baz", Return<jstring>{}, Params<>{}},
   };
 
-  const jobject fake_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
-
-  LocalObject<class_under_test> obj1{fake_jobject};
+  LocalObject<class_under_test> obj1{Fake<jobject>()};
   obj1("Foo", "This is a method.");
   obj1("Bar", "This is a method.", "It takes strings");
   obj1("Baz");
@@ -311,10 +289,8 @@ TEST_F(JniTest, MethodRef_SupportsArrays) {
       Method{"Foo", Return<void>{}, Params{Array{kClass}}},
       Method{"Bar", Return<void>{}, Params<int>{}}};
 
-  const jobject fake_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
-
   LocalArray<jobject, 1, kClass> local_array{nullptr};
-  LocalObject<class_under_test> obj1{fake_jobject};
+  LocalObject<class_under_test> obj1{Fake<jobject>()};
   obj1("Foo", local_array);
 }
 
