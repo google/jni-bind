@@ -15,6 +15,7 @@
  */
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "implementation/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
@@ -33,6 +34,7 @@ using ::jni::Params;
 using ::jni::Rank;
 using ::jni::Rankifier;
 using ::jni::RegularToArrayTypeMap_t;
+using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::StrEq;
@@ -125,7 +127,7 @@ TEST_F(JniTest, Array_HandlesSingleIntArray) {
       "ClassThatReturnsIntArrays",
       Method{"IntArray", jni::Return{Array{jint{}}}, Params{}}};
 
-  LocalObject<kClass> obj{jobject{nullptr}};
+  LocalObject<kClass> obj{Fake<jobject>()};
 
   static_assert(
       !std::is_base_of_v<jni::RefBaseTag<jobjectArray>, decltype(obj)>);
@@ -145,7 +147,7 @@ TEST_F(JniTest, Array_HandlesSingleObjectArrayAsReturn) {
       "ClassThatReturnsIntArrays",
       Method{"ObjectArray", jni::Return{Array{kClass2}}, Params{}}};
 
-  LocalObject<kClass> obj{jobject{nullptr}};
+  LocalObject<kClass> obj{Fake<jobject>()};
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("ObjectArray"), StrEq("()[LkClass2;")));
 
@@ -160,8 +162,8 @@ TEST_F(JniTest, Array_HandlesSingleArrayParam_NativeJNIType) {
       "kClass",
       Method{"takesFloatArray", jni::Return<void>{}, Params{Array{float{}}}}};
 
-  LocalObject<kClass> obj{jobject{nullptr}};
-  obj("takesFloatArray", jfloatArray{nullptr});
+  LocalObject<kClass> obj{Fake<jobject>()};
+  obj("takesFloatArray", Fake<jfloatArray>());
 }
 
 TEST_F(JniTest, Array_HandlesSingleObjectArray) {
@@ -172,8 +174,8 @@ TEST_F(JniTest, Array_HandlesSingleObjectArray) {
   EXPECT_CALL(
       *env_, GetMethodID(_, StrEq("takesObjectArray"), StrEq("([LkClass2;)V")));
 
-  LocalArray<jobject, 1, kClass2> input_arg{nullptr};
-  LocalObject<kClass> obj{jobject{nullptr}};
+  LocalArray<jobject, 1, kClass2> input_arg{Fake<jobjectArray>()};
+  LocalObject<kClass> obj{Fake<jobject>()};
   obj("takesObjectArray", input_arg);
 }
 
@@ -183,8 +185,8 @@ TEST_F(JniTest, Array_HandlesSingleBoolAsParamWithRankfulReturnType) {
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([Z)I")));
 
-  LocalObject<kClass> obj{jobject{nullptr}};
-  obj("Foo", jbooleanArray{nullptr});
+  LocalObject<kClass> obj{Fake<jobject>()};
+  obj("Foo", Fake<jbooleanArray>());
 }
 
 TEST_F(JniTest, Array_HandlesSingleBoolAsParamWithVoidReturnT) {
@@ -195,10 +197,10 @@ TEST_F(JniTest, Array_HandlesSingleBoolAsParamWithVoidReturnT) {
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([Z)V")));
 
-  LocalObject<kClass> obj{jobject{nullptr}};
-  // obj("Foo", jarray{nullptr});     // doesn't compile (good).
-  // obj("Foo", jintArray{nullptr});  // doesn't compile (good).
-  obj("Foo", jbooleanArray{nullptr});
+  LocalObject<kClass> obj{Fake<jobject>()};
+  // obj("Foo", Fake<jarray>());     // doesn't compile (good).
+  // obj("Foo", Fake<jintArray>());  // doesn't compile (good).
+  obj("Foo", Fake<jbooleanArray>());
 }
 
 TEST_F(JniTest, Array_HandlesMultipleBoolAsParam) {
@@ -215,11 +217,11 @@ TEST_F(JniTest, Array_HandlesMultipleBoolAsParam) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("ZZ"), StrEq("([Z[Z)V")));
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("ZZZ"), StrEq("([Z[Z[Z)V")));
 
-  LocalObject<kClass> obj{jobject{nullptr}};
-  obj("Z", jbooleanArray{nullptr});
-  obj("ZZ", jbooleanArray{nullptr}, jbooleanArray{nullptr});
-  obj("ZZZ", jbooleanArray{nullptr}, jbooleanArray{nullptr},
-      jbooleanArray{nullptr});
+  LocalObject<kClass> obj{Fake<jobject>()};
+  obj("Z", Fake<jbooleanArray>(1));
+  obj("ZZ", Fake<jbooleanArray>(2), Fake<jbooleanArray>(3));
+  obj("ZZZ", Fake<jbooleanArray>(3), Fake<jbooleanArray>(4),
+      Fake<jbooleanArray>(5));
 }
 
 TEST_F(JniTest, Array_HandlesComplexArrays) {
@@ -231,8 +233,8 @@ TEST_F(JniTest, Array_HandlesComplexArrays) {
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([I[Z)[LkClass2;")));
 
-  LocalObject<kClass> obj{jobject{nullptr}};
-  obj("Foo", jintArray{nullptr}, jbooleanArray{nullptr});
+  LocalObject<kClass> obj{Fake<jobject>()};
+  obj("Foo", Fake<jintArray>(), Fake<jbooleanArray>());
 }
 
 TEST_F(JniTest, Array_AllowsRValuesOfLocalArrays) {
@@ -243,7 +245,7 @@ TEST_F(JniTest, Array_AllowsRValuesOfLocalArrays) {
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([I)V")));
 
-  LocalObject<kClass> obj{jobject{nullptr}};
+  LocalObject<kClass> obj{Fake<jobject>()};
   LocalArray<jint> local_array{3};
 
   obj("Foo", std::move(local_array));
@@ -255,7 +257,7 @@ TEST_F(JniTest, Array_HandlesSingle2DIntAsReturnT) {
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("I"), StrEq("()[[I")));
 
-  LocalObject<kClass> obj{jobject{nullptr}};
+  LocalObject<kClass> obj{Fake<jobject>()};
   obj("I");
 }
 
@@ -265,10 +267,10 @@ TEST_F(JniTest, Array_HandlesSingle2DIntAsParamWithRankfulReturnT) {
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("I"), StrEq("([[I)I")));
 
-  LocalObject<kClass> obj{jobject{nullptr}};
+  LocalObject<kClass> obj{Fake<jobject>()};
   // obj("I", jintArray{nullptr}); // doesn't compile (good).
-  obj("I", jobjectArray{nullptr});
-  obj("I", LocalArray<jint, 2>{nullptr});
+  obj("I", Fake<jobjectArray>());
+  obj("I", LocalArray<jint, 2>{Fake<jobjectArray>()});
 }
 
 TEST_F(JniTest, Array_HandlesSingle2DClassAsReturn) {
@@ -278,7 +280,7 @@ TEST_F(JniTest, Array_HandlesSingle2DClassAsReturn) {
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("()[[LkClass2;")));
 
-  LocalObject<kClass> obj{jobject{nullptr}};
+  LocalObject<kClass> obj{Fake<jobject>()};
   obj("Foo");
 }
 
@@ -290,8 +292,8 @@ TEST_F(JniTest, Array_HandlesSinglePredefinedClassAsParam) {
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([LkClass;)V")));
 
-  LocalObject<kClass> obj{jobject{nullptr}};
-  LocalObject<kClassThatAcceptsArrays> obj_to_call_on{jobject{nullptr}};
+  LocalObject<kClass> obj{Fake<jobject>()};
+  LocalObject<kClassThatAcceptsArrays> obj_to_call_on{Fake<jobject>()};
   LocalArray<jobject, 1, kClass> local_array{5, obj};
   obj_to_call_on("Foo", local_array);
 }
@@ -305,8 +307,8 @@ TEST_F(JniTest, Array_HandlesSingleUndefinedClassAsParam) {
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([LkClass;)V")));
 
-  LocalObject<kClass> obj{jobject{nullptr}};
-  LocalObject<kClassThatAcceptsArrays> obj_to_call_on{jobject{nullptr}};
+  LocalObject<kClass> obj{Fake<jobject>()};
+  LocalObject<kClassThatAcceptsArrays> obj_to_call_on{Fake<jobject>()};
   LocalArray<jobject, 1, kClass> local_array{5, obj};
   obj_to_call_on("Foo", local_array);
 }
@@ -360,7 +362,7 @@ TEST_F(JniTest, Array_CorrectReturnSignatureForStrings) {
       Method{"StringArray", jni::Return{Array{jstring{}}}, Params{}},
   };
 
-  LocalObject<kClass> obj{jobject{nullptr}};
+  LocalObject<kClass> obj{Fake<jobject>()};
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("StringArray"),
                                  StrEq("()[Ljava/lang/String;")));
   LocalArray<jstring> arr = obj("StringArray");
@@ -372,7 +374,7 @@ TEST_F(JniTest, Array_CorrectParamSignatureForStrings) {
       Method{"StringArray", jni::Return{}, Params{Array{jstring{}}}},
   };
 
-  LocalObject<kClass> obj{jobject{nullptr}};
+  LocalObject<kClass> obj{Fake<jobject>()};
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("StringArray"),
                                  StrEq("([Ljava/lang/String;)V")));
   LocalArray<jstring> arr{2};
@@ -398,7 +400,7 @@ TEST_F(JniTest, Array_FieldTests) {
       Field{"ObjectArrayRank3", Array{kClass2, Rank<3>{}}},
   };
 
-  LocalObject<kClass> obj{jobject{nullptr}};
+  LocalObject<kClass> obj{Fake<jobject>()};
   EXPECT_CALL(*env_, GetFieldID(_, StrEq("BoolArray"), StrEq("[Z")));
   EXPECT_CALL(*env_, GetFieldID(_, StrEq("ByteArray"), StrEq("[B")));
   EXPECT_CALL(*env_, GetFieldID(_, StrEq("CharArray"), StrEq("[C")));
@@ -464,14 +466,14 @@ static constexpr Class kArrClass{
 
 TEST_F(JniTest, Array_HandlesMultipleMultiDimensionalValues_1) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([[I)[I")));
-  LocalObject<kArrClass> obj{jobject{nullptr}};
-  LocalArray<jint, 1> ret = obj("Foo", jobjectArray{nullptr});
+  LocalObject<kArrClass> obj{Fake<jobject>()};
+  LocalArray<jint, 1> ret = obj("Foo", Fake<jobjectArray>());
 }
 
 TEST_F(JniTest, Array_HandlesMultipleMultiDimensionalValues_2) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Baz"), StrEq("([[[I)[LkClass2;")));
 
-  LocalObject<kArrClass> obj{jobject{nullptr}};
+  LocalObject<kArrClass> obj{Fake<jobject>()};
 
   // The compiler complains of unused variable here. This would be worth digging
   // into to understand the underlying cause (i.e. only the following fails).
@@ -480,7 +482,7 @@ TEST_F(JniTest, Array_HandlesMultipleMultiDimensionalValues_2) {
   // TODO(b/143908983): CTAD is failing.
   // LocalArray ret = obj("Baz", jobjectArray{nullptr});
 
-  LocalArray<jobject, 1, kClass2> ret = obj("Baz", jobjectArray{nullptr});
+  LocalArray<jobject, 1, kClass2> ret = obj("Baz", Fake<jobjectArray>());
   static_assert(std::is_same_v<decltype(ret), LocalArray<jobject, 1, kClass2>>);
 }
 
@@ -488,8 +490,8 @@ TEST_F(JniTest, Array_HandlesMultipleMultiDimensionalValues_3) {
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("Bar"), StrEq("([[[I[D)[[LkClass3;")));
 
-  LocalObject<kArrClass> obj{jobject{nullptr}};
-  obj("Bar", jobjectArray{nullptr}, jdoubleArray{nullptr});
+  LocalObject<kArrClass> obj{Fake<jobject>()};
+  obj("Bar", Fake<jobjectArray>(), Fake<jdoubleArray>());
 }
 
 }  // namespace

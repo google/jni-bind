@@ -42,6 +42,7 @@ cc_test(
     name = "array_test",
     srcs = ["array_test.cc"],
     deps = [
+        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
         "@googletest//:gtest_main",
