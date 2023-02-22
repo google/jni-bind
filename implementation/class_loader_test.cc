@@ -25,6 +25,7 @@ using ::jni::ClassLoader;
 using ::jni::kClassNotInLoaderSetIdx;
 using ::jni::kDefaultClassLoader;
 using ::jni::kNullClassLoader;
+using ::jni::ParentLoaderForClass;
 using ::jni::SupportedClassSet;
 
 // Base custom loader.
@@ -43,21 +44,20 @@ static constexpr ClassLoader kLoaderWithNullParent{kNullClassLoader,
 // Doesn't compile (good)
 //
 // static_assert(
-//   kLoaderWithNullParent == jni::ParentLoaderForClass<kLoaderWithNullParent,
+//   kLoaderWithNullParent == ParentLoaderForClass<kLoaderWithNullParent,
 //   kBar>());
 
 // Index of classes not in the set.
 static_assert(kDefaultClassLoader.IdxOfClass<kFoo>() ==
               kClassNotInLoaderSetIdx);
-static_assert(
-    kDefaultClassLoader ==
-    jni::ParentLoaderForClass<kLoaderWithNoClassesDefaultParent, kFoo>());
-static_assert(kLoaderWithDefaultParent ==
-              jni::ParentLoaderForClass<kLoaderWithDefaultParent, kFoo>());
 static_assert(kDefaultClassLoader ==
-              jni::ParentLoaderForClass<kLoaderWithDefaultParent, kBar>());
+              ParentLoaderForClass<kLoaderWithNoClassesDefaultParent, kFoo>());
+static_assert(kLoaderWithDefaultParent ==
+              ParentLoaderForClass<kLoaderWithDefaultParent, kFoo>());
+static_assert(kDefaultClassLoader ==
+              ParentLoaderForClass<kLoaderWithDefaultParent, kBar>());
 static_assert(kLoaderWithNullParent ==
-              jni::ParentLoaderForClass<kLoaderWithNullParent, kFoo>());
+              ParentLoaderForClass<kLoaderWithNullParent, kFoo>());
 
 ////////////////////////////////////////////////////////////////////////////////
 // Null Class Loader Tests
@@ -122,24 +122,22 @@ static_assert(kChildChildLoader.IdxOfAncestor<kGnar>() == 0);
 // ClassLoader Selection.
 
 // For kLoader:
-static_assert(kLoader == jni::ParentLoaderForClass<kLoader, kFoo>());
-static_assert(kLoader == jni::ParentLoaderForClass<kLoader, kBaz>());
-static_assert(kLoader == jni::ParentLoaderForClass<kLoader, kBar>());
+static_assert(kLoader == ParentLoaderForClass<kLoader, kFoo>());
+static_assert(kLoader == ParentLoaderForClass<kLoader, kBaz>());
+static_assert(kLoader == ParentLoaderForClass<kLoader, kBar>());
 
 // For kChildLoader:
-static_assert(kLoader == jni::ParentLoaderForClass<kChildLoader, kFoo>());
-static_assert(kLoader == jni::ParentLoaderForClass<kChildLoader, kBaz>());
-static_assert(kLoader == jni::ParentLoaderForClass<kChildLoader, kBar>());
-static_assert(kChildLoader ==
-              jni::ParentLoaderForClass<kChildLoader, kBazNar>());
+static_assert(kLoader == ParentLoaderForClass<kChildLoader, kFoo>());
+static_assert(kLoader == ParentLoaderForClass<kChildLoader, kBaz>());
+static_assert(kLoader == ParentLoaderForClass<kChildLoader, kBar>());
+static_assert(kChildLoader == ParentLoaderForClass<kChildLoader, kBazNar>());
 
 // For kChildChildLoader:
-static_assert(kLoader == jni::ParentLoaderForClass<kChildLoader, kFoo>());
-static_assert(kLoader == jni::ParentLoaderForClass<kChildLoader, kBaz>());
-static_assert(kLoader == jni::ParentLoaderForClass<kChildLoader, kBar>());
-static_assert(kChildLoader ==
-              jni::ParentLoaderForClass<kChildLoader, kBazNar>());
+static_assert(kLoader == ParentLoaderForClass<kChildLoader, kFoo>());
+static_assert(kLoader == ParentLoaderForClass<kChildLoader, kBaz>());
+static_assert(kLoader == ParentLoaderForClass<kChildLoader, kBar>());
+static_assert(kChildLoader == ParentLoaderForClass<kChildLoader, kBazNar>());
 static_assert(kChildChildLoader ==
-              jni::ParentLoaderForClass<kChildChildLoader, kGnar>());
+              ParentLoaderForClass<kChildChildLoader, kGnar>());
 
 }  // namespace
