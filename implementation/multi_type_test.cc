@@ -18,6 +18,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "implementation/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
@@ -27,6 +28,7 @@ using jni::Class;
 using jni::Field;
 using jni::Method;
 using jni::Params;
+using ::jni::test::Fake;
 using jni::test::JniTest;
 using testing::_;
 using testing::Eq;
@@ -42,36 +44,32 @@ TEST_F(JniTest, MultiTypeTest_SimpleSmokeTestForSingleObject) {
       Field{"SomeField", jint{}},
   };
 
-  jclass local_jclass{reinterpret_cast<jclass>(0XAAAAA)};
-  jclass global_jclass{reinterpret_cast<jclass>(0XBBBBB)};
-  jobject local_jobject{reinterpret_cast<jobject>(0XCCCCCC)};
-  jobject global_jobject{reinterpret_cast<jobject>(0XDDDDDD)};
-  jmethodID jmethod{reinterpret_cast<jmethodID>(0XEEEEEE)};
-  jfieldID field_id{reinterpret_cast<jfieldID>(0XFFFFFF)};
+  EXPECT_CALL(*env_, FindClass(StrEq("ARCore")))
+      .WillOnce(Return(Fake<jclass>(1)));
+  EXPECT_CALL(*env_, NewGlobalRef(Eq(Fake<jclass>(1))))
+      .WillOnce(Return(Fake<jclass>(2)));
+  EXPECT_CALL(*env_,
+              GetMethodID(Fake<jclass>(2), StrEq("<init>"), StrEq("()V")))
+      .WillOnce(Return(Fake<jmethodID>()));
 
-  EXPECT_CALL(*env_, FindClass(StrEq("ARCore"))).WillOnce(Return(local_jclass));
-  EXPECT_CALL(*env_, NewGlobalRef(Eq(local_jclass)))
-      .WillOnce(Return(global_jclass));
-  EXPECT_CALL(*env_, GetMethodID(global_jclass, StrEq("<init>"), StrEq("()V")))
-      .WillOnce(Return(jmethod));
+  EXPECT_CALL(*env_, NewObjectV(Fake<jclass>(2), Fake<jmethodID>(), _))
+      .WillOnce(Return(Fake<jobject>(1)));
+  EXPECT_CALL(*env_, NewGlobalRef(Fake<jobject>(1)))
+      .WillOnce(Return(Fake<jobject>(2)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(1))).Times(1);
 
-  EXPECT_CALL(*env_, NewObjectV(global_jclass, jmethod, _))
-      .WillOnce(Return(local_jobject));
-  EXPECT_CALL(*env_, NewGlobalRef(local_jobject))
-      .WillOnce(Return(global_jobject));
-  EXPECT_CALL(*env_, DeleteLocalRef(local_jobject)).Times(1);
+  EXPECT_CALL(*env_, GetMethodID(Fake<jclass>(2), StrEq("Foo"), StrEq("(IF)I")))
+      .WillOnce(Return(Fake<jmethodID>()));
+  EXPECT_CALL(*env_, GetMethodID(Fake<jclass>(2), StrEq("Bar"), StrEq("()I")))
+      .WillOnce(Return(Fake<jmethodID>()));
+  EXPECT_CALL(*env_, GetMethodID(Fake<jclass>(2), StrEq("Baz"), StrEq("(F)V")))
+      .WillOnce(Return(Fake<jmethodID>()));
+  EXPECT_CALL(*env_,
+              GetFieldID(Fake<jclass>(2), StrEq("SomeField"), StrEq("I")))
+      .WillOnce(Return(Fake<jfieldID>()));
 
-  EXPECT_CALL(*env_, GetMethodID(global_jclass, StrEq("Foo"), StrEq("(IF)I")))
-      .WillOnce(Return(jmethod));
-  EXPECT_CALL(*env_, GetMethodID(global_jclass, StrEq("Bar"), StrEq("()I")))
-      .WillOnce(Return(jmethod));
-  EXPECT_CALL(*env_, GetMethodID(global_jclass, StrEq("Baz"), StrEq("(F)V")))
-      .WillOnce(Return(jmethod));
-  EXPECT_CALL(*env_, GetFieldID(global_jclass, StrEq("SomeField"), StrEq("I")))
-      .WillOnce(Return(field_id));
-
-  EXPECT_CALL(*env_, DeleteGlobalRef(global_jobject)).Times(1);
-  EXPECT_CALL(*env_, DeleteGlobalRef(global_jclass)).Times(1);
+  EXPECT_CALL(*env_, DeleteGlobalRef(Fake<jobject>(2))).Times(1);
+  EXPECT_CALL(*env_, DeleteGlobalRef(Fake<jclass>(2))).Times(1);
 
   jni::GlobalObject<object> obj{};
   obj("Foo", 1, 2.f);
@@ -84,6 +82,8 @@ TEST_F(JniTest, MultiTypeTest_SimpleSmokeTestForSingleObject) {
 }
 
 TEST_F(JniTest, MultiTypeTest_MethodsOfSameNameButDifferentClassAreUnique) {
+  EXPECT_CALL(*env_, GetMethodID).Times(2);
+
   static constexpr Class c1{
       "com.google.ARCore",
       Method{"Foo", jni::Return<jint>{}, Params<jint>{}},
@@ -92,14 +92,9 @@ TEST_F(JniTest, MultiTypeTest_MethodsOfSameNameButDifferentClassAreUnique) {
       "com.google.VRCore",
       Method{"Foo", jni::Return<jint>{}, Params<jint>{}},
   };
-  const jobject object1{reinterpret_cast<jobject>(0XAAAAAA)};
-  const jobject object2{reinterpret_cast<jobject>(0XBBBBBB)};
-  const jobject object3{reinterpret_cast<jobject>(0XCCCCCC)};
 
-  EXPECT_CALL(*env_, GetMethodID).Times(2);
-
-  jni::LocalObject<c1> obj1{object1};
-  jni::LocalObject<c2> obj2{object2};
+  jni::LocalObject<c1> obj1{Fake<jobject>(1)};
+  jni::LocalObject<c2> obj2{Fake<jobject>(2)};
   obj1("Foo", 12345);
   obj2("Foo", 12345);
 
@@ -112,7 +107,7 @@ TEST_F(JniTest, MultiTypeTest_MethodsOfSameNameButDifferentClassAreUnique) {
   obj2("Foo", 12345);
   obj2("Foo", 12345);
 
-  jni::LocalObject<c1> obj3{object3};
+  jni::LocalObject<c1> obj3{Fake<jobject>(3)};
   obj3("Foo", 12345);
   obj3("Foo", 12345);
 }

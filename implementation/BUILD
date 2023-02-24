@@ -646,6 +646,7 @@ cc_test(
     name = "multi_type_test",
     srcs = ["multi_type_test.cc"],
     deps = [
+        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
         "//:mock_jni_env",
