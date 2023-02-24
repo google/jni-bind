@@ -47,10 +47,6 @@ TEST_F(JniTest, ArrayView_CallsLengthProperly) {
 }
 
 TEST_F(JniTest, ArrayView_GetsAndReleaseArrayBuffer) {
-  ASSERT_EQ((Fake<jboolean*>()), nullptr);
-  ASSERT_EQ((Fake<jlong*>()), reinterpret_cast<jlong*>(0x123456789abcde));
-  ASSERT_EQ((Fake<jclass*>()), reinterpret_cast<jclass*>(0xABCDEF12345));
-
   EXPECT_CALL(*env_, GetBooleanArrayElements(Eq(Fake<jbooleanArray>()), _))
       .WillOnce(::testing::Return(Fake<jboolean*>()));
   EXPECT_CALL(*env_, ReleaseBooleanArrayElements(

@@ -15,6 +15,7 @@
  */
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "implementation/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
@@ -31,6 +32,7 @@ using ::jni::LocalObject;
 using ::jni::LocalString;
 using ::jni::Method;
 using ::jni::Params;
+using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::Return;
@@ -38,26 +40,26 @@ using ::testing::StrEq;
 
 static constexpr Class kClass{"kClass"};
 
-jstring FakeJString() { return reinterpret_cast<jstring>(0xFEFEFEFEFE); }
-jintArray FakeJIntArray() { return reinterpret_cast<jintArray>(0xDADADADADA); }
-
 ////////////////////////////////////////////////////////////////////////////////
 // Construction Tests.
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, LocalArray_BuildsAndDestroys) {
-  EXPECT_CALL(*env_, NewIntArray(1)).WillOnce(Return(FakeJIntArray()));
+  EXPECT_CALL(*env_, NewIntArray(1)).WillOnce(Return(Fake<jintArray>()));
   EXPECT_CALL(*env_, DeleteLocalRef(_));
 
   LocalArray<jint> int_array_1{1};
 }
 
 TEST_F(JniTest, LocalArray_ConstructsIntArrayWithCorrectSize) {
-  EXPECT_CALL(*env_, NewIntArray(1)).WillOnce(Return(FakeJIntArray()));
-  EXPECT_CALL(*env_, NewIntArray(2)).WillOnce(Return(FakeJIntArray()));
-  EXPECT_CALL(*env_, NewIntArray(3)).WillOnce(Return(FakeJIntArray()));
-  EXPECT_CALL(*env_, NewIntArray(4)).WillOnce(Return(FakeJIntArray()));
+  EXPECT_CALL(*env_, NewIntArray(1)).WillOnce(Return(Fake<jintArray>(1)));
+  EXPECT_CALL(*env_, NewIntArray(2)).WillOnce(Return(Fake<jintArray>(2)));
+  EXPECT_CALL(*env_, NewIntArray(3)).WillOnce(Return(Fake<jintArray>(3)));
+  EXPECT_CALL(*env_, NewIntArray(4)).WillOnce(Return(Fake<jintArray>(4)));
 
-  EXPECT_CALL(*env_, DeleteLocalRef(FakeJIntArray())).Times(4);
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(1)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(2)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(3)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(4)));
 
   LocalArray<jint> int_array_1{1};
   LocalArray<jint> int_array_2{2};
@@ -238,20 +240,20 @@ TEST_F(JniTest, Array_CorrectSignatureForStringParams) {
 
 TEST_F(JniTest, Array_LocalVanillaObjectRValuesCanBeSet) {
   EXPECT_CALL(*env_, DeleteLocalRef(_)).Times(2);  // array, in place obj
-  EXPECT_CALL(*env_, DeleteLocalRef(FakeJString())).Times(0);
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>())).Times(0);
 
   LocalArray<jobject, 1, kJavaLangString> arr{
       3, LocalObject<kJavaLangString>{"Foo"}};
-  arr.Set(0, LocalObject<kJavaLangString>{FakeJString()});
+  arr.Set(0, LocalObject<kJavaLangString>{Fake<jstring>()});
 }
 
 TEST_F(JniTest, Array_LocalStringRValuesCanBeSet) {
   EXPECT_CALL(*env_, DeleteLocalRef(_))
       .Times(1);  // array (object is moved from)
-  EXPECT_CALL(*env_, DeleteLocalRef(FakeJString())).Times(0);
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>())).Times(0);
 
   LocalArray<jstring> arr{3};
-  arr.Set(0, LocalString{FakeJString()});
+  arr.Set(0, LocalString{Fake<jstring>()});
 }
 
 }  // namespace

@@ -44,6 +44,7 @@ cc_test(
     deps = [
         ":jni_env",
         "//:jni_dep",
+        "//implementation:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )

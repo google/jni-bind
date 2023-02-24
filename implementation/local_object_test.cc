@@ -19,6 +19,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "implementation/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
@@ -31,31 +32,29 @@ using jni::kDefaultJvm;
 using jni::LocalObject;
 using jni::Method;
 using jni::Params;
+using ::jni::test::Fake;
 using jni::test::JniTest;
 using testing::_;
 using testing::InSequence;
 using testing::StrEq;
 
 TEST_F(JniTest, LocalObject_CallsNewAndDeleteOnNewObject) {
-  static constexpr Class kClass{"com/google/CallsNewAndDeleteOnNewObject"};
-  const jobject local_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
-
   // Note, class refs are not released, so Times() != 2.
-  EXPECT_CALL(*env_, NewObjectV).WillOnce(testing::Return(local_jobject));
-  EXPECT_CALL(*env_, DeleteLocalRef(local_jobject)).Times(1);
+  EXPECT_CALL(*env_, NewObjectV).WillOnce(testing::Return(Fake<jobject>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
 
+  static constexpr Class kClass{"com/google/CallsNewAndDeleteOnNewObject"};
   LocalObject<kClass> local_object{};
-  EXPECT_EQ(jobject{local_object}, local_jobject);
+  EXPECT_EQ(jobject{local_object}, Fake<jobject>());
 }
 
 TEST_F(JniTest, LocalObject_CallsOnlyDeleteOnWrapCtor) {
   static constexpr Class kClass{"com/google/CallsOnlyDeleteOnWrapCtor"};
-  const jobject local_jobject_from_user{reinterpret_cast<jobject>(0XAAAAAA)};
 
   EXPECT_CALL(*env_, NewLocalRef).Times(0);
-  EXPECT_CALL(*env_, DeleteLocalRef(local_jobject_from_user)).Times(1);
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
 
-  LocalObject<kClass> local_object{local_jobject_from_user};
+  LocalObject<kClass> local_object{Fake<jobject>()};
   EXPECT_NE(jobject{local_object}, nullptr);
 }
 
@@ -71,27 +70,23 @@ TEST_F(JniTest, LocalObject_ObjectReturnsInstanceMethods) {
              jni::Return<jdouble>{},
              Params<jint, jfloat, jint, jfloat, jdouble>{}}};
 
-  const jobject local_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
-  const jmethodID ctor_method{reinterpret_cast<jmethodID>(0XBBBBBB)};
-  const jmethodID jmethod{reinterpret_cast<jmethodID>(0XCCCCCC)};
-
   InSequence seq;
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("()V")))
-      .WillOnce(testing::Return(ctor_method));
-  EXPECT_CALL(*env_, NewObjectV(_, ctor_method, _))
-      .WillOnce(testing::Return(local_jobject));
+      .WillOnce(testing::Return(Fake<jmethodID>(1)));
+  EXPECT_CALL(*env_, NewObjectV(_, Fake<jmethodID>(1), _))
+      .WillOnce(testing::Return(Fake<jobject>()));
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("(I)I")))
-      .WillOnce(testing::Return(jmethod));
+      .WillOnce(testing::Return(Fake<jmethodID>(2)));
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Baz"), StrEq("(F)V")))
-      .WillOnce(testing::Return(jmethod));
+      .WillOnce(testing::Return(Fake<jmethodID>(2)));
   EXPECT_CALL(*env_,
               GetMethodID(_,
                           StrEq("AMethodWithAReallyLongNameThatWouldPossiblyBeH"
                                 "ardForTemplatesToHandle"),
                           StrEq("(IFIFD)D")))
-      .WillOnce(testing::Return(jmethod));
-  EXPECT_CALL(*env_, DeleteLocalRef(local_jobject)).Times(1);
+      .WillOnce(testing::Return(Fake<jmethodID>(2)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
 
   LocalObject<java_class_under_test> dynamic_object{};
   dynamic_object("Foo", 12345);
@@ -104,13 +99,12 @@ TEST_F(JniTest, LocalObject_ObjectReturnsInstanceMethods) {
 TEST_F(JniTest, LocalObject_CallsDeleteOnceAfterAMoveConstruction) {
   static constexpr Class kClass{
       "com/google/CallsDeleteOnceAfterAMoveConstruction"};
-  const jobject local_jobject_from_user{reinterpret_cast<jobject>(0XAAAAAA)};
 
   EXPECT_CALL(*env_, NewLocalRef).Times(0);
-  EXPECT_CALL(*env_, DeleteLocalRef(local_jobject_from_user)).Times(1);
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
 
   LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_1{
-      local_jobject_from_user};
+      Fake<jobject>()};
 
   EXPECT_NE(jobject{local_object_1}, nullptr);
 
@@ -123,15 +117,15 @@ TEST_F(JniTest, LocalObject_CallsDeleteOnceAfterAMoveConstruction) {
 TEST_F(JniTest, LocalObject_FunctionsProperlyInSTLContainer) {
   static constexpr Class kClass{
       "com/google/CallsDeleteOnceAfterAMoveConstruction"};
-  const jobject local_jobject_from_user{reinterpret_cast<jobject>(0XAAAAAA)};
 
   EXPECT_CALL(*env_, NewLocalRef).Times(0);
-  EXPECT_CALL(*env_, DeleteLocalRef(local_jobject_from_user)).Times(2);
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(1)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(2)));
 
   LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_1{
-      local_jobject_from_user};
+      Fake<jobject>(1)};
   LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_2{
-      local_jobject_from_user};
+      Fake<jobject>(2)};
   std::tuple t{std::move(local_object_1), std::move(local_object_2)};
 }
 
@@ -140,13 +134,12 @@ TEST_F(JniTest, LocalObject_ValuesWorkAfterMoveConstructor) {
       "com/google/ValuesWorkAfterMoveConstructor",
       Method{"Foo", jni::Return<jint>{}, Params<jint>{}},
       Field{"BarField", jint{}}};
-  const jobject local_jobject_from_user{reinterpret_cast<jobject>(0XAAAAAA)};
 
   EXPECT_CALL(*env_, CallIntMethodV).Times(3);
   EXPECT_CALL(*env_, SetIntField).Times(4);
 
   LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_1{
-      local_jobject_from_user};
+      Fake<jobject>()};
   local_object_1("Foo", 1);
   local_object_1("Foo", 2);
   local_object_1["BarField"].Set(1);

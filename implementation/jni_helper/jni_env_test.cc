@@ -16,9 +16,12 @@
 #include "jni_env.h"
 
 #include <gtest/gtest.h>
+#include "implementation/fake_test_constants.h"
 #include "jni_dep.h"
 
 namespace {
+
+using ::jni::test::Fake;
 
 class JniEnvForTest : public jni::JniEnv {
  public:
@@ -36,10 +39,10 @@ class JniEnvForTest : public jni::JniEnv {
 // has been added.
 TEST(JniEnv, StartsNullAndSetsAndGetsTheSameValue) {
   EXPECT_EQ(JniEnvForTest::GetEnv(), nullptr);
-  JniEnvForTest::SetEnv_ForTest(reinterpret_cast<JNIEnv*>(0xAAAAAA));
-  EXPECT_EQ(JniEnvForTest::GetEnv(), reinterpret_cast<JNIEnv*>(0xAAAAAA));
-  JniEnvForTest::SetEnv_ForTest(reinterpret_cast<JNIEnv*>(0xBBBBBB));
-  EXPECT_EQ(JniEnvForTest::GetEnv(), reinterpret_cast<JNIEnv*>(0xBBBBBB));
+  JniEnvForTest::SetEnv_ForTest(Fake<JNIEnv*>(1));
+  EXPECT_EQ(JniEnvForTest::GetEnv(), Fake<JNIEnv*>(1));
+  JniEnvForTest::SetEnv_ForTest(Fake<JNIEnv*>(2));
+  EXPECT_EQ(JniEnvForTest::GetEnv(), Fake<JNIEnv*>(2));
   JniEnvForTest::SetEnv_ForTest(nullptr);
   EXPECT_EQ(JniEnvForTest::GetEnv(), nullptr);
 }

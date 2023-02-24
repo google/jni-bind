@@ -294,9 +294,9 @@ cc_test(
     name = "field_ref_test",
     srcs = ["field_ref_test.cc"],
     deps = [
+        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
-        "//:mock_jni_env",
         "@googletest//:gtest_main",
     ],
 )
@@ -342,6 +342,7 @@ cc_test(
     name = "global_object_test",
     srcs = ["global_object_test.cc"],
     deps = [
+        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
         "@googletest//:gtest_main",
@@ -500,10 +501,8 @@ cc_test(
     srcs = ["local_array_test.cc"],
     deps = [
         ":fake_test_constants",
-        ":local_array_string",
         "//:jni_bind",
         "//:jni_test",
-        "//:mock_jni_env",
         "@googletest//:gtest_main",
     ],
 )
@@ -539,9 +538,9 @@ cc_test(
     name = "local_object_test",
     srcs = ["local_object_test.cc"],
     deps = [
+        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
-        "//:mock_jni_env",
         "@googletest//:gtest_main",
     ],
 )
@@ -649,8 +648,6 @@ cc_test(
         ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
-        "//:mock_jni_env",
-        "//:mock_jvm",
         "@googletest//:gtest_main",
     ],
 )
@@ -936,6 +933,7 @@ cc_test(
     name = "string_ref_test",
     srcs = ["string_ref_test.cc"],
     deps = [
+        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
         "@googletest//:gtest_main",
