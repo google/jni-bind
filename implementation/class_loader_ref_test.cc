@@ -102,11 +102,8 @@ TEST_F(JniTestForClassLoaders,
                                             SupportedClassSet{kTestClass1}};
 
   JvmRef<kDefaultJvm> jvm_ref{jvm_.get()};
-  const jobject class_loader_local_to_be_wrapped{
-      reinterpret_cast<jobject>(0XAAAAAA)};
 
-  LocalClassLoader<kClassLoader> local_class_loader{
-      class_loader_local_to_be_wrapped};
+  LocalClassLoader<kClassLoader> local_class_loader{Fake<jobject>()};
   auto a = local_class_loader.BuildLocalObject<kTestClass1>();
   LocalObject<kTestClass2> b{a};
   b("Foo", a);
@@ -116,7 +113,7 @@ TEST_F(JniTestForClassLoaders,
 }
 
 TEST_F(JniTestForClassLoaders,
-       ClassLoaderRefTest_ConstructorsAcceptGlobalClassLoadedObjects) {
+       lassLoaderRefTest_ConstructorsAcceptGlobalClassLoadedObjects) {
   static constexpr Class kTestClass1{"TestClass1"};
   static constexpr Class kTestClass2{
       "TestClass2", Constructor{kTestClass1},
@@ -125,11 +122,8 @@ TEST_F(JniTestForClassLoaders,
                                             SupportedClassSet{kTestClass1}};
 
   JvmRef<kDefaultJvm> jvm_ref{jvm_.get()};
-  const jobject class_loader_local_to_be_wrapped{
-      reinterpret_cast<jobject>(0XAAAAAA)};
 
-  LocalClassLoader<kClassLoader> local_class_loader{
-      class_loader_local_to_be_wrapped};
+  LocalClassLoader<kClassLoader> local_class_loader{Fake<jobject>()};
   auto a = local_class_loader.BuildGlobalObject<kTestClass1>();
   LocalObject<kTestClass2> b{a};
   b("Foo", a);
@@ -152,11 +146,8 @@ TEST_F(JniTestForClassLoaders,
   static constexpr Jvm kJvm{kClassLoader};
 
   JvmRef<kJvm> jvm_ref{jvm_.get()};
-  const jobject class_loader_local_to_be_wrapped{
-      reinterpret_cast<jobject>(0XAAAAAA)};
 
-  LocalClassLoader<kClassLoader, kJvm> local_class_loader{
-      class_loader_local_to_be_wrapped};
+  LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
   LocalObject<kTestClass1, kClassLoader> a =
       local_class_loader.BuildLocalObject<kTestClass1>();
   LocalObject<kTestClass2> b{a};
@@ -174,11 +165,8 @@ TEST_F(JniTestForClassLoaders, ClassLoaderRefTest_ConstructsFromRValue) {
   static constexpr Jvm kJvm{kClassLoader};
 
   JvmRef<kJvm> jvm_ref{jvm_.get()};
-  const jobject class_loader_local_to_be_wrapped{
-      reinterpret_cast<jobject>(0XAAAAAA)};
 
-  LocalClassLoader<kClassLoader, kJvm> local_class_loader{
-      class_loader_local_to_be_wrapped};
+  LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
   LocalObject<kTestClass1, kClassLoader, kJvm> b{
       local_class_loader.BuildLocalObject<kTestClass1>()};
 
@@ -198,11 +186,8 @@ TEST_F(JniTestForClassLoaders,
   static constexpr Jvm kJvm{kClassLoader};
 
   JvmRef<kJvm> jvm_ref{jvm_.get()};
-  const jobject class_loader_local_to_be_wrapped{
-      reinterpret_cast<jobject>(0XAAAAAA)};
 
-  LocalClassLoader<kClassLoader, kJvm> local_class_loader{
-      class_loader_local_to_be_wrapped};
+  LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
 
   LocalObject<kTestClass1> a{};
   LocalObject<kTestClass2, kClassLoader, kJvm> b =
@@ -224,11 +209,8 @@ TEST_F(
   static constexpr Jvm kJvm{kClassLoader};
 
   JvmRef<kJvm> jvm_ref{jvm_.get()};
-  const jobject class_loader_local_to_be_wrapped{
-      reinterpret_cast<jobject>(0XAAAAAA)};
 
-  LocalClassLoader<kClassLoader, kJvm> local_class_loader{
-      class_loader_local_to_be_wrapped};
+  LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
   auto a = local_class_loader.BuildLocalObject<kTestClass1>(12345);
   // local_class_loader.BuildLocalObject<kTestClass1>(); doesn't compile (good)
 
@@ -251,10 +233,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   static constexpr Jvm kJvm{kClassLoader};
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
-  const jobject class_loader_local_to_be_wrapped{
-      reinterpret_cast<jobject>(0XAAAAAA)};
-  LocalClassLoader<kClassLoader, kJvm> local_class_loader{
-      class_loader_local_to_be_wrapped};
+  LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
 
   LocalObject a{local_class_loader.BuildLocalObject<kTestClass1>()};
   auto b = local_class_loader.BuildLocalObject<kTestClass2>();
@@ -278,10 +257,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   static constexpr Jvm kJvm{kClassLoader};
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
-  const jobject class_loader_local_to_be_wrapped{
-      reinterpret_cast<jobject>(0XAAAAAA)};
-  LocalClassLoader<kClassLoader, kJvm> local_class_loader{
-      class_loader_local_to_be_wrapped};
+  LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobjectArray>()};
 
   LocalObject<kTestClass1, kClassLoader, kJvm> a =
       local_class_loader.BuildLocalObject<kTestClass1>();
@@ -303,10 +279,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   static constexpr Jvm kJvm{kClassLoader};
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
-  const jobject class_loader_local_to_be_wrapped{
-      reinterpret_cast<jobject>(0XAAAAAA)};
-  LocalClassLoader<kClassLoader, kJvm> local_class_loader{
-      class_loader_local_to_be_wrapped};
+  LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobjectArray>()};
 
   LocalObject a{local_class_loader.BuildLocalObject<kTestClass1>()};
   TearDown();
@@ -320,19 +293,10 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   static constexpr ClassLoader kClassLoader{
       kNullClassLoader, SupportedClassSet{kTestClassNoCrossTalk}};
 
-  static constexpr Jvm kClassLoaderJvm{kClassLoader};
-
   // We will use this ClassLoader instead of the default loader to load
   // TestClass.
-  const jobject class_loader_local_to_be_wrapped{
-      reinterpret_cast<jobject>(0XAAAAAA)};
+  static constexpr Jvm kClassLoaderJvm{kClassLoader};
 
-  const jclass class_loader_local_jclass{reinterpret_cast<jclass>(0XACACAC)};
-
-  const jmethodID load_class_jmethod{reinterpret_cast<jmethodID>(0XAEAEAE)};
-  const jobject custom_test_jobject{reinterpret_cast<jobject>(0XBABABA)};
-  const jobject second_custom_test_jobject{reinterpret_cast<jobject>(0XBBBBBB)};
-  const jclass custom_test_local_jclass{reinterpret_cast<jclass>(0XBCBCBC)};
   const jmethodID custom_test_init_jmethod{
       reinterpret_cast<jmethodID>(0XBDBDBD)};
   const jmethodID custom_test_method_jmethod{
@@ -342,51 +306,49 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   InSequence sequence;
 
   EXPECT_CALL(*env_, FindClass(StrEq("java/lang/ClassLoader")))
-      .WillOnce(testing::Return(class_loader_local_jclass));
+      .WillOnce(testing::Return(Fake<jclass>(1)));
 
-  EXPECT_CALL(*env_, NewGlobalRef(class_loader_local_jclass))
-      .WillOnce(testing::Return(AsGlobal(class_loader_local_jclass)));
+  EXPECT_CALL(*env_, NewGlobalRef(Fake<jclass>(1)))
+      .WillOnce(testing::Return(AsGlobal(Fake<jclass>(1))));
 
-  EXPECT_CALL(
-      *env_,
-      GetMethodID(AsGlobal(class_loader_local_jclass), StrEq("loadClass"),
-                  StrEq("(Ljava/lang/String;)Ljava/lang/Class;")))
-      .WillOnce(testing::Return(load_class_jmethod));
+  EXPECT_CALL(*env_,
+              GetMethodID(AsGlobal(Fake<jclass>(1)), StrEq("loadClass"),
+                          StrEq("(Ljava/lang/String;)Ljava/lang/Class;")))
+      .WillOnce(testing::Return(Fake<jmethodID>(1)));
 
   EXPECT_CALL(*env_, NewStringUTF(_))
       .WillOnce(testing::Return(custom_test_class_name));
 
   // We should only try to load the class once even if we create multiple
   // instances.
-  EXPECT_CALL(*env_, CallObjectMethodV(class_loader_local_to_be_wrapped,
-                                       load_class_jmethod, _))
-      .WillOnce(testing::Return(custom_test_local_jclass));
+  EXPECT_CALL(*env_, CallObjectMethodV(Fake<jobject>(1), Fake<jmethodID>(1), _))
+      .WillOnce(testing::Return(Fake<jclass>(2)));
 
-  EXPECT_CALL(*env_, NewGlobalRef(custom_test_local_jclass))
-      .WillOnce(testing::Return(AsGlobal(custom_test_local_jclass)));
-  EXPECT_CALL(*env_, GetMethodID(AsGlobal(custom_test_local_jclass),
-                                 StrEq("<init>"), StrEq("(I)V")))
+  EXPECT_CALL(*env_, NewGlobalRef(Fake<jclass>(2)))
+      .WillOnce(testing::Return(AsGlobal(Fake<jclass>(2))));
+  EXPECT_CALL(*env_, GetMethodID(AsGlobal(Fake<jclass>(2)), StrEq("<init>"),
+                                 StrEq("(I)V")))
       .WillOnce(testing::Return(custom_test_init_jmethod));
-  EXPECT_CALL(*env_, NewObjectV(AsGlobal(custom_test_local_jclass),
-                                custom_test_init_jmethod, _))
-      .WillOnce(testing::Return(custom_test_jobject));
-  EXPECT_CALL(*env_, NewObjectV(AsGlobal(custom_test_local_jclass),
-                                custom_test_init_jmethod, _))
-      .WillOnce(testing::Return(second_custom_test_jobject));
-
-  EXPECT_CALL(*env_, GetMethodID(AsGlobal(custom_test_local_jclass),
-                                 StrEq("methodNoCrossTalk"),
-
-                                 StrEq("(I)I")))
-      .WillOnce(testing::Return(custom_test_method_jmethod));
   EXPECT_CALL(
-      *env_, CallIntMethodV(custom_test_jobject, custom_test_method_jmethod, _))
+      *env_, NewObjectV(AsGlobal(Fake<jclass>(2)), custom_test_init_jmethod, _))
+      .WillOnce(testing::Return(Fake<jobject>(2)));
+  EXPECT_CALL(
+      *env_, NewObjectV(AsGlobal(Fake<jclass>(2)), custom_test_init_jmethod, _))
+      .WillOnce(testing::Return(Fake<jobject>(3)));
+
+  EXPECT_CALL(*env_,
+              GetMethodID(AsGlobal(Fake<jclass>(2)), StrEq("methodNoCrossTalk"),
+
+                          StrEq("(I)I")))
+      .WillOnce(testing::Return(custom_test_method_jmethod));
+  EXPECT_CALL(*env_,
+              CallIntMethodV(Fake<jobject>(2), custom_test_method_jmethod, _))
       .WillOnce(testing::Return(123));
 
   // Code under test.
   JvmRef<kClassLoaderJvm> jvm_ref{jvm_.get()};
   LocalClassLoader<kClassLoader, kClassLoaderJvm> class_loader{
-      class_loader_local_to_be_wrapped};
+      Fake<jobject>(1)};
 
   auto custom_loader_object =
       class_loader.BuildLocalObject<kTestClassNoCrossTalk>(jint{1});
@@ -419,7 +381,6 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   const jmethodID get_class_loader_jmethod{
       reinterpret_cast<jmethodID>(0XBDBDBD)};
   const jclass class_loader_jclass{reinterpret_cast<jclass>(0XCACACA)};
-  const jmethodID load_class_jmethod{reinterpret_cast<jmethodID>(0XCACCAC)};
   const jobject class_loader_jobject{reinterpret_cast<jobject>(0XCDCDCD)};
   const jobject class_loader_from_object_ref_jobject{
       reinterpret_cast<jobject>(0XAAADCD)};
@@ -449,13 +410,13 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   EXPECT_CALL(*env_,
               GetMethodID(Eq(AsGlobal(class_loader_jclass)), StrEq("loadClass"),
                           StrEq("(Ljava/lang/String;)Ljava/lang/Class;")))
-      .WillOnce(testing::Return(load_class_jmethod));
+      .WillOnce(testing::Return(Fake<jmethodID>(1)));
 
   EXPECT_CALL(*env_, NewStringUTF(StrEq("com.google.ARCore")))
       .WillOnce(testing::Return(test_name_jstring));
 
   EXPECT_CALL(*env_, CallObjectMethodV(class_loader_from_object_ref_jobject,
-                                       load_class_jmethod, _))
+                                       Fake<jmethodID>(1), _))
       .WillOnce(testing::Return(class_loader_jobject));
 
   // Make sure we try to get the method with the loaded class, not the direct
