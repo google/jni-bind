@@ -17,6 +17,9 @@
 #ifndef JNI_BIND_FAKE_TEST_CONSTANTS_H_
 #define JNI_BIND_FAKE_TEST_CONSTANTS_H_
 
+#include <cstdint>
+#include <type_traits>
+
 #include "jni_dep.h"
 
 namespace jni::test {
@@ -24,10 +27,25 @@ namespace jni::test {
 template <typename T>
 struct FakeImpl;
 
-template <typename T, typename OffsetT = int>
+// Produces a fake value of type T with non-trivial default value.
+// If modifier is not NONE, will add a modifier.
+// Offset can be used to nudge off base value so fake values don't match.
+template <typename T,
+          typename OffsetT = int>
 auto Fake(OffsetT offset = 0) {
-  return FakeImpl<T>::Val(offset);
+  return reinterpret_cast<T>(FakeImpl<std::decay_t<T>>::Val(offset));
 }
+
+template <typename T>
+struct FakeImpl<T*> {
+  static T* Val(int offset) {
+    if constexpr (std::is_pointer_v<T>) {
+      return reinterpret_cast<T*>(FakeImpl<std::decay_t<T>>::Val(offset));
+    } else {
+      return reinterpret_cast<T*>(static_cast<intptr_t>(FakeImpl<std::decay_t<T>>::Val(offset)));
+    }
+  }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // JNI C API constants.
@@ -83,7 +101,7 @@ struct FakeImpl<jint> {
 
 template <>
 struct FakeImpl<jlong> {
-  static jlong Val(jlong offset) { return jlong{555555555} + offset; }
+  static jlong Val(jlong offset) { return jlong{0x123456789ABCDE} + offset; }
 };
 
 template <>

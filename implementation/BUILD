@@ -81,6 +81,7 @@ cc_test(
     name = "array_view_test",
     srcs = ["array_view_test.cc"],
     deps = [
+        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
         "@googletest//:gtest_main",
