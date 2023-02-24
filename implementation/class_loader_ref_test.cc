@@ -18,6 +18,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "implementation/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
@@ -297,12 +298,6 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   // TestClass.
   static constexpr Jvm kClassLoaderJvm{kClassLoader};
 
-  const jmethodID custom_test_init_jmethod{
-      reinterpret_cast<jmethodID>(0XBDBDBD)};
-  const jmethodID custom_test_method_jmethod{
-      reinterpret_cast<jmethodID>(0XBEBEBE)};
-  const jstring custom_test_class_name{reinterpret_cast<jstring>(0XBFBFBF)};
-
   InSequence sequence;
 
   EXPECT_CALL(*env_, FindClass(StrEq("java/lang/ClassLoader")))
@@ -317,7 +312,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
       .WillOnce(testing::Return(Fake<jmethodID>(1)));
 
   EXPECT_CALL(*env_, NewStringUTF(_))
-      .WillOnce(testing::Return(custom_test_class_name));
+      .WillOnce(testing::Return(Fake<jstring>()));
 
   // We should only try to load the class once even if we create multiple
   // instances.
@@ -328,21 +323,20 @@ TEST_F(JniTestWithNoDefaultJvmRef,
       .WillOnce(testing::Return(AsGlobal(Fake<jclass>(2))));
   EXPECT_CALL(*env_, GetMethodID(AsGlobal(Fake<jclass>(2)), StrEq("<init>"),
                                  StrEq("(I)V")))
-      .WillOnce(testing::Return(custom_test_init_jmethod));
-  EXPECT_CALL(
-      *env_, NewObjectV(AsGlobal(Fake<jclass>(2)), custom_test_init_jmethod, _))
+      .WillOnce(testing::Return(Fake<jmethodID>(2)));
+  EXPECT_CALL(*env_,
+              NewObjectV(AsGlobal(Fake<jclass>(2)), Fake<jmethodID>(2), _))
       .WillOnce(testing::Return(Fake<jobject>(2)));
-  EXPECT_CALL(
-      *env_, NewObjectV(AsGlobal(Fake<jclass>(2)), custom_test_init_jmethod, _))
+  EXPECT_CALL(*env_,
+              NewObjectV(AsGlobal(Fake<jclass>(2)), Fake<jmethodID>(2), _))
       .WillOnce(testing::Return(Fake<jobject>(3)));
 
   EXPECT_CALL(*env_,
               GetMethodID(AsGlobal(Fake<jclass>(2)), StrEq("methodNoCrossTalk"),
 
                           StrEq("(I)I")))
-      .WillOnce(testing::Return(custom_test_method_jmethod));
-  EXPECT_CALL(*env_,
-              CallIntMethodV(Fake<jobject>(2), custom_test_method_jmethod, _))
+      .WillOnce(testing::Return(Fake<jmethodID>(3)));
+  EXPECT_CALL(*env_, CallIntMethodV(Fake<jobject>(2), Fake<jmethodID>(3), _))
       .WillOnce(testing::Return(123));
 
   // Code under test.
@@ -372,62 +366,47 @@ TEST_F(JniTestWithNoDefaultJvmRef,
 
   static constexpr jni::Jvm atypical_jvm_definition{class_loader};
 
-  const jobject test_jobject{reinterpret_cast<jobject>(0XAAAAAA)};
-  const jstring test_name_jstring{reinterpret_cast<jstring>(0XABABAB)};
-  const jclass test_jclass{reinterpret_cast<jclass>(0XACACAC)};
-  const jmethodID test_method_jmethod{reinterpret_cast<jmethodID>(0XAFAFAF)};
-
-  const jclass class_jclass{reinterpret_cast<jclass>(0XBBBBBB)};
-  const jmethodID get_class_loader_jmethod{
-      reinterpret_cast<jmethodID>(0XBDBDBD)};
-  const jclass class_loader_jclass{reinterpret_cast<jclass>(0XCACACA)};
-  const jobject class_loader_jobject{reinterpret_cast<jobject>(0XCDCDCD)};
-  const jobject class_loader_from_object_ref_jobject{
-      reinterpret_cast<jobject>(0XAAADCD)};
-
   InSequence seq;
 
   // The java/lang/Class and java/lang/ClassLoader will always be from the
   // default loader, and they only need to be cached once.
   EXPECT_CALL(*env_, FindClass(StrEq("java/lang/Class")))
-      .WillOnce(testing::Return(class_jclass));
+      .WillOnce(testing::Return(Fake<jclass>(2)));
 
   EXPECT_CALL(*env_, FindClass(StrEq("java/lang/ClassLoader")))
-      .WillOnce(testing::Return(class_loader_jclass));
+      .WillOnce(testing::Return(Fake<jclass>(3)));
 
-  EXPECT_CALL(*env_, GetObjectClass(test_jobject))
-      .WillOnce(testing::Return(test_jclass));
+  EXPECT_CALL(*env_, GetObjectClass(Fake<jobject>(1)))
+      .WillOnce(testing::Return(Fake<jclass>(1)));
 
   EXPECT_CALL(*env_,
-              GetMethodID(AsGlobal(class_jclass), StrEq("getClassLoader"),
+              GetMethodID(AsGlobal(Fake<jclass>(2)), StrEq("getClassLoader"),
                           StrEq("()Ljava/lang/ClassLoader;")))
-      .WillOnce(testing::Return(get_class_loader_jmethod));
+      .WillOnce(testing::Return(Fake<jmethodID>(2)));
+
+  EXPECT_CALL(*env_, CallObjectMethodV(Fake<jclass>(1), Fake<jmethodID>(2), _))
+      .WillOnce(testing::Return(Fake<jobject>(3)));
 
   EXPECT_CALL(*env_,
-              CallObjectMethodV(test_jclass, get_class_loader_jmethod, _))
-      .WillOnce(testing::Return(class_loader_from_object_ref_jobject));
-
-  EXPECT_CALL(*env_,
-              GetMethodID(Eq(AsGlobal(class_loader_jclass)), StrEq("loadClass"),
+              GetMethodID(Eq(AsGlobal(Fake<jclass>(3))), StrEq("loadClass"),
                           StrEq("(Ljava/lang/String;)Ljava/lang/Class;")))
       .WillOnce(testing::Return(Fake<jmethodID>(1)));
 
   EXPECT_CALL(*env_, NewStringUTF(StrEq("com.google.ARCore")))
-      .WillOnce(testing::Return(test_name_jstring));
+      .WillOnce(testing::Return(Fake<jstring>()));
 
-  EXPECT_CALL(*env_, CallObjectMethodV(class_loader_from_object_ref_jobject,
-                                       Fake<jmethodID>(1), _))
-      .WillOnce(testing::Return(class_loader_jobject));
+  EXPECT_CALL(*env_, CallObjectMethodV(Fake<jobject>(3), Fake<jmethodID>(1), _))
+      .WillOnce(testing::Return(Fake<jobject>(2)));
 
   // Make sure we try to get the method with the loaded class, not the direct
   // object class.
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("()V")))
-      .WillOnce(testing::Return(test_method_jmethod));
+      .WillOnce(testing::Return(Fake<jmethodID>(1)));
 
   // Code under test.
   jni::JvmRef<atypical_jvm_definition> jvm_ref{jvm_.get()};
   jni::LocalObject<class_under_test, class_loader, atypical_jvm_definition>
-      obj1{test_jobject};
+      obj1{Fake<jobject>(1)};
   obj1("Foo");
 
   this->TearDown();
