@@ -925,6 +925,7 @@ cc_test(
     name = "static_ref_test",
     srcs = ["static_ref_test.cc"],
     deps = [
+        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
         "@googletest//:gtest_main",

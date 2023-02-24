@@ -15,6 +15,7 @@
  */
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "implementation/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
@@ -29,6 +30,7 @@ using ::jni::Params;
 using ::jni::Rank;
 using ::jni::Static;
 using ::jni::StaticRef;
+using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::Return;
@@ -58,12 +60,11 @@ static constexpr Class kClass{
 // clang-format on
 
 TEST_F(JniTest, StaticBooleanField) {
-  jfieldID static_field_id{reinterpret_cast<jfieldID>(0XDEDEDE)};
   EXPECT_CALL(*env_, GetStaticFieldID(_, StrEq("booleanField"), StrEq("Z")))
-      .WillOnce(Return(static_field_id));
-  EXPECT_CALL(*env_, GetStaticBooleanField(_, static_field_id))
+      .WillOnce(Return(Fake<jfieldID>()));
+  EXPECT_CALL(*env_, GetStaticBooleanField(_, Fake<jfieldID>()))
       .WillOnce(Return(true));
-  EXPECT_CALL(*env_, SetStaticBooleanField(_, static_field_id, true));
+  EXPECT_CALL(*env_, SetStaticBooleanField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
   EXPECT_TRUE(StaticRef<kClass>{}["booleanField"].Get());
@@ -71,12 +72,11 @@ TEST_F(JniTest, StaticBooleanField) {
 }
 
 TEST_F(JniTest, StaticByteField) {
-  jfieldID static_field_id{reinterpret_cast<jfieldID>(0XDEDEDE)};
   EXPECT_CALL(*env_, GetStaticFieldID(_, StrEq("byteField"), StrEq("B")))
-      .WillOnce(Return(static_field_id));
-  EXPECT_CALL(*env_, GetStaticByteField(_, static_field_id))
+      .WillOnce(Return(Fake<jfieldID>()));
+  EXPECT_CALL(*env_, GetStaticByteField(_, Fake<jfieldID>()))
       .WillOnce(Return(true));
-  EXPECT_CALL(*env_, SetStaticByteField(_, static_field_id, true));
+  EXPECT_CALL(*env_, SetStaticByteField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
   EXPECT_TRUE(StaticRef<kClass>{}["byteField"].Get());
@@ -84,12 +84,11 @@ TEST_F(JniTest, StaticByteField) {
 }
 
 TEST_F(JniTest, StaticCharField) {
-  jfieldID static_field_id{reinterpret_cast<jfieldID>(0XDEDEDE)};
   EXPECT_CALL(*env_, GetStaticFieldID(_, StrEq("charField"), StrEq("C")))
-      .WillOnce(Return(static_field_id));
-  EXPECT_CALL(*env_, GetStaticCharField(_, static_field_id))
+      .WillOnce(Return(Fake<jfieldID>()));
+  EXPECT_CALL(*env_, GetStaticCharField(_, Fake<jfieldID>()))
       .WillOnce(Return(true));
-  EXPECT_CALL(*env_, SetStaticCharField(_, static_field_id, true));
+  EXPECT_CALL(*env_, SetStaticCharField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
   EXPECT_TRUE(StaticRef<kClass>{}["charField"].Get());
@@ -97,12 +96,11 @@ TEST_F(JniTest, StaticCharField) {
 }
 
 TEST_F(JniTest, StaticShortField) {
-  jfieldID static_field_id{reinterpret_cast<jfieldID>(0XDEDEDE)};
   EXPECT_CALL(*env_, GetStaticFieldID(_, StrEq("shortField"), StrEq("S")))
-      .WillOnce(Return(static_field_id));
-  EXPECT_CALL(*env_, GetStaticShortField(_, static_field_id))
+      .WillOnce(Return(Fake<jfieldID>()));
+  EXPECT_CALL(*env_, GetStaticShortField(_, Fake<jfieldID>()))
       .WillOnce(Return(true));
-  EXPECT_CALL(*env_, SetStaticShortField(_, static_field_id, true));
+  EXPECT_CALL(*env_, SetStaticShortField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
   EXPECT_TRUE(StaticRef<kClass>{}["shortField"].Get());
@@ -110,12 +108,11 @@ TEST_F(JniTest, StaticShortField) {
 }
 
 TEST_F(JniTest, StaticIntField) {
-  jfieldID static_field_id{reinterpret_cast<jfieldID>(0XDEDEDE)};
   EXPECT_CALL(*env_, GetStaticFieldID(_, StrEq("intField"), StrEq("I")))
-      .WillOnce(Return(static_field_id));
-  EXPECT_CALL(*env_, GetStaticIntField(_, static_field_id))
+      .WillOnce(Return(Fake<jfieldID>()));
+  EXPECT_CALL(*env_, GetStaticIntField(_, Fake<jfieldID>()))
       .WillOnce(Return(true));
-  EXPECT_CALL(*env_, SetStaticIntField(_, static_field_id, true));
+  EXPECT_CALL(*env_, SetStaticIntField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
   EXPECT_TRUE(StaticRef<kClass>{}["intField"].Get());
@@ -123,12 +120,11 @@ TEST_F(JniTest, StaticIntField) {
 }
 
 TEST_F(JniTest, StaticLongField) {
-  jfieldID static_field_id{reinterpret_cast<jfieldID>(0XDEDEDE)};
   EXPECT_CALL(*env_, GetStaticFieldID(_, StrEq("longField"), StrEq("J")))
-      .WillOnce(Return(static_field_id));
-  EXPECT_CALL(*env_, GetStaticLongField(_, static_field_id))
+      .WillOnce(Return(Fake<jfieldID>()));
+  EXPECT_CALL(*env_, GetStaticLongField(_, Fake<jfieldID>()))
       .WillOnce(Return(true));
-  EXPECT_CALL(*env_, SetStaticLongField(_, static_field_id, true));
+  EXPECT_CALL(*env_, SetStaticLongField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
   EXPECT_TRUE(StaticRef<kClass>{}["longField"].Get());
@@ -136,12 +132,11 @@ TEST_F(JniTest, StaticLongField) {
 }
 
 TEST_F(JniTest, StaticFloatField) {
-  jfieldID static_field_id{reinterpret_cast<jfieldID>(0XDEDEDE)};
   EXPECT_CALL(*env_, GetStaticFieldID(_, StrEq("floatField"), StrEq("F")))
-      .WillOnce(Return(static_field_id));
-  EXPECT_CALL(*env_, GetStaticFloatField(_, static_field_id))
+      .WillOnce(Return(Fake<jfieldID>()));
+  EXPECT_CALL(*env_, GetStaticFloatField(_, Fake<jfieldID>()))
       .WillOnce(Return(true));
-  EXPECT_CALL(*env_, SetStaticFloatField(_, static_field_id, true));
+  EXPECT_CALL(*env_, SetStaticFloatField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
   EXPECT_TRUE(StaticRef<kClass>{}["floatField"].Get());
@@ -149,12 +144,11 @@ TEST_F(JniTest, StaticFloatField) {
 }
 
 TEST_F(JniTest, StaticDoubleField) {
-  jfieldID static_field_id{reinterpret_cast<jfieldID>(0XDEDEDE)};
   EXPECT_CALL(*env_, GetStaticFieldID(_, StrEq("doubleField"), StrEq("D")))
-      .WillOnce(Return(static_field_id));
-  EXPECT_CALL(*env_, GetStaticDoubleField(_, static_field_id))
+      .WillOnce(Return(Fake<jfieldID>()));
+  EXPECT_CALL(*env_, GetStaticDoubleField(_, Fake<jfieldID>()))
       .WillOnce(Return(true));
-  EXPECT_CALL(*env_, SetStaticDoubleField(_, static_field_id, true));
+  EXPECT_CALL(*env_, SetStaticDoubleField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
   EXPECT_TRUE(StaticRef<kClass>{}["doubleField"].Get());
@@ -162,26 +156,23 @@ TEST_F(JniTest, StaticDoubleField) {
 }
 
 TEST_F(JniTest, StaticField_ObjectGet) {
-  jfieldID field_id{reinterpret_cast<jfieldID>(0XDEDEDE)};
-  jobject fake_obj{reinterpret_cast<jobject>(0XCDCDCD)};
   EXPECT_CALL(*env_,
               GetStaticFieldID(_, StrEq("classField"), StrEq("LkClass2;")))
-      .WillOnce(Return(field_id));
-  EXPECT_CALL(*env_, GetStaticObjectField(_, field_id))
-      .WillOnce(Return(fake_obj));
+      .WillOnce(Return(Fake<jfieldID>()));
+  EXPECT_CALL(*env_, GetStaticObjectField(_, Fake<jfieldID>()))
+      .WillOnce(Return(Fake<jobject>()));
 
   jni::LocalObject<kClass2> obj = StaticRef<kClass>{}["classField"].Get();
 }
 
 TEST_F(JniTest, StaticField_ObjectSet) {
-  jfieldID field_id{reinterpret_cast<jfieldID>(0XDEDEDE)};
-  jobject fake_obj{reinterpret_cast<jobject>(0XCDCDCD)};
   EXPECT_CALL(*env_,
               GetStaticFieldID(_, StrEq("classField"), StrEq("LkClass2;")))
-      .WillOnce(Return(field_id));
-  EXPECT_CALL(*env_, SetStaticObjectField(_, field_id, fake_obj));
+      .WillOnce(Return(Fake<jfieldID>()));
+  EXPECT_CALL(*env_,
+              SetStaticObjectField(_, Fake<jfieldID>(), Fake<jobject>()));
 
-  StaticRef<kClass>{}["classField"].Set(LocalObject<kClass2>{fake_obj});
+  StaticRef<kClass>{}["classField"].Set(LocalObject<kClass2>{Fake<jobject>()});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
