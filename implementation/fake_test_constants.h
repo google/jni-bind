@@ -50,6 +50,21 @@ struct FakeImpl<T*> {
 ////////////////////////////////////////////////////////////////////////////////
 // JNI C API constants.
 ////////////////////////////////////////////////////////////////////////////////
+
+template <>
+struct FakeImpl<JNIEnv*> {
+  static JNIEnv* Val(int offset) {
+    return reinterpret_cast<JNIEnv*>(0xFABCFABCFAB) + offset;
+  }
+};
+
+template <>
+struct FakeImpl<JNIEnv**> {
+  static JNIEnv** Val(int offset) {
+    return reinterpret_cast<JNIEnv**>(0xDABDABDABDA) + offset;
+  }
+};
+
 template <>
 struct FakeImpl<jclass> {
   static jclass Val(int offset) {

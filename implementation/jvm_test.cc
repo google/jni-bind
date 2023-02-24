@@ -33,6 +33,7 @@ using jni::LocalObject;
 using jni::SupportedClassSet;
 using jni::ThreadGuard;
 using jni::test::AsGlobal;
+using ::jni::test::Fake;
 using jni::test::JniTest;
 using jni::test::JniTestWithNoDefaultJvmRef;
 using jni::test::MockJvm;
@@ -70,38 +71,35 @@ TEST(Jni, JvmStaticClassLoaderLookupsWork) {
 }
 
 TEST_F(JniTest, JvmRefTearsDownClassesLoadedfromDefaultLoader) {
-  static constexpr Class kClass1{"com/google/Class1"};
-
   // Note, this expectation means FindClass is called *exactly* once.
-  const jclass local_jclass_for_class1{reinterpret_cast<jclass>(0XAAAAA)};
-  EXPECT_CALL(*env_, FindClass).WillOnce(Return(local_jclass_for_class1));
+  // Using offset to avoid Fake<jclass>() usage in jni_test.h.
+  EXPECT_CALL(*env_, FindClass).WillOnce(Return(Fake<jclass>(1)));
   EXPECT_CALL(*env_, DeleteGlobalRef).Times(AnyNumber());
-  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(local_jclass_for_class1)));
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jclass>(1))));
 
+  static constexpr Class kClass1{"com/google/Class1"};
   LocalObject<kClass1> local_object1{};
 }
 
 TEST_F(JniTest, NoStaticCrossTalkWithPriorTest) {
-  static constexpr Class kClass1{"com/google/Class1"};
-
   // Note, this expectation means FindClass is called *exactly* once.
-  const jclass local_class_loader_jclass{reinterpret_cast<jclass>(0XAAAAA)};
-  EXPECT_CALL(*env_, FindClass).WillOnce(Return(local_class_loader_jclass));
+  // Using 1 offset to avoid Fake<jclass>() usage in jni_test.h.
+  EXPECT_CALL(*env_, FindClass).WillOnce(Return(Fake<jclass>(1)));
   EXPECT_CALL(*env_, DeleteGlobalRef).Times(AnyNumber());
-  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(local_class_loader_jclass)));
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jclass>(1))));
 
+  static constexpr Class kClass1{"com/google/Class1"};
   LocalObject<kClass1> local_object1{};
 }
 
 TEST_F(JniTest, NoStaticCrossTalkWithUnrelatedTest) {
-  static constexpr Class kClass1{"com/google/Class2"};
-
   // Note, this expectation means FindClass is called *exactly* once.
-  const jclass local_class_loader_jclass{reinterpret_cast<jclass>(0XAAAAA)};
-  EXPECT_CALL(*env_, FindClass).WillOnce(Return(local_class_loader_jclass));
+  // Using 1 offset to avoid Fake<jclass>() usage in jni_test.h.
+  EXPECT_CALL(*env_, FindClass).WillOnce(Return(Fake<jclass>(1)));
   EXPECT_CALL(*env_, DeleteGlobalRef).Times(AnyNumber());
-  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(local_class_loader_jclass)));
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jclass>(1))));
 
+  static constexpr Class kClass1{"com/google/Class2"};
   LocalObject<kClass1> local_object1{};
 }
 
@@ -113,16 +111,12 @@ TEST_F(JniTestWithNoDefaultJvmRef,
 }
 
 TEST_F(JniTestWithNoDefaultJvmRef, JvmRefsDontReuuseStaleFindClassValues) {
-  const jclass class_loader_first_generation{reinterpret_cast<jclass>(0XAAAAA)};
-  const jclass class_loader_second_generation{
-      reinterpret_cast<jclass>(0XBBBBB)};
-
   EXPECT_CALL(*env_, FindClass)
-      .WillOnce(Return(class_loader_first_generation))
-      .WillOnce(Return(class_loader_second_generation));
+      .WillOnce(Return(Fake<jclass>(1)))
+      .WillOnce(Return(Fake<jclass>(2)));
   EXPECT_CALL(*env_, DeleteGlobalRef).Times(AnyNumber());
-  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(class_loader_first_generation)));
-  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(class_loader_second_generation)));
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jclass>(1))));
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jclass>(2))));
 
   static constexpr Class kClass1{"com/google/ADifferentClassForVariety"};
   {
@@ -137,22 +131,18 @@ TEST_F(JniTestWithNoDefaultJvmRef, JvmRefsDontReuuseStaleFindClassValues) {
 }
 
 TEST_F(JniTest, DefaultLoaderReleasesMultipleClasses) {
+  EXPECT_CALL(*env_, FindClass)
+      .WillOnce(Return(Fake<jclass>(1)))
+      .WillOnce(Return(Fake<jclass>(2)))
+      .WillOnce(Return(Fake<jclass>(3)));
+  EXPECT_CALL(*env_, DeleteGlobalRef).Times(AnyNumber());
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jclass>(1))));
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jclass>(2))));
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jclass>(3))));
+
   static constexpr Class kClass1{"com/google/Class1"};
   static constexpr Class kClass2{"com/google/Class2"};
   static constexpr Class kClass3{"com/google/Class3"};
-
-  const jclass local_class_loader_jclass1{reinterpret_cast<jclass>(0XAAAAA)};
-  const jclass local_class_loader_jclass2{reinterpret_cast<jclass>(0XBBBBB)};
-  const jclass local_class_loader_jclass3{reinterpret_cast<jclass>(0XCCCCC)};
-
-  EXPECT_CALL(*env_, FindClass)
-      .WillOnce(Return(local_class_loader_jclass1))
-      .WillOnce(Return(local_class_loader_jclass2))
-      .WillOnce(Return(local_class_loader_jclass3));
-  EXPECT_CALL(*env_, DeleteGlobalRef).Times(AnyNumber());
-  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(local_class_loader_jclass1)));
-  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(local_class_loader_jclass2)));
-  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(local_class_loader_jclass3)));
 
   LocalObject<kClass1> local_object1{};
   LocalObject<kClass2> local_object2{};
