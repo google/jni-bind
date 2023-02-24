@@ -29,6 +29,7 @@ using ::jni::Constructor;
 using ::jni::Jvm;
 using ::jni::JvmRef;
 using ::jni::kDefaultClassLoader;
+using ::jni::kDefaultJvm;
 using ::jni::kNullClassLoader;
 using ::jni::LocalClassLoader;
 using ::jni::LocalObject;
@@ -57,11 +58,8 @@ class JniTestForClassLoaders : public JniTestWithNoDefaultJvmRef {
   void SetUp() override {
     JniTestWithNoDefaultJvmRef::SetUp();
 
-    ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
-        .WillByDefault(
-            testing::Invoke([&](jobject obj, jmethodID methodID, va_list) {
-              return Fake<jclass>();
-            }));
+    ON_CALL(*env_, CallObjectMethodV)
+        .WillByDefault(::testing::Return(Fake<jclass>()));
   }
 };
 
@@ -81,15 +79,13 @@ TEST_F(JniTest, LocalObject_SupportsPassingAnObjectWithAClassLoader) {
   static constexpr Class kTestClass2{
       "TestClass2", Method{"Foo", jni::Return{}, jni::Params{kTestClass1}}};
 
-  const jobject class_loader_jobject{reinterpret_cast<jobject>(0XABCDE)};
+  static constexpr ClassLoader kTestClassLoader{kNullClassLoader,
+                                                SupportedClassSet{kTestClass1}};
 
-  static constexpr ClassLoader kTestClassLoader{
-      jni::kNullClassLoader, jni::SupportedClassSet{kTestClass1}};
-
-  jni::JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get()};
+  JvmRef<kDefaultJvm> jvm_ref{jvm_.get()};
 
   // LocalObject<kTestClass2, kTestClassLoader> a{}; // doesn't compile (good).
-  LocalObject<kTestClass1, kTestClassLoader> a{class_loader_jobject};
+  LocalObject<kTestClass1, kTestClassLoader> a{Fake<jobject>()};
   LocalObject<kTestClass2> b{};
   b("Foo", a);
 
@@ -105,7 +101,7 @@ TEST_F(JniTestForClassLoaders,
   static constexpr ClassLoader kClassLoader{kNullClassLoader,
                                             SupportedClassSet{kTestClass1}};
 
-  JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get()};
+  JvmRef<kDefaultJvm> jvm_ref{jvm_.get()};
   const jobject class_loader_local_to_be_wrapped{
       reinterpret_cast<jobject>(0XAAAAAA)};
 
@@ -128,7 +124,7 @@ TEST_F(JniTestForClassLoaders,
   static constexpr ClassLoader kClassLoader{kNullClassLoader,
                                             SupportedClassSet{kTestClass1}};
 
-  JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get()};
+  JvmRef<kDefaultJvm> jvm_ref{jvm_.get()};
   const jobject class_loader_local_to_be_wrapped{
       reinterpret_cast<jobject>(0XAAAAAA)};
 
@@ -246,9 +242,8 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   static constexpr Class kTestClass3{"TestClass3"};
   static constexpr Class kTestClass4{"TestClass4"};
 
-  ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
-      .WillByDefault(testing::Invoke([&](jobject obj, jmethodID methodID,
-                                         va_list) { return Fake<jclass>(); }));
+  ON_CALL(*env_, CallObjectMethodV)
+      .WillByDefault(::testing::Return(Fake<jclass>()));
 
   static constexpr ClassLoader kClassLoader{
       kNullClassLoader,
@@ -276,8 +271,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
       "TestClass2", Method{"Foo", Return{}, Params{kTestClass1}}};
 
   ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
-      .WillByDefault(testing::Invoke([&](jobject obj, jmethodID methodID,
-                                         va_list) { return Fake<jclass>(); }));
+      .WillByDefault(::testing::Return(Fake<jclass>()));
 
   static constexpr ClassLoader kClassLoader{kNullClassLoader,
                                             SupportedClassSet{kTestClass1}};
@@ -302,8 +296,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   static constexpr Class kTestClass1{"TestClass1"};
 
   ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
-      .WillByDefault(testing::Invoke([&](jobject obj, jmethodID methodID,
-                                         va_list) { return Fake<jclass>(); }));
+      .WillByDefault(::testing::Return(Fake<jclass>()));
 
   static constexpr ClassLoader kClassLoader{kDefaultClassLoader,
                                             SupportedClassSet{}};
