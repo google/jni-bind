@@ -66,6 +66,7 @@ cc_test(
         "//:jni_dep",
         "//:jni_test",
         "//:mock_jni_env",
+        "//implementation:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -100,10 +101,10 @@ cc_test(
     srcs = ["invoke_test.cc"],
     deps = [
         ":invoke",
-        "//:jni_bind",
         "//:jni_dep",
         "//:jni_test",
         "//:mock_jni_env",
+        "//implementation:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )

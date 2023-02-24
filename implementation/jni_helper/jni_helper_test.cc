@@ -17,6 +17,7 @@
 #include "jni_helper.h"
 
 #include <gtest/gtest.h>
+#include "implementation/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_dep.h"
 #include "jni_test.h"
@@ -28,6 +29,7 @@ using jni::JniHelper;
 using jni::Method;
 using jni::Params;
 using jni::Return;
+using jni::test::Fake;
 using jni::test::JniTest;
 using jni::test::MockJniEnv;
 using testing::_;
@@ -37,26 +39,22 @@ using testing::StrEq;
 
 TEST_F(JniTest, JniHelper_CallsReleaseClass) {
   InSequence seq;
-  static const jclass clazz{reinterpret_cast<jclass>(0XAAAAA)};
   EXPECT_CALL(*env_, FindClass(StrEq("Test2")))
       .Times(1)
-      .WillOnce(testing::Return(clazz));
+      .WillOnce(testing::Return(Fake<jclass>()));
 
-  EXPECT_EQ(JniHelper::FindClass("Test2"), clazz);
-  JniHelper::ReleaseClass(clazz);
+  EXPECT_EQ(JniHelper::FindClass("Test2"), Fake<jclass>());
+  JniHelper::ReleaseClass(Fake<jclass>());
 }
 
 TEST_F(JniTest, JniHelper_CallsNewObjectV) {
-  static const jclass clazz{reinterpret_cast<jclass>(0XAAAAA)};
-  static const jmethodID method{reinterpret_cast<jmethodID>(0XBBBBB)};
-  EXPECT_CALL(*env_, NewObjectV(Eq(clazz), Eq(method), _));
-  JniHelper::NewLocalObject(clazz, method);
+  EXPECT_CALL(*env_, NewObjectV(Eq(Fake<jclass>()), Eq(Fake<jmethodID>()), _));
+  JniHelper::NewLocalObject(Fake<jclass>(), Fake<jmethodID>());
 }
 
 TEST_F(JniTest, JniHelper_CallsDeleteLocalObject) {
-  static const jobject object{reinterpret_cast<jobject>(0XAAAAA)};
-  EXPECT_CALL(*env_, DeleteLocalRef(object));
-  JniHelper::DeleteLocalObject(object);
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>()));
+  JniHelper::DeleteLocalObject(Fake<jobject>());
 }
 
 TEST_F(JniTest, JniHelper_CallsNewLocalString) {
@@ -67,29 +65,25 @@ TEST_F(JniTest, JniHelper_CallsNewLocalString) {
 
 TEST_F(JniTest, JniHelper_CallsGlobalRefOnProvidedLocalString) {
   InSequence seq;
-  jstring fake_str{reinterpret_cast<jstring>(0xAAAAA)};
-  EXPECT_CALL(*env_, NewGlobalRef(fake_str));
-  EXPECT_CALL(*env_, DeleteLocalRef(fake_str));
-  JniHelper::PromoteLocalToGlobalString(fake_str);
+  EXPECT_CALL(*env_, NewGlobalRef(Fake<jstring>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>()));
+  JniHelper::PromoteLocalToGlobalString(Fake<jstring>());
 }
 
 TEST_F(JniTest, JniHelper_CallsDeleteGlobalRef) {
-  jstring fake_str{reinterpret_cast<jstring>(0xAAAAA)};
-  EXPECT_CALL(*env_, DeleteGlobalRef(fake_str));
-  JniHelper::DeleteGlobalString(fake_str);
+  EXPECT_CALL(*env_, DeleteGlobalRef(Fake<jstring>()));
+  JniHelper::DeleteGlobalString(Fake<jstring>());
 }
 
 TEST_F(JniTest, JniHelper_CallsNewStringUTF) {
-  jstring fake_str{reinterpret_cast<jstring>(0xAAAAA)};
-  EXPECT_CALL(*env_, GetStringUTFChars(fake_str, nullptr));
-  JniHelper::GetStringUTFChars(fake_str);
+  EXPECT_CALL(*env_, GetStringUTFChars(Fake<jstring>(), nullptr));
+  JniHelper::GetStringUTFChars(Fake<jstring>());
 }
 
 TEST_F(JniTest, JniHelper_CallsReleaseStringUTFChars) {
-  jstring fake_jstr{reinterpret_cast<jstring>(0xAAAAA)};
   const char* fake_pinned_chars{reinterpret_cast<const char*>(0xBBBBB)};
-  EXPECT_CALL(*env_, ReleaseStringUTFChars(fake_jstr, fake_pinned_chars));
-  JniHelper::ReleaseStringUTFChars(fake_jstr, fake_pinned_chars);
+  EXPECT_CALL(*env_, ReleaseStringUTFChars(Fake<jstring>(), fake_pinned_chars));
+  JniHelper::ReleaseStringUTFChars(Fake<jstring>(), fake_pinned_chars);
 }
 
 }  // namespace

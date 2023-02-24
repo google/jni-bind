@@ -17,6 +17,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "implementation/fake_test_constants.h"
 #include "jni_dep.h"
 #include "jni_test.h"
 #include "mock_jni_env.h"
@@ -24,109 +25,103 @@
 namespace {
 
 using jni::InvokeHelper;
+using jni::test::Fake;
 using jni::test::JniTest;
 using jni::test::MockJniEnv;
 using testing::_;
 using testing::Return;
 
 TEST_F(JniTest, InvokeHelper_InvokesVoidMethod) {
-  static const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
-  static const jmethodID method{reinterpret_cast<jmethodID>(0XBBBBBB)};
-  EXPECT_CALL(*env_, CallVoidMethodV(object, method, _)).Times(3);
+  EXPECT_CALL(*env_, CallVoidMethodV(Fake<jobject>(), Fake<jmethodID>(), _))
+      .Times(3);
 
-  InvokeHelper<void, 0, false>::Invoke(object, nullptr, method, 1);
-  InvokeHelper<void, 0, false>::Invoke(object, nullptr, method, 1, 2);
-  InvokeHelper<void, 0, false>::Invoke(object, nullptr, method, 1, 2, 3);
+  InvokeHelper<void, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                       Fake<jmethodID>(), 1);
+  InvokeHelper<void, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                       Fake<jmethodID>(), 1, 2);
+  InvokeHelper<void, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                       Fake<jmethodID>(), 1, 2, 3);
 }
 
 TEST_F(JniTest, InvokeHelper_InvokesBooleanMethod) {
-  static const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
-  static const jmethodID method{reinterpret_cast<jmethodID>(0XBBBBBB)};
-  EXPECT_CALL(*env_, CallBooleanMethodV(object, method, _))
+  EXPECT_CALL(*env_, CallBooleanMethodV(Fake<jobject>(), Fake<jmethodID>(), _))
       .WillOnce(Return(true))
       .WillOnce(Return(false))
       .WillOnce(Return(true));
 
-  EXPECT_EQ(
-      (InvokeHelper<jboolean, 0, false>::Invoke(object, nullptr, method, 1)),
-      true);
-  EXPECT_EQ(
-      (InvokeHelper<jboolean, 0, false>::Invoke(object, nullptr, method, 1, 2)),
-      false);
-  EXPECT_EQ((InvokeHelper<jboolean, 0, false>::Invoke(object, nullptr, method,
-                                                      1, 2, 3)),
+  EXPECT_EQ((InvokeHelper<jboolean, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                                      Fake<jmethodID>(), 1)),
+            true);
+  EXPECT_EQ((InvokeHelper<jboolean, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                                      Fake<jmethodID>(), 1, 2)),
+            false);
+  EXPECT_EQ((InvokeHelper<jboolean, 0, false>::Invoke(
+                Fake<jobject>(), nullptr, Fake<jmethodID>(), 1, 2, 3)),
             true);
 }
 
 TEST_F(JniTest, InvokeHelper_InvokesIntMethod) {
-  static const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
-  static const jmethodID method{reinterpret_cast<jmethodID>(0XBBBBBB)};
-  EXPECT_CALL(*env_, CallIntMethodV(object, method, _))
+  EXPECT_CALL(*env_, CallIntMethodV(Fake<jobject>(), Fake<jmethodID>(), _))
       .Times(3)
       .WillRepeatedly(Return(123));
 
-  EXPECT_EQ((InvokeHelper<jint, 0, false>::Invoke(object, nullptr, method, 1)),
+  EXPECT_EQ((InvokeHelper<jint, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                                  Fake<jmethodID>(), 1)),
             123);
-  EXPECT_EQ(
-      (InvokeHelper<jint, 0, false>::Invoke(object, nullptr, method, 1, 2)),
-      123);
-  EXPECT_EQ(
-      (InvokeHelper<jint, 0, false>::Invoke(object, nullptr, method, 1, 2, 3)),
-      123);
+  EXPECT_EQ((InvokeHelper<jint, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                                  Fake<jmethodID>(), 1, 2)),
+            123);
+  EXPECT_EQ((InvokeHelper<jint, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                                  Fake<jmethodID>(), 1, 2, 3)),
+            123);
 }
 
 TEST_F(JniTest, InvokeHelper_InvokesLongMethod) {
-  static const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
-  static const jmethodID method{reinterpret_cast<jmethodID>(0XBBBBBB)};
-  EXPECT_CALL(*env_, CallLongMethodV(object, method, _))
+  EXPECT_CALL(*env_, CallLongMethodV(Fake<jobject>(), Fake<jmethodID>(), _))
       .Times(3)
       .WillRepeatedly(Return(123L));
 
-  EXPECT_EQ((InvokeHelper<jlong, 0, false>::Invoke(object, nullptr, method, 1)),
+  EXPECT_EQ((InvokeHelper<jlong, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                                   Fake<jmethodID>(), 1)),
             123L);
-  EXPECT_EQ(
-      (InvokeHelper<jlong, 0, false>::Invoke(object, nullptr, method, 1, 2)),
-      123L);
-  EXPECT_EQ(
-      (InvokeHelper<jlong, 0, false>::Invoke(object, nullptr, method, 1, 2, 3)),
-      123L);
+  EXPECT_EQ((InvokeHelper<jlong, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                                   Fake<jmethodID>(), 1, 2)),
+            123L);
+  EXPECT_EQ((InvokeHelper<jlong, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                                   Fake<jmethodID>(), 1, 2, 3)),
+            123L);
 }
 
 TEST_F(JniTest, InvokeHelper_InvokesFloatMethod) {
-  static const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
-  static const jmethodID method{reinterpret_cast<jmethodID>(0XBBBBBB)};
-  EXPECT_CALL(*env_, CallFloatMethodV(object, method, _))
+  EXPECT_CALL(*env_, CallFloatMethodV(Fake<jobject>(), Fake<jmethodID>(), _))
       .Times(3)
       .WillRepeatedly(Return(123));
 
-  EXPECT_EQ(
-      (InvokeHelper<jfloat, 0, false>::Invoke(object, nullptr, method, 1)),
-      123);
-  EXPECT_EQ(
-      (InvokeHelper<jfloat, 0, false>::Invoke(object, nullptr, method, 1, 2)),
-      123);
-  EXPECT_EQ((InvokeHelper<jfloat, 0, false>::Invoke(object, nullptr, method, 1,
-                                                    2, 3)),
+  EXPECT_EQ((InvokeHelper<jfloat, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                                    Fake<jmethodID>(), 1)),
+            123);
+  EXPECT_EQ((InvokeHelper<jfloat, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                                    Fake<jmethodID>(), 1, 2)),
+            123);
+  EXPECT_EQ((InvokeHelper<jfloat, 0, false>::Invoke(
+                Fake<jobject>(), nullptr, Fake<jmethodID>(), 1, 2, 3)),
             123);
 }
 
 TEST_F(JniTest, InvokeHelper_InvokesObjectMethod) {
-  static const jobject object{reinterpret_cast<jobject>(0XAAAAAA)};
-  static const jobject result{reinterpret_cast<jobject>(0XBBBBBB)};
-  static const jmethodID method{reinterpret_cast<jmethodID>(0XCCCCCC)};
-  EXPECT_CALL(*env_, CallObjectMethodV(object, method, _))
+  EXPECT_CALL(*env_, CallObjectMethodV(Fake<jobject>(), Fake<jmethodID>(), _))
       .Times(3)
-      .WillRepeatedly(Return(result));
+      .WillRepeatedly(Return(Fake<jobject>()));
 
-  EXPECT_EQ(
-      (InvokeHelper<jobject, 0, false>::Invoke(object, nullptr, method, 1)),
-      result);
-  EXPECT_EQ(
-      (InvokeHelper<jobject, 0, false>::Invoke(object, nullptr, method, 1, 2)),
-      result);
-  EXPECT_EQ((InvokeHelper<jobject, 0, false>::Invoke(object, nullptr, method, 1,
-                                                     2, 3)),
-            result);
+  EXPECT_EQ((InvokeHelper<jobject, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                                     Fake<jmethodID>(), 1)),
+            Fake<jobject>());
+  EXPECT_EQ((InvokeHelper<jobject, 0, false>::Invoke(Fake<jobject>(), nullptr,
+                                                     Fake<jmethodID>(), 1, 2)),
+            Fake<jobject>());
+  EXPECT_EQ((InvokeHelper<jobject, 0, false>::Invoke(
+                Fake<jobject>(), nullptr, Fake<jmethodID>(), 1, 2, 3)),
+            Fake<jobject>());
 }
 
 }  // namespace
