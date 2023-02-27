@@ -75,7 +75,7 @@ struct JniArrayHelper<jboolean, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jboolean* native_ptr,
                                           bool copy_on_completion) {
-    const jboolean copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseBooleanArrayElements(
         static_cast<jbooleanArray>(array), native_ptr, copy_back_mode);
   }
@@ -98,7 +98,7 @@ struct JniArrayHelper<jbyte, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jbyte* native_ptr,
                                           bool copy_on_completion) {
-    const jbyte copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseByteArrayElements(
         static_cast<jbyteArray>(array), native_ptr, copy_back_mode);
   }
@@ -121,7 +121,7 @@ struct JniArrayHelper<jchar, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jchar* native_ptr,
                                           bool copy_on_completion) {
-    const jchar copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseCharArrayElements(
         static_cast<jcharArray>(array), native_ptr, copy_back_mode);
   }
@@ -144,7 +144,7 @@ struct JniArrayHelper<jshort, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jshort* native_ptr,
                                           bool copy_on_completion) {
-    const jshort copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseShortArrayElements(
         static_cast<jshortArray>(array), native_ptr, copy_back_mode);
   }
@@ -190,7 +190,7 @@ struct JniArrayHelper<jlong, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jlong* native_ptr,
                                           bool copy_on_completion) {
-    const jlong copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseLongArrayElements(
         static_cast<jlongArray>(array), native_ptr, copy_back_mode);
   }
@@ -213,7 +213,7 @@ struct JniArrayHelper<jfloat, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jfloat* native_ptr,
                                           bool copy_on_completion) {
-    const jfloat copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseFloatArrayElements(
         static_cast<jfloatArray>(array), native_ptr, copy_back_mode);
   }
@@ -236,7 +236,7 @@ struct JniArrayHelper<jdouble, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jdouble* native_ptr,
                                           bool copy_on_completion) {
-    const jdouble copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseDoubleArrayElements(
         static_cast<jdoubleArray>(array), native_ptr, copy_back_mode);
   }
