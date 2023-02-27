@@ -81,8 +81,6 @@ class FieldRef {
   }
 
   using ProxyForField = Proxy_t<typename IdT::RawValT>;
-  using CDeclForField = CDecl_t<typename IdT::RawValT>;
-  using RawT = typename IdT::RawValT;
   using ReturnProxied = Return_t<typename IdT::MaterializeCDeclT, IdT>;
 
   const auto& SelfVal() {

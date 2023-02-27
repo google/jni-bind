@@ -129,7 +129,7 @@ TEST_F(JniTest, Field_doubleField) {
   EXPECT_CALL(*env_, GetDoubleField);
   EXPECT_CALL(*env_, SetDoubleField);
   obj["doubleField"].Get();
-  obj["doubleField"].Set(123.l);
+  obj["doubleField"].Set(123.);
 }
 
 TEST_F(JniTest, Field_ObjectGet) {
