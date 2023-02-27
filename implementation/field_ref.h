@@ -80,7 +80,6 @@ class FieldRef {
     });
   }
 
-  using ProxyForField = Proxy_t<typename IdT::RawValT>;
   using ReturnProxied = Return_t<typename IdT::MaterializeCDeclT, IdT>;
 
   const auto& SelfVal() {
@@ -101,7 +100,7 @@ class FieldRef {
   void Set(T&& value) {
     FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
                 IdT::kIsStatic>::SetValue(SelfVal(), GetFieldID(class_ref_),
-                                          ProxyForField::ProxyAsArg(
+                                          Proxy_t<T>::ProxyAsArg(
                                               std::forward<T>(value)));
   }
 

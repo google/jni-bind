@@ -41,7 +41,6 @@ using ::testing::StrEq;
 
 static constexpr Class kClass{"kClass"};
 static constexpr Class kClass2{"kClass2"};
-
 static constexpr Array arr1{jint{}};
 static constexpr Array arr2{jfloat{}};
 static constexpr Array arr3{jdouble{}};
@@ -319,7 +318,7 @@ TEST_F(JniTest, Array_HandlesSingleUndefinedClassAsParam) {
 TEST_F(JniTest, Array_LooksUpCorrectSignaturesForReturns) {
   static constexpr Class kClass{
       "kClass",
-      Method{"BoolArray", jni::Return{Array{jboolean{}}}, Params{}},
+      Method{"BooleanArray", jni::Return{Array{jboolean{}}}, Params{}},
       Method{"ByteArray", jni::Return{Array{jbyte{}}}, Params{}},
       Method{"CharArray", jni::Return{Array{jchar{}}}, Params{}},
       Method{"ShortArray", jni::Return{Array{jshort{}}}, Params{}},
@@ -331,7 +330,7 @@ TEST_F(JniTest, Array_LooksUpCorrectSignaturesForReturns) {
   };
 
   LocalObject<kClass> obj{jobject{nullptr}};
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("BoolArray"), StrEq("()[Z")));
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("BooleanArray"), StrEq("()[Z")));
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("ByteArray"), StrEq("()[B")));
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("CharArray"), StrEq("()[C")));
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("ShortArray"), StrEq("()[S")));
@@ -341,7 +340,7 @@ TEST_F(JniTest, Array_LooksUpCorrectSignaturesForReturns) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("LongArray"), StrEq("()[J")));
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("ObjectArray"), StrEq("()[LkClass2;")));
-  obj("BoolArray");
+  obj("BooleanArray");
   obj("ByteArray");
   obj("CharArray");
   obj("ShortArray");
@@ -379,78 +378,6 @@ TEST_F(JniTest, Array_CorrectParamSignatureForStrings) {
                                  StrEq("([Ljava/lang/String;)V")));
   LocalArray<jstring> arr{2};
   obj("StringArray", arr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Fields.
-////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, Array_FieldTests) {
-  static constexpr Class kClass{
-      "kClass",
-      Field{"BoolArray", Array{jboolean{}}},
-      Field{"ByteArray", Array{jbyte{}}},
-      Field{"CharArray", Array{jchar{}}},
-      Field{"ShortArray", Array{jshort{}}},
-      Field{"IntArray", Array{jint{}}},
-      Field{"FloatArray", Array{jfloat{}}},
-      Field{"DoubleArray", Array{jdouble{}}},
-      Field{"LongArray", Array{jlong{}}},
-      Field{"ObjectArrayRank1", Array{kClass2}},
-      Field{"ObjectArrayRank2", Array{kClass2, Rank<2>{}}},
-      Field{"ObjectArrayRank3", Array{kClass2, Rank<3>{}}},
-  };
-
-  LocalObject<kClass> obj{Fake<jobject>()};
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("BoolArray"), StrEq("[Z")));
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("ByteArray"), StrEq("[B")));
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("CharArray"), StrEq("[C")));
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("ShortArray"), StrEq("[S")));
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("IntArray"), StrEq("[I")));
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("FloatArray"), StrEq("[F")));
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("DoubleArray"), StrEq("[D")));
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("LongArray"), StrEq("[J")));
-  EXPECT_CALL(*env_,
-              GetFieldID(_, StrEq("ObjectArrayRank1"), StrEq("[LkClass2;")));
-  EXPECT_CALL(*env_,
-              GetFieldID(_, StrEq("ObjectArrayRank2"), StrEq("[[LkClass2;")));
-  EXPECT_CALL(*env_,
-              GetFieldID(_, StrEq("ObjectArrayRank3"), StrEq("[[[LkClass2;")));
-
-  obj["BoolArray"].Get();
-  obj["ByteArray"].Get();
-  obj["CharArray"].Get();
-  obj["ShortArray"].Get();
-  obj["IntArray"].Get();
-  obj["FloatArray"].Get();
-  obj["LongArray"].Get();
-  obj["DoubleArray"].Get();
-  obj["ObjectArrayRank1"].Get();
-  obj["ObjectArrayRank2"].Get();
-  obj["ObjectArrayRank3"].Get();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Fields: String Tests.
-////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, Array_CorrectFieldSignatureForStrings) {
-  static constexpr Class kClass{
-      "kClass",
-      Field{"StringArrayRank1", Array{jstring{}}},
-      Field{"StringArrayRank2", Array{jstring{}, Rank<2>{}}},
-      Field{"StringArrayRank3", Array{jstring{}, Rank<3>{}}},
-  };
-
-  LocalObject<kClass> obj{jobject{nullptr}};
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("StringArrayRank1"),
-                                StrEq("[Ljava/lang/String;")));
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("StringArrayRank2"),
-                                StrEq("[[Ljava/lang/String;")));
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("StringArrayRank3"),
-                                StrEq("[[[Ljava/lang/String;")));
-
-  LocalArray<jstring> arr1 = obj["StringArrayRank1"].Get();
-  LocalArray<jstring, 2> arr2 = obj["StringArrayRank2"].Get();
-  LocalArray<jstring, 3> arr3 = obj["StringArrayRank3"].Get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

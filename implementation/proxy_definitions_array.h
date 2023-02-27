@@ -77,7 +77,7 @@ struct Proxy<JArrayType, typename std::enable_if_t<
   static JArrayType ProxyAsArg(JArrayType arr) { return arr; };
 
   template <typename T>
-  static JArrayType ProxyAsArg(T& t) {
+  static JArrayType ProxyAsArg(const T& t) {
     return JArrayType{t};
   };
 

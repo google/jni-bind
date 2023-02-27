@@ -25,6 +25,7 @@ using ::jni::AdoptGlobal;
 using ::jni::Array;
 using ::jni::CDecl_t;
 using ::jni::Class;
+using ::jni::Field;
 using ::jni::GlobalObject;
 using ::jni::kJavaLangString;
 using ::jni::LocalArray;
@@ -48,6 +49,12 @@ TEST_F(JniTest, LocalArray_BuildsAndDestroys) {
   EXPECT_CALL(*env_, DeleteLocalRef(_));
 
   LocalArray<jint> int_array_1{1};
+}
+
+TEST_F(JniTest, LocalArray_IsImplicitlyConvertibleToSpanType) {
+  EXPECT_EQ(static_cast<jintArray>(
+                LocalArray<jint>{reinterpret_cast<jintArray>(0xAAAA)}),
+            reinterpret_cast<jintArray>(0xAAAA));
 }
 
 TEST_F(JniTest, LocalArray_ConstructsIntArrayWithCorrectSize) {
@@ -122,7 +129,7 @@ TEST_F(JniTest, LocalArray_ConstructsTheRightTypeForRValues) {
 // path is still exercised. Note that testing a method is all or nothing, so
 // if a constructor is queried there is a test for a GetMethod with "<init>".
 ////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, Array_HandlesLValueLocalObject) {
+TEST_F(JniTest, Array_Method_HandlesLValueLocalObject) {
   static constexpr Class kClass2{"kClass2"};
 
   static constexpr Class kClass{
@@ -134,6 +141,20 @@ TEST_F(JniTest, Array_HandlesLValueLocalObject) {
 
   LocalObject<kClass> obj{jobject{nullptr}};
   obj("Foo", LocalArray<jobject, 1, kClass2>{123, obj});
+}
+
+TEST_F(JniTest, Array_Field_HandlesLValueLocalObject) {
+  static constexpr Class kClass2{"kClass2"};
+
+  static constexpr Class kClass{
+      "ArrayMultiTest",
+      Field{"Foo", Array{kClass2}},
+  };
+
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("Foo"), StrEq("[LkClass2;")));
+
+  LocalObject<kClass> obj{Fake<jobject>()};
+  LocalArray<jobject, 1, kClass2>{obj["Foo"].Get()};
 }
 
 TEST_F(JniTest, Array_HandlesLValueGlobalObject) {
