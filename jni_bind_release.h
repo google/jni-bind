@@ -15,7 +15,7 @@
  */
 
 /*******************************************************************************
- * JNI Bind Version 0.9.2.
+ * JNI Bind Version 0.9.3.
  * Alpha Public Release.
  ********************************************************************************
  * This header is the single header version which you can use to quickly test or
@@ -2542,7 +2542,7 @@ struct JniArrayHelper<jboolean, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jboolean* native_ptr,
                                           bool copy_on_completion) {
-    const jboolean copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseBooleanArrayElements(
         static_cast<jbooleanArray>(array), native_ptr, copy_back_mode);
   }
@@ -2565,7 +2565,7 @@ struct JniArrayHelper<jbyte, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jbyte* native_ptr,
                                           bool copy_on_completion) {
-    const jbyte copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseByteArrayElements(
         static_cast<jbyteArray>(array), native_ptr, copy_back_mode);
   }
@@ -2588,7 +2588,7 @@ struct JniArrayHelper<jchar, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jchar* native_ptr,
                                           bool copy_on_completion) {
-    const jchar copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseCharArrayElements(
         static_cast<jcharArray>(array), native_ptr, copy_back_mode);
   }
@@ -2611,7 +2611,7 @@ struct JniArrayHelper<jshort, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jshort* native_ptr,
                                           bool copy_on_completion) {
-    const jshort copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseShortArrayElements(
         static_cast<jshortArray>(array), native_ptr, copy_back_mode);
   }
@@ -2657,7 +2657,7 @@ struct JniArrayHelper<jlong, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jlong* native_ptr,
                                           bool copy_on_completion) {
-    const jlong copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseLongArrayElements(
         static_cast<jlongArray>(array), native_ptr, copy_back_mode);
   }
@@ -2680,7 +2680,7 @@ struct JniArrayHelper<jfloat, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jfloat* native_ptr,
                                           bool copy_on_completion) {
-    const jfloat copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseFloatArrayElements(
         static_cast<jfloatArray>(array), native_ptr, copy_back_mode);
   }
@@ -2703,7 +2703,7 @@ struct JniArrayHelper<jdouble, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jdouble* native_ptr,
                                           bool copy_on_completion) {
-    const jdouble copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseDoubleArrayElements(
         static_cast<jdoubleArray>(array), native_ptr, copy_back_mode);
   }
@@ -4958,9 +4958,7 @@ namespace jni {
 template <typename t1, typename t2 = void>
 struct Proxy;
 
-// Everything you are permitted to declare at method prototypes.
-// Note, if the size can reasonably differ, the jtype is enforced by virtue of
-// being a different type (i.e. you can't accidentally widen).
+// CDecls for all declarable types (these index into proxy definitions).
 using AllKeys =
     Corpus_t<JniUserDefinedCorpusTag, void, jboolean, jbyte, jshort, jint,
              jfloat, jlong, jchar, jdouble, jstring, jobject, jarray,
@@ -5731,7 +5729,7 @@ struct Proxy<JArrayType, typename std::enable_if_t<
   static JArrayType ProxyAsArg(JArrayType arr) { return arr; };
 
   template <typename T>
-  static JArrayType ProxyAsArg(T& t) {
+  static JArrayType ProxyAsArg(const T& t) {
     return JArrayType{t};
   };
 
@@ -5869,7 +5867,6 @@ struct Proxy<LongType,
 ////////////////////////////////////////////////////////////////////////////////
 // Object Proxy Definitions.
 ////////////////////////////////////////////////////////////////////////////////
-
 template <typename JObject>
 struct Proxy<JObject,
              typename std::enable_if_t<std::is_same_v<JObject, jobject>>>
@@ -6225,9 +6222,6 @@ class FieldRef {
     });
   }
 
-  using ProxyForField = Proxy_t<typename IdT::RawValT>;
-  using CDeclForField = CDecl_t<typename IdT::RawValT>;
-  using RawT = typename IdT::RawValT;
   using ReturnProxied = Return_t<typename IdT::MaterializeCDeclT, IdT>;
 
   const auto& SelfVal() {
@@ -6248,7 +6242,7 @@ class FieldRef {
   void Set(T&& value) {
     FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
                 IdT::kIsStatic>::SetValue(SelfVal(), GetFieldID(class_ref_),
-                                          ProxyForField::ProxyAsArg(
+                                          Proxy_t<T>::ProxyAsArg(
                                               std::forward<T>(value)));
   }
 
