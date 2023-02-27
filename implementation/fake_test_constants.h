@@ -163,7 +163,7 @@ struct FakeImpl<jbooleanArray> {
 template <>
 struct FakeImpl<jbyteArray> {
   static jbyteArray Val(int offset) {
-    return reinterpret_cast<jbyteArray>(0xEEEEEFFFFFFF + offset);
+    return reinterpret_cast<jbyteArray>(0xAEAEAFBFBFBF + offset);
   }
 };
 
@@ -177,42 +177,42 @@ struct FakeImpl<jcharArray> {
 template <>
 struct FakeImpl<jshortArray> {
   static jshortArray Val(int offset) {
-    return reinterpret_cast<jshortArray>(0xEEEEEFFFFFFF + offset);
+    return reinterpret_cast<jshortArray>(0xBEEEEBFFFFFB + offset);
   }
 };
 
 template <>
 struct FakeImpl<jintArray> {
   static jintArray Val(int offset) {
-    return reinterpret_cast<jintArray>(0xEEEEEFFFFFFF + offset);
+    return reinterpret_cast<jintArray>(0xEAABAAFAABAAF + offset);
   }
 };
 
 template <>
 struct FakeImpl<jfloatArray> {
   static jfloatArray Val(int offset) {
-    return reinterpret_cast<jfloatArray>(0xEEEEEFFFFFFF + offset);
+    return reinterpret_cast<jfloatArray>(0xDAAAEDAAAAF + offset);
   }
 };
 
 template <>
 struct FakeImpl<jlongArray> {
   static jlongArray Val(int offset) {
-    return reinterpret_cast<jlongArray>(0xEEEEEFFFFFFF + offset);
+    return reinterpret_cast<jlongArray>(0xFAAFFBAAABFF + offset);
   }
 };
 
 template <>
 struct FakeImpl<jdoubleArray> {
   static jdoubleArray Val(int offset) {
-    return reinterpret_cast<jdoubleArray>(0xEEEEEFFFFFFF + offset);
+    return reinterpret_cast<jdoubleArray>(0xBEEEEEEEEEEB + offset);
   }
 };
 
 template <>
 struct FakeImpl<jobjectArray> {
   static jobjectArray Val(int offset) {
-    return reinterpret_cast<jobjectArray>(0xEEEEEFFFFFFF + offset);
+    return reinterpret_cast<jobjectArray>(0xFECEEABCCCCF + offset);
   }
 };
 
