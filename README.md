@@ -155,7 +155,7 @@ You can also build a `jni::jvmRef` from any `JNIEnv*`.
 Class definitions are the basic mechanism by which you interact with Java through JNI:
 
 ```cpp
-static constexpr jni::class kClass{"com/full/class/name/JavaClassName", jni::Field..., jni::Method... };
+static constexpr jni::Class kClass{"com/full/class/name/JavaClassName", jni::Field..., jni::Method... };
 ```
 
 jni::Class definitions are static (the class names of any Java object is known in advance).  Instances of these classes are created at runtime using [`jni::LocalObject`](implementation/local_object.h) or [`jni::GlobalObject`](implementation/global_object.h).
