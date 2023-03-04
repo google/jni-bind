@@ -17,6 +17,7 @@
 package com.jnibind.test;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import org.junit.AfterClass;
@@ -44,12 +45,25 @@ public final class StringTest {
     jniTearDown();
   }
 
+  native void jniPassesStringsInManyWays(StringTestHelper helper, String s);
+
+  // Exercises passing strings in all sorts of ways.
+  // Designed to catch bad lifecycle usage and exercise different param types.
+  @Test
+  public void multiFormPassTest() {
+
+    jniPassesStringsInManyWays(rJniStringTestHelper, "SimpleTestString");
+
+    verify(rJniStringTestHelper, times(7)).voidMethodTakesString("SimpleTestString");
+  }
+
   native void jniVoidMethodTakesString(StringTestHelper helper, String s);
 
   native void jniVoidMethodTakesTwoStrings(StringTestHelper helper, String s1, String s2);
 
   native void jniVoidMethodTakesFiveStrings(
       StringTestHelper helper, String s1, String s2, String s3, String s4, String s5);
+
 
   // Calls each of the above native methods which will then call the similarly named method on the
   // StringTestHelper.  E.g. jniVoidMethodTakesString calls voidMethodTakesString.

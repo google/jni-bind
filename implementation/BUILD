@@ -803,6 +803,7 @@ cc_library(
         ":default_class_loader",
         ":jvm",
         ":proxy",
+        ":ref_base",
         "//class_defs:java_lang_classes",
     ],
 )

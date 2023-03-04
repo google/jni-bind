@@ -24,10 +24,12 @@
 #include "implementation/default_class_loader.h"
 #include "implementation/jvm.h"
 #include "implementation/proxy.h"
+#include "implementation/ref_base.h"
 
 namespace jni {
 
 class LocalString;
+class GlobalString;
 
 template <typename SpanType, std::size_t kRank, const auto& class_v_,
           const auto& class_loader_v_, const auto& jvm_v_>
@@ -48,8 +50,8 @@ struct Proxy<JString,
     using type = LocalString;
   };
 
-  using AsArg =
-      std::tuple<std::string, jstring, char*, const char*, std::string_view>;
+  using AsArg = std::tuple<std::string, jstring, char*, const char*,
+                           std::string_view, RefBaseTag<jstring>>;
 
   template <typename Id>
   using AsReturn = typename Helper<Id, Id::kRank>::type;
@@ -60,7 +62,8 @@ struct Proxy<JString,
       IsConvertibleKey<T>::template value<jstring> ||
       IsConvertibleKey<T>::template value<char*> ||
       IsConvertibleKey<T>::template value<const char*> ||
-      IsConvertibleKey<T>::template value<std::string_view>;
+      IsConvertibleKey<T>::template value<std::string_view> ||
+      std::is_same_v<T, LocalString> || std::is_same_v<T, GlobalString>;
 
   // These leak local instances of strings.  Usually, RAII mechanisms would
   // correctly release local instances, but here we are stripping that so it can
@@ -78,6 +81,20 @@ struct Proxy<JString,
     } else {
       return JniHelper::NewLocalString(s.data());
     }
+  }
+
+  template <typename T,
+            typename = std::enable_if_t<std::is_same_v<T, GlobalString> ||
+                                        std::is_same_v<T, LocalString>>>
+  static jstring ProxyAsArg(T& t) {
+    return jstring{t};
+  }
+
+  template <typename T,
+            typename = std::enable_if_t<std::is_same_v<T, GlobalString> ||
+                                        std::is_same_v<T, LocalString>>>
+  static jstring ProxyAsArg(T&& t) {
+    return t.Release();
   }
 };
 
