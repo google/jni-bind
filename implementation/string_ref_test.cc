@@ -120,9 +120,9 @@ TEST_F(JniTest, LocalString_AllowsRValueLocalString) {
 ////////////////////////////////////////////////////////////////////////////////
 // Global String Tests.
 ////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, GlobalString_NullPtrT) { GlobalString str{nullptr}; }
-
-TEST_F(JniTest, GlobalString_NullWorks) { GlobalString str{jstring{nullptr}}; }
+TEST_F(JniTest, GlobalString_NullWorks) {
+  GlobalString str{AdoptGlobal{}, jstring{nullptr}};
+}
 
 TEST_F(JniTest, GlobalString_ConstructsFromObject) {
   EXPECT_CALL(*env_, DeleteGlobalRef).Times(1);
@@ -133,8 +133,7 @@ TEST_F(JniTest, GlobalString_ConstructsFromObject) {
 
 TEST_F(JniTest, GlobalString_GlobalsReleaseWithGlobalMechanism) {
   EXPECT_CALL(*env_, DeleteGlobalRef);
-
-  GlobalString str{Fake<jstring>()};
+  GlobalString str{AdoptGlobal{}, Fake<jstring>()};
 }
 
 TEST_F(JniTest, GlobalString_ConstructsFromOutputOfMethod) {

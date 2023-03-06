@@ -58,5 +58,6 @@
 #include "implementation/local_class_loader.h"
 #include "implementation/local_object.h"
 #include "implementation/local_string.h"
+#include "implementation/promotion_mechanics.h"
 
 #endif  // JNI_BIND_JNI_BIND_H_

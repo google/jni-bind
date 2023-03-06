@@ -52,6 +52,7 @@ cc_library(
         "//implementation:method",
         "//implementation:no_idx",
         "//implementation:params",
+        "//implementation:promotion_mechanics",
         "//implementation:return",
         "//implementation:selector_static_info",
         "//implementation:static",

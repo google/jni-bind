@@ -19,6 +19,7 @@
 
 #include "implementation/global_object.h"
 #include "implementation/local_string.h"
+#include "implementation/promotion_mechanics.h"
 #include "implementation/ref_base.h"
 #include "implementation/string_ref.h"
 #include "jni_dep.h"
@@ -30,9 +31,20 @@ class GlobalString : public StringRefBase<GlobalString> {
   using StringRefBase<GlobalString>::StringRefBase;
   friend class StringRefBase<GlobalString>;
 
-  GlobalString(jobject java_string_as_object)
+  // jstring ctors.
+  GlobalString(PromoteToGlobal, jstring java_string)
+      : StringRefBase<GlobalString>(
+            JniHelper::PromoteLocalToGlobalString(java_string)) {}
+  GlobalString(AdoptGlobal, jstring java_string)
+      : StringRefBase<GlobalString>(java_string) {}
+
+  // jobject constructors.
+  GlobalString(PromoteToGlobal, jobject java_string_as_object)
       : StringRefBase<GlobalString>(JniHelper::PromoteLocalToGlobalString(
             static_cast<jstring>(java_string_as_object))) {}
+  GlobalString(AdoptGlobal, jobject java_string_as_object)
+      : StringRefBase<GlobalString>(
+            static_cast<jstring>(java_string_as_object)) {}
 
   GlobalString(GlobalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>
                    &&global_string)
@@ -48,6 +60,13 @@ class GlobalString : public StringRefBase<GlobalString> {
   UtfStringView Pin() { return {RefBaseTag<jstring>::object_ref_}; }
 
  private:
+  // Construction from jstring requires |PromoteToGlobal| or |AdoptGlobal|.
+  explicit GlobalString(jstring obj) : StringRefBase(obj) {}
+
+  // Construction from jstring requires |PromoteToGlobal| or |AdoptGlobal|.
+  explicit GlobalString(jobject obj)
+      : StringRefBase(static_cast<jstring>(obj)) {}
+
   // Invoked through CRTP on dtor.
   void ClassSpecificDeleteObjectRef(jstring object_ref) {
     JniHelper::DeleteGlobalString(object_ref);

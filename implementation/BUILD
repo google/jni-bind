@@ -334,6 +334,7 @@ cc_library(
         ":class",
         ":local_object",
         ":object_ref",
+        ":promotion_mechanics",
         "//:jni_dep",
         "//implementation/jni_helper",
     ],
@@ -356,6 +357,7 @@ cc_library(
     deps = [
         ":global_object",
         ":local_string",
+        ":promotion_mechanics",
         ":ref_base",
         ":string_ref",
         "//:jni_dep",
@@ -729,6 +731,11 @@ cc_library(
     name = "params",
     hdrs = ["params.h"],
     deps = [":object"],
+)
+
+cc_library(
+    name = "promotion_mechanics",
+    hdrs = ["promotion_mechanics.h"],
 )
 
 cc_library(

@@ -16,23 +16,17 @@
 #ifndef JNI_BIND_GLOBAL_OBJECT_H_
 #define JNI_BIND_GLOBAL_OBJECT_H_
 
-#include "class.h"
-#include "local_object.h"
-#include "object_ref.h"
+#include "implementation/class.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/local_object.h"
+#include "implementation/object_ref.h"
+#include "implementation/promotion_mechanics.h"
 #include "jni_dep.h"
 
 namespace jni {
 
 template <const auto& jvm_v_, const auto& class_loader_v_>
 class ClassLoaderRef;
-
-// Pass this tag to allow Global object's constructor to promote for you.
-struct PromoteToGlobal {};
-
-// WARNING: Avoid using a global jobject in a constructor unless you are
-// confident the underlying jobject has been pinned as a global.
-struct AdoptGlobal {};
 
 template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
