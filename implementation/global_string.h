@@ -28,32 +28,41 @@ namespace jni {
 
 class GlobalString : public StringRefBase<GlobalString> {
  public:
-  using StringRefBase<GlobalString>::StringRefBase;
+  using Base = StringRefBase<GlobalString>;
+  using Base::Base;
   friend class StringRefBase<GlobalString>;
 
-  // jstring ctors.
-  GlobalString(PromoteToGlobal, jstring java_string)
-      : StringRefBase<GlobalString>(
-            JniHelper::PromoteLocalToGlobalString(java_string)) {}
-  GlobalString(AdoptGlobal, jstring java_string)
-      : StringRefBase<GlobalString>(java_string) {}
+  // "Copy" constructor, creates new reference (standard).
+  GlobalString(CreateCopy, jstring object)
+      : Base(static_cast<jstring>(
+            JniHelper::NewGlobalRef(static_cast<jobject>(object)))) {}
 
-  // jobject constructors.
-  GlobalString(PromoteToGlobal, jobject java_string_as_object)
-      : StringRefBase<GlobalString>(JniHelper::PromoteLocalToGlobalString(
-            static_cast<jstring>(java_string_as_object))) {}
-  GlobalString(AdoptGlobal, jobject java_string_as_object)
-      : StringRefBase<GlobalString>(
-            static_cast<jstring>(java_string_as_object)) {}
+  // "Copy" constructor, creates new reference (standard).
+  GlobalString(CreateCopy, jobject object)
+      : Base(static_cast<jstring>(JniHelper::NewGlobalRef(object))) {}
+
+  // "Promote" constructor, creates a new global, frees passed arg (standard).
+  GlobalString(PromoteToGlobal, jstring object)
+      : Base(JniHelper::PromoteLocalToGlobalString(object)) {}
+
+  // "Promote" constructor, creates a new global, frees passed arg (standard).
+  GlobalString(PromoteToGlobal, jobject object)
+      : Base(JniHelper::PromoteLocalToGlobalString(
+            static_cast<jstring>(object))) {}
+
+  // "Adopts" a global by wrapping a jobject (non-standard).
+  GlobalString(AdoptGlobal, jstring object) : Base(object) {}
+
+  // "Adopts" a global by wrapping a jstring (non-standard).
+  GlobalString(AdoptGlobal, jobject object)
+      : Base(static_cast<jstring>(object)) {}
 
   GlobalString(GlobalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>
                    &&global_string)
-      : StringRefBase<GlobalString>(
-            static_cast<jstring>(global_string.Release())) {}
+      : Base(static_cast<jstring>(global_string.Release())) {}
 
   GlobalString(LocalString &&local_string)
-      : StringRefBase<GlobalString>(
-            JniHelper::PromoteLocalToGlobalString(local_string.Release())) {}
+      : Base(JniHelper::PromoteLocalToGlobalString(local_string.Release())) {}
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.

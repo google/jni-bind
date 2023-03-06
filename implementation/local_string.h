@@ -19,6 +19,7 @@
 
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/local_object.h"
+#include "implementation/promotion_mechanics.h"
 #include "implementation/ref_base.h"
 #include "implementation/string_ref.h"
 #include "jni_dep.h"
@@ -41,6 +42,16 @@ class LocalString : public StringRefBase<LocalString> {
   LocalString(jobject java_string_as_object)
       : StringRefBase<LocalString>(
             static_cast<jstring>(java_string_as_object)) {}
+
+  // "Copy" constructor (additional reference to object will be created).
+  LocalString(CreateCopy, jstring object)
+      : StringRefBase<LocalString>(
+            static_cast<jstring>(JniHelper::NewLocalRef(object))) {}
+
+  // "Copy" constructor (additional reference to object will be created).
+  LocalString(CreateCopy, jobject object)
+      : StringRefBase<LocalString>(
+            static_cast<jstring>(JniHelper::NewLocalRef(object))) {}
 
   LocalString(
       LocalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>&& obj)

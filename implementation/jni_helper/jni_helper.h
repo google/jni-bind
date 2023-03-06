@@ -65,6 +65,10 @@ class JniHelper {
   static jobject NewLocalObject(jclass clazz, jmethodID ctor_method,
                                 CtorArgs&&... ctor_args);
 
+  static jobject NewLocalRef(jobject object);
+
+  static jobject NewGlobalRef(jobject object);
+
   // Creates a new GlobalRef to |local_object|, then deletes the local
   // reference.
   static jobject PromoteLocalToGlobalObject(jobject local_object);
@@ -134,6 +138,14 @@ template <typename... CtorArgs>
 jobject JniHelper::NewLocalObject(jclass clazz, jmethodID ctor_method,
                                   CtorArgs&&... ctor_args) {
   return jni::JniEnv::GetEnv()->NewObject(clazz, ctor_method, ctor_args...);
+}
+
+inline jobject JniHelper::NewLocalRef(jobject object) {
+  return jni::JniEnv::GetEnv()->NewLocalRef(object);
+}
+
+inline jobject JniHelper::NewGlobalRef(jobject object) {
+  return jni::JniEnv::GetEnv()->NewGlobalRef(object);
 }
 
 inline void JniHelper::DeleteLocalObject(jobject object) {

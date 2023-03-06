@@ -37,13 +37,29 @@ class GlobalObject
   template <const auto& jvm_v, const auto& class_loader_v>
   friend class ClassLoaderRef;
 
-  using ObjectRefT = ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>;
-  using ObjectRefT::ObjectRefT;
+  using Base = ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>;
+  using Base::Base;
+
+  // Constructs a new global object using the local object's default
+  // constructor.
+  explicit GlobalObject()
+      : GlobalObject(JniHelper::PromoteLocalToGlobalObject(
+            LocalObject<class_v_, class_loader_v_, jvm_v_>{}.Release())) {}
+
+  // "Copy" constructor, creates new reference (standard).
+  explicit GlobalObject(CreateCopy, jobject obj)
+      : Base(JniHelper::NewGlobalRef(obj)) {}
+
+  // "Promote" constructor, creates a new global, frees passed arg (standard).
+  explicit GlobalObject(PromoteToGlobal, jobject obj)
+      : Base(JniHelper::PromoteLocalToGlobalObject(obj)) {}
+
+  // "Adopts" a global by wrapping a jstring (non-standard).
+  explicit GlobalObject(AdoptGlobal, jobject obj) : Base(obj) {}
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&& local_object)
-      : ObjectRefT(
-            JniHelper::PromoteLocalToGlobalObject(jobject{local_object})) {
+      : Base(JniHelper::PromoteLocalToGlobalObject(jobject{local_object})) {
     static_assert(
         std::string_view(class_v.name_) == std::string_view(class_v_.name_),
         "You are attempting to initialise a LocalObject from another class "
@@ -52,17 +68,12 @@ class GlobalObject
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   GlobalObject(GlobalObject<class_v, class_loader_v, jvm_v>&& rhs)
-      : ObjectRefT(rhs.Release()) {
+      : Base(rhs.Release()) {
     static_assert(
         std::string_view(class_v.name_) == std::string_view(class_v_.name_),
         "You are attempting to initialise a GlobalObject from another class "
         "type");
   }
-
-  // Constructs a new object using the local object's default constructor.
-  explicit GlobalObject()
-      : GlobalObject(JniHelper::PromoteLocalToGlobalObject(
-            LocalObject<class_v_, class_loader_v_, jvm_v_>{}.Release())) {}
 
   // Constructs a new object using arg based ctor.
   template <typename... Ts>
@@ -72,25 +83,19 @@ class GlobalObject
                 std::forward<Ts>(ts)...}
                 .Release())) {}
 
-  // Constructs a global promoting a local object to a global (standard).
-  explicit GlobalObject(PromoteToGlobal, jobject obj)
-      : ObjectRefT(JniHelper::PromoteLocalToGlobalObject(obj)) {}
-
-  // Constructs a global by wrapping a jobject (non-standard).
-  explicit GlobalObject(AdoptGlobal, jobject obj) : ObjectRefT(obj) {}
 
   GlobalObject(const GlobalObject&) = delete;
   GlobalObject(GlobalObject&& rhs) = default;
 
   ~GlobalObject() {
-    if (ObjectRefT::object_ref_) {
-      JniHelper::DeleteGlobalObject(ObjectRefT::object_ref_);
+    if (Base::object_ref_) {
+      JniHelper::DeleteGlobalObject(Base::object_ref_);
     }
   }
 
  private:
   // Construction from jobject requires |PromoteToGlobal| or |AdoptGlobal|.
-  explicit GlobalObject(jobject obj) : ObjectRefT(obj) {}
+  explicit GlobalObject(jobject obj) : Base(obj) {}
 };
 
 template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>

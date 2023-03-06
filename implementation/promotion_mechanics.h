@@ -18,7 +18,11 @@
 
 namespace jni {
 
-// This tag allows the constructor to promote underlying jobjbect for you.
+// Creates an additional reference to the underlying object.
+// When used for local, presumes local, for global, presumes global.
+struct CreateCopy {};
+
+// This tag allows the constructor to promote underlying jobject for you.
 struct PromoteToGlobal {};
 
 // CAUTION: This tag assume the underlying jobject has been pinned as a global.

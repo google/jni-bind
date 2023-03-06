@@ -539,10 +539,10 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
-        ":jni_type",
         ":jvm",
         ":jvm_ref",
         ":object_ref",
+        ":promotion_mechanics",
         "//:jni_dep",
         "//implementation/jni_helper",
     ],
@@ -564,6 +564,7 @@ cc_library(
     hdrs = ["local_string.h"],
     deps = [
         ":local_object",
+        ":promotion_mechanics",
         ":ref_base",
         ":string_ref",
         "//:jni_dep",

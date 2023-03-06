@@ -27,6 +27,7 @@ namespace {
 using ::jni::AdoptGlobal;
 using ::jni::Class;
 using ::jni::Constructor;
+using ::jni::CreateCopy;
 using ::jni::Field;
 using ::jni::GlobalObject;
 using ::jni::Method;
@@ -95,6 +96,18 @@ TEST_F(JniTest, GlobalObject_CallsOnlyDeleteOnWrapCtor) {
   GlobalObject<kClass> global_object{AdoptGlobal{}, Fake<jobject>()};
 
   EXPECT_NE(jobject{global_object}, nullptr);
+}
+
+TEST_F(JniTest, GlobalObject_CallsNewGlobalRefOnCopy) {
+  static constexpr Class kClass{"kClass"};
+
+  EXPECT_CALL(*env_, NewGlobalRef(Fake<jobject>(1)))
+      .WillOnce(::testing::Return(Fake<jobject>(2)));
+  EXPECT_CALL(*env_, DeleteGlobalRef(Fake<jobject>(2)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(1))).Times(0);
+
+  GlobalObject<kClass> global_object{CreateCopy{}, Fake<jobject>(1)};
+  EXPECT_EQ(jobject{global_object}, Fake<jobject>(2));
 }
 
 TEST_F(JniTest, GlobalObject_CallsDeleteOnceAfterAMoveConstruction) {

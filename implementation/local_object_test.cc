@@ -25,15 +25,16 @@
 
 namespace {
 
-using jni::Class;
-using jni::Field;
-using jni::kDefaultClassLoader;
-using jni::kDefaultJvm;
-using jni::LocalObject;
-using jni::Method;
-using jni::Params;
+using ::jni::Class;
+using ::jni::CreateCopy;
+using ::jni::Field;
+using ::jni::kDefaultClassLoader;
+using ::jni::kDefaultJvm;
+using ::jni::LocalObject;
+using ::jni::Method;
+using ::jni::Params;
 using ::jni::test::Fake;
-using jni::test::JniTest;
+using ::jni::test::JniTest;
 using testing::_;
 using testing::InSequence;
 using testing::StrEq;
@@ -43,19 +44,29 @@ TEST_F(JniTest, LocalObject_CallsNewAndDeleteOnNewObject) {
   EXPECT_CALL(*env_, NewObjectV).WillOnce(testing::Return(Fake<jobject>()));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
 
-  static constexpr Class kClass{"com/google/CallsNewAndDeleteOnNewObject"};
+  static constexpr Class kClass{"kClass"};
   LocalObject<kClass> local_object{};
   EXPECT_EQ(jobject{local_object}, Fake<jobject>());
 }
 
 TEST_F(JniTest, LocalObject_CallsOnlyDeleteOnWrapCtor) {
-  static constexpr Class kClass{"com/google/CallsOnlyDeleteOnWrapCtor"};
+  static constexpr Class kClass{"kClass"};
 
   EXPECT_CALL(*env_, NewLocalRef).Times(0);
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
 
   LocalObject<kClass> local_object{Fake<jobject>()};
   EXPECT_NE(jobject{local_object}, nullptr);
+}
+
+TEST_F(JniTest, LocalObject_CallsNewLocalRefOnCopy) {
+  static constexpr Class kClass{"kClass"};
+
+  EXPECT_CALL(*env_, NewLocalRef).WillOnce(::testing::Return(Fake<jobject>(2)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(2)));
+
+  LocalObject<kClass> local_object{CreateCopy{}, Fake<jobject>(1)};
+  EXPECT_EQ(jobject{local_object}, Fake<jobject>(2));
 }
 
 TEST_F(JniTest, LocalObject_ObjectReturnsInstanceMethods) {

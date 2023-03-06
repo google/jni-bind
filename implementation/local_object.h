@@ -25,6 +25,7 @@
 #include "implementation/jvm.h"
 #include "implementation/jvm_ref.h"
 #include "implementation/object_ref.h"
+#include "implementation/promotion_mechanics.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -40,7 +41,12 @@ class LocalObject
   using ObjectRefT = ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>;
   using ObjectRefT::ObjectRefT;
 
+  // Default "wrap" constructor (object will be released at end of scope).
   LocalObject(jobject object) : ObjectRefT(object) {}
+
+  // "Copy" constructor (additional reference to object will be created).
+  LocalObject(CreateCopy, jobject object)
+      : ObjectRefT(JniHelper::NewLocalRef(object)) {}
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   LocalObject(LocalObject<class_v, class_loader_v, jvm_v>&& rhs)

@@ -21,6 +21,7 @@
 namespace {
 
 using ::jni::AdoptGlobal;
+using ::jni::CreateCopy;
 using ::jni::GlobalObject;
 using ::jni::GlobalString;
 using ::jni::kJavaLangString;
@@ -57,9 +58,29 @@ TEST_F(JniTest, LocalString_NullWorks) {
 }
 
 TEST_F(JniTest, LocalString_ConstructsFromObject) {
-  EXPECT_CALL(*env_, DeleteLocalRef).Times(1);
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>()));
   LocalObject<kJavaLangString> undecorated_object{Fake<jobject>()};
   LocalString decorated_object{std::move(undecorated_object)};
+}
+
+TEST_F(JniTest, LocalString_CopiesFromObject) {
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(2)));
+  EXPECT_CALL(*env_, NewLocalRef(Fake<jobject>(1)))
+      .WillOnce(::testing::Return(Fake<jobject>(2)));
+
+  LocalString decorated_object{CreateCopy{}, Fake<jobject>(1)};
+
+  EXPECT_EQ(jstring{decorated_object}, Fake<jobject>(2));
+}
+
+TEST_F(JniTest, LocalString_CopiesFromJString) {
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>(2)));
+  EXPECT_CALL(*env_, NewLocalRef(Fake<jstring>(1)))
+      .WillOnce(::testing::Return(Fake<jstring>(2)));
+
+  LocalString decorated_object{CreateCopy{}, Fake<jstring>(1)};
+
+  EXPECT_EQ(jstring{decorated_object}, Fake<jstring>(2));
 }
 
 TEST_F(JniTest, LocalString_ConstructsFromOutputOfMethod) {
