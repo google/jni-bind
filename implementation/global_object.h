@@ -18,6 +18,7 @@
 
 #include "implementation/class.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_type.h"
 #include "implementation/local_object.h"
 #include "implementation/object_ref.h"
 #include "implementation/promotion_mechanics.h"
@@ -33,13 +34,16 @@ template <const auto& class_v_,
           const auto& jvm_v_ = kDefaultJvm>
 class GlobalObject
     : public GlobalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
-                        jobject, jobject> {
+                        JniT<jobject, class_v_, class_loader_v_, jvm_v_>,
+
+                        jobject> {
  public:
   template <const auto& jvm_v, const auto& class_loader_v>
   friend class ClassLoaderRef;
 
-  using Base = GlobalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
-                          jobject, jobject>;
+  using Base =
+      GlobalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+                 JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
   using Base::Base;
 
   // Constructs a new global object using the local object's default

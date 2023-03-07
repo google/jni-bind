@@ -332,6 +332,7 @@ cc_library(
     hdrs = ["global_object.h"],
     deps = [
         ":class",
+        ":jni_type",
         ":local_object",
         ":object_ref",
         ":promotion_mechanics",
@@ -361,6 +362,7 @@ cc_library(
         ":ref_base",
         ":string_ref",
         "//:jni_dep",
+        "//class_defs:java_lang_classes",
     ],
 )
 
@@ -539,6 +541,7 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
+        ":jni_type",
         ":jvm",
         ":jvm_ref",
         ":object_ref",
@@ -568,6 +571,7 @@ cc_library(
         ":ref_base",
         ":string_ref",
         "//:jni_dep",
+        "//class_defs:java_lang_classes",
         "//implementation/jni_helper",
     ],
 )

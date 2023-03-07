@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_LOCAL_STRING_H_
 #define JNI_BIND_LOCAL_STRING_H_
 
+#include "class_defs/java_lang_classes.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/local_object.h"
 #include "implementation/promotion_mechanics.h"
@@ -34,11 +35,17 @@ namespace jni {
 // Like |jobjects|, |jstring|s can be either local or global with the same
 // ownership semantics.
 class LocalString
-    : public LocalCtor<StringRefBase<LocalString>, jstring, jobject, jstring> {
+    : public LocalCtor<
+          StringRefBase<LocalString>,
+          JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>,
+          jobject, jstring> {
  public:
   friend StringRefBase<LocalString>;
 
-  using Base = LocalCtor<StringRefBase<LocalString>, jstring, jobject, jstring>;
+  using Base = LocalCtor<
+      StringRefBase<LocalString>,
+      JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>, jobject,
+      jstring>;
   using Base::Base;
 
   LocalString(

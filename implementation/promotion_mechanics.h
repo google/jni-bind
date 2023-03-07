@@ -39,12 +39,13 @@ struct LocalCtor : public CrtpBase {
 
 // Augments a a local constructor of type |Span| (created by |LoadedBy|).
 // Inheritance and ctor inheritance will continue through |Base|.
-template <typename CrtpBase, typename Span, typename ViableSpan,
+template <typename CrtpBase, typename JniT, typename ViableSpan,
           typename... ViableSpans>
-struct LocalCtor<CrtpBase, Span, ViableSpan, ViableSpans...>
-    : public LocalCtor<CrtpBase, Span, ViableSpans...> {
-  using Base = LocalCtor<CrtpBase, Span, ViableSpans...>;
+struct LocalCtor<CrtpBase, JniT, ViableSpan, ViableSpans...>
+    : public LocalCtor<CrtpBase, JniT, ViableSpans...> {
+  using Base = LocalCtor<CrtpBase, JniT, ViableSpans...>;
   using Base::Base;
+  using Span = typename JniT::SpanType;
 
   // "Copy" constructor: Additional reference to object will be created.
   LocalCtor(CreateCopy, ViableSpan object)
@@ -55,19 +56,20 @@ struct LocalCtor<CrtpBase, Span, ViableSpan, ViableSpans...>
   LocalCtor(ViableSpan object) : Base(static_cast<Span>(object)) {}
 };
 
-template <typename CrtpBase, typename Span, typename... ViableSpans>
+template <typename CrtpBase, typename JniT, typename... ViableSpans>
 struct GlobalCtor : public CrtpBase {
   using CrtpBase::CrtpBase;
 };
 
 // Augments a a local constructor of type |Span| (created by |LoadedBy|).
 // Inheritance and ctor inheritance will continue through |Base|.
-template <typename CrtpBase, typename Span, typename ViableSpan,
+template <typename CrtpBase, typename JniT, typename ViableSpan,
           typename... ViableSpans>
-struct GlobalCtor<CrtpBase, Span, ViableSpan, ViableSpans...>
-    : public GlobalCtor<CrtpBase, Span, ViableSpans...> {
-  using Base = GlobalCtor<CrtpBase, Span, ViableSpans...>;
+struct GlobalCtor<CrtpBase, JniT, ViableSpan, ViableSpans...>
+    : public GlobalCtor<CrtpBase, JniT, ViableSpans...> {
+  using Base = GlobalCtor<CrtpBase, JniT, ViableSpans...>;
   using Base::Base;
+  using Span = typename JniT::SpanType;
 
   // "Copy" constructor: Additional reference to object will be created.
   GlobalCtor(CreateCopy, ViableSpan object)

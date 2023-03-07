@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_GLOBAL_STRING_H_
 #define JNI_BIND_GLOBAL_STRING_H_
 
+#include "class_defs/java_lang_classes.h"
 #include "implementation/global_object.h"
 #include "implementation/local_string.h"
 #include "implementation/promotion_mechanics.h"
@@ -26,13 +27,18 @@
 
 namespace jni {
 
-class GlobalString : public GlobalCtor<StringRefBase<GlobalString>, jstring,
-                                       jobject, jstring> {
+class GlobalString
+    : public GlobalCtor<
+          StringRefBase<GlobalString>,
+          JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>,
+          jobject, jstring> {
  public:
   friend class StringRefBase<GlobalString>;
 
-  using Base =
-      GlobalCtor<StringRefBase<GlobalString>, jstring, jobject, jstring>;
+  using Base = GlobalCtor<
+      StringRefBase<GlobalString>,
+      JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>, jobject,
+      jstring>;
   using Base::Base;
 
   GlobalString(GlobalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>

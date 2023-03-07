@@ -22,6 +22,7 @@
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/jvm_ref.h"
 #include "implementation/object_ref.h"
@@ -37,10 +38,12 @@ template <const auto& class_v_,
           const auto& jvm_v_ = kDefaultJvm>
 class LocalObject
     : public LocalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
-                       jobject, jobject> {
+                       JniT<jobject, class_v_, class_loader_v_, jvm_v_>,
+                       jobject> {
  public:
-  using Base = LocalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
-                         jobject, jobject>;
+  using Base =
+      LocalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+                JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
   using Base::Base;
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
