@@ -19,6 +19,7 @@
 namespace jni::metaprogramming {
 
 enum class PackType {
+  NOT_CONTAINER,
   TYPES,
   AUTO,
   AUTO_REF,
@@ -30,7 +31,9 @@ enum class PackType {
 // cannot discriminate on void.
 struct PackDiscrimator {
   template <typename T>
-  struct Helper;
+  struct Helper {
+    static constexpr PackType val = PackType::NOT_CONTAINER;
+  };
 
   template <template <typename...> class Container, typename... Ts>
   struct Helper<Container<Ts...>> {
