@@ -16,6 +16,9 @@
 #ifndef JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_H_
 #define JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_H_
 
+#include "implementation/jni_helper/jni_helper.h"
+#include "jni_dep.h"
+
 namespace jni {
 
 // Creates an additional reference to the underlying object.
@@ -28,6 +31,56 @@ struct PromoteToGlobal {};
 // CAUTION: This tag assume the underlying jobject has been pinned as a global.
 // This is atypical when solely using JNI Bind, use with caution.
 struct AdoptGlobal {};
+
+template <typename CrtpBase, typename Span, typename... ViableSpans>
+struct LocalCtor : public CrtpBase {
+  using CrtpBase::CrtpBase;
+};
+
+// Augments a a local constructor of type |Span| (created by |LoadedBy|).
+// Inheritance and ctor inheritance will continue through |Base|.
+template <typename CrtpBase, typename Span, typename ViableSpan,
+          typename... ViableSpans>
+struct LocalCtor<CrtpBase, Span, ViableSpan, ViableSpans...>
+    : public LocalCtor<CrtpBase, Span, ViableSpans...> {
+  using Base = LocalCtor<CrtpBase, Span, ViableSpans...>;
+  using Base::Base;
+
+  // "Copy" constructor: Additional reference to object will be created.
+  LocalCtor(CreateCopy, ViableSpan object)
+      : Base(static_cast<Span>(
+            JniHelper::NewLocalRef(static_cast<jobject>(object)))) {}
+
+  // "Wrap" constructor: Object released at end of scope.
+  LocalCtor(ViableSpan object) : Base(static_cast<Span>(object)) {}
+};
+
+template <typename CrtpBase, typename Span, typename... ViableSpans>
+struct GlobalCtor : public CrtpBase {
+  using CrtpBase::CrtpBase;
+};
+
+// Augments a a local constructor of type |Span| (created by |LoadedBy|).
+// Inheritance and ctor inheritance will continue through |Base|.
+template <typename CrtpBase, typename Span, typename ViableSpan,
+          typename... ViableSpans>
+struct GlobalCtor<CrtpBase, Span, ViableSpan, ViableSpans...>
+    : public GlobalCtor<CrtpBase, Span, ViableSpans...> {
+  using Base = GlobalCtor<CrtpBase, Span, ViableSpans...>;
+  using Base::Base;
+
+  // "Copy" constructor: Additional reference to object will be created.
+  GlobalCtor(CreateCopy, ViableSpan object)
+      : Base(static_cast<Span>(
+            JniHelper::NewGlobalRef(static_cast<jobject>(object)))) {}
+
+  // "Promote" constructor: Creates new global, frees |obj| (standard).
+  explicit GlobalCtor(PromoteToGlobal, ViableSpan obj)
+      : Base(JniHelper::PromoteLocalToGlobalObject(obj)) {}
+
+  // "Adopts" a global by wrapping a jstring (non-standard).
+  explicit GlobalCtor(AdoptGlobal, ViableSpan obj) : Base(obj) {}
+};
 
 }  // namespace jni
 

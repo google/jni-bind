@@ -36,21 +36,16 @@ template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class LocalObject
-    : public ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_> {
+    : public LocalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+                       jobject, jobject> {
  public:
-  using ObjectRefT = ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>;
-  using ObjectRefT::ObjectRefT;
-
-  // Default "wrap" constructor (object will be released at end of scope).
-  LocalObject(jobject object) : ObjectRefT(object) {}
-
-  // "Copy" constructor (additional reference to object will be created).
-  LocalObject(CreateCopy, jobject object)
-      : ObjectRefT(JniHelper::NewLocalRef(object)) {}
+  using Base = LocalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+                         jobject, jobject>;
+  using Base::Base;
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   LocalObject(LocalObject<class_v, class_loader_v, jvm_v>&& rhs)
-      : ObjectRefT(rhs.Release()) {
+      : Base(rhs.Release()) {
     static_assert(
         std::string_view(class_v.name_) == std::string_view(class_v_.name_),
         "You are attempting to initialise a LocalObject from another class "
@@ -58,8 +53,8 @@ class LocalObject
   }
 
   ~LocalObject() {
-    if (ObjectRefT::object_ref_) {
-      JniHelper::DeleteLocalObject(ObjectRefT::object_ref_);
+    if (Base::object_ref_) {
+      JniHelper::DeleteLocalObject(Base::object_ref_);
     }
   }
 };

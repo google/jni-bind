@@ -31,31 +31,19 @@ namespace jni {
 // In order to use a string in memory (as opposed to only using it for function
 // arguments), "Pin" the string.
 //
-// Like jobjects, jstrings can be either local or global with the same ownership
-// semantics.
-class LocalString : public StringRefBase<LocalString> {
+// Like |jobjects|, |jstring|s can be either local or global with the same
+// ownership semantics.
+class LocalString
+    : public LocalCtor<StringRefBase<LocalString>, jstring, jobject, jstring> {
  public:
-  using StringRefBase<LocalString>::StringRefBase;
-  friend class StringRefBase<LocalString>;
+  friend StringRefBase<LocalString>;
 
-  // Constructors to support the that jstring and jobject are interchangeable.
-  LocalString(jobject java_string_as_object)
-      : StringRefBase<LocalString>(
-            static_cast<jstring>(java_string_as_object)) {}
-
-  // "Copy" constructor (additional reference to object will be created).
-  LocalString(CreateCopy, jstring object)
-      : StringRefBase<LocalString>(
-            static_cast<jstring>(JniHelper::NewLocalRef(object))) {}
-
-  // "Copy" constructor (additional reference to object will be created).
-  LocalString(CreateCopy, jobject object)
-      : StringRefBase<LocalString>(
-            static_cast<jstring>(JniHelper::NewLocalRef(object))) {}
+  using Base = LocalCtor<StringRefBase<LocalString>, jstring, jobject, jstring>;
+  using Base::Base;
 
   LocalString(
       LocalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>&& obj)
-      : StringRefBase<LocalString>(static_cast<jstring>(obj.Release())) {}
+      : Base(static_cast<jstring>(obj.Release())) {}
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.

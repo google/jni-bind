@@ -32,12 +32,14 @@ template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class GlobalObject
-    : public ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_> {
+    : public GlobalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+                        jobject, jobject> {
  public:
   template <const auto& jvm_v, const auto& class_loader_v>
   friend class ClassLoaderRef;
 
-  using Base = ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>;
+  using Base = GlobalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+                          jobject, jobject>;
   using Base::Base;
 
   // Constructs a new global object using the local object's default
@@ -45,17 +47,6 @@ class GlobalObject
   explicit GlobalObject()
       : GlobalObject(JniHelper::PromoteLocalToGlobalObject(
             LocalObject<class_v_, class_loader_v_, jvm_v_>{}.Release())) {}
-
-  // "Copy" constructor, creates new reference (standard).
-  explicit GlobalObject(CreateCopy, jobject obj)
-      : Base(JniHelper::NewGlobalRef(obj)) {}
-
-  // "Promote" constructor, creates a new global, frees passed arg (standard).
-  explicit GlobalObject(PromoteToGlobal, jobject obj)
-      : Base(JniHelper::PromoteLocalToGlobalObject(obj)) {}
-
-  // "Adopts" a global by wrapping a jstring (non-standard).
-  explicit GlobalObject(AdoptGlobal, jobject obj) : Base(obj) {}
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&& local_object)

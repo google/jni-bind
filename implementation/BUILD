@@ -737,6 +737,10 @@ cc_library(
 cc_library(
     name = "promotion_mechanics",
     hdrs = ["promotion_mechanics.h"],
+    deps = [
+        "//:jni_dep",
+        "//implementation/jni_helper",
+    ],
 )
 
 cc_library(

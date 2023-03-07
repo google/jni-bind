@@ -26,36 +26,14 @@
 
 namespace jni {
 
-class GlobalString : public StringRefBase<GlobalString> {
+class GlobalString : public GlobalCtor<StringRefBase<GlobalString>, jstring,
+                                       jobject, jstring> {
  public:
-  using Base = StringRefBase<GlobalString>;
-  using Base::Base;
   friend class StringRefBase<GlobalString>;
 
-  // "Copy" constructor, creates new reference (standard).
-  GlobalString(CreateCopy, jstring object)
-      : Base(static_cast<jstring>(
-            JniHelper::NewGlobalRef(static_cast<jobject>(object)))) {}
-
-  // "Copy" constructor, creates new reference (standard).
-  GlobalString(CreateCopy, jobject object)
-      : Base(static_cast<jstring>(JniHelper::NewGlobalRef(object))) {}
-
-  // "Promote" constructor, creates a new global, frees passed arg (standard).
-  GlobalString(PromoteToGlobal, jstring object)
-      : Base(JniHelper::PromoteLocalToGlobalString(object)) {}
-
-  // "Promote" constructor, creates a new global, frees passed arg (standard).
-  GlobalString(PromoteToGlobal, jobject object)
-      : Base(JniHelper::PromoteLocalToGlobalString(
-            static_cast<jstring>(object))) {}
-
-  // "Adopts" a global by wrapping a jobject (non-standard).
-  GlobalString(AdoptGlobal, jstring object) : Base(object) {}
-
-  // "Adopts" a global by wrapping a jstring (non-standard).
-  GlobalString(AdoptGlobal, jobject object)
-      : Base(static_cast<jstring>(object)) {}
+  using Base =
+      GlobalCtor<StringRefBase<GlobalString>, jstring, jobject, jstring>;
+  using Base::Base;
 
   GlobalString(GlobalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>
                    &&global_string)
@@ -70,11 +48,10 @@ class GlobalString : public StringRefBase<GlobalString> {
 
  private:
   // Construction from jstring requires |PromoteToGlobal| or |AdoptGlobal|.
-  explicit GlobalString(jstring obj) : StringRefBase(obj) {}
+  explicit GlobalString(jstring obj) : Base(obj) {}
 
   // Construction from jstring requires |PromoteToGlobal| or |AdoptGlobal|.
-  explicit GlobalString(jobject obj)
-      : StringRefBase(static_cast<jstring>(obj)) {}
+  explicit GlobalString(jobject obj) : Base(static_cast<jstring>(obj)) {}
 
   // Invoked through CRTP on dtor.
   void ClassSpecificDeleteObjectRef(jstring object_ref) {
