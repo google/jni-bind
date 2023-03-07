@@ -268,6 +268,25 @@ cc_test(
 )
 
 cc_library(
+    name = "deep_equal",
+    hdrs = ["deep_equal.h"],
+    deps = [
+        ":pack_discriminator",
+        ":vals_equal",
+    ],
+)
+
+cc_test(
+    name = "deep_equal_test",
+    srcs = ["deep_equal_test.cc"],
+    deps = [
+        ":deep_equal",
+        ":pack_discriminator",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "detect",
     hdrs = ["detect.h"],
 )

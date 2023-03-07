@@ -48,6 +48,7 @@ struct D {};
 // static_assert(PackDiscriminator_e<C<>> == PackType::AUTO_REF);
 // static_assert(PackDiscriminator_e<D<>> == PackType::CONST_AUTO_REF);
 
+static_assert(PackDiscriminator_e<int> == PackType::NOT_CONTAINER);
 static_assert(PackDiscriminator_e<NonContainer> == PackType::NOT_CONTAINER);
 
 static_assert(PackDiscriminator_e<A<>> == PackType::TYPES);

@@ -63,7 +63,7 @@ template <typename T>
 static constexpr PackType PackDiscriminator_e =
     PackDiscrimator::template val<T>;
 
-// Metafunction to forward a containerize pack to a compatible container.
+// Metafunction to forward a containerized pack to a compatible container.
 template <template <template <typename...> class> class TypesContainer,
           template <template <auto...> class> class AutoContainer,
           template <template <const auto&...> class>
