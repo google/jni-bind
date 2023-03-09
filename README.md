@@ -229,7 +229,7 @@ Accessing and setting fields will follow the rules laid out in [Type Conversion 
 <a name="constructors"></a>
 ## Constructors
 
-If you want to create a new Java object from native code, you can define a `jni::Constructor`cpp, or use the default constructor. **If you omit a constructor the default constructor is called, but if any are specified you must explicitly define a no argument constructor.**
+If you want to create a new Java object from native code, you can define a `jni::Constructor`, or use the default constructor. **If you omit a constructor the default constructor is called, but if any are specified you must explicitly define a no argument constructor.**
 
 ```cpp
 static constexpr jni::Class kSomeClass{...};
