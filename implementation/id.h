@@ -39,7 +39,10 @@ template <typename JniT_, IdType kIdType_, std::size_t idx = kNoIdx,
 struct Id {
   using JniT = JniT_;
   static constexpr IdType kIdType = kIdType_;
-  static constexpr auto& root = JniT::GetClass();
+
+  static constexpr auto Root() { return JniT::GetClass(); }
+
+  static constexpr auto root = Root();
 
   static constexpr std::size_t kIdx = idx;
   static constexpr std::size_t kSecondaryIdx = secondary_idx;
@@ -63,27 +66,27 @@ struct Id {
                        (kIdxToChange == 1 ? kNewValue : secondary_idx),
                        (kIdxToChange == 2 ? kNewValue : tertiary_idx)>;
 
-  static constexpr const auto& Val() {
+  static constexpr auto Val() {
     if constexpr (kIdType == IdType::CLASS) {
-      return root;
+      return Root();
     } else if constexpr (kIdType == IdType::STATIC_FIELD) {
       static_assert(idx != kNoIdx);
-      return std::get<idx>(root.static_.fields_).raw_;
+      return std::get<idx>(Root().static_.fields_).raw_;
     } else if constexpr (kIdType == IdType::STATIC_OVERLOAD_SET) {
       // Overload (no such thing as static constructor).
       static_assert(idx != kNoIdx);
-      return std::get<idx>(root.static_.methods_);
+      return std::get<idx>(Root().static_.methods_);
     } else if constexpr (kIdType == IdType::STATIC_OVERLOAD) {
       // Overload (no such thing as static constructor).
       static_assert(idx != kNoIdx);
       return std::get<secondary_idx>(
-          std::get<idx>(root.static_.methods_).invocations_);
+          std::get<idx>(Root().static_.methods_).invocations_);
     } else if constexpr (kIdType == IdType::STATIC_OVERLOAD_PARAM) {
       // Overload.
       if constexpr (tertiary_idx == kNoIdx) {
         // Return.
         return std::get<secondary_idx>(
-                   std::get<idx>(root.static_.methods_).invocations_)
+                   std::get<idx>(Root().static_.methods_).invocations_)
             .return_.raw_;
       } else {
         return std::get<tertiary_idx>(
@@ -147,61 +150,21 @@ struct Id {
   // Returns root for constructor, else return's "raw_" member.
   static constexpr auto Materialize() {
     if constexpr (kIdType == IdType::STATIC_OVERLOAD) {
-      static_assert(kIdx != kNoIdx);
-
-      // Overload return value.
-      return std::get<secondary_idx>(
-                 std::get<idx>(root.static_.methods_).invocations_)
-          .return_.raw_;
-    } else if constexpr (kIdType == IdType::STATIC_OVERLOAD_PARAM) {
-      static_assert(kIdx != kNoIdx);
-
-      if constexpr (tertiary_idx == kNoIdx) {
-        // Overload return value.
-        return std::get<secondary_idx>(
-                   std::get<idx>(root.static_.methods_).invocations_)
-            .return_.raw_;
-      } else {
-        // Overload.
-        return std::get<tertiary_idx>(
-            std::get<secondary_idx>(
-                std::get<idx>(root.static_.methods_).invocations_)
-                .params_.values_);
-      }
-    }
-
-    else if constexpr (kIdType == IdType::OVERLOAD) {
+      return Val().return_.raw_;
+    } else if constexpr (kIdType == IdType::OVERLOAD) {
       if constexpr (kIdx == kNoIdx) {
         // Constructor.
         return root;
       } else {
         // Overload return value.
-        return std::get<secondary_idx>(
-                   std::get<idx>(root.methods_).invocations_)
-            .return_.raw_;
+        return Val().return_.raw_;
       }
-    } else if constexpr (kIdType == IdType::OVERLOAD_PARAM) {
-      if constexpr (kIdx == kNoIdx) {
-        // Constructor.
-        return root;
-      } else if constexpr (tertiary_idx == kNoIdx) {
-        // Overload return value.
-        return std::get<secondary_idx>(
-                   std::get<idx>(root.methods_).invocations_)
-            .return_.raw_;
-      } else {
-        // Overload.
-        return std::get<tertiary_idx>(
-            std::get<secondary_idx>(std::get<idx>(root.methods_).invocations_)
-                .params_.values_);
-      }
-    } else if constexpr (kIdType == IdType::FIELD) {
-      return std::get<kIdx>(root.fields_).raw_;
-    } else if constexpr (kIdType == IdType::STATIC_FIELD) {
-      return std::get<kIdx>(root.static_.fields_).raw_;
-    } else {
+    } else if constexpr (kIdType == IdType::STATIC_OVERLOAD_SET ||
+                         kIdType == IdType::OVERLOAD_SET) {
       // Not implemented.
       return Void{};
+    } else {
+      return Val();
     }
   }
 

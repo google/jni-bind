@@ -62,7 +62,7 @@ struct SelectorStaticInfo {
   // Strangely, the compiler refuses to peer through Val and loses the
   // constexpr-ness (i.e std::decay_t<decltype(Val())>; is not a constant
   // expression).
-  static constexpr inline const auto& Val() {
+  static constexpr inline auto Val() {
     if constexpr (Selector::kRank == 0) {
       return Selector::Val();
     } else {
