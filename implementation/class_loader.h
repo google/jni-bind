@@ -62,6 +62,14 @@ class ClassLoader {
       : parent_loader_(kDefaultClassLoader),
         supported_classes_(supported_class_set.supported_classes_) {}
 
+  // When all existing usage of nameless classloaders are removed this will be
+  // the only constructor.
+  explicit constexpr ClassLoader(
+      const char*, ParentLoader_ parent_loader,
+      SupportedClassSet<SupportedClasses_...> supported_class_set)
+      : parent_loader_(parent_loader),
+        supported_classes_(supported_class_set.supported_classes_) {}
+
   bool constexpr operator==(
       const ClassLoader<ParentLoader_, SupportedClasses_...>& rhs) const {
     return (*this).parent_loader_ == rhs.parent_loader_ &&
