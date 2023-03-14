@@ -25,6 +25,7 @@
 #include "implementation/class.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/no_idx.h"
+#include "implementation/object.h"
 #include "implementation/supported_class_set.h"
 #include "metaprogramming/all_unique.h"
 #include "metaprogramming/base_filter.h"
@@ -35,7 +36,6 @@ namespace jni {
 inline constexpr struct NoClassLoader {
 } kNoClassLoaderSpecified;
 
-// Represents the compile time info we have about a class loader. In general,
 // this is just the list of classes we expect to be loadable from a class loader
 // and its parent loader.
 //
@@ -44,30 +44,43 @@ inline constexpr struct NoClassLoader {
 // classes attached to two different class loaders will still be compatible if
 // they were loaded by a shared parent loader.
 template <typename ParentLoader_, typename... SupportedClasses_>
-class ClassLoader {
+class ClassLoader : Object {
  public:
   const ParentLoader_ parent_loader_;
   const std::tuple<SupportedClasses_...> supported_classes_;
 
-  // TODO (b/143908983): Loaders should not be able to supply classes that their
-  // parents do.
+  // Default classloader (no name needed).
   explicit constexpr ClassLoader(
       ParentLoader_ parent_loader,
       SupportedClassSet<SupportedClasses_...> supported_class_set)
-      : parent_loader_(parent_loader),
+      __attribute__((
+          enable_if(parent_loader == kDefaultClassLoader,
+                    "You must provide a name for classloaders (except "
+                    "kNullClassLoader and kDefaultClassLoader)")))
+      : Object("__JNI_BIND_DEFAULT_CLASS_LOADER__"),
+        parent_loader_(parent_loader),
         supported_classes_(supported_class_set.supported_classes_) {}
 
+  // Null classloader (no name needed).
   explicit constexpr ClassLoader(
+      ParentLoader_ parent_loader,
       SupportedClassSet<SupportedClasses_...> supported_class_set)
-      : parent_loader_(kDefaultClassLoader),
+      __attribute__((
+          enable_if(parent_loader == kNullClassLoader,
+                    "You must provide a name for classloaders (except "
+                    "kNullClassLoader and kDefaultClassLoader)")))
+      : Object("__JNI_BIND_NULL_CLASS_LOADER__"),
+        parent_loader_(parent_loader),
         supported_classes_(supported_class_set.supported_classes_) {}
 
-  // When all existing usage of nameless classloaders are removed this will be
-  // the only constructor.
+  // TODO (b/143908983): Loaders should not be able to supply classes that their
+  // parents do.
   explicit constexpr ClassLoader(
-      const char*, ParentLoader_ parent_loader,
+      const char* class_loader_name, ParentLoader_ parent_loader,
       SupportedClassSet<SupportedClasses_...> supported_class_set)
-      : parent_loader_(parent_loader),
+
+      : Object(class_loader_name),
+        parent_loader_(parent_loader),
         supported_classes_(supported_class_set.supported_classes_) {}
 
   bool constexpr operator==(

@@ -141,6 +141,7 @@ cc_library(
         ":class",
         ":default_class_loader",
         ":no_idx",
+        ":object",
         ":supported_class_set",
         "//class_defs:java_lang_classes",
         "//metaprogramming:all_unique",

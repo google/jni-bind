@@ -67,12 +67,13 @@ static constexpr ClassLoader kLoader{kNullClassLoader,
 
 // Child loader only.
 static constexpr Class kBazNar{"BazNar"};
-static constexpr ClassLoader kChildLoader{kLoader, SupportedClassSet{kBazNar}};
+static constexpr ClassLoader kChildLoader{"com/google/kClassLoader", kLoader,
+                                          SupportedClassSet{kBazNar}};
 
 // Child-child loader only.
 static constexpr Class kGnar{"Gnar"};
-static constexpr ClassLoader kChildChildLoader{kChildLoader,
-                                               SupportedClassSet{kGnar}};
+static constexpr ClassLoader kChildChildLoader{
+    "com/google/kChildLoader", kChildLoader, SupportedClassSet{kGnar}};
 
 // No loaders (fulfilled by default, but not null).
 static constexpr Class kUnusedClass{"UnusedClass"};

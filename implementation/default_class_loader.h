@@ -102,8 +102,14 @@ class NullClassLoader {
   }
 };
 
-inline constexpr NullClassLoader kNullClassLoader;
-inline constexpr DefaultClassLoader kDefaultClassLoader;
+static constexpr NullClassLoader kNullClassLoader;
+static constexpr DefaultClassLoader kDefaultClassLoader;
+
+// DO NOT USE: This obviates a compiler bug for value based enablement on ctor.
+static constexpr auto kShadowNullClassLoader = kNullClassLoader;
+
+// DO NOT USE: This obviates a compiler bug for value based enablement on ctor.
+static constexpr auto kShadowDefaultClassLoader = kDefaultClassLoader;
 
 }  // namespace jni
 
