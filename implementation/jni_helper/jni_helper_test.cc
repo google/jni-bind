@@ -26,12 +26,8 @@
 namespace {
 
 using jni::JniHelper;
-using jni::Method;
-using jni::Params;
-using jni::Return;
 using jni::test::Fake;
 using jni::test::JniTest;
-using jni::test::MockJniEnv;
 using testing::_;
 using testing::Eq;
 using testing::InSequence;
