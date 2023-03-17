@@ -25,7 +25,6 @@ using ::jni::Array;
 using ::jni::ArrayStrip_t;
 using ::jni::CDecl_t;
 using ::jni::Class;
-using ::jni::Field;
 using ::jni::FullArrayStripV;
 using ::jni::LocalArray;
 using ::jni::LocalObject;

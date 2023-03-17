@@ -24,7 +24,6 @@ using jni::Class;
 using jni::Constructor;
 using jni::LocalObject;
 using jni::test::JniTest;
-using jni::test::MockJniEnv;
 using testing::_;
 using testing::StrEq;
 
