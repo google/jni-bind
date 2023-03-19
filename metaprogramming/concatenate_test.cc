@@ -19,7 +19,6 @@
 #include <tuple>
 #include <type_traits>
 
-using jni::metaprogramming::Concatenate;
 using jni::metaprogramming::Concatenate_t;
 using jni::metaprogramming::ConcatenateTup_t;
 
