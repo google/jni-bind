@@ -492,6 +492,27 @@ cc_test(
 )
 
 cc_library(
+    name = "lambda_compatible",
+    hdrs = ["lambda_compatible.h"],
+    deps = [
+        ":deep_equal",
+        ":tuple_manipulation",
+        ":type_of_nth_element",
+    ],
+)
+
+cc_test(
+    name = "lambda_compatible_test",
+    srcs = ["lambda_compatible_test.cc"],
+    deps = [
+        ":deep_equal",
+        ":lambda_compatible",
+        ":vals",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "lambda_string",
     hdrs = ["lambda_string.h"],
 )
