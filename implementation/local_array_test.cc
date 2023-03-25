@@ -122,6 +122,30 @@ TEST_F(JniTest, LocalArray_ConstructsTheRightTypeForRValues) {
       5, std::move(default_object)};
 }
 
+TEST_F(JniTest, LocalArray_ConstructsFromVectors) {
+  EXPECT_CALL(*env_, NewBooleanArray(3));
+  /*
+  EXPECT_CALL(*env_, NewByteArray(2));
+  EXPECT_CALL(*env_, NewCharArray(3));
+  EXPECT_CALL(*env_, NewShortArray(4));
+  EXPECT_CALL(*env_, NewIntArray(5));
+  EXPECT_CALL(*env_, NewLongArray(6));
+  EXPECT_CALL(*env_, NewFloatArray(7));
+  EXPECT_CALL(*env_, NewDoubleArray(8));
+  */
+
+  LocalArray<jboolean> boolean_array{std::vector{true, true, false}};
+  /*
+  LocalArray<jbyte> byte_array{2};
+  LocalArray<jchar> char_array{3};
+  LocalArray<jshort> short_array{4};
+  LocalArray<jint> int_array{5};
+  LocalArray<jlong> long_array{6};
+  LocalArray<jfloat> float_array{7};
+  LocalArray<jdouble> double_array{8};
+  */
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Object Array Tests.
 //

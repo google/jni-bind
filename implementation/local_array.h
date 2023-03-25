@@ -16,6 +16,7 @@
 #ifndef JNI_BIND_LOCAL_ARRAY_H_
 #define JNI_BIND_LOCAL_ARRAY_H_
 
+#include <array>
 #include <cstddef>
 #include <type_traits>
 
@@ -53,6 +54,20 @@ class LocalArray
       ArrayRef<JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
   using Base::Base;
 
+  LocalArray(std::size_t size)
+      : Base(JniArrayHelper<SpanType, kRank_>::NewArray(size)) {}
+
+  template <typename T>
+  LocalArray(std::vector<T> vals)
+      //: Base(nullptr)
+      : Base(JniArrayHelper<SpanType>::NewArray(vals.size())) {}
+
+  /*
+  template <typename T>
+  LocalArray(std::initializer_list<T> vals) : Base(nullptr) {
+  }
+  */
+
   LocalArray(LocalArray<SpanType, kRank_>&& rhs) : Base(rhs.Release()) {}
 
   template <std::size_t kRank, const auto& class_v, const auto& class_loader_v,
@@ -64,12 +79,11 @@ class LocalArray
   }
 };
 
-template <template <const auto&, const auto&, const auto&>
-          class ObjectContainer,
-          const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-LocalArray(std::size_t,
-           const ObjectContainer<class_v_, class_loader_v_, jvm_v_>&)
+/*
+template <typename T>
+LocalArray(std::initializer_list<T>)
     -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
+    */
 
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 LocalArray(
