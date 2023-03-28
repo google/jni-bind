@@ -34,7 +34,7 @@
 
 namespace jni {
 
-template <const auto& jvm_v_>
+template <const auto& jvm_v_ = kDefaultJvm>
 class JvmRef;
 
 class ThreadGuard;
@@ -221,6 +221,9 @@ class JvmRef : public JvmRefBase {
   // Main thread has a JNIEnv just like every other thread.
   const ThreadGuard thread_guard_ = {};
 };
+
+JvmRef(JNIEnv*) -> JvmRef<kDefaultJvm>;
+JvmRef(JavaVM*) -> JvmRef<kDefaultJvm>;
 
 }  // namespace jni
 
