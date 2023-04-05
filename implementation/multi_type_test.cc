@@ -46,6 +46,7 @@ TEST_F(JniTest, MultiTypeTest_SimpleSmokeTestForSingleObject) {
 
   EXPECT_CALL(*env_, FindClass(StrEq("ARCore")))
       .WillOnce(Return(Fake<jclass>(1)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>(1)));
   EXPECT_CALL(*env_, NewGlobalRef(Eq(Fake<jclass>(1))))
       .WillOnce(Return(Fake<jclass>(2)));
   EXPECT_CALL(*env_,

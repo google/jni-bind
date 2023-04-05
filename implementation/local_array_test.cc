@@ -261,6 +261,7 @@ TEST_F(JniTest, Array_CorrectSignatureForStringParams) {
 
 TEST_F(JniTest, Array_LocalVanillaObjectRValuesCanBeSet) {
   EXPECT_CALL(*env_, DeleteLocalRef(_)).Times(2);  // array, in place obj
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>())).Times(2);  // FindClass
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>())).Times(0);
 
   LocalArray<jobject, 1, kJavaLangString> arr{
@@ -271,6 +272,7 @@ TEST_F(JniTest, Array_LocalVanillaObjectRValuesCanBeSet) {
 TEST_F(JniTest, Array_LocalStringRValuesCanBeSet) {
   EXPECT_CALL(*env_, DeleteLocalRef(_))
       .Times(1);  // array (object is moved from)
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>()));  // FindClass
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>())).Times(0);
 
   LocalArray<jstring> arr{3};

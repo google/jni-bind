@@ -100,14 +100,29 @@ TEST_F(JniTest, LocalString_CreatesFromCharPtr) {
 TEST_F(JniTest, LocalString_CreatesFromStringView) {
   EXPECT_CALL(*env_, NewStringUTF(StrEq("TestString")))
       .WillOnce(Return(Fake<jstring>()));
-  EXPECT_CALL(*env_, DeleteLocalRef);
+
+  // jclass for temp String class reference.
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>()));
+  // The variable str (which is itself an object).
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>()));
+  // TODO(b/143908983): Currently strings leak one local during proxying.
+  // Temporary xref created during construction.
+  // EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>()));
+
   LocalString str{std::string_view{char_ptr}};
 }
 
 TEST_F(JniTest, LocalString_CreatesFromString) {
   EXPECT_CALL(*env_, NewStringUTF(StrEq("TestString")))
       .WillOnce(Return(Fake<jstring>()));
-  EXPECT_CALL(*env_, DeleteLocalRef);
+
+  // jclass for temp String class reference.
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>()));
+  // The variable str (which is itself an object).
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>()));
+  // TODO(b/143908983): Currently strings leak one local during proxying.
+  // Temporary xref created during construction.
+  // EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>()));
   LocalString str{std::string{"TestString"}};
 }
 

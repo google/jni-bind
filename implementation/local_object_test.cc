@@ -40,9 +40,9 @@ using testing::InSequence;
 using testing::StrEq;
 
 TEST_F(JniTest, LocalObject_CallsNewAndDeleteOnNewObject) {
-  // Note, class refs are not released, so Times() != 2.
   EXPECT_CALL(*env_, NewObjectV).WillOnce(testing::Return(Fake<jobject>()));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>())).Times(1);
 
   static constexpr Class kClass{"kClass"};
   LocalObject<kClass> local_object{};
@@ -82,6 +82,7 @@ TEST_F(JniTest, LocalObject_ObjectReturnsInstanceMethods) {
              Params<jint, jfloat, jint, jfloat, jdouble>{}}};
 
   InSequence seq;
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>())).Times(1);
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), StrEq("()V")))
       .WillOnce(testing::Return(Fake<jmethodID>(1)));
   EXPECT_CALL(*env_, NewObjectV(_, Fake<jmethodID>(1), _))

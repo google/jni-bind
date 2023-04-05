@@ -156,26 +156,17 @@ inline jobject JniHelper::PromoteLocalToGlobalObject(jobject local_object) {
 }
 
 inline jclass JniHelper::PromoteLocalToGlobalClass(jclass local_class) {
-  return reinterpret_cast<jclass>(JniEnv::GetEnv()->NewGlobalRef(local_class));
+  return static_cast<jclass>(
+      static_cast<jobject>(PromoteLocalToGlobalObject(local_class)));
 }
 
 template <typename... CtorArgs>
 inline jobject JniHelper::NewGlobalObject(jclass clazz, jmethodID ctor_method,
                                           CtorArgs&&... ctor_args) {
-  // Note, this local ref handle created below is never leaked outside of this
-  // scope and should naturally be cleaned up when invoking JNI function
-  // completes.  That said, the maximum number of local refs can be extremely
-  // limited (the standard only requires 16), and if the caller doesn't
-  // explicitly reach for the performant option, it doesn't make sense to
-  // provide a micro optimisation of skipping the delete call below.
-  //
-  // If consumers want the most performant option, they should use LocalRef
-  // implementations when building their dynamic object.
   JNIEnv* const env = jni::JniEnv::GetEnv();
   jobject local_object = NewLocalObject(env, clazz, ctor_method,
                                         std::forward<CtorArgs>(ctor_args)...);
   jobject global_object = env->NewGlobalRef(local_object);
-
   env->DeleteLocalRef(local_object);
 
   return global_object;
