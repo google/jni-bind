@@ -27,7 +27,6 @@ namespace {
 using jni::InvokeHelper;
 using jni::test::Fake;
 using jni::test::JniTest;
-using jni::test::MockJniEnv;
 using testing::_;
 using testing::Return;
 
