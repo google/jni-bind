@@ -26,6 +26,7 @@
 #include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jvm.h"
+#include "implementation/loaded_by.h"
 #include "implementation/no_idx.h"
 #include "metaprogramming/vals_equal.h"
 
@@ -48,19 +49,21 @@ struct JniT {
                 : (class_loader_idx_ == kNoIdx ? true : false));
   }
 
-  static constexpr const auto& GetClassLoader() {
-    if constexpr (class_loader_idx_ != kNoIdx) {
-      return std::get<class_loader_idx_>(jvm_v_.class_loaders_);
+  static constexpr auto GetClass() {
+    if constexpr (class_idx_ != kNoIdx) {
+      return StripClassFromLoadedBy(
+          std::get<class_idx_>(GetClassLoader().supported_classes_));
     } else {
-      return class_loader_v_;
+      return StripClassFromLoadedBy(class_v_);
     }
   }
 
-  static constexpr const auto& GetClass() {
-    if constexpr (class_idx_ != kNoIdx) {
-      return std::get<class_idx_>(GetClassLoader().supported_classes_);
+  static constexpr auto GetClassLoader() {
+    if constexpr (class_loader_idx_ != kNoIdx) {
+      return StripClassLoaderFromLoadedBy(
+          std::get<class_loader_idx_>(jvm_v_.class_loaders_));
     } else {
-      return class_v_;
+      return StripClassLoaderFromLoadedBy(class_loader_v_);
     }
   }
 

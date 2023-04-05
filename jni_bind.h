@@ -33,6 +33,7 @@
 #include "implementation/id.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
+#include "implementation/loaded_by.h"
 #include "implementation/method.h"
 #include "implementation/no_idx.h"
 #include "implementation/params.h"

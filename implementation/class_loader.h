@@ -36,18 +36,23 @@ namespace jni {
 inline constexpr struct NoClassLoader {
 } kNoClassLoaderSpecified;
 
-// this is just the list of classes we expect to be loadable from a class loader
+// This is just the list of classes we expect to be loadable from a class loader
 // and its parent loader.
 //
 // Classes from different loaders are typically incompatible, but Class loaders
 // delegate classes that they cannot directly load to their parent loaders, so
 // classes attached to two different class loaders will still be compatible if
 // they were loaded by a shared parent loader.
+//
+// To annotate a class in a function or field declaration, use `LoadedBy`.
 template <typename ParentLoader_, typename... SupportedClasses_>
-class ClassLoader : Object {
+class ClassLoader : public Object {
  public:
   const ParentLoader_ parent_loader_;
   const std::tuple<SupportedClasses_...> supported_classes_;
+
+  explicit constexpr ClassLoader(const char* class_loader_name)
+      : Object(class_loader_name) {}
 
   // Default classloader (no name needed).
   explicit constexpr ClassLoader(
@@ -145,6 +150,12 @@ class ClassLoader : Object {
         cur_idx + 1);
   }
 };
+
+// Note: Null is chosen, not default, because LoadedBy requires a syntax like
+// LoadedBy{ClassLoader{"kClass"}} (using the CTAD loader type below), but
+// we want to prevent explicit usage of a default loader (as it makes no sense).
+ClassLoader(const char*)
+    -> ClassLoader<std::decay_t<decltype(kNullClassLoader)>>;
 
 template <typename ParentLoader_, typename... SupportedClasses_>
 ClassLoader(ParentLoader_ parent_loader,

@@ -33,6 +33,7 @@ static constexpr std::size_t kClassNotInLoaderSetIdx =
 // that classes are explicitly listed under a loader's class list.
 class DefaultClassLoader {
  public:
+  const char* name_ = "__JNI_BIND_DEFAULT_CLASS_LOADER__";
   std::tuple<> supported_classes_{};
 
   // Note, this will return true iff ignore_default_loader is true, but the
@@ -75,6 +76,8 @@ class DefaultClassLoader {
 // for most user defined classes.
 class NullClassLoader {
  public:
+  const char* name_ = "__JNI_BIND_NULL_CLASS_LOADER__";
+
   template <const auto&, bool ignore_default_loader = false>
   constexpr bool SupportedDirectlyOrIndirectly() const {
     return false;

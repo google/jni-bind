@@ -24,18 +24,26 @@ namespace {
 
 using ::jni::Array;
 using ::jni::Class;
+using ::jni::ClassLoader;
 using ::jni::Constructor;
 using ::jni::Field;
 using ::jni::Id;
 using ::jni::IdType;
 using ::jni::JniT;
+using ::jni::kDefaultClassLoader;
 using ::jni::kNoIdx;
+using ::jni::LoadedBy;
 using ::jni::Method;
 using ::jni::Overload;
 using ::jni::Params;
 using ::jni::Rank;
 using ::jni::Return;
 using ::jni::Static;
+using ::jni::SupportedClassSet;
+
+static constexpr Class kOtherClass{"kOtherClass"};
+static constexpr ClassLoader kClassLoader{kDefaultClassLoader,
+                                          SupportedClassSet{kOtherClass}};
 
 static constexpr Class kClass1{
     "kClass1",
@@ -63,6 +71,8 @@ static constexpr Class kClass1{
     },
     Method{"m5", jni::Return{Array{Class{"kClass2"}}}, Params<>{}},
     Method{"m6", jni::Return{Array{Class{"kClass2"}, Rank<2>{}}}, Params<>{}},
+    Method{"m7", jni::Return{LoadedBy{kClassLoader, kOtherClass}}, Params<>{}},
+
     Field{"f0", int{}},
     Field{"f1", Class{"kClass2"}}};
 
@@ -101,6 +111,8 @@ using kMethod2 = Id<JT, IdType::OVERLOAD_SET, 2>;
 using kMethod3 = Id<JT, IdType::OVERLOAD_SET, 3>;
 using kMethod4 = Id<JT, IdType::OVERLOAD_SET, 4>;
 using kMethod5 = Id<JT, IdType::OVERLOAD_SET, 5>;
+using kMethod6 = Id<JT, IdType::OVERLOAD_SET, 6>;
+using kMethod7 = Id<JT, IdType::OVERLOAD_SET, 7>;
 
 static_assert(kMethod0::Name() == std::string_view{"m0"});
 static_assert(kMethod1::Name() == std::string_view{"m1"});
@@ -108,6 +120,8 @@ static_assert(kMethod2::Name() == std::string_view{"m2"});
 static_assert(kMethod3::Name() == std::string_view{"m3"});
 static_assert(kMethod4::Name() == std::string_view{"m4"});
 static_assert(kMethod5::Name() == std::string_view{"m5"});
+static_assert(kMethod6::Name() == std::string_view{"m6"});
+static_assert(kMethod7::Name() == std::string_view{"m7"});
 
 using kMethod0Overload0 = Id<JT, IdType::OVERLOAD, 0, 0>;
 using kMethod1Overload0 = Id<JT, IdType::OVERLOAD, 1, 0>;
@@ -115,6 +129,7 @@ using kMethod2Overload0 = Id<JT, IdType::OVERLOAD, 2, 0>;
 using kMethod3Overload0 = Id<JT, IdType::OVERLOAD, 3, 0>;
 using kMethod5Overload0 = Id<JT, IdType::OVERLOAD, 5, 0>;
 using kMethod6Overload0 = Id<JT, IdType::OVERLOAD, 6, 0>;
+using kMethod7Overload0 = Id<JT, IdType::OVERLOAD, 7, 0>;
 
 static_assert(kMethod0Overload0::NumParams() == 0);
 static_assert(kMethod1Overload0::NumParams() == 1);
@@ -172,6 +187,10 @@ static_assert(std::string_view{"m6"} == kMethod6Overload0::Name());
 
 static_assert(1 == kMethod5Overload0Return::kRank);
 static_assert(2 == kMethod6Overload0Return::kRank);
+
+using kMethod7Overload0Return = Id<JT, IdType::OVERLOAD_PARAM, 7, 0>;
+
+static_assert(std::string_view{"m7"} == kMethod7Overload0::Name());
 
 ////////////////////////////////////////////////////////////////////////////////
 // Fields (Overload sets with only one overload)

@@ -373,6 +373,7 @@ cc_library(
     deps = [
         ":array",
         ":class",
+        ":class_loader",
         ":field",
         ":id_type",
         ":name_constants",
@@ -407,6 +408,7 @@ cc_library(
         ":class_loader",
         ":default_class_loader",
         ":jvm",
+        ":loaded_by",
         ":no_idx",
         "//metaprogramming:vals_equal",
     ],
@@ -460,6 +462,15 @@ cc_test(
         "//implementation/jni_helper",
         "//implementation/jni_helper:jni_env",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "loaded_by",
+    hdrs = ["loaded_by.h"],
+    deps = [
+        ":class_loader",
+        ":default_class_loader",
     ],
 )
 

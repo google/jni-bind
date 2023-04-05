@@ -129,7 +129,7 @@ struct Proxy<JObject,
              typename std::enable_if_t<std::is_same_v<JObject, jobject>>>
     : public ProxyBase<jobject> {
   using AsDecl = std::tuple<Object>;
-  using AsArg = std::tuple<jobject, RefBaseTag<jobject>>;
+  using AsArg = std::tuple<jobject, RefBaseTag<jobject>, LoaderTag>;
 
   template <typename InputParamSelectionT, typename T>
   struct ContextualViabilityHelper {
@@ -153,9 +153,10 @@ struct Proxy<JObject,
   template <typename Id>
   struct Helper {
     static constexpr auto kClass{Id::Val()};
+    static constexpr auto kClassLoader{Id::JniT::GetClassLoader()};
 
     // TODO(b/174272629): Class loaders should also be enforced.
-    using type = LocalObject<kClass, kDefaultClassLoader, kDefaultJvm>;
+    using type = LocalObject<kClass, kClassLoader, kDefaultJvm>;
   };
 
   template <typename Id>

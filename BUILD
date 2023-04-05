@@ -44,6 +44,7 @@ cc_library(
         "//implementation:jni_type",
         "//implementation:jvm",
         "//implementation:jvm_ref",
+        "//implementation:loaded_by",
         "//implementation:local_array",
         "//implementation:local_array_string",
         "//implementation:local_class_loader",
