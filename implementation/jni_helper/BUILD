@@ -121,6 +121,56 @@ cc_library(
 )
 
 cc_library(
+    name = "lifecycle",
+    hdrs = ["lifecycle.h"],
+    deps = [
+        ":jni_env",
+        "//:jni_dep",
+    ],
+)
+
+cc_library(
+    name = "lifecycle_object",
+    hdrs = ["lifecycle_object.h"],
+    deps = [
+        ":jni_env",
+        ":lifecycle",
+        "//:jni_dep",
+    ],
+)
+
+cc_test(
+    name = "lifecycle_object_test",
+    srcs = ["lifecycle_object_test.cc"],
+    deps = [
+        ":lifecycle_object",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "lifecycle_string",
+    hdrs = ["lifecycle_string.h"],
+    deps = [
+        ":lifecycle",
+        ":lifecycle_object",
+    ],
+)
+
+cc_test(
+    name = "lifecycle_string_test",
+    srcs = ["lifecycle_string_test.cc"],
+    deps = [
+        ":lifecycle_string",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "static_field_value",
     hdrs = ["static_field_value.h"],
     deps = [

@@ -24,11 +24,7 @@
 
 namespace jni {
 
-/**
-// JniHelper is a shim to using a JNIenv object.
-// This extra layer of indirection allows for quickly shimming all JNICalls
-// (e.g. adding exception checking, logging each JNI call, etc).
-**/
+// Helper JNI shim for object, method, class, etc. lookup.
 class JniHelper {
  public:
   // Finds a class with "name".  Note, the classloader used is whatever is

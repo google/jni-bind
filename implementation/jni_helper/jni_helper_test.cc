@@ -25,13 +25,13 @@
 
 namespace {
 
-using jni::JniHelper;
-using jni::test::Fake;
-using jni::test::JniTest;
-using testing::_;
-using testing::Eq;
-using testing::InSequence;
-using testing::StrEq;
+using ::jni::JniHelper;
+using ::jni::test::Fake;
+using ::jni::test::JniTest;
+using ::testing::_;
+using ::testing::Eq;
+using ::testing::InSequence;
+using ::testing::StrEq;
 
 TEST_F(JniTest, JniHelper_CallsReleaseClass) {
   InSequence seq;
