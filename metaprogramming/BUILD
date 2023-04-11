@@ -800,6 +800,21 @@ cc_test(
 )
 
 cc_library(
+    name = "replace_string",
+    hdrs = ["replace_string.h"],
+    deps = [":lambda_string"],
+)
+
+cc_test(
+    name = "replace_string_test",
+    srcs = ["replace_string_test.cc"],
+    deps = [
+        ":replace_string",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "reverse",
     hdrs = ["reverse.h"],
     deps = [
