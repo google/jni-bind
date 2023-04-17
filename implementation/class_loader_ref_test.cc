@@ -288,11 +288,11 @@ TEST_F(JniTestWithNoDefaultJvmRef,
 
 TEST_F(JniTestWithNoDefaultJvmRef,
        ClassLoaderRefTest_ClassLoadersDoNotConflict) {
-  static constexpr Class kTestClassNoCrossTalk{
-      "TestClassNoCrossTalk", Constructor<jint>{},
+  static constexpr Class kClass{
+      "com/google/kClass", Constructor<jint>{},
       Method{"methodNoCrossTalk", Return<jint>{}, Params<jint>{}}};
-  static constexpr ClassLoader kClassLoader{
-      kNullClassLoader, SupportedClassSet{kTestClassNoCrossTalk}};
+  static constexpr ClassLoader kClassLoader{kNullClassLoader,
+                                            SupportedClassSet{kClass}};
 
   // We will use this ClassLoader instead of the default loader to load
   // TestClass.
@@ -344,11 +344,10 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   LocalClassLoader<kClassLoader, kClassLoaderJvm> class_loader{
       Fake<jobject>(1)};
 
-  auto custom_loader_object =
-      class_loader.BuildLocalObject<kTestClassNoCrossTalk>(jint{1});
+  auto custom_loader_object = class_loader.BuildLocalObject<kClass>(jint{1});
 
   auto second_custom_loader_object =
-      class_loader.BuildLocalObject<kTestClassNoCrossTalk>(jint{2});
+      class_loader.BuildLocalObject<kClass>(jint{2});
 
   EXPECT_EQ(custom_loader_object("methodNoCrossTalk", jint{2}), 123);
 

@@ -32,6 +32,7 @@
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/selector_static_info.h"
 #include "implementation/signature.h"
+#include "metaprogramming/replace_string.h"
 
 namespace jni {
 
@@ -181,7 +182,9 @@ struct Id {
   static constexpr std::size_t kRank = Rankifier::Rank(Val());
 
   static constexpr const char* Name() {
-    if constexpr (kIdType == IdType::STATIC_OVERLOAD_SET) {
+    if constexpr (kIdType == IdType::CLASS) {
+      return Class().name_;
+    } else if constexpr (kIdType == IdType::STATIC_OVERLOAD_SET) {
       return Val().name_;
     } else if constexpr (kIdType == IdType::STATIC_OVERLOAD) {
       return Id<JniT, IdType::STATIC_OVERLOAD_SET, idx, secondary_idx>::Name();
@@ -199,6 +202,9 @@ struct Id {
       return "NO_NAME";
     }
   }
+  static constexpr std::string_view kName = Name();
+  static constexpr std::string_view kNameUsingDots =
+      metaprogramming::Replace_v<kName, '/', '.'>;
 
   static constexpr std::size_t NumParams() {
     if constexpr (kIdType == IdType::OVERLOAD ||

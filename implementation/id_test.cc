@@ -46,7 +46,7 @@ static constexpr ClassLoader kClassLoader{kDefaultClassLoader,
                                           SupportedClassSet{kOtherClass}};
 
 static constexpr Class kClass1{
-    "kClass1",
+    "com/google/kClass1",
     Constructor{},
     Constructor{jint{}},
     Constructor{jfloat{}, jboolean{}},
@@ -77,6 +77,14 @@ static constexpr Class kClass1{
     Field{"f1", Class{"kClass2"}}};
 
 using JT = JniT<jobject, kClass1>;
+
+////////////////////////////////////////////////////////////////////////////////
+// Class.
+////////////////////////////////////////////////////////////////////////////////
+using kClass = Id<JT, IdType::CLASS>;
+
+static_assert(kClass::Name() == std::string_view{"com/google/kClass1"});
+static_assert(kClass::kNameUsingDots == std::string_view{"com.google.kClass1"});
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructors

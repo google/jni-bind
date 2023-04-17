@@ -23,6 +23,7 @@
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/global_object.h"
+#include "implementation/id.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm_ref.h"
@@ -68,6 +69,8 @@ class ClassLoaderRef
 
   template <const auto& class_v, typename... Params>
   [[nodiscard]] auto BuildLocalObject(Params&&... params) {
+    using JniClassT = JniT<jobject, class_v>;
+    using IdClassT = Id<JniClassT, IdType::CLASS>;
     static_assert(
         !(ParentLoaderForClass<class_loader_v_, class_v>() == kNullClassLoader),
         "Cannot build this class with this loader.");
@@ -78,10 +81,11 @@ class ClassLoaderRef
                       0>>::PrimeJClassFromClassLoader([=]() {
         // Prevent the object (which is a runtime instance of a class) from
         // falling out of scope so it is not released.
-        LocalObject loaded_class = (*this)("loadClass", class_v.name_);
+        LocalObject loaded_class =
+            (*this)("loadClass", IdClassT::kNameUsingDots);
 
         // We only want to create global references if we are actually going
-        // to use it them so that they do not leak.
+        // to use them so that they do not leak.
         jclass test_class{
             static_cast<jclass>(static_cast<jobject>(loaded_class))};
         return static_cast<jclass>(JniEnv::GetEnv()->NewGlobalRef(test_class));

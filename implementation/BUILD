@@ -169,8 +169,8 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
-        ":default_class_loader",
         ":global_object",
+        ":id",
         ":jni_type",
         ":jvm_ref",
         ":local_object",
@@ -381,6 +381,7 @@ cc_library(
         ":proxy_convenience_aliases",
         ":selector_static_info",
         ":signature",
+        "//metaprogramming:replace_string",
     ],
 )
 
