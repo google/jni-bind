@@ -17,18 +17,18 @@
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
 
-using jni::Class;
-using jni::ClassLoader;
-using jni::Constructor;
-using jni::GlobalClassLoader;
-using jni::kDefaultClassLoader;
-using jni::kNullClassLoader;
-using jni::LocalClassLoader;
-using jni::LocalObject;
-using jni::Method;
-using jni::Params;
-using jni::Return;
-using jni::SupportedClassSet;
+using ::jni::Class;
+using ::jni::ClassLoader;
+using ::jni::Constructor;
+using ::jni::GlobalClassLoader;
+using ::jni::kDefaultClassLoader;
+using ::jni::kNullClassLoader;
+using ::jni::LocalClassLoader;
+using ::jni::LocalObject;
+using ::jni::Method;
+using ::jni::Params;
+using ::jni::Return;
+using ::jni::SupportedClassSet;
 
 static constexpr Class kClassLoaderTestClass{
     "com/jnibind/test/ClassLoaderTest",

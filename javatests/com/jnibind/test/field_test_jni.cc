@@ -19,10 +19,10 @@
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
 
-using jni::Class;
-using jni::Constructor;
-using jni::Field;
-using jni::LocalObject;
+using ::jni::Class;
+using ::jni::Constructor;
+using ::jni::Field;
+using ::jni::LocalObject;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
 

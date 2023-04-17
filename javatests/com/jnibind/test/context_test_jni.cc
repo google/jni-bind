@@ -21,7 +21,7 @@
 
 namespace {
 
-using jni::GlobalObject;
+using ::jni::GlobalObject;
 
 // A struct that could represent context to be maintained across multiple native
 // JNI invocations.  Only global objects can be held in this way, local objects

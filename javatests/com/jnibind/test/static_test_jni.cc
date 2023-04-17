@@ -19,14 +19,14 @@
 #include "javatests/com/jnibind/test/object_test_helper_jni.h"
 #include "jni_bind.h"
 
-using jni::Array;
-using jni::Class;
-using jni::Field;
-using jni::Method;
-using jni::Params;
-using jni::Return;
-using jni::Static;
-using jni::StaticRef;
+using ::jni::Array;
+using ::jni::Class;
+using ::jni::Field;
+using ::jni::Method;
+using ::jni::Params;
+using ::jni::Return;
+using ::jni::Static;
+using ::jni::StaticRef;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
 

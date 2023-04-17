@@ -19,15 +19,15 @@
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
 
-using jni::Array;
-using jni::ArrayView;
-using jni::Class;
-using jni::LocalArray;
-using jni::LocalObject;
-using jni::LocalString;
-using jni::Method;
-using jni::Params;
-using jni::Return;
+using ::jni::Array;
+using ::jni::ArrayView;
+using ::jni::Class;
+using ::jni::LocalArray;
+using ::jni::LocalObject;
+using ::jni::LocalString;
+using ::jni::Method;
+using ::jni::Params;
+using ::jni::Return;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
 
