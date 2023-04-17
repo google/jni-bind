@@ -33,7 +33,9 @@ inline constexpr Class kJavaLangObject{"java/lang/Object"};
 
 inline constexpr Class kJavaLangClassLoader{
     "java/lang/ClassLoader",
-    Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}}};
+    Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}},
+    Method{"toString", Return{jstring{}}, Params<>{}},
+};
 
 static constexpr Class kJavaLangString{
     "java/lang/String",
