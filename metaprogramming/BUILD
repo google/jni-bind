@@ -861,6 +861,21 @@ cc_test(
 )
 
 cc_library(
+    name = "string_contains",
+    hdrs = ["string_contains.h"],
+    deps = [":lambda_string"],
+)
+
+cc_test(
+    name = "string_contains_test",
+    srcs = ["string_contains_test.cc"],
+    deps = [
+        ":string_contains",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "type_index_mask",
     hdrs = ["type_index_mask.h"],
     deps = [":type_of_nth_element"],
