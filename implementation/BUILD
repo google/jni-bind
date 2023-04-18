@@ -730,6 +730,7 @@ cc_library(
         "//metaprogramming:invocable_map",
         "//metaprogramming:optional_wrap",
         "//metaprogramming:queryable_map",
+        "//metaprogramming:string_contains",
         "//metaprogramming:tuple_manipulation",
     ],
 )

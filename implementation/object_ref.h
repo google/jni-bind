@@ -40,6 +40,7 @@
 #include "metaprogramming/invocable_map.h"
 #include "metaprogramming/optional_wrap.h"
 #include "metaprogramming/queryable_map.h"
+#include "metaprogramming/string_contains.h"
 #include "metaprogramming/tuple_manipulation.h"
 
 namespace jni {
@@ -63,6 +64,9 @@ class ObjectRef
       JniT::class_loader_v
           .template SupportedDirectlyOrIndirectly<JniT::class_v>(),
       "This class is not directly or indirectly supported by this loader.");
+  static_assert(!metaprogramming::StringContains_v<JniT::kName, '.'>,
+                "Use '/', not '.' in class names (for maximum) portability.");
+
   using RefBase = RefBase<JniT>;
 
   ObjectRef() = delete;

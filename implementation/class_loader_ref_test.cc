@@ -357,7 +357,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
 TEST_F(JniTestWithNoDefaultJvmRef,
        ClassLoaderRefTest_ClassesOfDifferentClassLoadersAreUnique) {
   static constexpr Class class_under_test{
-      "com.google.ARCore",
+      "com/google/ARCore",
       Method{"Foo", jni::Return{}, Params<>{}},
   };
   static constexpr ClassLoader class_loader{
@@ -391,7 +391,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
                           StrEq("(Ljava/lang/String;)Ljava/lang/Class;")))
       .WillOnce(testing::Return(Fake<jmethodID>(1)));
 
-  EXPECT_CALL(*env_, NewStringUTF(StrEq("com.google.ARCore")))
+  EXPECT_CALL(*env_, NewStringUTF(StrEq("com/google/ARCore")))
       .WillOnce(testing::Return(Fake<jstring>()));
 
   EXPECT_CALL(*env_, CallObjectMethodV(Fake<jobject>(3), Fake<jmethodID>(1), _))

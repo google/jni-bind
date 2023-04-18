@@ -86,11 +86,11 @@ TEST_F(JniTest, MultiTypeTest_MethodsOfSameNameButDifferentClassAreUnique) {
   EXPECT_CALL(*env_, GetMethodID).Times(2);
 
   static constexpr Class c1{
-      "com.google.ARCore",
+      "com/google/ARCore",
       Method{"Foo", jni::Return<jint>{}, Params<jint>{}},
   };
   static constexpr Class c2{
-      "com.google.VRCore",
+      "com/google/VRCore",
       Method{"Foo", jni::Return<jint>{}, Params<jint>{}},
   };
 

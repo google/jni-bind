@@ -67,6 +67,8 @@ struct JniT {
     }
   }
 
+  static constexpr std::string_view kName{GetClass().name_};
+
   static constexpr const auto& GetJvm() { return jvm_v_; }
 
   static constexpr auto GetStatic() {
