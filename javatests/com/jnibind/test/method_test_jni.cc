@@ -16,8 +16,6 @@
 
 #include <memory>
 
-#include "object_test_helper_jni.h"
-#include "jni_bind.h"
 
 using ::jni::Class;
 using ::jni::LocalObject;
@@ -55,10 +53,13 @@ constexpr Class kMethodTestHelper {
     // Float Method Tests.
     Method{"floatMethod", Return<jfloat>{}, Params<>{}},
     Method{"floatMethodTakesOneFloat", Return<jfloat>{}, Params<jfloat>{}},
+    
     Method{"floatMethodTakesFiveFloats", Return<jfloat>{}, Params<jfloat,jfloat,jfloat,jfloat,jfloat>{}},
 
     // Double Method Tests.
     Method{"doubleMethod", Return<jdouble>{}, Params<>{}},
+
+
     Method{"doubleMethodTakesOneDouble", Return<jdouble>{}, Params<jdouble>{}},
     Method{"doubleMethodTakesFiveDoubles", Return<jdouble>{}, Params<jdouble,jdouble,jdouble,jdouble,jdouble>{}},
 

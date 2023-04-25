@@ -21,10 +21,6 @@
 
 #include "implementation/array_type_conversion.h"
 #include "implementation/object.h"
-#include "implementation/return.h"
-#include "jni_dep.h"
-#include "metaprogramming/contains.h"
-#include "metaprogramming/type_to_type_map.h"
 
 namespace jni {
 
@@ -40,6 +36,7 @@ struct Rank {};
 template <typename RawType, std::size_t kRank>
 struct ArrayNonObjectTypeImpl {
   RawType raw_;
+  jobject nonsense_;
 
   constexpr ArrayNonObjectTypeImpl(RawType raw) : raw_(raw) {}
 
