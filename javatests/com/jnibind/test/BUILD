@@ -34,6 +34,53 @@ java_test(
 )
 
 ################################################################################
+# Classloader Test.
+################################################################################
+cc_library(
+    name = "class_loader_test_jni_impl",
+    srcs = ["class_loader_test_jni.cc"],
+    deps = [
+        ":object_test_helper_jni",
+        "//:jni_bind",
+    ],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libclass_loader_test_jni.so",
+    linkshared = True,
+    deps = [":class_loader_test_jni_impl"],
+)
+
+java_library(
+    name = "ClassLoaderHelperClassImpl",
+    srcs = [
+        "ClassLoaderHelperClass.java",
+    ],
+)
+
+java_binary(
+    name = "ClassLoaderHelperClass",
+    srcs = [
+        "ClassLoaderHelperClass.java",
+    ],
+)
+
+java_test(
+    name = "ClassLoaderTest",
+    testonly = 1,
+    srcs = [
+        "ClassLoaderTest.java",
+    ],
+    data = [
+        "ClassLoaderHelperClass_deploy.jar",
+        ":libclass_loader_test_jni.so",
+    ],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    deps = ["@maven//:com_google_truth_truth_1_1"],
+)
+
+################################################################################
 # Context Test.
 ################################################################################
 cc_library(

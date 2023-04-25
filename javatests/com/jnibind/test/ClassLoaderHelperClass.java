@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.jnibind.test;
 
 /** A helper class to be loaded remotely. */
-class ClassLoaderHelperClass {
+public class ClassLoaderHelperClass {
   private final int intVal;
+
+  public ClassLoaderHelperClass() {
+    this.intVal = 123456;
+  }
 
   public ClassLoaderHelperClass(int intVal) {
     this.intVal = intVal;

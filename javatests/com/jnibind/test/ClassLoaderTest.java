@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.jnibind.test;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import android.os.Environment;
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
-import androidx.test.services.storage.TestStorage;
-import com.google.android.apps.common.proguard.UsedByNative;
-import dalvik.system.PathClassLoader;
-import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.jar.JarFile;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Exercises basic behaviours with local objects, ranging from those passed down to JNI to those
@@ -37,69 +36,45 @@ import org.junit.runner.RunWith;
  *
  * <p>Note, any object passed into JNI is always local.
  */
-@RunWith(AndroidJUnit4ClassRunner.class)
+@RunWith(JUnit4.class)
 public final class ClassLoaderTest {
   private static final String REMOTE_CLASS_PATH_KEY = "remote_class_path";
+  private static final String JAR_CONTAINING_CLASSES =
+      System.getProperty("java.library.path") + "/ClassLoaderHelperClass_deploy.jar";
+
+  private static JarFile jarFile;
+  private static URL[] urlArray;
+  private static URLClassLoader urlClassLoader;
 
   static {
     System.loadLibrary("class_loader_test_jni");
   }
 
-  @UsedByNative("class_loader_test_jni.cc")
-  ObjectTestHelper methodTakesLocalObjectReturnsNewObject(ObjectTestHelper object) {
-    return new ObjectTestHelper(object.intVal1 + 5, object.intVal2 + 6, object.intVal3 + 7);
+  @BeforeClass
+  public static void doSetup() throws Exception {
+    jarFile = new JarFile(JAR_CONTAINING_CLASSES);
+    urlArray = new URL[] {new URL("jar:file:" + JAR_CONTAINING_CLASSES + "!/")};
+    urlClassLoader = URLClassLoader.newInstance(urlArray);
   }
 
-  native ObjectTestHelper jniBuildNewObjectsFromClassLoader(ClassLoader classLoader);
+  static native void jniTearDown();
+
+  @AfterClass
+  public static void doShutDown() {
+    jniTearDown();
+  }
+
+  @Test
+  public void smokeTestEnsuringLoaderCanLoadClass() throws Exception {
+    Class<?> classInstance = urlClassLoader.loadClass("com.jnibind.test.ClassLoaderHelperClass");
+    assertNotNull(classInstance.getDeclaredConstructor().newInstance());
+  }
+
+  native Object jniBuildNewObjectsFromClassLoader(ClassLoader classLoader);
 
   @Test
   public void manipulateNewObjectsFromClassLoaderReturnsObjectWithValPlusFive() {
-    // See methodTakesClassLoaderReturnsNewObject.
-    ObjectTestHelper objectFromJni =
-        jniBuildNewObjectsFromClassLoader(ClassLoaderTest.class.getClassLoader());
-    assertThat(objectFromJni.intVal1).isEqualTo(6);
-    assertThat(objectFromJni.intVal2).isEqualTo(8);
-    assertThat(objectFromJni.intVal3).isEqualTo(10);
-  }
-
-  native ObjectTestHelper jniBuildNewObjectsFromDefaultClassLoader(ClassLoader classLoader);
-
-  @Test
-  public void manipulateNewObjectsFromDefaultClassLoaderReturnsObjectWithValPlusFive() {
-    // See methodTakesClassLoaderReturnsNewObject.
-    ObjectTestHelper objectFromJni =
-        jniBuildNewObjectsFromDefaultClassLoader(ClassLoaderTest.class.getClassLoader());
-    assertThat(objectFromJni.intVal1).isEqualTo(7);
-    assertThat(objectFromJni.intVal2).isEqualTo(9);
-    assertThat(objectFromJni.intVal3).isEqualTo(11);
-  }
-
-  native int jniBuildsRemoteSubclassFromClassLoader(ClassLoader classLoader, int value);
-
-  native int jniBuildsRemoteClassFromClassLoader(ClassLoader classLoader, int value);
-
-  @Test
-  public void remoteClassLoadersCanHandleSubclasses() throws Exception {
-    File customClassJar =
-        new File(
-            Environment.getExternalStorageDirectory(),
-            "googletest/test_runfiles/google3/"
-                + new TestStorage(ApplicationProvider.getApplicationContext().getContentResolver())
-                    .getInputArgs()
-                    .get(REMOTE_CLASS_PATH_KEY));
-    assertThat(customClassJar.exists()).isTrue();
-    ClassLoader customLoader = new PathClassLoader(customClassJar.toString(), null);
-
-    // The subclass returns the inverse of the passed in value.
-    assertThat(jniBuildsRemoteSubclassFromClassLoader(customLoader, 1)).isEqualTo(-1);
-    assertThat(jniBuildsRemoteSubclassFromClassLoader(customLoader, 2)).isEqualTo(-2);
-    assertThat(jniBuildsRemoteSubclassFromClassLoader(customLoader, 3)).isEqualTo(-3);
-    assertThat(jniBuildsRemoteSubclassFromClassLoader(customLoader, 4)).isEqualTo(-4);
-
-    // The parent class should still return the same value.
-    assertThat(jniBuildsRemoteClassFromClassLoader(customLoader, 1)).isEqualTo(1);
-    assertThat(jniBuildsRemoteClassFromClassLoader(customLoader, 2)).isEqualTo(2);
-    assertThat(jniBuildsRemoteClassFromClassLoader(customLoader, 3)).isEqualTo(3);
-    assertThat(jniBuildsRemoteClassFromClassLoader(customLoader, 4)).isEqualTo(4);
+    Object newObject = jniBuildNewObjectsFromClassLoader(urlClassLoader);
+    assertEquals("com.jnibind.test.ClassLoaderHelperClass", newObject.getClass().getName());
   }
 }

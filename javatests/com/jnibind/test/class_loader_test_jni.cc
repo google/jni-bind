@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <memory>
+
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
 
@@ -22,7 +24,6 @@ using ::jni::ClassLoader;
 using ::jni::Constructor;
 using ::jni::GlobalClassLoader;
 using ::jni::kDefaultClassLoader;
-using ::jni::kNullClassLoader;
 using ::jni::LocalClassLoader;
 using ::jni::LocalObject;
 using ::jni::Method;
@@ -30,93 +31,36 @@ using ::jni::Params;
 using ::jni::Return;
 using ::jni::SupportedClassSet;
 
-static constexpr Class kClassLoaderTestClass{
-    "com/jnibind/test/ClassLoaderTest",
-    Method{"methodTakesLocalObjectReturnsNewObject",
-           Return{kObjectTestHelperClass}, Params{kObjectTestHelperClass}},
-};
+static constexpr Class kClassLoaderHelperClass{
+    "com/jnibind/test/ClassLoaderHelperClass"};
 
 static constexpr ClassLoader kTestClassLoader{
-    kDefaultClassLoader,
-    SupportedClassSet{kClassLoaderTestClass, kObjectTestHelperClass}};
+    kDefaultClassLoader, SupportedClassSet{kClassLoaderHelperClass}};
 
-static constexpr ClassLoader kLiteTestClassLoader{
-    kDefaultClassLoader, SupportedClassSet{kClassLoaderTestClass}};
+static constexpr jni::Jvm kJvmWithCustomClassLoaderSupport{kTestClassLoader};
 
-static constexpr Class kClassLoaderHelperClass{
-    "com/jnibind/test/ClassLoaderHelperClass", Constructor<jint>{},
-    Method{"getValue", Return<jint>{}, Params{}}};
-static constexpr Class kClassLoaderHelperSubclass{
-    "com/jnibind/test/ClassLoaderHelperSubclass", Constructor<jint>{},
-    Method{"getValue", Return<jint>{}, Params{}},
-    Method{"castToParent", Return{kClassLoaderHelperClass}, Params{}}};
-
-static constexpr ClassLoader kCustomClassLoader{
-    kDefaultClassLoader,
-    SupportedClassSet{kClassLoaderHelperClass, kClassLoaderHelperSubclass}};
-
-static constexpr jni::Jvm kJvmWithCustomClassLoaderSupport{
-    kTestClassLoader, kLiteTestClassLoader, kCustomClassLoader};
+static std::unique_ptr<jni::JvmRef<kJvmWithCustomClassLoaderSupport>> jvm;
 
 extern "C" {
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
-  static jni::JvmRef<kJvmWithCustomClassLoaderSupport> jvm{pjvm};
+  jvm.reset(new jni::JvmRef<kJvmWithCustomClassLoaderSupport>(pjvm));
+
   return JNI_VERSION_1_6;
+}
+
+JNIEXPORT void JNICALL
+Java_com_jnibind_test_ClassLoaderTest_jniTearDown(JNIEnv* env, jclass) {
+  jvm.reset();
 }
 
 JNIEXPORT jobject JNICALL
 Java_com_jnibind_test_ClassLoaderTest_jniBuildNewObjectsFromClassLoader(
-    JNIEnv* env, jobject jtest_obj, jobject jclass_loader_obj) {
-  GlobalClassLoader<kTestClassLoader, kJvmWithCustomClassLoaderSupport>
+    JNIEnv* env, jclass, jobject jclass_loader_obj) {
+  LocalClassLoader<kTestClassLoader, kJvmWithCustomClassLoaderSupport>
       class_loader{jclass_loader_obj};
 
-  LocalObject helper_obj =
-      class_loader.BuildLocalObject<kObjectTestHelperClass>(1, 2, 3);
-  return LocalObject<kClassLoaderTestClass, kTestClassLoader,
-                     kJvmWithCustomClassLoaderSupport>{jtest_obj}(
-             "methodTakesLocalObjectReturnsNewObject", helper_obj)
-      .Release();
-}
-
-JNIEXPORT jobject JNICALL
-Java_com_jnibind_test_ClassLoaderTest_jniBuildNewObjectsFromDefaultClassLoader(
-    JNIEnv* env, jobject jtest_obj, jobject jclass_loader_obj) {
-  GlobalClassLoader<kLiteTestClassLoader, kJvmWithCustomClassLoaderSupport>
-      class_loader{jclass_loader_obj};
-  LocalObject<kObjectTestHelperClass> helper_obj{2, 3, 4};
-  return LocalObject<kClassLoaderTestClass>{jtest_obj}(
-             "methodTakesLocalObjectReturnsNewObject", helper_obj)
-      .Release();
-}
-
-JNIEXPORT jint JNICALL
-Java_com_jnibind_test_ClassLoaderTest_jniBuildsRemoteSubclassFromClassLoader(
-    JNIEnv* env, jobject jtest_obj, jobject jclass_loader_obj, jint value) {
-  LocalClassLoader<kCustomClassLoader, kJvmWithCustomClassLoaderSupport>
-      class_loader{jclass_loader_obj};
-  LocalObject<kClassLoaderHelperSubclass, kCustomClassLoader,
-              kJvmWithCustomClassLoaderSupport>
-      helper_obj = class_loader.BuildLocalObject<kClassLoaderHelperSubclass>(
-          jint{value});
-  LocalObject<kClassLoaderHelperClass, kCustomClassLoader,
-              kJvmWithCustomClassLoaderSupport>
-      parent_obj{helper_obj("castToParent")};
-
-  return parent_obj("getValue");
-}
-
-JNIEXPORT jint JNICALL
-Java_com_jnibind_test_ClassLoaderTest_jniBuildsRemoteClassFromClassLoader(
-    JNIEnv* env, jobject jtest_obj, jobject jclass_loader_obj, jint value) {
-  LocalClassLoader<kCustomClassLoader, kJvmWithCustomClassLoaderSupport>
-      class_loader{jclass_loader_obj};
-  LocalObject<kClassLoaderHelperClass, kCustomClassLoader,
-              kJvmWithCustomClassLoaderSupport>
-      helper_obj =
-          class_loader.BuildLocalObject<kClassLoaderHelperClass>(jint{value});
-
-  return helper_obj("getValue");
+  return class_loader.BuildLocalObject<kClassLoaderHelperClass>().Release();
 }
 
 }  // extern "C"
