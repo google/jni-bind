@@ -411,6 +411,7 @@ cc_library(
         ":jvm",
         ":loaded_by",
         ":no_idx",
+        "//metaprogramming:replace_string",
         "//metaprogramming:vals_equal",
     ],
 )

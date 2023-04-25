@@ -72,7 +72,6 @@ struct OverloadRef {
       if constexpr (IdT::kIsStatic) {
         return jni::JniHelper::GetStaticMethodID(clazz, IdT::Name(),
                                                  Signature_v<IdT>.data());
-
       } else {
         return jni::JniHelper::GetMethodID(clazz, IdT::Name(),
                                            Signature_v<IdT>.data());

@@ -391,7 +391,11 @@ TEST_F(JniTestWithNoDefaultJvmRef,
                           StrEq("(Ljava/lang/String;)Ljava/lang/Class;")))
       .WillOnce(testing::Return(Fake<jmethodID>(1)));
 
-  EXPECT_CALL(*env_, NewStringUTF(StrEq("com/google/ARCore")))
+  // Note: While "/" is the mandatory delimiter for describing the class in its
+  // definition, load class uses "." delineation. Strangely, when calling
+  // Classloader.loadClass on Android both '.' and '/'work, but on x86 Java (and
+  // presumably other JVM implementations), only the "." is accepted.
+  EXPECT_CALL(*env_, NewStringUTF(StrEq("com.google.ARCore")))
       .WillOnce(testing::Return(Fake<jstring>()));
 
   EXPECT_CALL(*env_, CallObjectMethodV(Fake<jobject>(3), Fake<jmethodID>(1), _))

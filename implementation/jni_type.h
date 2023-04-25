@@ -28,6 +28,7 @@
 #include "implementation/jvm.h"
 #include "implementation/loaded_by.h"
 #include "implementation/no_idx.h"
+#include "metaprogramming/replace_string.h"
 #include "metaprogramming/vals_equal.h"
 
 namespace jni {
@@ -68,6 +69,8 @@ struct JniT {
   }
 
   static constexpr std::string_view kName{GetClass().name_};
+  static constexpr std::string_view kNameWithDots{
+      metaprogramming::Replace_v<kName, '/', '.'>};
 
   static constexpr const auto& GetJvm() { return jvm_v_; }
 

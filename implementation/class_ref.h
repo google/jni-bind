@@ -72,12 +72,12 @@ class ClassRef {
         GetDefaultLoadedClassList().push_back(&return_value);
 
         return JniHelper::PromoteLocalToGlobalClass(
-            JniHelper::FindClass(JniT::GetClass().name_));
+            JniHelper::FindClass(JniT::kName.data()));
       });
     } else {
       // For non default classloader, storage in class member.
       return class_ref_.LoadAndMaybeInit([=]() {
-        return LoadClassFromObject(JniT::GetClass().name_,
+        return LoadClassFromObject(JniT::kNameWithDots.data(),
                                    optional_object_to_build_loader_from);
       });
     }
