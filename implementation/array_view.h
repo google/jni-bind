@@ -36,7 +36,7 @@ class ArrayView {
     using reference = SpanType&;
 
     Iterator(SpanType* ptr, std::size_t size, std::size_t idx)
-        : ptr_(ptr), size_(size), idx_(idx) {}
+        : size_(size), ptr_(ptr), idx_(idx) {}
 
     Iterator& operator++() {
       idx_++;
