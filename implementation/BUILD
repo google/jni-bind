@@ -119,6 +119,8 @@ cc_library(
         "//class_defs:java_lang_classes",
         "//implementation/jni_helper",
         "//implementation/jni_helper:invoke",
+        "//implementation/jni_helper:lifecycle_object",
+        "//implementation/jni_helper:lifecycle_string",
         "//metaprogramming:double_locked_value",
     ],
 )
@@ -183,6 +185,7 @@ cc_library(
         "//:jni_dep",
         "//class_defs:java_lang_classes",
         "//implementation/jni_helper:jni_env",
+        "//implementation/jni_helper:lifecycle_object",
         "//metaprogramming:contains",
         "//metaprogramming:queryable_map",
     ],
@@ -325,6 +328,7 @@ cc_library(
         ":jvm",
         "//:jni_dep",
         "//implementation/jni_helper",
+        "//implementation/jni_helper:lifecycle_object",
     ],
 )
 
@@ -339,6 +343,7 @@ cc_library(
         ":promotion_mechanics",
         "//:jni_dep",
         "//implementation/jni_helper",
+        "//implementation/jni_helper:lifecycle_object",
     ],
 )
 
@@ -364,6 +369,7 @@ cc_library(
         ":string_ref",
         "//:jni_dep",
         "//class_defs:java_lang_classes",
+        "//implementation/jni_helper:lifecycle_string",
     ],
 )
 
@@ -450,6 +456,7 @@ cc_library(
         ":jvm",
         ":method_ref",
         "//:jni_dep",
+        "//implementation/jni_helper:lifecycle_object",
         "//metaprogramming:double_locked_value",
         "//metaprogramming:function_traits",
     ],
@@ -489,8 +496,8 @@ cc_library(
         ":jvm",
         ":object",
         "//:jni_dep",
-        "//implementation/jni_helper",
         "//implementation/jni_helper:jni_array_helper",
+        "//implementation/jni_helper:lifecycle_object",
     ],
 )
 
@@ -546,6 +553,7 @@ cc_library(
         ":jvm",
         ":jvm_ref",
         "//:jni_dep",
+        "//implementation/jni_helper:lifecycle_object",
     ],
 )
 
@@ -562,6 +570,7 @@ cc_library(
         ":promotion_mechanics",
         "//:jni_dep",
         "//implementation/jni_helper",
+        "//implementation/jni_helper:lifecycle_object",
     ],
 )
 
@@ -587,6 +596,7 @@ cc_library(
         "//:jni_dep",
         "//class_defs:java_lang_classes",
         "//implementation/jni_helper",
+        "//implementation/jni_helper:lifecycle_string",
     ],
 )
 
@@ -619,6 +629,7 @@ cc_library(
         "//implementation/jni_helper:invoke",
         "//implementation/jni_helper:invoke_static",
         "//implementation/jni_helper:jni_env",
+        "//implementation/jni_helper:lifecycle_object",
         "//metaprogramming:double_locked_value",
         "//metaprogramming:invocable_map",
         "//metaprogramming:optional_wrap",
@@ -758,7 +769,7 @@ cc_library(
     hdrs = ["promotion_mechanics.h"],
     deps = [
         "//:jni_dep",
-        "//implementation/jni_helper",
+        "//implementation/jni_helper:lifecycle_object",
     ],
 )
 
@@ -836,6 +847,7 @@ cc_library(
         ":proxy",
         ":ref_base",
         "//class_defs:java_lang_classes",
+        "//implementation/jni_helper:lifecycle_string",
     ],
 )
 

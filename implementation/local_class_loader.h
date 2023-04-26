@@ -17,10 +17,11 @@
 #ifndef JNI_BIND_LOCAL_CLASS_LOADER_H_
 #define JNI_BIND_LOCAL_CLASS_LOADER_H_
 
-#include "class_loader.h"
-#include "class_loader_ref.h"
-#include "jvm.h"
-#include "jvm_ref.h"
+#include "implementation/class_loader.h"
+#include "implementation/class_loader_ref.h"
+#include "implementation/jni_helper/lifecycle_object.h"
+#include "implementation/jvm.h"
+#include "implementation/jvm_ref.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -35,7 +36,7 @@ class LocalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
 
   ~LocalClassLoader() {
     if (Base::object_ref_) {
-      JniHelper::DeleteLocalObject(Base::object_ref_);
+      LifecycleHelper<jobject, LifecycleType::LOCAL>::Delete(Base::object_ref_);
     }
   }
 

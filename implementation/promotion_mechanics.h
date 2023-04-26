@@ -16,7 +16,7 @@
 #ifndef JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_H_
 #define JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_H_
 
-#include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/lifecycle_object.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -46,11 +46,12 @@ struct LocalCtor<CrtpBase, JniT, ViableSpan, ViableSpans...>
   using Base = LocalCtor<CrtpBase, JniT, ViableSpans...>;
   using Base::Base;
   using Span = typename JniT::SpanType;
+  using LifecycleT = LifecycleHelper<Span, LifecycleType::LOCAL>;
 
   // "Copy" constructor: Additional reference to object will be created.
   LocalCtor(CreateCopy, ViableSpan object)
       : Base(static_cast<Span>(
-            JniHelper::NewLocalRef(static_cast<jobject>(object)))) {}
+            LifecycleT::NewReference(static_cast<Span>(object)))) {}
 
   // "Wrap" constructor: Object released at end of scope.
   LocalCtor(ViableSpan object) : Base(static_cast<Span>(object)) {}
@@ -70,15 +71,15 @@ struct GlobalCtor<CrtpBase, JniT, ViableSpan, ViableSpans...>
   using Base = GlobalCtor<CrtpBase, JniT, ViableSpans...>;
   using Base::Base;
   using Span = typename JniT::SpanType;
+  using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
 
   // "Copy" constructor: Additional reference to object will be created.
   GlobalCtor(CreateCopy, ViableSpan object)
-      : Base(static_cast<Span>(
-            JniHelper::NewGlobalRef(static_cast<jobject>(object)))) {}
+      : Base(static_cast<Span>(LifecycleT::NewReference(object))) {}
 
   // "Promote" constructor: Creates new global, frees |obj| (standard).
   explicit GlobalCtor(PromoteToGlobal, ViableSpan obj)
-      : Base(JniHelper::PromoteLocalToGlobalObject(obj)) {}
+      : Base(LifecycleT::Promote(obj)) {}
 
   // "Adopts" a global by wrapping a jstring (non-standard).
   explicit GlobalCtor(AdoptGlobal, ViableSpan obj) : Base(obj) {}

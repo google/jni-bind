@@ -22,6 +22,7 @@
 
 #include "class_defs/java_lang_classes.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/jni_helper/lifecycle_string.h"
 #include "implementation/jvm.h"
 #include "implementation/proxy.h"
 #include "implementation/ref_base.h"
@@ -77,9 +78,10 @@ struct Proxy<JString,
                                         std::is_same_v<T, std::string_view>>>
   static jstring ProxyAsArg(T s) {
     if constexpr (std::is_same_v<T, const char*>) {
-      return JniHelper::NewLocalString(s);
+      return LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s);
     } else {
-      return JniHelper::NewLocalString(s.data());
+      return LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(
+          s.data());
     }
   }
 

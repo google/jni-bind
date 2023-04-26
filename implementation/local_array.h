@@ -25,7 +25,7 @@
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/jni_array_helper.h"
-#include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/object.h"
@@ -87,7 +87,7 @@ class LocalArray
 
   ~LocalArray() {
     if (Base::object_ref_) {
-      JniHelper::DeleteLocalObject(Base::object_ref_);
+      LifecycleHelper<jobject, LifecycleType::LOCAL>::Delete(Base::object_ref_);
     }
   }
 };

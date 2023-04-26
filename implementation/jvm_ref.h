@@ -25,6 +25,7 @@
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_ref.h"
+#include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/method_ref.h"
@@ -187,8 +188,9 @@ class JvmRef : public JvmRefBase {
     auto& default_loaded_class_list = GetDefaultLoadedClassList();
     for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
          default_loaded_class_list) {
-      maybe_loaded_class_id->Reset(
-          [](jclass clazz) { JniHelper::ReleaseClass(clazz); });
+      maybe_loaded_class_id->Reset([](jclass clazz) {
+        LifecycleHelper<jobject, LifecycleType::GLOBAL>::Delete(clazz);
+      });
     }
     default_loaded_class_list.clear();
 

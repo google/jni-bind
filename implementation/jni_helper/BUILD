@@ -63,6 +63,7 @@ cc_test(
     srcs = ["jni_helper_test.cc"],
     deps = [
         ":jni_helper",
+        ":lifecycle_object",
         "//:jni_bind",
         "//:jni_dep",
         "//:jni_test",

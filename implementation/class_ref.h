@@ -27,6 +27,8 @@
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/invoke.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/lifecycle_object.h"
+#include "implementation/jni_helper/lifecycle_string.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/method.h"
@@ -71,8 +73,9 @@ class ClassRef {
       return return_value.LoadAndMaybeInit([]() {
         GetDefaultLoadedClassList().push_back(&return_value);
 
-        return JniHelper::PromoteLocalToGlobalClass(
-            JniHelper::FindClass(JniT::kName.data()));
+        return static_cast<jclass>(
+            LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
+                JniHelper::FindClass(JniT::kName.data())));
       });
     } else {
       // For non default classloader, storage in class member.
@@ -89,7 +92,8 @@ class ClassRef {
 
   static void MaybeReleaseClassRef() {
     class_ref_.Reset([](jclass maybe_loaded_class) {
-      JniHelper::ReleaseClass(maybe_loaded_class);
+      LifecycleHelper<jclass, LifecycleType::GLOBAL>::Delete(
+          maybe_loaded_class);
     });
   }
 
@@ -134,15 +138,18 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref) {
       JniHelper::GetMethodID(java_lang_class_loader_jclass, "loadClass",
                              "(Ljava/lang/String;)Ljava/lang/Class;");
 
-  jstring name_string = JniHelper::NewLocalString(name);
+  jstring name_string =
+      LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(name);
   jobject local_jclass_of_correct_loader =
       InvokeHelper<jobject, 1, false>::Invoke(object_ref_class_loader_jobject,
                                               nullptr, load_class_jmethod,
                                               name_string);
   jobject promote_jclass_of_correct_loader =
-      JniHelper::PromoteLocalToGlobalObject(local_jclass_of_correct_loader);
+      LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
+          local_jclass_of_correct_loader);
 
-  JniHelper::DeleteLocalObject(object_ref_class_loader_jobject);
+  LifecycleHelper<jobject, LifecycleType::LOCAL>::Delete(
+      object_ref_class_loader_jobject);
 
   return static_cast<jclass>(promote_jclass_of_correct_loader);
 }

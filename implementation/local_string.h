@@ -19,6 +19,7 @@
 
 #include "class_defs/java_lang_classes.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/lifecycle_string.h"
 #include "implementation/local_object.h"
 #include "implementation/promotion_mechanics.h"
 #include "implementation/ref_base.h"
@@ -59,7 +60,9 @@ class LocalString
  private:
   // Invoked through CRTP on dtor.
   void ClassSpecificDeleteObjectRef(jstring object_ref) {
-    JniHelper::DeleteLocalObject(object_ref);
+    if (Base::object_ref_) {
+      LifecycleHelper<jstring, LifecycleType::LOCAL>::Delete(object_ref);
+    }
   }
 };
 

@@ -19,6 +19,7 @@
 
 #include "class_defs/java_lang_classes.h"
 #include "implementation/global_object.h"
+#include "implementation/jni_helper/lifecycle_string.h"
 #include "implementation/local_string.h"
 #include "implementation/promotion_mechanics.h"
 #include "implementation/ref_base.h"
@@ -41,12 +42,14 @@ class GlobalString
       jstring>;
   using Base::Base;
 
+  using LifecycleT = LifecycleHelper<jstring, LifecycleType::GLOBAL>;
+
   GlobalString(GlobalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>
                    &&global_string)
       : Base(static_cast<jstring>(global_string.Release())) {}
 
   GlobalString(LocalString &&local_string)
-      : Base(JniHelper::PromoteLocalToGlobalString(local_string.Release())) {}
+      : Base(LifecycleT::Promote(local_string.Release())) {}
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
@@ -61,7 +64,7 @@ class GlobalString
 
   // Invoked through CRTP on dtor.
   void ClassSpecificDeleteObjectRef(jstring object_ref) {
-    JniHelper::DeleteGlobalString(object_ref);
+    LifecycleT::Delete(object_ref);
   }
 };
 

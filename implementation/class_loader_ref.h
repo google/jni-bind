@@ -25,6 +25,7 @@
 #include "implementation/global_object.h"
 #include "implementation/id.h"
 #include "implementation/jni_helper/jni_env.h"
+#include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm_ref.h"
 #include "implementation/local_object.h"
@@ -103,7 +104,7 @@ class ClassLoaderRef
     LocalObject obj =
         BuildLocalObject<class_v>(std::forward<Params>(params)...);
     jobject promoted_local =
-        JniHelper::PromoteLocalToGlobalObject(obj.Release());
+        LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(obj.Release());
 
     return GlobalObject<class_v,
                         ParentLoaderForClass<class_loader_v_, class_v>(),

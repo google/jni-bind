@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "implementation/jni_helper/lifecycle.h"
-
 #ifndef JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_OBJECT_H_
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_OBJECT_H_
 
+#include "implementation/jni_helper/lifecycle.h"
+
 namespace jni {
 
+// jobject.
 template <>
 struct LifecycleHelper<jobject, LifecycleType::LOCAL>
     : public LifecycleLocalBase<jobject> {
@@ -46,6 +47,15 @@ struct LifecycleHelper<jobject, LifecycleType::GLOBAL>
     return global_object;
   }
 };
+
+// jclass.
+template <>
+struct LifecycleHelper<jclass, LifecycleType::LOCAL>
+    : public LifecycleLocalBase<jclass> {};
+
+template <>
+struct LifecycleHelper<jclass, LifecycleType::GLOBAL>
+    : public LifecycleGlobalBase<jclass> {};
 
 }  // namespace jni
 

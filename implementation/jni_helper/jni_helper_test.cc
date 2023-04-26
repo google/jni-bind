@@ -18,6 +18,7 @@
 
 #include <gtest/gtest.h>
 #include "implementation/fake_test_constants.h"
+#include "implementation/jni_helper/lifecycle_object.h"
 #include "jni_bind.h"
 #include "jni_dep.h"
 #include "jni_test.h"
@@ -26,6 +27,8 @@
 namespace {
 
 using ::jni::JniHelper;
+using ::jni::LifecycleHelper;
+using ::jni::LifecycleType;
 using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
@@ -40,35 +43,7 @@ TEST_F(JniTest, JniHelper_CallsReleaseClass) {
       .WillOnce(testing::Return(Fake<jclass>()));
 
   EXPECT_EQ(JniHelper::FindClass("Test2"), Fake<jclass>());
-  JniHelper::ReleaseClass(Fake<jclass>());
-}
-
-TEST_F(JniTest, JniHelper_CallsNewObjectV) {
-  EXPECT_CALL(*env_, NewObjectV(Eq(Fake<jclass>()), Eq(Fake<jmethodID>()), _));
-  JniHelper::NewLocalObject(Fake<jclass>(), Fake<jmethodID>());
-}
-
-TEST_F(JniTest, JniHelper_CallsDeleteLocalObject) {
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>()));
-  JniHelper::DeleteLocalObject(Fake<jobject>());
-}
-
-TEST_F(JniTest, JniHelper_CallsNewLocalString) {
-  const char* fake_str{reinterpret_cast<const char*>(0xAAAAA)};
-  EXPECT_CALL(*env_, NewStringUTF(fake_str));
-  JniHelper::NewLocalString(fake_str);
-}
-
-TEST_F(JniTest, JniHelper_CallsGlobalRefOnProvidedLocalString) {
-  InSequence seq;
-  EXPECT_CALL(*env_, NewGlobalRef(Fake<jstring>()));
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>()));
-  JniHelper::PromoteLocalToGlobalString(Fake<jstring>());
-}
-
-TEST_F(JniTest, JniHelper_CallsDeleteGlobalRef) {
-  EXPECT_CALL(*env_, DeleteGlobalRef(Fake<jstring>()));
-  JniHelper::DeleteGlobalString(Fake<jstring>());
+  LifecycleHelper<jclass, LifecycleType::GLOBAL>::Delete(Fake<jclass>());
 }
 
 TEST_F(JniTest, JniHelper_CallsNewStringUTF) {

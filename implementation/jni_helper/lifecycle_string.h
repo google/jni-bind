@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "implementation/jni_helper/lifecycle.h"
-#include "implementation/jni_helper/lifecycle_object.h"
-
 #ifndef JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_STRING_H_
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_STRING_H_
+
+#include "implementation/jni_helper/lifecycle.h"
+#include "implementation/jni_helper/lifecycle_object.h"
 
 namespace jni {
 

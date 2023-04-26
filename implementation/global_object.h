@@ -17,7 +17,7 @@
 #define JNI_BIND_GLOBAL_OBJECT_H_
 
 #include "implementation/class.h"
-#include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/local_object.h"
 #include "implementation/object_ref.h"
@@ -46,15 +46,17 @@ class GlobalObject
                  JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
   using Base::Base;
 
+  using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
+
   // Constructs a new global object using the local object's default
   // constructor.
   explicit GlobalObject()
-      : GlobalObject(JniHelper::PromoteLocalToGlobalObject(
+      : GlobalObject(LifecycleT::Promote(
             LocalObject<class_v_, class_loader_v_, jvm_v_>{}.Release())) {}
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&& local_object)
-      : Base(JniHelper::PromoteLocalToGlobalObject(jobject{local_object})) {
+      : Base(LifecycleT::Promote(local_object.Release())) {
     static_assert(
         std::string_view(class_v.name_) == std::string_view(class_v_.name_),
         "You are attempting to initialise a LocalObject from another class "
@@ -73,18 +75,17 @@ class GlobalObject
   // Constructs a new object using arg based ctor.
   template <typename... Ts>
   explicit GlobalObject(Ts&&... ts)
-      : GlobalObject(JniHelper::PromoteLocalToGlobalObject(
-            LocalObject<class_v_, class_loader_v_, jvm_v_>{
+      : GlobalObject(
+            LifecycleT::Promote(LocalObject<class_v_, class_loader_v_, jvm_v_>{
                 std::forward<Ts>(ts)...}
-                .Release())) {}
-
+                                    .Release())) {}
 
   GlobalObject(const GlobalObject&) = delete;
   GlobalObject(GlobalObject&& rhs) = default;
 
   ~GlobalObject() {
     if (Base::object_ref_) {
-      JniHelper::DeleteGlobalObject(Base::object_ref_);
+      LifecycleT::Delete(Base::object_ref_);
     }
   }
 

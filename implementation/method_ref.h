@@ -28,6 +28,7 @@
 #include "implementation/jni_helper/invoke_static.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/method.h"
 #include "implementation/params.h"
@@ -91,9 +92,10 @@ struct OverloadRef {
           object, clazz, mthd,
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
     } else if constexpr (IdT::kIsConstructor) {
-      return ReturnProxied{JniHelper::NewLocalObject(
-          clazz, mthd,
-          Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
+      return ReturnProxied{
+          LifecycleHelper<jobject, LifecycleType::LOCAL>::Construct(
+              clazz, mthd,
+              Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
       return static_cast<ReturnProxied>(
           InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(

@@ -36,9 +36,6 @@ class JniHelper {
   // Note, if the object is polymorphic it may be a sub or superclass.
   static jclass GetObjectClass(jobject object);
 
-  // See FindClass and jni::Jvm.
-  static void ReleaseClass(jclass clazz);
-
   // Gets a method for a signature (no caching is performed).
   static inline jmethodID GetMethodID(jclass clazz, const char* method_name,
                                       const char* method_signature);
@@ -56,39 +53,7 @@ class JniHelper {
   static inline jfieldID GetStaticFieldID(jclass clazz, const char* field_name,
                                           const char* field_signature);
 
-  // Objects.
-  template <typename... CtorArgs>
-  static jobject NewLocalObject(jclass clazz, jmethodID ctor_method,
-                                CtorArgs&&... ctor_args);
-
-  static jobject NewLocalRef(jobject object);
-
-  static jobject NewGlobalRef(jobject object);
-
-  // Creates a new GlobalRef to |local_object|, then deletes the local
-  // reference.
-  static jobject PromoteLocalToGlobalObject(jobject local_object);
-
-  // Creates a new GlobalRef to |local_class|, then deletes the local
-  // reference.
-  static jclass PromoteLocalToGlobalClass(jclass local_class);
-
-  static void DeleteLocalObject(jobject object);
-
-  template <typename... CtorArgs>
-  static jobject NewGlobalObject(jclass clazz, jmethodID ctor_method,
-                                 CtorArgs&&... ctor_args);
-
-  static void DeleteGlobalObject(jobject obj_ref);
-
   // Strings.
-  static jstring NewLocalString(const char*);
-
-  // Creates a new GlobalRef to |local_string| , then deletes the local string.
-  static jstring PromoteLocalToGlobalString(jstring local_string);
-
-  static void DeleteGlobalString(jstring string);
-
   static const char* GetStringUTFChars(jstring str);
 
   static void ReleaseStringUTFChars(jstring str, const char* chars);
@@ -102,10 +67,6 @@ inline jclass JniHelper::FindClass(const char* name) {
 
 inline jclass JniHelper::GetObjectClass(jobject object) {
   return jni::JniEnv::GetEnv()->GetObjectClass(object);
-}
-
-inline void JniHelper::ReleaseClass(jclass clazz) {
-  jni::JniEnv::GetEnv()->DeleteGlobalRef(clazz);
 }
 
 jmethodID JniHelper::GetMethodID(jclass clazz, const char* method_name,
@@ -128,68 +89,6 @@ jfieldID JniHelper::GetFieldID(jclass clazz, const char* name,
 jfieldID JniHelper::GetStaticFieldID(jclass clazz, const char* name,
                                      const char* signature) {
   return jni::JniEnv::GetEnv()->GetStaticFieldID(clazz, name, signature);
-}
-
-template <typename... CtorArgs>
-jobject JniHelper::NewLocalObject(jclass clazz, jmethodID ctor_method,
-                                  CtorArgs&&... ctor_args) {
-  return jni::JniEnv::GetEnv()->NewObject(clazz, ctor_method, ctor_args...);
-}
-
-inline jobject JniHelper::NewLocalRef(jobject object) {
-  return jni::JniEnv::GetEnv()->NewLocalRef(object);
-}
-
-inline jobject JniHelper::NewGlobalRef(jobject object) {
-  return jni::JniEnv::GetEnv()->NewGlobalRef(object);
-}
-
-inline void JniHelper::DeleteLocalObject(jobject object) {
-  jni::JniEnv::GetEnv()->DeleteLocalRef(object);
-}
-
-inline jobject JniHelper::PromoteLocalToGlobalObject(jobject local_object) {
-  JNIEnv* const env = jni::JniEnv::GetEnv();
-  jobject global_object = env->NewGlobalRef(local_object);
-  env->DeleteLocalRef(local_object);
-  return global_object;
-}
-
-inline jclass JniHelper::PromoteLocalToGlobalClass(jclass local_class) {
-  return static_cast<jclass>(
-      static_cast<jobject>(PromoteLocalToGlobalObject(local_class)));
-}
-
-template <typename... CtorArgs>
-inline jobject JniHelper::NewGlobalObject(jclass clazz, jmethodID ctor_method,
-                                          CtorArgs&&... ctor_args) {
-  JNIEnv* const env = jni::JniEnv::GetEnv();
-  jobject local_object = NewLocalObject(env, clazz, ctor_method,
-                                        std::forward<CtorArgs>(ctor_args)...);
-  jobject global_object = env->NewGlobalRef(local_object);
-  env->DeleteLocalRef(local_object);
-
-  return global_object;
-}
-
-inline void JniHelper::DeleteGlobalObject(jobject obj_ref) {
-  jni::JniEnv::GetEnv()->DeleteGlobalRef(obj_ref);
-}
-
-inline jstring JniHelper::NewLocalString(const char* chars) {
-  return jni::JniEnv::GetEnv()->NewStringUTF(chars);
-}
-
-inline jstring JniHelper::PromoteLocalToGlobalString(jstring local_string) {
-  // jstrings follow the semantics of regular objects.
-  JNIEnv* const env = jni::JniEnv::GetEnv();
-  jstring global_string = static_cast<jstring>(env->NewGlobalRef(local_string));
-  env->DeleteLocalRef(local_string);
-  return global_string;
-}
-
-inline void JniHelper::DeleteGlobalString(jstring string) {
-  jni::JniEnv::GetEnv()->DeleteGlobalRef(string);
 }
 
 inline const char* JniHelper::GetStringUTFChars(jstring str) {

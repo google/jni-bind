@@ -21,7 +21,7 @@
 
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
-#include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/jvm_ref.h"
@@ -57,7 +57,7 @@ class LocalObject
 
   ~LocalObject() {
     if (Base::object_ref_) {
-      JniHelper::DeleteLocalObject(Base::object_ref_);
+      LifecycleHelper<jobject, LifecycleType::LOCAL>::Delete(Base::object_ref_);
     }
   }
 };
