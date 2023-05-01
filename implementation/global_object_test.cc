@@ -49,7 +49,7 @@ TEST_F(JniTest, GlobalObject_CallsNewAndDeleteOnNewObject) {
 
   GlobalObject<kClass> global_object{};
 
-  EXPECT_NE(jobject{global_object}, nullptr);
+  EXPECT_EQ(jobject{global_object}, AsGlobal(Fake<jobject>()));
 }
 
 TEST_F(JniTest, GlobalObject_ConstructsFromNonStandardConstructor) {
@@ -116,9 +116,11 @@ TEST_F(JniTest, GlobalObject_CallsDeleteOnceAfterAMoveConstruction) {
   static constexpr Class kClass{
       "com/google/CallsDeleteOnceAfterAMoveConstruction"};
   GlobalObject<kClass> global_object_1{AdoptGlobal{}, Fake<jobject>()};
-  EXPECT_NE(jobject{global_object_1}, nullptr);
+  EXPECT_EQ(jobject{global_object_1}, Fake<jobject>());
   GlobalObject<kClass> global_object_2{std::move(global_object_1)};
-  EXPECT_NE(jobject{global_object_2}, nullptr);
+
+  EXPECT_EQ(jobject{global_object_1}, nullptr);  // NOLINT
+  EXPECT_EQ(jobject{global_object_2}, Fake<jobject>());
 }
 
 TEST_F(JniTest, GlobalObject_FunctionsProperlyInSTLContainer) {
