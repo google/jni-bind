@@ -78,8 +78,8 @@ class ClassLoader : public Object {
         parent_loader_(parent_loader),
         supported_classes_(supported_class_set.supported_classes_) {}
 
-  // TODO (b/143908983): Loaders should not be able to supply classes that their
-  // parents do.
+  // TODO(b/143908983): Loaders should not be able to supply classes that their
+  //  parents do.
   explicit constexpr ClassLoader(
       const char* class_loader_name, ParentLoader_ parent_loader,
       SupportedClassSet<SupportedClasses_...> supported_class_set)

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef JNI_BIND_CLASS_LOADER_REF_H_
 #define JNI_BIND_CLASS_LOADER_REF_H_
 
@@ -100,7 +99,6 @@ class ClassLoaderRef
 
   template <const auto& class_v, typename... Params>
   [[nodiscard]] auto BuildGlobalObject(Params&&... params) {
-    // TODO(b/174256299): Promotion of locals to globals is clumsy.
     LocalObject obj =
         BuildLocalObject<class_v>(std::forward<Params>(params)...);
     jobject promoted_local =
