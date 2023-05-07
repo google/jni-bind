@@ -21,14 +21,8 @@
 
 using ::jni::Class;
 using ::jni::ClassLoader;
-using ::jni::Constructor;
-using ::jni::GlobalClassLoader;
 using ::jni::kDefaultClassLoader;
 using ::jni::LocalClassLoader;
-using ::jni::LocalObject;
-using ::jni::Method;
-using ::jni::Params;
-using ::jni::Return;
 using ::jni::SupportedClassSet;
 
 static constexpr Class kClassLoaderHelperClass{
