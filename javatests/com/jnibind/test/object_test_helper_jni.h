@@ -27,26 +27,29 @@ constexpr jni::Class kObjectClass {
 constexpr jni::Class kObjectTestHelperClass {
     "com/jnibind/test/ObjectTestHelper",
 
-    jni::Constructor<>{},
-    jni::Constructor{kObjectClass},
-    jni::Constructor<int>{},
-    jni::Constructor<int, int, int>{},
+  ::jni::Constructor<>{},
+  ::jni::Constructor{kObjectClass},
+  ::jni::Constructor<int>{},
+  ::jni::Constructor<int, int, int>{},
 
-    jni::Method{"returnNewObjectWithFieldSetToSum",
-      jni::Overload{
-        jni::Return{jni::Class{"com/jnibind/test/ObjectTestHelper"}},
-        jni::Params<int, int>{}
+   ::jni::Method{"returnNewObjectWithFieldSetToSum",
+     ::jni::Overload{
+        ::jni::Return{jni::Class{"com/jnibind/test/ObjectTestHelper"}},
+        ::jni::Params<int, int>{}
       },
-      jni::Overload{
-        jni::Return{jni::Class{"com/jnibind/test/ObjectTestHelper"}},
-        jni::Params{jni::Class{"com/jnibind/test/ObjectTestHelper"}}
+      ::jni::Overload{
+        ::jni::Return{jni::Class{"com/jnibind/test/ObjectTestHelper"}},
+        ::jni::Params{jni::Class{"com/jnibind/test/ObjectTestHelper"}}
       },
     },
 
-    jni::Field{"intVal1", int{}},
-    jni::Field{"intVal2", int{}},
-    jni::Field{"intVal3", int{}}
+    ::jni::Method{"foo", ::jni::Return{}, ::jni::Params{}},
+
+    ::jni::Field{"intVal1", int{}},
+    ::jni::Field{"intVal2", int{}},
+    ::jni::Field{"intVal3", int{}}
 };
+
 // clang-format on
 
 #endif  // JNI_BIND_JAVATESTS_COM_JNIBIND_TEST_H

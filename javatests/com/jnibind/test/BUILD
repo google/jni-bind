@@ -340,3 +340,35 @@ java_test(
         "@maven//:org_mockito_mockito_core_2_28_2",
     ],
 )
+
+################################################################################
+# Thread Test.
+################################################################################
+cc_library(
+    name = "thread_test_jni_impl",
+    srcs = ["thread_test_jni.cc"],
+    deps = [
+        ":object_test_helper_jni",
+        "//:jni_bind",
+    ],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libthread_test_jni.so",
+    linkshared = True,
+    deps = [":thread_test_jni_impl"],
+)
+
+java_test(
+    name = "ThreadTest",
+    testonly = 1,
+    srcs = ["ThreadTest.java"],
+    data = [":libthread_test_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    deps = [
+        ":object_test_helper",
+        "@maven//:com_google_truth_truth_1_1",
+        "@maven//:org_mockito_mockito_core_2_28_2",
+    ],
+)

@@ -24,22 +24,24 @@
 
 namespace {
 
-using jni::Class;
-using jni::ClassLoader;
-using jni::Jvm;
-using jni::JvmRef;
-using jni::kNullClassLoader;
-using jni::LocalObject;
-using jni::SupportedClassSet;
-using jni::ThreadGuard;
-using jni::test::AsGlobal;
+using ::jni::Class;
+using ::jni::ClassLoader;
+using ::jni::GlobalObject;
+using ::jni::Jvm;
+using ::jni::JvmRef;
+using ::jni::kNullClassLoader;
+using ::jni::LocalObject;
+using ::jni::PromoteToGlobal;
+using ::jni::SupportedClassSet;
+using ::jni::ThreadGuard;
+using ::jni::test::AsGlobal;
 using ::jni::test::Fake;
-using jni::test::JniTest;
-using jni::test::JniTestWithNoDefaultJvmRef;
-using jni::test::MockJvm;
-using testing::_;
-using testing::AnyNumber;
-using testing::Return;
+using ::jni::test::JniTest;
+using ::jni::test::JniTestWithNoDefaultJvmRef;
+using ::jni::test::MockJvm;
+using ::testing::_;
+using ::testing::AnyNumber;
+using ::testing::Return;
 
 TEST(Jni, JvmStaticClassLoaderLookupsWork) {
   static constexpr Class kClass1{"com/google/Class1"};
@@ -175,6 +177,10 @@ TEST(ThreadGuard, WontEffectDetachmentForPreexistingEnv) {
   ThreadGuard thread_guard_3 = jvm_ref.BuildThreadGuard();
 }
 
+// This behaviour is no longer tested! To guarantee GlobalObjects passed into
+// lambdas are supported, this happens on thread teardown, which is past
+// a point when it can be tested on main thread in unit testing.
+/*
 TEST(ThreadGuard, CallsAttachCurrentThreadIfEnvIsNotAttached) {
   MockJvm jvm;
   EXPECT_CALL(jvm, GetEnv).WillRepeatedly(Return(JNI_EDETACHED));
@@ -196,13 +202,34 @@ TEST(JvmThreadGuard, DetachesOnceForTheMainJvmRefAndThreadGuard) {
   JvmRef<jni::kDefaultJvm> jvm_ref{&jvm};
   ThreadGuard thread_guard_1 = jvm_ref.BuildThreadGuard();
 }
+*/
+
+constexpr jni::Class kObjectTestHelperClass{
+    "com/jnibind/test/ObjectTestHelper",
+
+    ::jni::Field{"intVal1", int{}},
+};
+
+TEST_F(JniTest, AllowsMoveCtorIntoLambdaWithThreadGuardUsage) {
+  GlobalObject<kObjectTestHelperClass> global_obj{PromoteToGlobal{},
+                                                  Fake<jobject>(1)};
+
+  std::thread worker{[gobj{std::move(global_obj)}]() mutable {
+    ThreadGuard thread_guard{};
+    gobj["intVal1"].Get();
+  }};
+
+  worker.join();
+}
 
 TEST(JvmThreadGuard, DetachesOnceForMultipleGuardsOnSingleThread) {
   jni::test::MockJvm jvm;
 
   EXPECT_CALL(jvm, GetEnv(_, _)).WillRepeatedly(Return(JNI_EDETACHED));
   EXPECT_CALL(jvm, AttachCurrentThread(_, _)).Times(1);
-  EXPECT_CALL(jvm, DetachCurrentThread).Times(1);
+
+  // See above uncommented test.
+  // EXPECT_CALL(jvm, DetachCurrentThread).Times(1);
 
   // Will call AttachCurrentThread once for the main thread (JvmRef) and once
   // for the constructed ThreadGuard.
@@ -273,10 +300,17 @@ TEST(JvmThreadGuard, UpdatesIndividualThreadsWithNewValues) {
   // simply to ensure writes are seen on the main thread (this is all but
   // guaranteed to happen anyways, but this is technically more friendly to the
   // compiler).
-  const std::vector<JNIEnv*> expected_output{
+  //
+  // Also, detachment is in TLS destruction, which isn't deterministic, however,
+  // what matters is that both complete, not really the order.
+  const std::vector<JNIEnv*> expected_output_1{
       reinterpret_cast<JNIEnv*>(0xBBBBBBBBBBB),
       reinterpret_cast<JNIEnv*>(0xCCCCCCCCCCC)};
-  EXPECT_EQ(observed_envs, expected_output);
+  const std::vector<JNIEnv*> expected_output_2{
+      reinterpret_cast<JNIEnv*>(0xCCCCCCCCCCC),
+      reinterpret_cast<JNIEnv*>(0xBBBBBBBBBBB)};
+  EXPECT_TRUE((observed_envs == expected_output_1 ||
+               observed_envs == expected_output_2));
 }
 
 }  // namespace

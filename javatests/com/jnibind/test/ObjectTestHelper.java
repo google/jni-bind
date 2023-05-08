@@ -17,7 +17,7 @@
 package com.jnibind.test;
 
 /** Simple object for use with RJni object tests. */
-final class ObjectTestHelper {
+public class ObjectTestHelper {
   public ObjectTestHelper() {
     intVal1 = 0;
     intVal2 = 0;
@@ -52,6 +52,8 @@ final class ObjectTestHelper {
     return new ObjectTestHelper(
         this.intVal1 + rhs.intVal1, this.intVal2 + rhs.intVal2, this.intVal3 + rhs.intVal3);
   }
+
+  public void foo() {}
 
   public boolean isEqualTo(ObjectTestHelper rhs) {
     return this.intVal1 == rhs.intVal1

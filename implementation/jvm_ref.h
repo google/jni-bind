@@ -39,12 +39,14 @@ template <const auto& jvm_v_ = kDefaultJvm>
 class JvmRef;
 
 class ThreadGuard;
+struct ThreadLocalGuardDestructor;
 
 // Helper for JvmRef to enforce correct sequencing of getting and setting
 // process level static fo JavaVM*.
 class JvmRefBase {
  protected:
   friend class ThreadGuard;
+  friend class ThreadLocalGuardDestructor;
 
   JvmRefBase(JavaVM* vm) { process_level_jvm_.store(vm); }
   ~JvmRefBase() { process_level_jvm_.store(nullptr); }
@@ -55,6 +57,27 @@ class JvmRefBase {
   static inline std::atomic<JavaVM*> process_level_jvm_ = nullptr;
 };
 
+// Designed to be the very last JniBind object to execute on the thread.
+// Objects passed by move for lambdas will be destructed after any contents
+// statements within their lambda, and `ThreadGuard` can't be moved into the
+// lambda because its construction will be on the host thread. This static
+// teardown guarantees a delayed destruction beyond any GlobalObject.
+struct ThreadLocalGuardDestructor {
+  bool detach_thread_when_all_guards_released_ = false;
+
+  // By calling this the compiler is obligated to perform initalisation.
+  void ForceDestructionOnThreadClose() {}
+
+  ~ThreadLocalGuardDestructor() {
+    if (detach_thread_when_all_guards_released_) {
+      JavaVM* jvm = JvmRefBase::GetJavaVm();
+      if (jvm) {
+        jvm->DetachCurrentThread();
+      }
+    }
+  }
+};
+
 // ThreadGuard attaches and detaches JNIEnv* objects on the creation of new
 // threads.  All new threads which want to use JNI Wrapper must hold a
 // ThreadGuard beyond the scope of all created objects.  If the ThreadGuard
@@ -63,9 +86,6 @@ class ThreadGuard {
  public:
   ~ThreadGuard() {
     thread_guard_count_--;
-    if (thread_guard_count_ == 0 && detach_thread_when_all_guards_released_) {
-      JvmRefBase::GetJavaVm()->DetachCurrentThread();
-    }
   }
 
   ThreadGuard(ThreadGuard&) = delete;
@@ -77,6 +97,8 @@ class ThreadGuard {
   // This constructor must *never* be called before a |JvmRef| has been
   // constructed. It depends on static setup from |JvmRef|.
   [[nodiscard]] ThreadGuard() {
+    thread_local_guard_destructor.ForceDestructionOnThreadClose();
+
     // Nested ThreadGuards should be permitted in the same way mutex locks are.
     thread_guard_count_++;
     if (thread_guard_count_ != 1) {
@@ -93,16 +115,15 @@ class ThreadGuard {
         metaprogramming::FunctionTraitsArg_t<decltype(&JavaVM::GetEnv), 1>;
     const int code =
         vm->GetEnv(reinterpret_cast<TypeForGetEnv>(&jni_env), JNI_VERSION_1_6);
+
     if (code != JNI_OK) {
       using TypeForAttachment = metaprogramming::FunctionTraitsArg_t<
           decltype(&JavaVM::AttachCurrentThread), 1>;
       vm->AttachCurrentThread(reinterpret_cast<TypeForAttachment>(&jni_env),
                               nullptr);
-      detach_thread_when_all_guards_released_ = true;
-    } else {
-      detach_thread_when_all_guards_released_ = false;
+      thread_local_guard_destructor.detach_thread_when_all_guards_released_ =
+          true;
     }
-
     // Why not store this locally to ThreadGuard?
     //
     // JNIEnv is thread local static, and the context an object is built from
@@ -115,7 +136,8 @@ class ThreadGuard {
 
  private:
   static inline thread_local int thread_guard_count_ = 0;
-  static inline thread_local bool detach_thread_when_all_guards_released_;
+  static inline thread_local ThreadLocalGuardDestructor
+      thread_local_guard_destructor{};
 };
 
 // Represents a runtime instance of a Java Virtual Machine.
