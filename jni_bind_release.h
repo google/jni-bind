@@ -15,7 +15,7 @@
  */
 
 /*******************************************************************************
- * JNI Bind Version 0.9.3.
+ * JNI Bind Version 0.9.4.
  * Alpha Public Release.
  ********************************************************************************
  * This header is the single header version which you can use to quickly test or
@@ -1038,11 +1038,7 @@ using BaseFilterWithDefault_t =
 
 namespace jni {
 
-/**
-// JniHelper is a shim to using a JNIenv object.
-// This extra layer of indirection allows for quickly shimming all JNICalls
-// (e.g. adding exception checking, logging each JNI call, etc).
-**/
+// Helper JNI shim for object, method, class, etc. lookup.
 class JniHelper {
  public:
   // Finds a class with "name".  Note, the classloader used is whatever is
@@ -1053,9 +1049,6 @@ class JniHelper {
   // Returns a local ref jclass for the given jobject.
   // Note, if the object is polymorphic it may be a sub or superclass.
   static jclass GetObjectClass(jobject object);
-
-  // See FindClass and jni::Jvm.
-  static void ReleaseClass(jclass clazz);
 
   // Gets a method for a signature (no caching is performed).
   static inline jmethodID GetMethodID(jclass clazz, const char* method_name,
@@ -1074,35 +1067,7 @@ class JniHelper {
   static inline jfieldID GetStaticFieldID(jclass clazz, const char* field_name,
                                           const char* field_signature);
 
-  // Objects.
-  template <typename... CtorArgs>
-  static jobject NewLocalObject(jclass clazz, jmethodID ctor_method,
-                                CtorArgs&&... ctor_args);
-
-  // Creates a new GlobalRef to |local_object|, then deletes the local
-  // reference.
-  static jobject PromoteLocalToGlobalObject(jobject local_object);
-
-  // Creates a new GlobalRef to |local_class|, then deletes the local
-  // reference.
-  static jclass PromoteLocalToGlobalClass(jclass local_class);
-
-  static void DeleteLocalObject(jobject object);
-
-  template <typename... CtorArgs>
-  static jobject NewGlobalObject(jclass clazz, jmethodID ctor_method,
-                                 CtorArgs&&... ctor_args);
-
-  static void DeleteGlobalObject(jobject obj_ref);
-
   // Strings.
-  static jstring NewLocalString(const char*);
-
-  // Creates a new GlobalRef to |local_string| , then deletes the local string.
-  static jstring PromoteLocalToGlobalString(jstring local_string);
-
-  static void DeleteGlobalString(jstring string);
-
   static const char* GetStringUTFChars(jstring str);
 
   static void ReleaseStringUTFChars(jstring str, const char* chars);
@@ -1116,10 +1081,6 @@ inline jclass JniHelper::FindClass(const char* name) {
 
 inline jclass JniHelper::GetObjectClass(jobject object) {
   return jni::JniEnv::GetEnv()->GetObjectClass(object);
-}
-
-inline void JniHelper::ReleaseClass(jclass clazz) {
-  jni::JniEnv::GetEnv()->DeleteGlobalRef(clazz);
 }
 
 jmethodID JniHelper::GetMethodID(jclass clazz, const char* method_name,
@@ -1142,69 +1103,6 @@ jfieldID JniHelper::GetFieldID(jclass clazz, const char* name,
 jfieldID JniHelper::GetStaticFieldID(jclass clazz, const char* name,
                                      const char* signature) {
   return jni::JniEnv::GetEnv()->GetStaticFieldID(clazz, name, signature);
-}
-
-template <typename... CtorArgs>
-jobject JniHelper::NewLocalObject(jclass clazz, jmethodID ctor_method,
-                                  CtorArgs&&... ctor_args) {
-  return jni::JniEnv::GetEnv()->NewObject(clazz, ctor_method, ctor_args...);
-}
-
-inline void JniHelper::DeleteLocalObject(jobject object) {
-  jni::JniEnv::GetEnv()->DeleteLocalRef(object);
-}
-
-inline jobject JniHelper::PromoteLocalToGlobalObject(jobject local_object) {
-  JNIEnv* const env = jni::JniEnv::GetEnv();
-  jobject global_object = env->NewGlobalRef(local_object);
-  env->DeleteLocalRef(local_object);
-  return global_object;
-}
-
-inline jclass JniHelper::PromoteLocalToGlobalClass(jclass local_class) {
-  return reinterpret_cast<jclass>(JniEnv::GetEnv()->NewGlobalRef(local_class));
-}
-
-template <typename... CtorArgs>
-inline jobject JniHelper::NewGlobalObject(jclass clazz, jmethodID ctor_method,
-                                          CtorArgs&&... ctor_args) {
-  // Note, this local ref handle created below is never leaked outside of this
-  // scope and should naturally be cleaned up when invoking JNI function
-  // completes.  That said, the maximum number of local refs can be extremely
-  // limited (the standard only requires 16), and if the caller doesn't
-  // explicitly reach for the performant option, it doesn't make sense to
-  // provide a micro optimisation of skipping the delete call below.
-  //
-  // If consumers want the most performant option, they should use LocalRef
-  // implementations when building their dynamic object.
-  JNIEnv* const env = jni::JniEnv::GetEnv();
-  jobject local_object = NewLocalObject(env, clazz, ctor_method,
-                                        std::forward<CtorArgs>(ctor_args)...);
-  jobject global_object = env->NewGlobalRef(local_object);
-
-  env->DeleteLocalRef(local_object);
-
-  return global_object;
-}
-
-inline void JniHelper::DeleteGlobalObject(jobject obj_ref) {
-  jni::JniEnv::GetEnv()->DeleteGlobalRef(obj_ref);
-}
-
-inline jstring JniHelper::NewLocalString(const char* chars) {
-  return jni::JniEnv::GetEnv()->NewStringUTF(chars);
-}
-
-inline jstring JniHelper::PromoteLocalToGlobalString(jstring local_string) {
-  // jstrings follow the semantics of regular objects.
-  JNIEnv* const env = jni::JniEnv::GetEnv();
-  jstring global_string = static_cast<jstring>(env->NewGlobalRef(local_string));
-  env->DeleteLocalRef(local_string);
-  return global_string;
-}
-
-inline void JniHelper::DeleteGlobalString(jstring string) {
-  jni::JniEnv::GetEnv()->DeleteGlobalRef(string);
 }
 
 inline const char* JniHelper::GetStringUTFChars(jstring str) {
@@ -1922,6 +1820,7 @@ static constexpr std::size_t kClassNotInLoaderSetIdx =
 // that classes are explicitly listed under a loader's class list.
 class DefaultClassLoader {
  public:
+  const char* name_ = "__JNI_BIND_DEFAULT_CLASS_LOADER__";
   std::tuple<> supported_classes_{};
 
   // Note, this will return true iff ignore_default_loader is true, but the
@@ -1964,6 +1863,8 @@ class DefaultClassLoader {
 // for most user defined classes.
 class NullClassLoader {
  public:
+  const char* name_ = "__JNI_BIND_NULL_CLASS_LOADER__";
+
   template <const auto&, bool ignore_default_loader = false>
   constexpr bool SupportedDirectlyOrIndirectly() const {
     return false;
@@ -1991,8 +1892,14 @@ class NullClassLoader {
   }
 };
 
-inline constexpr NullClassLoader kNullClassLoader;
-inline constexpr DefaultClassLoader kDefaultClassLoader;
+static constexpr NullClassLoader kNullClassLoader;
+static constexpr DefaultClassLoader kDefaultClassLoader;
+
+// DO NOT USE: This obviates a compiler bug for value based enablement on ctor.
+static constexpr auto kShadowNullClassLoader = kNullClassLoader;
+
+// DO NOT USE: This obviates a compiler bug for value based enablement on ctor.
+static constexpr auto kShadowDefaultClassLoader = kDefaultClassLoader;
 
 }  // namespace jni
 
@@ -2006,7 +1913,9 @@ inline constexpr Class kJavaLangObject{"java/lang/Object"};
 
 inline constexpr Class kJavaLangClassLoader{
     "java/lang/ClassLoader",
-    Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}}};
+    Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}},
+    Method{"toString", Return{jstring{}}, Params<>{}},
+};
 
 static constexpr Class kJavaLangString{
     "java/lang/String",
@@ -2096,6 +2005,95 @@ static constexpr auto StringConcatenate_v = StringConcatenate::value<Vs...>;
 
 }  // namespace jni::metaprogramming
 
+#include <string_view>
+#include <type_traits>
+#include <utility>
+
+#define STR(x) []() { return x; }
+
+namespace jni::metaprogramming {
+
+template <typename Identifier>
+using identifier_type = decltype(std::declval<Identifier>()());
+
+constexpr std::size_t ConstexprStrlen(const char* str) {
+  return str[0] == 0 ? 0 : ConstexprStrlen(str + 1) + 1;
+}
+
+struct StringAsTypeBase {};
+
+// Represents a string by embedding a sequence of characters in a type.
+template <char... chars>
+struct StringAsType : StringAsTypeBase {
+  static constexpr char static_chars[] = {chars..., 0};
+  static constexpr std::string_view chars_as_sv = {static_chars,
+                                                   sizeof...(chars)};
+};
+
+template <typename Identifier, std::size_t... I>
+constexpr auto LambdaToStr(Identifier id, std::index_sequence<I...>) {
+  return StringAsType<id()[I]...>{};
+}
+
+template <
+    typename Identifier,
+    std::enable_if_t<std::is_same_v<identifier_type<Identifier>, const char*>,
+                     int> = 0>
+constexpr auto LambdaToStr(Identifier id) {
+  return LambdaToStr(id, std::make_index_sequence<ConstexprStrlen(id())>{});
+}
+
+template <typename NameLambda>
+using LambdaStringToType = decltype(LambdaToStr(std::declval<NameLambda>()));
+
+}  // namespace jni::metaprogramming
+
+#include <utility>
+
+namespace jni {
+
+enum class LifecycleType {
+  LOCAL,
+  GLOBAL,
+  // WEAK, // not implemented yet.
+};
+
+template <typename Span, LifecycleType lifecycle_type>
+struct LifecycleHelper;
+
+// Shared implementation for local jobjects (jobject, jstring).
+template <typename Span>
+struct LifecycleLocalBase {
+  static inline void Delete(Span object) {
+    JniEnv::GetEnv()->DeleteLocalRef(object);
+  }
+
+  static inline Span NewReference(Span object) {
+    return static_cast<Span>(JniEnv::GetEnv()->NewLocalRef(object));
+  }
+};
+
+// Shared implementation for global jobjects (jobject, jstring).
+template <typename Span>
+struct LifecycleGlobalBase {
+  static inline Span Promote(Span object) {
+    jobject ret = JniEnv::GetEnv()->NewGlobalRef(object);
+    JniEnv::GetEnv()->DeleteLocalRef(object);
+
+    return static_cast<Span>(ret);
+  }
+
+  static inline void Delete(Span object) {
+    JniEnv::GetEnv()->DeleteGlobalRef(object);
+  }
+
+  static inline Span NewReference(Span object) {
+    return static_cast<Span>(JniEnv::GetEnv()->NewGlobalRef(object));
+  }
+};
+
+}  // namespace jni
+
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -2105,31 +2103,56 @@ namespace jni {
 inline constexpr struct NoClassLoader {
 } kNoClassLoaderSpecified;
 
-// Represents the compile time info we have about a class loader. In general,
-// this is just the list of classes we expect to be loadable from a class loader
+// This is just the list of classes we expect to be loadable from a class loader
 // and its parent loader.
 //
 // Classes from different loaders are typically incompatible, but Class loaders
 // delegate classes that they cannot directly load to their parent loaders, so
 // classes attached to two different class loaders will still be compatible if
 // they were loaded by a shared parent loader.
+//
+// To annotate a class in a function or field declaration, use `LoadedBy`.
 template <typename ParentLoader_, typename... SupportedClasses_>
-class ClassLoader {
+class ClassLoader : public Object {
  public:
   const ParentLoader_ parent_loader_;
   const std::tuple<SupportedClasses_...> supported_classes_;
 
-  // TODO (b/143908983): Loaders should not be able to supply classes that their
-  // parents do.
+  explicit constexpr ClassLoader(const char* class_loader_name)
+      : Object(class_loader_name) {}
+
+  // Default classloader (no name needed).
   explicit constexpr ClassLoader(
       ParentLoader_ parent_loader,
       SupportedClassSet<SupportedClasses_...> supported_class_set)
-      : parent_loader_(parent_loader),
+      __attribute__((
+          enable_if(parent_loader == kDefaultClassLoader,
+                    "You must provide a name for classloaders (except "
+                    "kNullClassLoader and kDefaultClassLoader)")))
+      : Object("__JNI_BIND_DEFAULT_CLASS_LOADER__"),
+        parent_loader_(parent_loader),
         supported_classes_(supported_class_set.supported_classes_) {}
 
+  // Null classloader (no name needed).
   explicit constexpr ClassLoader(
+      ParentLoader_ parent_loader,
       SupportedClassSet<SupportedClasses_...> supported_class_set)
-      : parent_loader_(kDefaultClassLoader),
+      __attribute__((
+          enable_if(parent_loader == kNullClassLoader,
+                    "You must provide a name for classloaders (except "
+                    "kNullClassLoader and kDefaultClassLoader)")))
+      : Object("__JNI_BIND_NULL_CLASS_LOADER__"),
+        parent_loader_(parent_loader),
+        supported_classes_(supported_class_set.supported_classes_) {}
+
+  // TODO(b/143908983): Loaders should not be able to supply classes that their
+  //  parents do.
+  explicit constexpr ClassLoader(
+      const char* class_loader_name, ParentLoader_ parent_loader,
+      SupportedClassSet<SupportedClasses_...> supported_class_set)
+
+      : Object(class_loader_name),
+        parent_loader_(parent_loader),
         supported_classes_(supported_class_set.supported_classes_) {}
 
   bool constexpr operator==(
@@ -2194,6 +2217,12 @@ class ClassLoader {
         cur_idx + 1);
   }
 };
+
+// Note: Null is chosen, not default, because LoadedBy requires a syntax like
+// LoadedBy{ClassLoader{"kClass"}} (using the CTAD loader type below), but
+// we want to prevent explicit usage of a default loader (as it makes no sense).
+ClassLoader(const char*)
+    -> ClassLoader<std::decay_t<decltype(kNullClassLoader)>>;
 
 template <typename ParentLoader_, typename... SupportedClasses_>
 ClassLoader(ParentLoader_ parent_loader,
@@ -2301,6 +2330,33 @@ static constexpr bool ValsEqual_cr_v =
 
 }  // namespace jni::metaprogramming
 
+#include <string_view>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+template <char sought_char, char new_char>
+struct Replace {
+  template <const std::string_view& str, typename IndexSequence>
+  struct Helper;
+
+  template <const std::string_view& str, std::size_t... Is>
+  struct Helper<str, std::index_sequence<Is...>> {
+    static constexpr std::string_view val = StringAsType<(
+        str[Is] == sought_char ? new_char : str[Is])...>::chars_as_sv;
+  };
+
+  template <const std::string_view& str>
+  static constexpr std::string_view val =
+      Helper<str, std::make_index_sequence<str.length()>>::val;
+};
+
+template <const std::string_view& str, char sought_char, char new_char>
+static constexpr auto Replace_v =
+    Replace<sought_char, new_char>::template val<str>;
+
+}  // namespace jni::metaprogramming
+
 namespace jni::metaprogramming {
 
 template <std::size_t repeat_cnt>
@@ -2395,6 +2451,47 @@ struct Constants {
 };
 
 }  // namespace jni::metaprogramming
+
+namespace jni {
+
+// jobject.
+template <>
+struct LifecycleHelper<jobject, LifecycleType::LOCAL>
+    : public LifecycleLocalBase<jobject> {
+  template <typename... CtorArgs>
+  static inline jobject Construct(jclass clazz, jmethodID ctor_method,
+                                  CtorArgs&&... ctor_args) {
+    return JniEnv::GetEnv()->NewObject(clazz, ctor_method, ctor_args...);
+  }
+};
+
+template <>
+struct LifecycleHelper<jobject, LifecycleType::GLOBAL>
+    : public LifecycleGlobalBase<jobject> {
+  template <typename... CtorArgs>
+  static inline jobject Construct(jclass clazz, jmethodID ctor_method,
+                                  CtorArgs&&... ctor_args) {
+    using Local = LifecycleHelper<jobject, LifecycleType::LOCAL>;
+
+    jobject local_object = Local::Construct(
+        clazz, ctor_method, std::forward<CtorArgs&&>(ctor_args)...);
+    jobject global_object = Promote(local_object);
+    Local::Delete(local_object);
+
+    return global_object;
+  }
+};
+
+// jclass.
+template <>
+struct LifecycleHelper<jclass, LifecycleType::LOCAL>
+    : public LifecycleLocalBase<jclass> {};
+
+template <>
+struct LifecycleHelper<jclass, LifecycleType::GLOBAL>
+    : public LifecycleGlobalBase<jclass> {};
+
+}  // namespace jni
 
 #include <string_view>
 
@@ -2757,6 +2854,61 @@ static constexpr std::string_view kInit{"<init>"};
 
 }  // namespace jni
 
+namespace jni {
+
+struct LoaderTag {};
+
+// Annotation for use in function and field declarations. When used as argument
+// the underlying object must come from the same class loader.
+template <typename ClassLoaderT, typename ClassT>
+struct LoadedBy : LoaderTag {
+  const ClassLoaderT class_loader_;
+  const ClassT class_;
+
+  static_assert(
+      !std::is_same_v<ClassLoaderT, ClassLoader<DefaultClassLoader>>,
+      "LoadedBy is not required for the default loader (it's implicit).");
+
+  constexpr LoadedBy(ClassLoaderT class_loader, ClassT clazz)
+      : class_loader_(class_loader), class_(clazz) {}
+};
+
+template <typename ClassLoaderT, typename ClassT>
+LoadedBy(ClassLoaderT, ClassT) -> LoadedBy<ClassLoaderT, ClassT>;
+
+template <typename T>
+struct IsLoadedBy {
+  static constexpr bool val = false;
+};
+
+template <typename ClassLoaderT, typename ClassT>
+struct IsLoadedBy<LoadedBy<ClassLoaderT, ClassT>> {
+  static constexpr bool val = true;
+};
+
+template <typename T>
+static constexpr bool IsLoadedBy_v = IsLoadedBy<T>::val;
+
+template <typename T>
+constexpr auto StripClassFromLoadedBy(T val) {
+  if constexpr (IsLoadedBy_v<T>) {
+    return val.class_;
+  } else {
+    return val;
+  }
+}
+
+template <typename T>
+constexpr auto StripClassLoaderFromLoadedBy(T val) {
+  if constexpr (IsLoadedBy_v<T>) {
+    return val.class_loader_;
+  } else {
+    return val;
+  }
+}
+
+}  // namespace jni
+
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -3014,6 +3166,33 @@ template <template <typename> class Container, typename T>
 static constexpr bool Detect_v = Detect<Container>::template val<T>;
 
 }  // namespace jni::metaprogramming
+
+namespace jni {
+
+template <>
+struct LifecycleHelper<jstring, LifecycleType::LOCAL>
+    : public LifecycleLocalBase<jstring> {
+  static inline jstring Construct(const char* chars) {
+    return jni::JniEnv::GetEnv()->NewStringUTF(chars);
+  }
+};
+
+template <>
+struct LifecycleHelper<jstring, LifecycleType::GLOBAL>
+    : public LifecycleGlobalBase<jstring> {
+  template <typename... CtorArgs>
+  static inline jstring Construct(const char* chars) {
+    using Local = LifecycleHelper<jstring, LifecycleType::LOCAL>;
+
+    jstring local_string = Local::Construct(chars);
+    jstring global_string = Promote(local_string);
+    Local::Delete(local_string);
+
+    return global_string;
+  }
+};
+
+}  // namespace jni
 
 #include <utility>
 
@@ -3355,7 +3534,7 @@ struct SelectorStaticInfo {
   // Strangely, the compiler refuses to peer through Val and loses the
   // constexpr-ness (i.e std::decay_t<decltype(Val())>; is not a constant
   // expression).
-  static constexpr inline const auto& Val() {
+  static constexpr inline auto Val() {
     if constexpr (Selector::kRank == 0) {
       return Selector::Val();
     } else {
@@ -3530,21 +3709,27 @@ struct JniT {
                 : (class_loader_idx_ == kNoIdx ? true : false));
   }
 
-  static constexpr const auto& GetClassLoader() {
-    if constexpr (class_loader_idx_ != kNoIdx) {
-      return std::get<class_loader_idx_>(jvm_v_.class_loaders_);
+  static constexpr auto GetClass() {
+    if constexpr (class_idx_ != kNoIdx) {
+      return StripClassFromLoadedBy(
+          std::get<class_idx_>(GetClassLoader().supported_classes_));
     } else {
-      return class_loader_v_;
+      return StripClassFromLoadedBy(class_v_);
     }
   }
 
-  static constexpr const auto& GetClass() {
-    if constexpr (class_idx_ != kNoIdx) {
-      return std::get<class_idx_>(GetClassLoader().supported_classes_);
+  static constexpr auto GetClassLoader() {
+    if constexpr (class_loader_idx_ != kNoIdx) {
+      return StripClassLoaderFromLoadedBy(
+          std::get<class_loader_idx_>(jvm_v_.class_loaders_));
     } else {
-      return class_v_;
+      return StripClassLoaderFromLoadedBy(class_loader_v_);
     }
   }
+
+  static constexpr std::string_view kName{GetClass().name_};
+  static constexpr std::string_view kNameWithDots{
+      metaprogramming::Replace_v<kName, '/', '.'>};
 
   static constexpr const auto& GetJvm() { return jvm_v_; }
 
@@ -3672,7 +3857,7 @@ class ArrayView {
     using reference = SpanType&;
 
     Iterator(SpanType* ptr, std::size_t size, std::size_t idx)
-        : ptr_(ptr), size_(size), idx_(idx) {}
+        : size_(size), ptr_(ptr), idx_(idx) {}
 
     Iterator& operator++() {
       idx_++;
@@ -4068,13 +4253,14 @@ class ClassRef {
       return return_value.LoadAndMaybeInit([]() {
         GetDefaultLoadedClassList().push_back(&return_value);
 
-        return JniHelper::PromoteLocalToGlobalClass(
-            JniHelper::FindClass(JniT::GetClass().name_));
+        return static_cast<jclass>(
+            LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
+                JniHelper::FindClass(JniT::kName.data())));
       });
     } else {
       // For non default classloader, storage in class member.
       return class_ref_.LoadAndMaybeInit([=]() {
-        return LoadClassFromObject(JniT::GetClass().name_,
+        return LoadClassFromObject(JniT::kNameWithDots.data(),
                                    optional_object_to_build_loader_from);
       });
     }
@@ -4086,7 +4272,8 @@ class ClassRef {
 
   static void MaybeReleaseClassRef() {
     class_ref_.Reset([](jclass maybe_loaded_class) {
-      JniHelper::ReleaseClass(maybe_loaded_class);
+      LifecycleHelper<jclass, LifecycleType::GLOBAL>::Delete(
+          maybe_loaded_class);
     });
   }
 
@@ -4131,15 +4318,18 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref) {
       JniHelper::GetMethodID(java_lang_class_loader_jclass, "loadClass",
                              "(Ljava/lang/String;)Ljava/lang/Class;");
 
-  jstring name_string = JniHelper::NewLocalString(name);
+  jstring name_string =
+      LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(name);
   jobject local_jclass_of_correct_loader =
       InvokeHelper<jobject, 1, false>::Invoke(object_ref_class_loader_jobject,
                                               nullptr, load_class_jmethod,
                                               name_string);
   jobject promote_jclass_of_correct_loader =
-      JniHelper::PromoteLocalToGlobalObject(local_jclass_of_correct_loader);
+      LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
+          local_jclass_of_correct_loader);
 
-  JniHelper::DeleteLocalObject(object_ref_class_loader_jobject);
+  LifecycleHelper<jobject, LifecycleType::LOCAL>::Delete(
+      object_ref_class_loader_jobject);
 
   return static_cast<jclass>(promote_jclass_of_correct_loader);
 }
@@ -4441,7 +4631,7 @@ class LocalArray
 
   ~LocalArray() {
     if (Base::object_ref_) {
-      JniHelper::DeleteLocalObject(Base::object_ref_);
+      LifecycleHelper<jobject, LifecycleType::LOCAL>::Delete(Base::object_ref_);
     }
   }
 };
@@ -4478,7 +4668,8 @@ template <typename JniT_, IdType kIdType_, std::size_t idx = kNoIdx,
 struct Id {
   using JniT = JniT_;
   static constexpr IdType kIdType = kIdType_;
-  static constexpr auto& root = JniT::GetClass();
+
+  static constexpr auto Class() { return JniT::GetClass(); }
 
   static constexpr std::size_t kIdx = idx;
   static constexpr std::size_t kSecondaryIdx = secondary_idx;
@@ -4502,72 +4693,73 @@ struct Id {
                        (kIdxToChange == 1 ? kNewValue : secondary_idx),
                        (kIdxToChange == 2 ? kNewValue : tertiary_idx)>;
 
-  static constexpr const auto& Val() {
+  static constexpr auto Val() {
     if constexpr (kIdType == IdType::CLASS) {
-      return root;
+      return Class();
     } else if constexpr (kIdType == IdType::STATIC_FIELD) {
       static_assert(idx != kNoIdx);
-      return std::get<idx>(root.static_.fields_).raw_;
+      return std::get<idx>(Class().static_.fields_).raw_;
     } else if constexpr (kIdType == IdType::STATIC_OVERLOAD_SET) {
       // Overload (no such thing as static constructor).
       static_assert(idx != kNoIdx);
-      return std::get<idx>(root.static_.methods_);
+      return std::get<idx>(Class().static_.methods_);
     } else if constexpr (kIdType == IdType::STATIC_OVERLOAD) {
       // Overload (no such thing as static constructor).
       static_assert(idx != kNoIdx);
       return std::get<secondary_idx>(
-          std::get<idx>(root.static_.methods_).invocations_);
+          std::get<idx>(Class().static_.methods_).invocations_);
     } else if constexpr (kIdType == IdType::STATIC_OVERLOAD_PARAM) {
       // Overload.
       if constexpr (tertiary_idx == kNoIdx) {
         // Return.
         return std::get<secondary_idx>(
-                   std::get<idx>(root.static_.methods_).invocations_)
+                   std::get<idx>(Class().static_.methods_).invocations_)
             .return_.raw_;
       } else {
         return std::get<tertiary_idx>(
             std::get<secondary_idx>(
-                std::get<idx>(root.static_.methods_).invocations_)
+                std::get<idx>(Class().static_.methods_).invocations_)
                 .params_.values_);
       }
     } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
       if constexpr (idx == kNoIdx) {
         // Constructor.
-        return root.constructors_;
+        return Class().constructors_;
       } else {
         // Overload.
-        return std::get<idx>(root.methods_);
+        return std::get<idx>(Class().methods_);
       }
     } else if constexpr (kIdType == IdType::OVERLOAD) {
       if constexpr (idx == kNoIdx) {
         // Constructor.
-        return std::get<secondary_idx>(root.constructors_);
+        return std::get<secondary_idx>(Class().constructors_);
       } else {
         // Overload.
         return std::get<secondary_idx>(
-            std::get<idx>(root.methods_).invocations_);
+            std::get<idx>(Class().methods_).invocations_);
       }
     } else if constexpr (kIdType == IdType::OVERLOAD_PARAM) {
       if constexpr (idx == kNoIdx) {
         // Constructor.
         if constexpr (tertiary_idx == kNoIdx) {
           // Return.
-          return root;
+          return Class();
         } else {
           // Overload return.
           return std::get<tertiary_idx>(
-              std::get<secondary_idx>(root.constructors_).params_.values_);
+              std::get<secondary_idx>(Class().constructors_).params_.values_);
         }
       } else {
         // Overload.
         if constexpr (tertiary_idx == kNoIdx) {
           // Return.
           return std::get<secondary_idx>(
-                     std::get<idx>(root.methods_).invocations_)
+                     std::get<idx>(Class().methods_).invocations_)
               .return_.raw_;
         } else {
           return std::get<tertiary_idx>(
-              std::get<secondary_idx>(std::get<idx>(root.methods_).invocations_)
+              std::get<secondary_idx>(
+                  std::get<idx>(Class().methods_).invocations_)
                   .params_.values_);
         }
       }
@@ -4576,71 +4768,31 @@ struct Id {
       static_assert(idx != kNoIdx);
 
       return std::get<secondary_idx>(
-          std::get<idx>(root.static_methods_).invocations_);
+          std::get<idx>(Class().static_methods_).invocations_);
     } else if constexpr (kIdType == IdType::FIELD) {
       static_assert(idx != kNoIdx);
-      return std::get<idx>(root.fields_).raw_;
+      return std::get<idx>(Class().fields_).raw_;
     }
   }
 
   // Returns root for constructor, else return's "raw_" member.
   static constexpr auto Materialize() {
     if constexpr (kIdType == IdType::STATIC_OVERLOAD) {
-      static_assert(kIdx != kNoIdx);
-
-      // Overload return value.
-      return std::get<secondary_idx>(
-                 std::get<idx>(root.static_.methods_).invocations_)
-          .return_.raw_;
-    } else if constexpr (kIdType == IdType::STATIC_OVERLOAD_PARAM) {
-      static_assert(kIdx != kNoIdx);
-
-      if constexpr (tertiary_idx == kNoIdx) {
-        // Overload return value.
-        return std::get<secondary_idx>(
-                   std::get<idx>(root.static_.methods_).invocations_)
-            .return_.raw_;
-      } else {
-        // Overload.
-        return std::get<tertiary_idx>(
-            std::get<secondary_idx>(
-                std::get<idx>(root.static_.methods_).invocations_)
-                .params_.values_);
-      }
-    }
-
-    else if constexpr (kIdType == IdType::OVERLOAD) {
+      return Val().return_.raw_;
+    } else if constexpr (kIdType == IdType::OVERLOAD) {
       if constexpr (kIdx == kNoIdx) {
         // Constructor.
-        return root;
+        return Class();
       } else {
         // Overload return value.
-        return std::get<secondary_idx>(
-                   std::get<idx>(root.methods_).invocations_)
-            .return_.raw_;
+        return Val().return_.raw_;
       }
-    } else if constexpr (kIdType == IdType::OVERLOAD_PARAM) {
-      if constexpr (kIdx == kNoIdx) {
-        // Constructor.
-        return root;
-      } else if constexpr (tertiary_idx == kNoIdx) {
-        // Overload return value.
-        return std::get<secondary_idx>(
-                   std::get<idx>(root.methods_).invocations_)
-            .return_.raw_;
-      } else {
-        // Overload.
-        return std::get<tertiary_idx>(
-            std::get<secondary_idx>(std::get<idx>(root.methods_).invocations_)
-                .params_.values_);
-      }
-    } else if constexpr (kIdType == IdType::FIELD) {
-      return std::get<kIdx>(root.fields_).raw_;
-    } else if constexpr (kIdType == IdType::STATIC_FIELD) {
-      return std::get<kIdx>(root.static_.fields_).raw_;
-    } else {
+    } else if constexpr (kIdType == IdType::STATIC_OVERLOAD_SET ||
+                         kIdType == IdType::OVERLOAD_SET) {
       // Not implemented.
       return Void{};
+    } else {
+      return Val();
     }
   }
 
@@ -4655,15 +4807,16 @@ struct Id {
   using CDecl = CDecl_t<VoidIfVoid_t<MaterializeT>>;
 
   static constexpr std::size_t kRank = Rankifier::Rank(Val());
-  static constexpr Return kObjectWhenConstructed{root};
 
   static constexpr const char* Name() {
-    if constexpr (kIdType == IdType::STATIC_OVERLOAD_SET) {
+    if constexpr (kIdType == IdType::CLASS) {
+      return Class().name_;
+    } else if constexpr (kIdType == IdType::STATIC_OVERLOAD_SET) {
       return Val().name_;
     } else if constexpr (kIdType == IdType::STATIC_OVERLOAD) {
       return Id<JniT, IdType::STATIC_OVERLOAD_SET, idx, secondary_idx>::Name();
     } else if constexpr (kIdType == IdType::STATIC_FIELD) {
-      return std::get<idx>(root.static_.fields_).name_;
+      return std::get<idx>(Class().static_.fields_).name_;
     } else if constexpr (kIdType == IdType::OVERLOAD_SET && idx == kNoIdx) {
       return "<init>";
     } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
@@ -4671,11 +4824,14 @@ struct Id {
     } else if constexpr (kIdType == IdType::OVERLOAD) {
       return Id<JniT, IdType::OVERLOAD_SET, idx, secondary_idx>::Name();
     } else if constexpr (kIdType == IdType::FIELD) {
-      return std::get<idx>(root.fields_).name_;
+      return std::get<idx>(Class().fields_).name_;
     } else {
       return "NO_NAME";
     }
   }
+  static constexpr std::string_view kName = Name();
+  static constexpr std::string_view kNameUsingDots =
+      metaprogramming::Replace_v<kName, '/', '.'>;
 
   static constexpr std::size_t NumParams() {
     if constexpr (kIdType == IdType::OVERLOAD ||
@@ -5618,6 +5774,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, true> {
 namespace jni {
 
 class LocalString;
+class GlobalString;
 
 template <typename SpanType, std::size_t kRank, const auto& class_v_,
           const auto& class_loader_v_, const auto& jvm_v_>
@@ -5638,8 +5795,8 @@ struct Proxy<JString,
     using type = LocalString;
   };
 
-  using AsArg =
-      std::tuple<std::string, jstring, char*, const char*, std::string_view>;
+  using AsArg = std::tuple<std::string, jstring, char*, const char*,
+                           std::string_view, RefBaseTag<jstring>>;
 
   template <typename Id>
   using AsReturn = typename Helper<Id, Id::kRank>::type;
@@ -5650,7 +5807,8 @@ struct Proxy<JString,
       IsConvertibleKey<T>::template value<jstring> ||
       IsConvertibleKey<T>::template value<char*> ||
       IsConvertibleKey<T>::template value<const char*> ||
-      IsConvertibleKey<T>::template value<std::string_view>;
+      IsConvertibleKey<T>::template value<std::string_view> ||
+      std::is_same_v<T, LocalString> || std::is_same_v<T, GlobalString>;
 
   // These leak local instances of strings.  Usually, RAII mechanisms would
   // correctly release local instances, but here we are stripping that so it can
@@ -5664,10 +5822,25 @@ struct Proxy<JString,
                                         std::is_same_v<T, std::string_view>>>
   static jstring ProxyAsArg(T s) {
     if constexpr (std::is_same_v<T, const char*>) {
-      return JniHelper::NewLocalString(s);
+      return LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s);
     } else {
-      return JniHelper::NewLocalString(s.data());
+      return LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(
+          s.data());
     }
+  }
+
+  template <typename T,
+            typename = std::enable_if_t<std::is_same_v<T, GlobalString> ||
+                                        std::is_same_v<T, LocalString>>>
+  static jstring ProxyAsArg(T& t) {
+    return jstring{t};
+  }
+
+  template <typename T,
+            typename = std::enable_if_t<std::is_same_v<T, GlobalString> ||
+                                        std::is_same_v<T, LocalString>>>
+  static jstring ProxyAsArg(T&& t) {
+    return t.Release();
   }
 };
 
@@ -5872,7 +6045,7 @@ struct Proxy<JObject,
              typename std::enable_if_t<std::is_same_v<JObject, jobject>>>
     : public ProxyBase<jobject> {
   using AsDecl = std::tuple<Object>;
-  using AsArg = std::tuple<jobject, RefBaseTag<jobject>>;
+  using AsArg = std::tuple<jobject, RefBaseTag<jobject>, LoaderTag>;
 
   template <typename InputParamSelectionT, typename T>
   struct ContextualViabilityHelper {
@@ -5896,9 +6069,10 @@ struct Proxy<JObject,
   template <typename Id>
   struct Helper {
     static constexpr auto kClass{Id::Val()};
+    static constexpr auto kClassLoader{Id::JniT::GetClassLoader()};
 
     // TODO(b/174272629): Class loaders should also be enforced.
-    using type = LocalObject<kClass, kDefaultClassLoader, kDefaultJvm>;
+    using type = LocalObject<kClass, kClassLoader, kDefaultJvm>;
   };
 
   template <typename Id>
@@ -6137,7 +6311,6 @@ struct OverloadRef {
       if constexpr (IdT::kIsStatic) {
         return jni::JniHelper::GetStaticMethodID(clazz, IdT::Name(),
                                                  Signature_v<IdT>.data());
-
       } else {
         return jni::JniHelper::GetMethodID(clazz, IdT::Name(),
                                            Signature_v<IdT>.data());
@@ -6157,9 +6330,10 @@ struct OverloadRef {
           object, clazz, mthd,
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
     } else if constexpr (IdT::kIsConstructor) {
-      return ReturnProxied{JniHelper::NewLocalObject(
-          clazz, mthd,
-          Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
+      return ReturnProxied{
+          LifecycleHelper<jobject, LifecycleType::LOCAL>::Construct(
+              clazz, mthd,
+              Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
       return static_cast<ReturnProxied>(
           InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(
@@ -6253,6 +6427,28 @@ class FieldRef {
 
 }  // namespace jni
 
+namespace jni::metaprogramming {
+
+template <char sought>
+struct StringContains {
+  template <const std::string_view& str, typename IndexSequence>
+  struct Helper;
+
+  template <const std::string_view& str, std::size_t... Is>
+  struct Helper<str, std::index_sequence<Is...>> {
+    static constexpr bool val = ((str[Is] == sought) || ...);
+  };
+
+  template <const std::string_view& str>
+  static constexpr bool val =
+      Helper<str, std::make_index_sequence<str.length()>>::val;
+};
+
+template <const std::string_view& str, char sought>
+static constexpr bool StringContains_v =
+    StringContains<sought>::template val<str>;
+
+}  // namespace jni::metaprogramming
 
 #include <limits>
 #include <type_traits>
@@ -6359,16 +6555,18 @@ struct OverloadSelector {
 
 namespace jni {
 
-template <const auto& jvm_v_>
+template <const auto& jvm_v_ = kDefaultJvm>
 class JvmRef;
 
 class ThreadGuard;
+struct ThreadLocalGuardDestructor;
 
 // Helper for JvmRef to enforce correct sequencing of getting and setting
 // process level static fo JavaVM*.
 class JvmRefBase {
  protected:
   friend class ThreadGuard;
+  friend class ThreadLocalGuardDestructor;
 
   JvmRefBase(JavaVM* vm) { process_level_jvm_.store(vm); }
   ~JvmRefBase() { process_level_jvm_.store(nullptr); }
@@ -6379,6 +6577,27 @@ class JvmRefBase {
   static inline std::atomic<JavaVM*> process_level_jvm_ = nullptr;
 };
 
+// Designed to be the very last JniBind object to execute on the thread.
+// Objects passed by move for lambdas will be destructed after any contents
+// statements within their lambda, and `ThreadGuard` can't be moved into the
+// lambda because its construction will be on the host thread. This static
+// teardown guarantees a delayed destruction beyond any GlobalObject.
+struct ThreadLocalGuardDestructor {
+  bool detach_thread_when_all_guards_released_ = false;
+
+  // By calling this the compiler is obligated to perform initalisation.
+  void ForceDestructionOnThreadClose() {}
+
+  ~ThreadLocalGuardDestructor() {
+    if (detach_thread_when_all_guards_released_) {
+      JavaVM* jvm = JvmRefBase::GetJavaVm();
+      if (jvm) {
+        jvm->DetachCurrentThread();
+      }
+    }
+  }
+};
+
 // ThreadGuard attaches and detaches JNIEnv* objects on the creation of new
 // threads.  All new threads which want to use JNI Wrapper must hold a
 // ThreadGuard beyond the scope of all created objects.  If the ThreadGuard
@@ -6387,9 +6606,6 @@ class ThreadGuard {
  public:
   ~ThreadGuard() {
     thread_guard_count_--;
-    if (thread_guard_count_ == 0 && detach_thread_when_all_guards_released_) {
-      JvmRefBase::GetJavaVm()->DetachCurrentThread();
-    }
   }
 
   ThreadGuard(ThreadGuard&) = delete;
@@ -6401,6 +6617,8 @@ class ThreadGuard {
   // This constructor must *never* be called before a |JvmRef| has been
   // constructed. It depends on static setup from |JvmRef|.
   [[nodiscard]] ThreadGuard() {
+    thread_local_guard_destructor.ForceDestructionOnThreadClose();
+
     // Nested ThreadGuards should be permitted in the same way mutex locks are.
     thread_guard_count_++;
     if (thread_guard_count_ != 1) {
@@ -6417,16 +6635,15 @@ class ThreadGuard {
         metaprogramming::FunctionTraitsArg_t<decltype(&JavaVM::GetEnv), 1>;
     const int code =
         vm->GetEnv(reinterpret_cast<TypeForGetEnv>(&jni_env), JNI_VERSION_1_6);
+
     if (code != JNI_OK) {
       using TypeForAttachment = metaprogramming::FunctionTraitsArg_t<
           decltype(&JavaVM::AttachCurrentThread), 1>;
       vm->AttachCurrentThread(reinterpret_cast<TypeForAttachment>(&jni_env),
                               nullptr);
-      detach_thread_when_all_guards_released_ = true;
-    } else {
-      detach_thread_when_all_guards_released_ = false;
+      thread_local_guard_destructor.detach_thread_when_all_guards_released_ =
+          true;
     }
-
     // Why not store this locally to ThreadGuard?
     //
     // JNIEnv is thread local static, and the context an object is built from
@@ -6439,7 +6656,8 @@ class ThreadGuard {
 
  private:
   static inline thread_local int thread_guard_count_ = 0;
-  static inline thread_local bool detach_thread_when_all_guards_released_;
+  static inline thread_local ThreadLocalGuardDestructor
+      thread_local_guard_destructor{};
 };
 
 // Represents a runtime instance of a Java Virtual Machine.
@@ -6512,8 +6730,9 @@ class JvmRef : public JvmRefBase {
     auto& default_loaded_class_list = GetDefaultLoadedClassList();
     for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
          default_loaded_class_list) {
-      maybe_loaded_class_id->Reset(
-          [](jclass clazz) { JniHelper::ReleaseClass(clazz); });
+      maybe_loaded_class_id->Reset([](jclass clazz) {
+        LifecycleHelper<jobject, LifecycleType::GLOBAL>::Delete(clazz);
+      });
     }
     default_loaded_class_list.clear();
 
@@ -6547,8 +6766,78 @@ class JvmRef : public JvmRefBase {
   const ThreadGuard thread_guard_ = {};
 };
 
+JvmRef(JNIEnv*) -> JvmRef<kDefaultJvm>;
+JvmRef(JavaVM*) -> JvmRef<kDefaultJvm>;
+
 }  // namespace jni
 
+namespace jni {
+
+// Creates an additional reference to the underlying object.
+// When used for local, presumes local, for global, presumes global.
+struct CreateCopy {};
+
+// This tag allows the constructor to promote underlying jobject for you.
+struct PromoteToGlobal {};
+
+// CAUTION: This tag assume the underlying jobject has been pinned as a global.
+// This is atypical when solely using JNI Bind, use with caution.
+struct AdoptGlobal {};
+
+template <typename CrtpBase, typename Span, typename... ViableSpans>
+struct LocalCtor : public CrtpBase {
+  using CrtpBase::CrtpBase;
+};
+
+// Augments a a local constructor of type |Span| (created by |LoadedBy|).
+// Inheritance and ctor inheritance will continue through |Base|.
+template <typename CrtpBase, typename JniT, typename ViableSpan,
+          typename... ViableSpans>
+struct LocalCtor<CrtpBase, JniT, ViableSpan, ViableSpans...>
+    : public LocalCtor<CrtpBase, JniT, ViableSpans...> {
+  using Base = LocalCtor<CrtpBase, JniT, ViableSpans...>;
+  using Base::Base;
+  using Span = typename JniT::SpanType;
+  using LifecycleT = LifecycleHelper<Span, LifecycleType::LOCAL>;
+
+  // "Copy" constructor: Additional reference to object will be created.
+  LocalCtor(CreateCopy, ViableSpan object)
+      : Base(static_cast<Span>(
+            LifecycleT::NewReference(static_cast<Span>(object)))) {}
+
+  // "Wrap" constructor: Object released at end of scope.
+  LocalCtor(ViableSpan object) : Base(static_cast<Span>(object)) {}
+};
+
+template <typename CrtpBase, typename JniT, typename... ViableSpans>
+struct GlobalCtor : public CrtpBase {
+  using CrtpBase::CrtpBase;
+};
+
+// Augments a a local constructor of type |Span| (created by |LoadedBy|).
+// Inheritance and ctor inheritance will continue through |Base|.
+template <typename CrtpBase, typename JniT, typename ViableSpan,
+          typename... ViableSpans>
+struct GlobalCtor<CrtpBase, JniT, ViableSpan, ViableSpans...>
+    : public GlobalCtor<CrtpBase, JniT, ViableSpans...> {
+  using Base = GlobalCtor<CrtpBase, JniT, ViableSpans...>;
+  using Base::Base;
+  using Span = typename JniT::SpanType;
+  using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
+
+  // "Copy" constructor: Additional reference to object will be created.
+  GlobalCtor(CreateCopy, ViableSpan object)
+      : Base(static_cast<Span>(LifecycleT::NewReference(object))) {}
+
+  // "Promote" constructor: Creates new global, frees |obj| (standard).
+  explicit GlobalCtor(PromoteToGlobal, ViableSpan obj)
+      : Base(LifecycleT::Promote(obj)) {}
+
+  // "Adopts" a global by wrapping a jstring (non-standard).
+  explicit GlobalCtor(AdoptGlobal, ViableSpan obj) : Base(obj) {}
+};
+
+}  // namespace jni
 
 #include <optional>
 #include <string>
@@ -6576,6 +6865,9 @@ class ObjectRef
       JniT::class_loader_v
           .template SupportedDirectlyOrIndirectly<JniT::class_v>(),
       "This class is not directly or indirectly supported by this loader.");
+  static_assert(!metaprogramming::StringContains_v<JniT::kName, '.'>,
+                "Use '/', not '.' in class names (for maximum) portability.");
+
   using RefBase = RefBase<JniT>;
 
   ObjectRef() = delete;
@@ -6745,16 +7037,18 @@ template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class LocalObject
-    : public ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_> {
+    : public LocalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+                       JniT<jobject, class_v_, class_loader_v_, jvm_v_>,
+                       jobject> {
  public:
-  using ObjectRefT = ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>;
-  using ObjectRefT::ObjectRefT;
-
-  LocalObject(jobject object) : ObjectRefT(object) {}
+  using Base =
+      LocalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+                JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
+  using Base::Base;
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   LocalObject(LocalObject<class_v, class_loader_v, jvm_v>&& rhs)
-      : ObjectRefT(rhs.Release()) {
+      : Base(rhs.Release()) {
     static_assert(
         std::string_view(class_v.name_) == std::string_view(class_v_.name_),
         "You are attempting to initialise a LocalObject from another class "
@@ -6762,8 +7056,8 @@ class LocalObject
   }
 
   ~LocalObject() {
-    if (ObjectRefT::object_ref_) {
-      JniHelper::DeleteLocalObject(ObjectRefT::object_ref_);
+    if (Base::object_ref_) {
+      LifecycleHelper<jobject, LifecycleType::LOCAL>::Delete(Base::object_ref_);
     }
   }
 };
@@ -6782,21 +7076,25 @@ namespace jni {
 // In order to use a string in memory (as opposed to only using it for function
 // arguments), "Pin" the string.
 //
-// Like jobjects, jstrings can be either local or global with the same ownership
-// semantics.
-class LocalString : public StringRefBase<LocalString> {
+// Like |jobjects|, |jstring|s can be either local or global with the same
+// ownership semantics.
+class LocalString
+    : public LocalCtor<
+          StringRefBase<LocalString>,
+          JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>,
+          jobject, jstring> {
  public:
-  using StringRefBase<LocalString>::StringRefBase;
-  friend class StringRefBase<LocalString>;
+  friend StringRefBase<LocalString>;
 
-  // Constructors to support the that jstring and jobject are interchangeable.
-  LocalString(jobject java_string_as_object)
-      : StringRefBase<LocalString>(
-            static_cast<jstring>(java_string_as_object)) {}
+  using Base = LocalCtor<
+      StringRefBase<LocalString>,
+      JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>, jobject,
+      jstring>;
+  using Base::Base;
 
   LocalString(
       LocalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>&& obj)
-      : StringRefBase<LocalString>(static_cast<jstring>(obj.Release())) {}
+      : Base(static_cast<jstring>(obj.Release())) {}
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
@@ -6805,7 +7103,9 @@ class LocalString : public StringRefBase<LocalString> {
  private:
   // Invoked through CRTP on dtor.
   void ClassSpecificDeleteObjectRef(jstring object_ref) {
-    JniHelper::DeleteLocalObject(object_ref);
+    if (Base::object_ref_) {
+      LifecycleHelper<jstring, LifecycleType::LOCAL>::Delete(object_ref);
+    }
   }
 };
 
@@ -6816,29 +7116,34 @@ namespace jni {
 template <const auto& jvm_v_, const auto& class_loader_v_>
 class ClassLoaderRef;
 
-// Pass this tag to allow Global object's constructor to promote for you.
-struct PromoteToGlobal {};
-
-// WARNING: Avoid using a global jobject in a constructor unless you are
-// confident the underlying jobject has been pinned as a global.
-struct AdoptGlobal {};
-
 template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class GlobalObject
-    : public ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_> {
+    : public GlobalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+                        JniT<jobject, class_v_, class_loader_v_, jvm_v_>,
+
+                        jobject> {
  public:
   template <const auto& jvm_v, const auto& class_loader_v>
   friend class ClassLoaderRef;
 
-  using ObjectRefT = ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>;
-  using ObjectRefT::ObjectRefT;
+  using Base =
+      GlobalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+                 JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
+  using Base::Base;
+
+  using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
+
+  // Constructs a new global object using the local object's default
+  // constructor.
+  explicit GlobalObject()
+      : GlobalObject(LifecycleT::Promote(
+            LocalObject<class_v_, class_loader_v_, jvm_v_>{}.Release())) {}
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&& local_object)
-      : ObjectRefT(
-            JniHelper::PromoteLocalToGlobalObject(jobject{local_object})) {
+      : Base(LifecycleT::Promote(local_object.Release())) {
     static_assert(
         std::string_view(class_v.name_) == std::string_view(class_v_.name_),
         "You are attempting to initialise a LocalObject from another class "
@@ -6847,45 +7152,33 @@ class GlobalObject
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   GlobalObject(GlobalObject<class_v, class_loader_v, jvm_v>&& rhs)
-      : ObjectRefT(rhs.Release()) {
+      : Base(rhs.Release()) {
     static_assert(
         std::string_view(class_v.name_) == std::string_view(class_v_.name_),
         "You are attempting to initialise a GlobalObject from another class "
         "type");
   }
 
-  // Constructs a new object using the local object's default constructor.
-  explicit GlobalObject()
-      : GlobalObject(JniHelper::PromoteLocalToGlobalObject(
-            LocalObject<class_v_, class_loader_v_, jvm_v_>{}.Release())) {}
-
   // Constructs a new object using arg based ctor.
   template <typename... Ts>
   explicit GlobalObject(Ts&&... ts)
-      : GlobalObject(JniHelper::PromoteLocalToGlobalObject(
-            LocalObject<class_v_, class_loader_v_, jvm_v_>{
+      : GlobalObject(
+            LifecycleT::Promote(LocalObject<class_v_, class_loader_v_, jvm_v_>{
                 std::forward<Ts>(ts)...}
-                .Release())) {}
-
-  // Constructs a global promoting a local object to a global (standard).
-  explicit GlobalObject(PromoteToGlobal, jobject obj)
-      : ObjectRefT(JniHelper::PromoteLocalToGlobalObject(obj)) {}
-
-  // Constructs a global by wrapping a jobject (non-standard).
-  explicit GlobalObject(AdoptGlobal, jobject obj) : ObjectRefT(obj) {}
+                                    .Release())) {}
 
   GlobalObject(const GlobalObject&) = delete;
   GlobalObject(GlobalObject&& rhs) = default;
 
   ~GlobalObject() {
-    if (ObjectRefT::object_ref_) {
-      JniHelper::DeleteGlobalObject(ObjectRefT::object_ref_);
+    if (Base::object_ref_) {
+      LifecycleT::Delete(Base::object_ref_);
     }
   }
 
  private:
   // Construction from jobject requires |PromoteToGlobal| or |AdoptGlobal|.
-  explicit GlobalObject(jobject obj) : ObjectRefT(obj) {}
+  explicit GlobalObject(jobject obj) : Base(obj) {}
 };
 
 template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
@@ -6927,6 +7220,8 @@ class ClassLoaderRef
 
   template <const auto& class_v, typename... Params>
   [[nodiscard]] auto BuildLocalObject(Params&&... params) {
+    using JniClassT = JniT<jobject, class_v>;
+    using IdClassT = Id<JniClassT, IdType::CLASS>;
     static_assert(
         !(ParentLoaderForClass<class_loader_v_, class_v>() == kNullClassLoader),
         "Cannot build this class with this loader.");
@@ -6937,10 +7232,11 @@ class ClassLoaderRef
                       0>>::PrimeJClassFromClassLoader([=]() {
         // Prevent the object (which is a runtime instance of a class) from
         // falling out of scope so it is not released.
-        LocalObject loaded_class = (*this)("loadClass", class_v.name_);
+        LocalObject loaded_class =
+            (*this)("loadClass", IdClassT::kNameUsingDots);
 
         // We only want to create global references if we are actually going
-        // to use it them so that they do not leak.
+        // to use them so that they do not leak.
         jclass test_class{
             static_cast<jclass>(static_cast<jobject>(loaded_class))};
         return static_cast<jclass>(JniEnv::GetEnv()->NewGlobalRef(test_class));
@@ -6954,11 +7250,10 @@ class ClassLoaderRef
 
   template <const auto& class_v, typename... Params>
   [[nodiscard]] auto BuildGlobalObject(Params&&... params) {
-    // TODO(b/174256299): Promotion of locals to globals is clumsy.
     LocalObject obj =
         BuildLocalObject<class_v>(std::forward<Params>(params)...);
     jobject promoted_local =
-        JniHelper::PromoteLocalToGlobalObject(obj.Release());
+        LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(obj.Release());
 
     return GlobalObject<class_v,
                         ParentLoaderForClass<class_loader_v_, class_v>(),
@@ -7044,7 +7339,7 @@ class LocalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
 
   ~LocalClassLoader() {
     if (Base::object_ref_) {
-      JniHelper::DeleteLocalObject(Base::object_ref_);
+      LifecycleHelper<jobject, LifecycleType::LOCAL>::Delete(Base::object_ref_);
     }
   }
 
@@ -7103,32 +7398,43 @@ class LocalArray<jstring, kRank_, class_v_, class_loader_v_, jvm_v_>
 
 namespace jni {
 
-class GlobalString : public StringRefBase<GlobalString> {
+class GlobalString
+    : public GlobalCtor<
+          StringRefBase<GlobalString>,
+          JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>,
+          jobject, jstring> {
  public:
-  using StringRefBase<GlobalString>::StringRefBase;
   friend class StringRefBase<GlobalString>;
 
-  GlobalString(jobject java_string_as_object)
-      : StringRefBase<GlobalString>(JniHelper::PromoteLocalToGlobalString(
-            static_cast<jstring>(java_string_as_object))) {}
+  using Base = GlobalCtor<
+      StringRefBase<GlobalString>,
+      JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>, jobject,
+      jstring>;
+  using Base::Base;
+
+  using LifecycleT = LifecycleHelper<jstring, LifecycleType::GLOBAL>;
 
   GlobalString(GlobalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>&&
                    global_string)
-      : StringRefBase<GlobalString>(
-            static_cast<jstring>(global_string.Release())) {}
+      : Base(static_cast<jstring>(global_string.Release())) {}
 
   GlobalString(LocalString&& local_string)
-      : StringRefBase<GlobalString>(
-            JniHelper::PromoteLocalToGlobalString(local_string.Release())) {}
+      : Base(LifecycleT::Promote(local_string.Release())) {}
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
   UtfStringView Pin() { return {RefBaseTag<jstring>::object_ref_}; }
 
  private:
+  // Construction from jstring requires |PromoteToGlobal| or |AdoptGlobal|.
+  explicit GlobalString(jstring obj) : Base(obj) {}
+
+  // Construction from jstring requires |PromoteToGlobal| or |AdoptGlobal|.
+  explicit GlobalString(jobject obj) : Base(static_cast<jstring>(obj)) {}
+
   // Invoked through CRTP on dtor.
   void ClassSpecificDeleteObjectRef(jstring object_ref) {
-    JniHelper::DeleteGlobalString(object_ref);
+    LifecycleT::Delete(object_ref);
   }
 };
 
@@ -7140,11 +7446,11 @@ template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
 class GlobalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
  public:
   using Base = ClassLoaderRef<jvm_v_, class_loader_v_>;
+  using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
 
-  // TODO(b/174256299): Make "global" from jobject more intuitive.
   GlobalClassLoader(jobject class_loader)
       : ClassLoaderRef<jvm_v_, class_loader_v_>(
-            JniHelper::PromoteLocalToGlobalObject(class_loader)) {}
+            LifecycleT::Promote(class_loader)) {}
 
   template <const auto& class_loader_v, const auto& jvm_v>
   GlobalClassLoader(GlobalClassLoader<class_loader_v, jvm_v>&& rhs)
@@ -7152,7 +7458,7 @@ class GlobalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
 
   ~GlobalClassLoader() {
     if (Base::object_ref_) {
-      JniHelper::DeleteGlobalObject(Base::object_ref_);
+      LifecycleT::Delete(Base::object_ref_);
     }
   }
 };
