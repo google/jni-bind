@@ -31,8 +31,6 @@ using ::jni::LifecycleHelper;
 using ::jni::LifecycleType;
 using ::jni::test::Fake;
 using ::jni::test::JniTest;
-using ::testing::_;
-using ::testing::Eq;
 using ::testing::InSequence;
 using ::testing::StrEq;
 
