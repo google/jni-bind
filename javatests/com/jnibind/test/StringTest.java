@@ -110,9 +110,10 @@ public final class StringTest {
   @Test
   public void passesForwardsAndReturnsStrings() {
     StringTestHelper testHelper = new StringTestHelper();
+    assertThat(jniStringMethodTakesString(testHelper, "")).isEqualTo("");
     assertThat(jniStringMethodTakesString(testHelper, "SimpleTestString"))
         .isEqualTo("SimpleTestString");
-    jniStringMethodTakesString(testHelper, "");
+    assertThat(jniStringMethodTakesString(testHelper, "\0ABC\0")).isEqualTo("\0ABC\0");
     assertThat(jniStringMethodTakesString(testHelper, "String with punctuation!@?@$!$#%"))
         .isEqualTo("String with punctuation!@?@$!$#%");
     assertThat(
