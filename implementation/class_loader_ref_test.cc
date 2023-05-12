@@ -47,6 +47,22 @@ using ::testing::Eq;
 using ::testing::InSequence;
 using ::testing::StrEq;
 
+static constexpr Class kClass1{
+    "Class1", Constructor{}, Constructor<jint>{},
+    Method{"Foo", Return{Class{"Class2"}}, Params{}}};
+
+static constexpr Class kClass2{
+    "Class2", Constructor{}, Constructor{kClass1},
+    Method{"Foo", jni::Return{}, jni::Params{kClass1}}};
+
+static constexpr Class kClass3{"Class3"};
+static constexpr Class kClass4{"Class4"};
+
+static constexpr ClassLoader kClassLoader{kNullClassLoader,
+                                          SupportedClassSet{kClass1, kClass2}};
+
+static constexpr Jvm kJvm{kClassLoader};
+
 // Helper class for classloader tests that gives the standard default class
 // object when using CallObjectMethodV.  This is because objects built from
 // class loaders are built by calling "loadClass" on the respective classloader
@@ -75,19 +91,11 @@ class JniTestForClassLoaders : public JniTestWithNoDefaultJvmRef {
 // as independent processes which would reflect the static nature of the memory.
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, LocalObject_SupportsPassingAnObjectWithAClassLoader) {
-  static constexpr Class kTestClass1{"TestClass1"};
-
-  static constexpr Class kTestClass2{
-      "TestClass2", Method{"Foo", jni::Return{}, jni::Params{kTestClass1}}};
-
-  static constexpr ClassLoader kTestClassLoader{kNullClassLoader,
-                                                SupportedClassSet{kTestClass1}};
-
   JvmRef<kDefaultJvm> jvm_ref{jvm_.get()};
 
-  // LocalObject<kTestClass2, kTestClassLoader> a{}; // doesn't compile (good).
-  LocalObject<kTestClass1, kTestClassLoader> a{Fake<jobject>()};
-  LocalObject<kTestClass2> b{};
+  // LocalObject<kClass2, kClassLoader> a{}; // doesn't compile (good).
+  LocalObject<kClass1, kClassLoader> a{Fake<jobject>()};
+  LocalObject<kClass2> b{};
   b("Foo", a);
 
   default_globals_made_that_should_be_released_.clear();
@@ -95,18 +103,11 @@ TEST_F(JniTest, LocalObject_SupportsPassingAnObjectWithAClassLoader) {
 
 TEST_F(JniTestForClassLoaders,
        ClassLoaderRefTest_ConstructorsAcceptClassLoadedObjects) {
-  static constexpr Class kTestClass1{"TestClass1"};
-  static constexpr Class kTestClass2{
-      "TestClass2", Constructor{kTestClass1},
-      Method{"Foo", Return{}, Params{kTestClass1}}};
-  static constexpr ClassLoader kClassLoader{kNullClassLoader,
-                                            SupportedClassSet{kTestClass1}};
-
   JvmRef<kDefaultJvm> jvm_ref{jvm_.get()};
 
   LocalClassLoader<kClassLoader> local_class_loader{Fake<jobject>()};
-  auto a = local_class_loader.BuildLocalObject<kTestClass1>();
-  LocalObject<kTestClass2> b{a};
+  auto a = local_class_loader.BuildLocalObject<kClass1>();
+  LocalObject<kClass2> b{a};
   b("Foo", a);
 
   default_globals_made_that_should_be_released_.clear();
@@ -115,18 +116,11 @@ TEST_F(JniTestForClassLoaders,
 
 TEST_F(JniTestForClassLoaders,
        lassLoaderRefTest_ConstructorsAcceptGlobalClassLoadedObjects) {
-  static constexpr Class kTestClass1{"TestClass1"};
-  static constexpr Class kTestClass2{
-      "TestClass2", Constructor{kTestClass1},
-      Method{"Foo", Return{}, Params{kTestClass1}}};
-  static constexpr ClassLoader kClassLoader{kNullClassLoader,
-                                            SupportedClassSet{kTestClass1}};
-
   JvmRef<kDefaultJvm> jvm_ref{jvm_.get()};
 
   LocalClassLoader<kClassLoader> local_class_loader{Fake<jobject>()};
-  auto a = local_class_loader.BuildGlobalObject<kTestClass1>();
-  LocalObject<kTestClass2> b{a};
+  auto a = local_class_loader.BuildGlobalObject<kClass1>();
+  LocalObject<kClass2> b{a};
   b("Foo", a);
 
   default_globals_made_that_should_be_released_.clear();
@@ -138,61 +132,38 @@ TEST_F(JniTestForClassLoaders,
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTestForClassLoaders,
        ClassLoaderRefTest_DefaultLoadedObjectBuildsWithClassLoadedObject) {
-  static constexpr Class kTestClass1{"TestClass1"};
-  static constexpr Class kTestClass2{
-      "TestClass2", Constructor{kTestClass1},
-      Method{"Foo", Return{}, Params{kTestClass1}}};
-  static constexpr ClassLoader kClassLoader{kNullClassLoader,
-                                            SupportedClassSet{kTestClass1}};
-  static constexpr Jvm kJvm{kClassLoader};
-
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
-  LocalObject<kTestClass1, kClassLoader> a =
-      local_class_loader.BuildLocalObject<kTestClass1>();
-  LocalObject<kTestClass2> b{a};
+  LocalObject<kClass1, kClassLoader> a =
+      local_class_loader.BuildLocalObject<kClass1>();
+  LocalObject<kClass2> b{a};
   b("Foo", a);
 
   TearDown();
 }
 
 TEST_F(JniTestForClassLoaders, ClassLoaderRefTest_ConstructsFromRValue) {
-  static constexpr Class kTestClass2{"TestClass2"};
-  static constexpr Class kTestClass1{
-      "TestClass1", Method{"Foo", Return{kTestClass2}, Params{}}};
-  static constexpr ClassLoader kClassLoader{
-      kNullClassLoader, SupportedClassSet{kTestClass1, kTestClass2}};
-  static constexpr Jvm kJvm{kClassLoader};
-
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
-  LocalObject<kTestClass1, kClassLoader, kJvm> b{
-      local_class_loader.BuildLocalObject<kTestClass1>()};
+  LocalObject<kClass1, kClassLoader, kJvm> b{
+      local_class_loader.BuildLocalObject<kClass1>()};
 
-  LocalObject<kTestClass2, kClassLoader, kJvm> c{b("Foo")};
+  LocalObject<kClass2, kClassLoader, kJvm> c{b("Foo")};
 
   TearDown();
 }
 
 TEST_F(JniTestForClassLoaders,
        ClassLoaderRefTest_ClassLoadedObjectBuildsWithDefaultLoadedObject) {
-  static constexpr Class kTestClass1{"TestClass1"};
-  static constexpr Class kTestClass2{
-      "TestClass2", Constructor{kTestClass1},
-      Method{"Foo", Return{}, Params{kTestClass1}}};
-  static constexpr ClassLoader kClassLoader{kNullClassLoader,
-                                            SupportedClassSet{kTestClass2}};
-  static constexpr Jvm kJvm{kClassLoader};
-
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
 
-  LocalObject<kTestClass1> a{};
-  LocalObject<kTestClass2, kClassLoader, kJvm> b =
-      local_class_loader.BuildLocalObject<kTestClass2>(a);
+  LocalObject<kClass1> a{};
+  LocalObject<kClass2, kClassLoader, kJvm> b =
+      local_class_loader.BuildLocalObject<kClass2>(a);
   b("Foo", a);
 
   TearDown();
@@ -201,68 +172,47 @@ TEST_F(JniTestForClassLoaders,
 TEST_F(
     JniTestForClassLoaders,
     ClassLoaderRefTest_LocalClassLoaderWithSingleClassAndConstructorCompiles) {
-  static constexpr Class kTestClass1{
-      "TestClass1",
-      Constructor<jint>{},
-  };
-  static constexpr ClassLoader kClassLoader{kNullClassLoader,
-                                            SupportedClassSet{kTestClass1}};
-  static constexpr Jvm kJvm{kClassLoader};
-
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
-  auto a = local_class_loader.BuildLocalObject<kTestClass1>(12345);
-  // local_class_loader.BuildLocalObject<kTestClass1>(); doesn't compile (good)
+  auto a = local_class_loader.BuildLocalObject<kClass1>(12345);
+  // local_class_loader.BuildLocalObject<kClass1>(); doesn't compile (good)
 
   TearDown();
 }
 
 TEST_F(JniTestWithNoDefaultJvmRef,
        ClassLoaderRefTest_LocalClassLoaderWithMultipleClassesCompiles) {
-  static constexpr Class kTestClass1{"TestClass1"};
-  static constexpr Class kTestClass2{"TestClass2"};
-  static constexpr Class kTestClass3{"TestClass3"};
-  static constexpr Class kTestClass4{"TestClass4"};
-
   ON_CALL(*env_, CallObjectMethodV)
       .WillByDefault(::testing::Return(Fake<jclass>()));
 
   static constexpr ClassLoader kClassLoader{
-      kNullClassLoader,
-      SupportedClassSet{kTestClass1, kTestClass2, kTestClass3, kTestClass4}};
+      kNullClassLoader, SupportedClassSet{kClass1, kClass2, kClass3, kClass4}};
   static constexpr Jvm kJvm{kClassLoader};
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
 
-  LocalObject a{local_class_loader.BuildLocalObject<kTestClass1>()};
-  auto b = local_class_loader.BuildLocalObject<kTestClass2>();
-  auto c = local_class_loader.BuildLocalObject<kTestClass3>();
-  auto d = local_class_loader.BuildLocalObject<kTestClass4>();
+  LocalObject a{local_class_loader.BuildLocalObject<kClass1>()};
+  auto b = local_class_loader.BuildLocalObject<kClass2>();
+  auto c = local_class_loader.BuildLocalObject<kClass3>();
+  auto d = local_class_loader.BuildLocalObject<kClass4>();
 
   TearDown();
 }
 
 TEST_F(JniTestWithNoDefaultJvmRef,
        DefaultLoadedObjectAcceptsClassLoadedObject) {
-  static constexpr Class kTestClass1{"TestClass1"};
-  static constexpr Class kTestClass2{
-      "TestClass2", Method{"Foo", Return{}, Params{kTestClass1}}};
-
   ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
       .WillByDefault(::testing::Return(Fake<jclass>()));
 
-  static constexpr ClassLoader kClassLoader{kNullClassLoader,
-                                            SupportedClassSet{kTestClass1}};
-  static constexpr Jvm kJvm{kClassLoader};
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobjectArray>()};
 
-  LocalObject<kTestClass1, kClassLoader, kJvm> a =
-      local_class_loader.BuildLocalObject<kTestClass1>();
-  LocalObject<kTestClass2> b{};
+  LocalObject<kClass1, kClassLoader, kJvm> a =
+      local_class_loader.BuildLocalObject<kClass1>();
+  LocalObject<kClass2> b{};
   b("Foo", a);
 
   TearDown();
@@ -270,19 +220,14 @@ TEST_F(JniTestWithNoDefaultJvmRef,
 
 TEST_F(JniTestWithNoDefaultJvmRef,
        ClassLoaderRefTest_DefaultLoadedClassCompiles) {
-  static constexpr Class kTestClass1{"TestClass1"};
-
   ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
       .WillByDefault(::testing::Return(Fake<jclass>()));
 
-  static constexpr ClassLoader kClassLoader{kDefaultClassLoader,
-                                            SupportedClassSet{}};
-  static constexpr Jvm kJvm{kClassLoader};
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobjectArray>()};
 
-  LocalObject a{local_class_loader.BuildLocalObject<kTestClass1>()};
+  LocalObject a{local_class_loader.BuildLocalObject<kClass1>()};
   TearDown();
 }
 
@@ -295,7 +240,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
                                             SupportedClassSet{kClass}};
 
   // We will use this ClassLoader instead of the default loader to load
-  // TestClass.
+  // Class.
   static constexpr Jvm kClassLoaderJvm{kClassLoader};
 
   InSequence sequence;
