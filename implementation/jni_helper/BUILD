@@ -5,8 +5,6 @@ package(
 
 licenses(["notice"])
 
-exports_files(["LICENSE"])
-
 filegroup(
     name = "headers_for_export",
     srcs = glob(["**/*.h"]),

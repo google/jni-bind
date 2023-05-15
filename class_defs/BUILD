@@ -10,8 +10,6 @@ filegroup(
     srcs = glob(["**/*.h"]),
 )
 
-exports_files(["LICENSE"])
-
 cc_library(
     name = "java_lang_classes",
     hdrs = ["java_lang_classes.h"],
