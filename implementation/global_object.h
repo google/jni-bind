@@ -33,7 +33,8 @@ template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class GlobalObject
-    : public GlobalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+    : public GlobalCtor<GlobalObject<class_v_, class_loader_v_, jvm_v_>,
+                        ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
                         JniT<jobject, class_v_, class_loader_v_, jvm_v_>,
 
                         jobject> {
@@ -42,7 +43,8 @@ class GlobalObject
   friend class ClassLoaderRef;
 
   using Base =
-      GlobalCtor<ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+      GlobalCtor<GlobalObject<class_v_, class_loader_v_, jvm_v_>,
+                 ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
                  JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
   using Base::Base;
 
@@ -54,23 +56,12 @@ class GlobalObject
       : GlobalObject(LifecycleT::Promote(
             LocalObject<class_v_, class_loader_v_, jvm_v_>{}.Release())) {}
 
-  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&& local_object)
-      : Base(LifecycleT::Promote(local_object.Release())) {
-    static_assert(
-        std::string_view(class_v.name_) == std::string_view(class_v_.name_),
-        "You are attempting to initialise a LocalObject from another class "
-        "type");
-  }
-
-  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  GlobalObject(GlobalObject<class_v, class_loader_v, jvm_v>&& rhs)
-      : Base(rhs.Release()) {
-    static_assert(
-        std::string_view(class_v.name_) == std::string_view(class_v_.name_),
-        "You are attempting to initialise a GlobalObject from another class "
-        "type");
-  }
+  // Note: Comparison is only constrained to the class name, and not the
+  // classloader or JVM (fully constraining classloaders is very complex).
+  template <typename T,
+            typename = std::enable_if_t<
+                ::jni::metaprogramming::DeepEqual_v<GlobalObject, T>>>
+  GlobalObject(T&& rhs) : Base(rhs.Release()) {}
 
   // Constructs a new object using arg based ctor.
   template <typename... Ts>
@@ -79,9 +70,6 @@ class GlobalObject
             LifecycleT::Promote(LocalObject<class_v_, class_loader_v_, jvm_v_>{
                 std::forward<Ts>(ts)...}
                                     .Release())) {}
-
-  GlobalObject(const GlobalObject&) = delete;
-  GlobalObject(GlobalObject&& rhs) = default;
 
   ~GlobalObject() {
     if (Base::object_ref_) {

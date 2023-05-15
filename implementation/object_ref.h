@@ -70,8 +70,6 @@ class ObjectRef
   using RefBase = RefBase<JniT>;
 
   ObjectRef() = delete;
-  explicit ObjectRef(ObjectRef&& rhs) = default;
-  ObjectRef(const ObjectRef& rhs) = delete;
   ObjectRef& operator=(const ObjectRef& rhs) = delete;
 
   jclass GetJClass() const {

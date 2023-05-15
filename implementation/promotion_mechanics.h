@@ -16,8 +16,12 @@
 #ifndef JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_H_
 #define JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_H_
 
+#include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/lifecycle_object.h"
+#include "implementation/jni_type.h"
 #include "jni_dep.h"
+#include "metaprogramming/deep_equal.h"
+#include "metaprogramming/pack_discriminator.h"
 
 namespace jni {
 
@@ -32,20 +36,23 @@ struct PromoteToGlobal {};
 // This is atypical when solely using JNI Bind, use with caution.
 struct AdoptGlobal {};
 
-template <typename CrtpBase, typename Span, typename... ViableSpans>
+template <typename Self, typename CrtpBase, typename Span,
+          typename... ViableSpans>
 struct LocalCtor : public CrtpBase {
   using CrtpBase::CrtpBase;
 };
 
-// Augments a a local constructor of type |Span| (created by |LoadedBy|).
-// Inheritance and ctor inheritance will continue through |Base|.
-template <typename CrtpBase, typename JniT, typename ViableSpan,
+// Augments a a local constructor of type |Span|.
+// Inheritance and ctor inheritance will continue through |CrtpBase|.
+template <typename Self, typename CrtpBase, typename JniT_, typename ViableSpan,
           typename... ViableSpans>
-struct LocalCtor<CrtpBase, JniT, ViableSpan, ViableSpans...>
-    : public LocalCtor<CrtpBase, JniT, ViableSpans...> {
-  using Base = LocalCtor<CrtpBase, JniT, ViableSpans...>;
+struct LocalCtor<Self, CrtpBase, JniT_, ViableSpan, ViableSpans...>
+    : public LocalCtor<Self, CrtpBase, JniT_, ViableSpans...> {
+  using Base = LocalCtor<Self, CrtpBase, JniT_, ViableSpans...>;
+
   using Base::Base;
-  using Span = typename JniT::SpanType;
+
+  using Span = typename JniT_::SpanType;
   using LifecycleT = LifecycleHelper<Span, LifecycleType::LOCAL>;
 
   // "Copy" constructor: Additional reference to object will be created.
@@ -57,18 +64,19 @@ struct LocalCtor<CrtpBase, JniT, ViableSpan, ViableSpans...>
   LocalCtor(ViableSpan object) : Base(static_cast<Span>(object)) {}
 };
 
-template <typename CrtpBase, typename JniT, typename... ViableSpans>
+template <typename Self, typename CrtpBase, typename JniT,
+          typename... ViableSpans>
 struct GlobalCtor : public CrtpBase {
   using CrtpBase::CrtpBase;
 };
 
 // Augments a a local constructor of type |Span| (created by |LoadedBy|).
 // Inheritance and ctor inheritance will continue through |Base|.
-template <typename CrtpBase, typename JniT, typename ViableSpan,
+template <typename Self, typename CrtpBase, typename JniT, typename ViableSpan,
           typename... ViableSpans>
-struct GlobalCtor<CrtpBase, JniT, ViableSpan, ViableSpans...>
-    : public GlobalCtor<CrtpBase, JniT, ViableSpans...> {
-  using Base = GlobalCtor<CrtpBase, JniT, ViableSpans...>;
+struct GlobalCtor<Self, CrtpBase, JniT, ViableSpan, ViableSpans...>
+    : public GlobalCtor<Self, CrtpBase, JniT, ViableSpans...> {
+  using Base = GlobalCtor<Self, CrtpBase, JniT, ViableSpans...>;
   using Base::Base;
   using Span = typename JniT::SpanType;
   using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
@@ -81,8 +89,12 @@ struct GlobalCtor<CrtpBase, JniT, ViableSpan, ViableSpans...>
   explicit GlobalCtor(PromoteToGlobal, ViableSpan obj)
       : Base(LifecycleT::Promote(obj)) {}
 
-  // "Adopts" a global by wrapping a jstring (non-standard).
+  // "Adopts" a global (non-standard).
   explicit GlobalCtor(AdoptGlobal, ViableSpan obj) : Base(obj) {}
+
+  template <typename T, typename = std::enable_if_t<
+                            ::jni::metaprogramming::DeepEqual_v<Self, T>>>
+  GlobalCtor(T&& rhs) : Base(rhs.Release()) {}
 };
 
 }  // namespace jni

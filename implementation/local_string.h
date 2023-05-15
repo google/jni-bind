@@ -37,14 +37,14 @@ namespace jni {
 // ownership semantics.
 class LocalString
     : public LocalCtor<
-          StringRefBase<LocalString>,
+          LocalString, StringRefBase<LocalString>,
           JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>,
           jobject, jstring> {
  public:
   friend StringRefBase<LocalString>;
 
   using Base = LocalCtor<
-      StringRefBase<LocalString>,
+      LocalString, StringRefBase<LocalString>,
       JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>, jobject,
       jstring>;
   using Base::Base;

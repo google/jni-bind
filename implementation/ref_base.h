@@ -32,7 +32,17 @@ template <typename StorageType>
 class RefBaseTag {
  public:
   RefBaseTag(StorageType object) : object_ref_(object) {}
-  RefBaseTag(RefBaseTag&& rhs) : object_ref_(rhs.Release()) {}
+
+  RefBaseTag(const RefBaseTag& rhs) = delete;
+
+  RefBaseTag(RefBaseTag&& rhs) {
+    object_ref_ = rhs.object_ref_;
+    rhs.object_ref_ = nullptr;
+  }
+
+  template <typename T,
+            typename = std::enable_if_t<std::is_same_v<T, StorageType>>>
+  RefBaseTag(RefBaseTag<T>&& rhs) : object_ref_(rhs.Release()) {}
 
   StorageType Release() {
     StorageType return_value = object_ref_;
@@ -63,9 +73,10 @@ class RefBase : public RefBaseTag<typename JniT::StorageType> {
 
   static inline const char* name_ = JniT::class_v.name_;
 
+  RefBase(const RefBase& rhs) = delete;
+
   RefBase(RefBaseTag<StorageType>&& rhs)
       : RefBaseTag<StorageType>(std::move(rhs)) {}
-  RefBase(RefBase&&) = default;
 };
 
 //==============================================================================

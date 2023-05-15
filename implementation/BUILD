@@ -165,9 +165,7 @@ cc_test(
 
 cc_library(
     name = "class_loader_ref",
-    hdrs = [
-        "class_loader_ref.h",
-    ],
+    hdrs = ["class_loader_ref.h"],
     deps = [
         ":class",
         ":class_loader",
@@ -328,6 +326,7 @@ cc_library(
         ":jvm",
         ":promotion_mechanics",
         "//:jni_dep",
+        "//class_defs:java_lang_classes",
         "//implementation/jni_helper:lifecycle_object",
     ],
 )
@@ -548,11 +547,14 @@ cc_library(
     name = "local_class_loader",
     hdrs = ["local_class_loader.h"],
     deps = [
+        ":class",
         ":class_loader",
         ":class_loader_ref",
         ":jvm",
         ":jvm_ref",
+        ":promotion_mechanics",
         "//:jni_dep",
+        "//class_defs:java_lang_classes",
         "//implementation/jni_helper:lifecycle_object",
     ],
 )
@@ -571,6 +573,7 @@ cc_library(
         "//:jni_dep",
         "//implementation/jni_helper",
         "//implementation/jni_helper:lifecycle_object",
+        "//metaprogramming:deep_equal",
     ],
 )
 
@@ -768,8 +771,12 @@ cc_library(
     name = "promotion_mechanics",
     hdrs = ["promotion_mechanics.h"],
     deps = [
+        ":jni_type",
         "//:jni_dep",
+        "//implementation/jni_helper",
         "//implementation/jni_helper:lifecycle_object",
+        "//metaprogramming:deep_equal",
+        "//metaprogramming:pack_discriminator",
     ],
 )
 

@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_GLOBAL_CLASS_LOADER_H_
 #define JNI_BIND_GLOBAL_CLASS_LOADER_H_
 
+#include "class_defs/java_lang_classes.h"
 #include "implementation/class_loader.h"
 #include "implementation/class_loader_ref.h"
 #include "implementation/jni_helper/lifecycle_object.h"
@@ -27,20 +28,21 @@
 namespace jni {
 
 template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
-class GlobalClassLoader : public ClassLoaderRef<jvm_v_, class_loader_v_> {
+class GlobalClassLoader
+    : public GlobalCtor<
+          GlobalClassLoader<class_loader_v_, jvm_v_>,
+          ClassLoaderRef<jvm_v_, class_loader_v_>,
+          JniT<jobject, kJavaLangClassLoader, class_loader_v_, jvm_v_>,
+          jobject> {
  public:
-  using Base = ClassLoaderRef<jvm_v_, class_loader_v_>;
+  using Base =
+      GlobalCtor<GlobalClassLoader<class_loader_v_, jvm_v_>,
+                 ClassLoaderRef<jvm_v_, class_loader_v_>,
+                 JniT<jobject, kJavaLangClassLoader, class_loader_v_, jvm_v_>,
+                 jobject>;
   using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
 
-  GlobalClassLoader(CreateCopy, jobject class_loader)
-      : Base(static_cast<jobject>(LifecycleT::NewReference(class_loader))) {}
-
-  GlobalClassLoader(AdoptGlobal, jobject class_loader)
-      : ClassLoaderRef<jvm_v_, class_loader_v_>(class_loader) {}
-
-  GlobalClassLoader(PromoteToGlobal, jobject class_loader)
-      : ClassLoaderRef<jvm_v_, class_loader_v_>(
-            LifecycleT::Promote(class_loader)) {}
+  using Base::Base;
 
   template <const auto& class_loader_v, const auto& jvm_v>
   GlobalClassLoader(GlobalClassLoader<class_loader_v, jvm_v>&& rhs)

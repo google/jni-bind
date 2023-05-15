@@ -27,6 +27,7 @@ namespace {
 using ::jni::Class;
 using ::jni::ClassLoader;
 using ::jni::Constructor;
+using ::jni::GlobalClassLoader;
 using ::jni::Jvm;
 using ::jni::JvmRef;
 using ::jni::kDefaultClassLoader;
@@ -79,6 +80,16 @@ class JniTestForClassLoaders : public JniTestWithNoDefaultJvmRef {
         .WillByDefault(::testing::Return(Fake<jclass>()));
   }
 };
+
+TEST_F(JniTest, LocalsAreMoveable) {
+  LocalClassLoader<kClassLoader, kJvm> obj_1{Fake<jobject>()};
+  LocalClassLoader<kClassLoader, kJvm> obj_2{std::move(obj_1)};
+}
+
+TEST_F(JniTest, GlobalsAreMoveable) {
+  GlobalClassLoader<kClassLoader, kJvm> obj_1{Fake<jobject>()};
+  GlobalClassLoader<kClassLoader, kJvm> obj_2{std::move(obj_1)};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Default JVM, non-default classloader (No ID teardown on JVM destruction).
@@ -222,7 +233,6 @@ TEST_F(JniTestWithNoDefaultJvmRef,
        ClassLoaderRefTest_DefaultLoadedClassCompiles) {
   ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
       .WillByDefault(::testing::Return(Fake<jclass>()));
-
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobjectArray>()};
