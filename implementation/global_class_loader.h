@@ -30,13 +30,13 @@ namespace jni {
 template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
 class GlobalClassLoader
     : public GlobalCtor<
-          GlobalClassLoader<class_loader_v_, jvm_v_>,
+          GlobalObject, GlobalClassLoader<class_loader_v_, jvm_v_>,
           ClassLoaderRef<jvm_v_, class_loader_v_>,
           JniT<jobject, kJavaLangClassLoader, class_loader_v_, jvm_v_>,
           jobject> {
  public:
   using Base =
-      GlobalCtor<GlobalClassLoader<class_loader_v_, jvm_v_>,
+      GlobalCtor<GlobalObject, GlobalClassLoader<class_loader_v_, jvm_v_>,
                  ClassLoaderRef<jvm_v_, class_loader_v_>,
                  JniT<jobject, kJavaLangClassLoader, class_loader_v_, jvm_v_>,
                  jobject>;

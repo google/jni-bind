@@ -24,6 +24,7 @@
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jvm.h"
 #include "implementation/jvm_ref.h"
+#include "implementation/local_object.h"
 #include "implementation/promotion_mechanics.h"
 #include "jni_dep.h"
 
@@ -32,13 +33,13 @@ namespace jni {
 template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
 class LocalClassLoader
     : public LocalCtor<
-          LocalClassLoader<class_loader_v_, jvm_v_>,
+          LocalObject, LocalClassLoader<class_loader_v_, jvm_v_>,
           ClassLoaderRef<jvm_v_, class_loader_v_>,
           JniT<jobject, kJavaLangClassLoader, class_loader_v_, jvm_v_>,
           jobject> {
  public:
   using Base =
-      LocalCtor<LocalClassLoader<class_loader_v_, jvm_v_>,
+      LocalCtor<LocalObject, LocalClassLoader<class_loader_v_, jvm_v_>,
                 ClassLoaderRef<jvm_v_, class_loader_v_>,
                 JniT<jobject, kJavaLangClassLoader, class_loader_v_, jvm_v_>,
                 jobject>;

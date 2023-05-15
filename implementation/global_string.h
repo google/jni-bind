@@ -30,14 +30,14 @@ namespace jni {
 
 class GlobalString
     : public GlobalCtor<
-          GlobalString, StringRefBase<GlobalString>,
+          GlobalObject, GlobalString, StringRefBase<GlobalString>,
           JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>,
           jobject, jstring> {
  public:
   friend class StringRefBase<GlobalString>;
 
   using Base = GlobalCtor<
-      GlobalString, StringRefBase<GlobalString>,
+      GlobalObject, GlobalString, StringRefBase<GlobalString>,
       JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>, jobject,
       jstring>;
   using Base::Base;

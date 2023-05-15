@@ -37,13 +37,13 @@ template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class LocalObject
-    : public LocalCtor<LocalObject<class_v_, class_loader_v_, jvm_v_>,
-                       ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
-                       JniT<jobject, class_v_, class_loader_v_, jvm_v_>,
-                       jobject> {
+    : public LocalCtor<
+          LocalObject, LocalObject<class_v_, class_loader_v_, jvm_v_>,
+          ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
+          JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject> {
  public:
   using Base =
-      LocalCtor<LocalObject<class_v_, class_loader_v_, jvm_v_>,
+      LocalCtor<LocalObject, LocalObject<class_v_, class_loader_v_, jvm_v_>,
                 ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
                 JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
   using Base::Base;

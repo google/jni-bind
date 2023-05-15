@@ -552,6 +552,7 @@ cc_library(
         ":class_loader_ref",
         ":jvm",
         ":jvm_ref",
+        ":local_object",
         ":promotion_mechanics",
         "//:jni_dep",
         "//class_defs:java_lang_classes",

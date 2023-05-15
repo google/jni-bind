@@ -36,20 +36,20 @@ struct PromoteToGlobal {};
 // This is atypical when solely using JNI Bind, use with caution.
 struct AdoptGlobal {};
 
-template <typename Self, typename CrtpBase, typename Span,
-          typename... ViableSpans>
+template <template <const auto&...> class Container, typename Self,
+          typename CrtpBase, typename Span, typename... ViableSpans>
 struct LocalCtor : public CrtpBase {
   using CrtpBase::CrtpBase;
 };
 
 // Augments a a local constructor of type |Span|.
 // Inheritance and ctor inheritance will continue through |CrtpBase|.
-template <typename Self, typename CrtpBase, typename JniT_, typename ViableSpan,
+template <template <const auto&...> class Container, typename Self,
+          typename CrtpBase, typename JniT_, typename ViableSpan,
           typename... ViableSpans>
-struct LocalCtor<Self, CrtpBase, JniT_, ViableSpan, ViableSpans...>
-    : public LocalCtor<Self, CrtpBase, JniT_, ViableSpans...> {
-  using Base = LocalCtor<Self, CrtpBase, JniT_, ViableSpans...>;
-
+struct LocalCtor<Container, Self, CrtpBase, JniT_, ViableSpan, ViableSpans...>
+    : public LocalCtor<Container, Self, CrtpBase, JniT_, ViableSpans...> {
+  using Base = LocalCtor<Container, Self, CrtpBase, JniT_, ViableSpans...>;
   using Base::Base;
 
   using Span = typename JniT_::SpanType;
@@ -64,19 +64,20 @@ struct LocalCtor<Self, CrtpBase, JniT_, ViableSpan, ViableSpans...>
   LocalCtor(ViableSpan object) : Base(static_cast<Span>(object)) {}
 };
 
-template <typename Self, typename CrtpBase, typename JniT,
-          typename... ViableSpans>
+template <template <const auto&...> class Container, typename Self,
+          typename CrtpBase, typename JniT, typename... ViableSpans>
 struct GlobalCtor : public CrtpBase {
   using CrtpBase::CrtpBase;
 };
 
 // Augments a a local constructor of type |Span| (created by |LoadedBy|).
 // Inheritance and ctor inheritance will continue through |Base|.
-template <typename Self, typename CrtpBase, typename JniT, typename ViableSpan,
+template <template <const auto&...> class Container, typename Self,
+          typename CrtpBase, typename JniT, typename ViableSpan,
           typename... ViableSpans>
-struct GlobalCtor<Self, CrtpBase, JniT, ViableSpan, ViableSpans...>
-    : public GlobalCtor<Self, CrtpBase, JniT, ViableSpans...> {
-  using Base = GlobalCtor<Self, CrtpBase, JniT, ViableSpans...>;
+struct GlobalCtor<Container, Self, CrtpBase, JniT, ViableSpan, ViableSpans...>
+    : public GlobalCtor<Container, Self, CrtpBase, JniT, ViableSpans...> {
+  using Base = GlobalCtor<Container, Self, CrtpBase, JniT, ViableSpans...>;
   using Base::Base;
   using Span = typename JniT::SpanType;
   using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;

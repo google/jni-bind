@@ -33,7 +33,8 @@ template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class GlobalObject
-    : public GlobalCtor<GlobalObject<class_v_, class_loader_v_, jvm_v_>,
+    : public GlobalCtor<GlobalObject,
+                        GlobalObject<class_v_, class_loader_v_, jvm_v_>,
                         ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
                         JniT<jobject, class_v_, class_loader_v_, jvm_v_>,
 
@@ -43,7 +44,7 @@ class GlobalObject
   friend class ClassLoaderRef;
 
   using Base =
-      GlobalCtor<GlobalObject<class_v_, class_loader_v_, jvm_v_>,
+      GlobalCtor<GlobalObject, GlobalObject<class_v_, class_loader_v_, jvm_v_>,
                  ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
                  JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
   using Base::Base;
