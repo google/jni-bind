@@ -326,8 +326,8 @@ cc_library(
         ":class_loader",
         ":class_loader_ref",
         ":jvm",
+        ":promotion_mechanics",
         "//:jni_dep",
-        "//implementation/jni_helper",
         "//implementation/jni_helper:lifecycle_object",
     ],
 )
