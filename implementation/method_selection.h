@@ -22,7 +22,6 @@
 #include <utility>
 
 #include "implementation/array.h"
-#include "implementation/array_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/id.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"

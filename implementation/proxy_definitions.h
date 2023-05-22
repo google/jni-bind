@@ -22,14 +22,13 @@
 #include <tuple>
 #include <type_traits>
 
-#include "implementation/array.h"
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/id.h"
 #include "implementation/id_type.h"
 #include "implementation/jvm.h"
-#include "implementation/local_array.h"
+#include "implementation/loaded_by.h"
 #include "implementation/name_constants.h"
 #include "implementation/object.h"
 #include "implementation/proxy.h"
