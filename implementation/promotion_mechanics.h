@@ -16,9 +16,12 @@
 #ifndef JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_H_
 #define JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_H_
 
+#include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
+#include "implementation/object_ref.h"
+#include "implementation/ref_base.h"
 #include "jni_dep.h"
 #include "metaprogramming/deep_equal.h"
 #include "metaprogramming/pack_discriminator.h"
@@ -36,48 +39,75 @@ struct PromoteToGlobal {};
 // This is atypical when solely using JNI Bind, use with caution.
 struct AdoptGlobal {};
 
-template <template <const auto&...> class Container, typename Self,
-          typename CrtpBase, typename Span, typename... ViableSpans>
-struct LocalCtor : public CrtpBase {
-  using CrtpBase::CrtpBase;
-};
-
 // Augments a a local constructor of type |Span|.
 // Inheritance and ctor inheritance will continue through |CrtpBase|.
-template <template <const auto&...> class Container, typename Self,
-          typename CrtpBase, typename JniT_, typename ViableSpan,
+template <LifecycleType lifecycleType, typename JniT, typename ViableSpan,
           typename... ViableSpans>
-struct LocalCtor<Container, Self, CrtpBase, JniT_, ViableSpan, ViableSpans...>
-    : public LocalCtor<Container, Self, CrtpBase, JniT_, ViableSpans...> {
-  using Base = LocalCtor<Container, Self, CrtpBase, JniT_, ViableSpans...>;
+struct ScopedEntry : public ScopedEntry<lifecycleType, JniT, ViableSpans...> {
+  using Base = ScopedEntry<lifecycleType, JniT, ViableSpans...>;
   using Base::Base;
-
-  using Span = typename JniT_::SpanType;
-  using LifecycleT = LifecycleHelper<Span, LifecycleType::LOCAL>;
+  using Span = typename JniT::SpanType;
+  using LifecycleT = LifecycleHelper<Span, lifecycleType>;
 
   // "Copy" constructor: Additional reference to object will be created.
-  LocalCtor(CreateCopy, ViableSpan object)
+  ScopedEntry(CreateCopy, ViableSpan object)
       : Base(static_cast<Span>(
             LifecycleT::NewReference(static_cast<Span>(object)))) {}
 
   // "Wrap" constructor: Object released at end of scope.
-  LocalCtor(ViableSpan object) : Base(static_cast<Span>(object)) {}
+  ScopedEntry(ViableSpan object) : Base(static_cast<Span>(object)) {}
+
+  template <typename T,
+            typename = std::enable_if_t<
+                ::jni::metaprogramming::DeepEqual_v<ScopedEntry, T> ||
+                std::is_base_of_v<RefBaseTag<Span>, T>>>
+  ScopedEntry(T&& rhs) : Base(rhs.Release()) {}
 };
 
-template <template <const auto&...> class Container, typename Self,
-          typename CrtpBase, typename JniT, typename... ViableSpans>
+struct ScopedTerminalTag {};
+
+template <LifecycleType lifecycleType, typename JniT>
+struct ScopedEntry<lifecycleType, JniT, ScopedTerminalTag>
+    : public ValidatorProxy<JniT> {
+  using Base = ValidatorProxy<JniT>;
+  using Base::Base;
+};
+
+template <LifecycleType lifecycleType, typename JniT, typename... ViableSpans>
+struct Scoped : public ScopedEntry<lifecycleType, JniT, ViableSpans...,
+                                   ScopedTerminalTag> {
+  using Base =
+      ScopedEntry<lifecycleType, JniT, ViableSpans..., ScopedTerminalTag>;
+  using Base::Base;
+
+  ~Scoped() {
+    if (Base::object_ref_) {
+      LifecycleHelper<typename JniT::SpanType, lifecycleType>::Delete(
+          Base::object_ref_);
+    }
+  }
+};
+
+template <LifecycleType lifecycleType, typename JniT, typename... ViableSpans>
+Scoped(Scoped<lifecycleType, JniT, ViableSpans...>)
+    -> Scoped<lifecycleType, JniT, ViableSpans...>;
+
+template <LifecycleType val, typename Self, typename CrtpBase, typename JniT,
+          typename... ViableSpans>
 struct GlobalCtor : public CrtpBase {
   using CrtpBase::CrtpBase;
 };
 
 // Augments a a local constructor of type |Span| (created by |LoadedBy|).
 // Inheritance and ctor inheritance will continue through |Base|.
-template <template <const auto&...> class Container, typename Self,
-          typename CrtpBase, typename JniT, typename ViableSpan,
+template <typename Self, typename CrtpBase, typename JniT, typename ViableSpan,
           typename... ViableSpans>
-struct GlobalCtor<Container, Self, CrtpBase, JniT, ViableSpan, ViableSpans...>
-    : public GlobalCtor<Container, Self, CrtpBase, JniT, ViableSpans...> {
-  using Base = GlobalCtor<Container, Self, CrtpBase, JniT, ViableSpans...>;
+struct GlobalCtor<LifecycleType::GLOBAL, Self, CrtpBase, JniT, ViableSpan,
+                  ViableSpans...>
+    : public GlobalCtor<LifecycleType::GLOBAL, Self, CrtpBase, JniT,
+                        ViableSpans...> {
+  using Base =
+      GlobalCtor<LifecycleType::GLOBAL, Self, CrtpBase, JniT, ViableSpans...>;
   using Base::Base;
   using Span = typename JniT::SpanType;
   using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
@@ -94,7 +124,8 @@ struct GlobalCtor<Container, Self, CrtpBase, JniT, ViableSpan, ViableSpans...>
   explicit GlobalCtor(AdoptGlobal, ViableSpan obj) : Base(obj) {}
 
   template <typename T, typename = std::enable_if_t<
-                            ::jni::metaprogramming::DeepEqual_v<Self, T>>>
+                            ::jni::metaprogramming::DeepEqual_v<Self, T> ||
+                            std::is_base_of_v<RefBaseTag<Span>, T>>>
   GlobalCtor(T&& rhs) : Base(rhs.Release()) {}
 };
 

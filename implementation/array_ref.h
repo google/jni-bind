@@ -22,6 +22,7 @@
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/jni_array_helper.h"
 #include "implementation/jni_type.h"
+#include "implementation/object_ref.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
 
@@ -53,9 +54,6 @@ class ArrayRef : public RefBase<JniT>,
     return JniArrayHelper<SpanType, JniT::kRank>::GetLength(Base::object_ref_);
   }
 };
-
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-class LocalObject;
 
 template <typename JniT>
 class ArrayRef<

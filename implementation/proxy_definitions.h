@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef JNI_BIND_TYPE_PROXY_DEFINITIONS_H_
 #define JNI_BIND_TYPE_PROXY_DEFINITIONS_H_
 
@@ -25,8 +24,11 @@
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/forward_declarations.h"
 #include "implementation/id.h"
 #include "implementation/id_type.h"
+#include "implementation/jni_helper/lifecycle.h"
+#include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/loaded_by.h"
 #include "implementation/name_constants.h"
@@ -36,9 +38,6 @@
 #include "jni_dep.h"
 
 namespace jni {
-
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-class LocalObject;
 
 template <typename TUndecayed>
 struct ProxyHelper;
@@ -136,12 +135,22 @@ struct Proxy<JObject,
     static constexpr bool kViable = std::is_same_v<T, jobject>;
   };
 
+  // Old "LocalObject" form.
   template <typename IdT,
             template <const auto&, const auto&, const auto&> class Container,
             const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   struct ContextualViabilityHelper<IdT,
                                    Container<class_v, class_loader_v, jvm_v>> {
-    // TODO(b/174272629): Exclude objects loaded by invalid loaders.
+    static constexpr bool kViable =
+        std::string_view{class_v.name_} == std::string_view{IdT::Val().name_};
+  };
+
+  // New "LocalObject" form.
+  template <typename IdT, LifecycleType lifecycleType, const auto& class_v,
+            const auto& class_loader_v, const auto& jvm_v>
+  struct ContextualViabilityHelper<
+      IdT, Scoped<lifecycleType, void,
+                  JniT<jobject, class_v, class_loader_v, jvm_v>, jobject>> {
     static constexpr bool kViable =
         std::string_view{class_v.name_} == std::string_view{IdT::Val().name_};
   };

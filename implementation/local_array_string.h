@@ -24,6 +24,7 @@
 #include "implementation/class.h"
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/jni_array_helper.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_type.h"
@@ -35,12 +36,6 @@
 #include "jni_dep.h"
 
 namespace jni {
-
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-class LocalObject;
-
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-class GlobalObject;
 
 template <std::size_t kRank_, const auto& class_v_, const auto& class_loader_v_,
           const auto& jvm_v_>

@@ -28,14 +28,15 @@ cc_library(
     hdrs = ["array_ref.h"],
     deps = [
         ":array",
-        ":array_type_conversion",
         ":array_view",
         ":class",
         ":default_class_loader",
         ":jni_type",
+        ":object_ref",
         ":ref_base",
         "//:jni_dep",
         "//implementation/jni_helper:jni_array_helper",
+        "//implementation/jni_helper:lifecycle",
     ],
 )
 
@@ -318,6 +319,12 @@ cc_library(
 )
 
 cc_library(
+    name = "forward_declarations",
+    hdrs = ["forward_declarations.h"],
+    deps = ["//implementation/jni_helper:lifecycle_object"],
+)
+
+cc_library(
     name = "global_class_loader",
     hdrs = ["global_class_loader.h"],
     deps = [
@@ -491,6 +498,7 @@ cc_library(
         ":class",
         ":class_ref",
         ":default_class_loader",
+        ":forward_declarations",
         ":jni_type",
         ":jvm",
         ":object",
@@ -509,6 +517,7 @@ cc_library(
         ":class",
         ":class_ref",
         ":default_class_loader",
+        ":forward_declarations",
         ":jni_type",
         ":jvm",
         ":local_array",
@@ -771,7 +780,10 @@ cc_library(
     name = "promotion_mechanics",
     hdrs = ["promotion_mechanics.h"],
     deps = [
+        ":forward_declarations",
         ":jni_type",
+        ":object_ref",
+        ":ref_base",
         "//:jni_dep",
         "//implementation/jni_helper",
         "//implementation/jni_helper:lifecycle_object",
@@ -817,12 +829,13 @@ cc_library(
     name = "proxy_definitions",
     hdrs = ["proxy_definitions.h"],
     deps = [
-        ":array",
         ":class",
         ":class_loader",
         ":default_class_loader",
+        ":forward_declarations",
         ":id",
         ":id_type",
+        ":jni_type",
         ":jvm",
         ":loaded_by",
         ":name_constants",
@@ -830,6 +843,7 @@ cc_library(
         ":proxy",
         ":ref_base",
         "//:jni_dep",
+        "//implementation/jni_helper:lifecycle",
     ],
 )
 

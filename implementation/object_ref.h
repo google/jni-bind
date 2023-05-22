@@ -152,6 +152,7 @@ class ConstructorValidator : public ObjectRef<JniT> {
   }
 };
 
+// Forward declaration for constructor validator (ctor augmentations).
 template <typename JniT>
 struct ValidatorProxy : public ConstructorValidator<JniT> {
   using Base = ConstructorValidator<JniT>;

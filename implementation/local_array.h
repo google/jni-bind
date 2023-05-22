@@ -24,6 +24,7 @@
 #include "implementation/class.h"
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/jni_array_helper.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
@@ -32,12 +33,6 @@
 #include "jni_dep.h"
 
 namespace jni {
-
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-class LocalObject;
-
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-class GlobalObject;
 
 // Represents a an array object (e.g. int[], float[][], Object[], etc).
 // Currently GlobalArrays do not exist, as reasoning about the lifecycles of the
@@ -85,6 +80,17 @@ class LocalArray
                 static_cast<jobject>(local_object)),
             static_cast<jobject>(local_object))) {}
 
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  LocalArray(std::size_t size,
+             const Scoped<LifecycleType::LOCAL,
+                          JniT<jobject, class_v, class_loader_v, jvm_v>,
+                          jobject>& local_object)
+      : Base(JniArrayHelper<jobject, kRank_>::NewArray(
+            size,
+            ObjectClassRefT::GetAndMaybeLoadClassRef(
+                static_cast<jobject>(local_object)),
+            static_cast<jobject>(local_object))) {}
+
   ~LocalArray() {
     if (Base::object_ref_) {
       LifecycleHelper<jobject, LifecycleType::LOCAL>::Delete(Base::object_ref_);
@@ -97,6 +103,13 @@ template <template <const auto&, const auto&, const auto&>
           const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 LocalArray(std::size_t,
            const ObjectContainer<class_v_, class_loader_v_, jvm_v_>&)
+    -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+LocalArray(
+    std::size_t,
+    const Scoped<LifecycleType::LOCAL,
+                 JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>&)
     -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
 
 template <typename SpanType>

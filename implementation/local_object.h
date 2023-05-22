@@ -31,37 +31,22 @@
 
 namespace jni {
 
-// Represents a "Local" JNI reference of a class.  This object is *not* thread
-// safe, but can be promoted to a GlobalObject which *is* thread safe.
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+using LocalObjectImpl =
+    Scoped<LifecycleType::LOCAL,
+           JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
+
 template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
-class LocalObject
-    : public LocalCtor<
-          LocalObject, LocalObject<class_v_, class_loader_v_, jvm_v_>,
-          ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
-          JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject> {
+class LocalObject : public LocalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
  public:
-  using Base =
-      LocalCtor<LocalObject, LocalObject<class_v_, class_loader_v_, jvm_v_>,
-                ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
-                JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
+  using Base = LocalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
   using Base::Base;
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  LocalObject(LocalObject<class_v, class_loader_v, jvm_v>&& rhs)
-      : Base(rhs.Release()) {
-    static_assert(
-        std::string_view(class_v.name_) == std::string_view(class_v_.name_),
-        "You are attempting to initialise a LocalObject from another class "
-        "type");
-  }
-
-  ~LocalObject() {
-    if (Base::object_ref_) {
-      LifecycleHelper<jobject, LifecycleType::LOCAL>::Delete(Base::object_ref_);
-    }
-  }
+  LocalObject(LocalObject<class_v, class_loader_v, jvm_v>&& obj)
+      : Base(obj.Release()) {}
 };
 
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>

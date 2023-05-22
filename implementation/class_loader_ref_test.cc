@@ -219,7 +219,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
 
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
-  LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobjectArray>()};
+  LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
 
   LocalObject<kClass1, kClassLoader, kJvm> a =
       local_class_loader.BuildLocalObject<kClass1>();
@@ -235,7 +235,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
       .WillByDefault(::testing::Return(Fake<jclass>()));
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
-  LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobjectArray>()};
+  LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
 
   LocalObject a{local_class_loader.BuildLocalObject<kClass1>()};
   TearDown();

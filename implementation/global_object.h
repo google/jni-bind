@@ -33,7 +33,7 @@ template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class GlobalObject
-    : public GlobalCtor<GlobalObject,
+    : public GlobalCtor<LifecycleType::GLOBAL,
                         GlobalObject<class_v_, class_loader_v_, jvm_v_>,
                         ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
                         JniT<jobject, class_v_, class_loader_v_, jvm_v_>,
@@ -44,7 +44,8 @@ class GlobalObject
   friend class ClassLoaderRef;
 
   using Base =
-      GlobalCtor<GlobalObject, GlobalObject<class_v_, class_loader_v_, jvm_v_>,
+      GlobalCtor<LifecycleType::GLOBAL,
+                 GlobalObject<class_v_, class_loader_v_, jvm_v_>,
                  ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
                  JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
   using Base::Base;
@@ -56,6 +57,12 @@ class GlobalObject
   explicit GlobalObject()
       : GlobalObject(LifecycleT::Promote(
             LocalObject<class_v_, class_loader_v_, jvm_v_>{}.Release())) {}
+
+  template <const auto& class_v,
+            const auto& class_loader_v = kDefaultClassLoader,
+            const auto& jvm_v = kDefaultJvm>
+  explicit GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&& lhs)
+      : GlobalObject(LifecycleT::Promote(lhs.Release())) {}
 
   // Note: Comparison is only constrained to the class name, and not the
   // classloader or JVM (fully constraining classloaders is very complex).
@@ -77,10 +84,6 @@ class GlobalObject
       LifecycleT::Delete(Base::object_ref_);
     }
   }
-
- private:
-  // Construction from jobject requires |PromoteToGlobal| or |AdoptGlobal|.
-  explicit GlobalObject(jobject obj) : Base(obj) {}
 };
 
 template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>

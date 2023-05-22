@@ -28,6 +28,10 @@
 
 namespace jni {
 
+using LocalStringImpl =
+    Scoped<LifecycleType::LOCAL, JniT<jstring, kJavaLangString>, jobject,
+           jstring>;
+
 // Represents and possibly builds a runtime Java String object.
 //
 // In order to use a string in memory (as opposed to only using it for function
@@ -35,35 +39,18 @@ namespace jni {
 //
 // Like |jobjects|, |jstring|s can be either local or global with the same
 // ownership semantics.
-class LocalString
-    : public LocalCtor<
-          LocalObject, LocalString, StringRefBase<LocalString>,
-          JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>,
-          jobject, jstring> {
+class LocalString : public LocalStringImpl {
  public:
-  friend StringRefBase<LocalString>;
-
-  using Base = LocalCtor<
-      LocalObject, LocalString, StringRefBase<LocalString>,
-      JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>, jobject,
-      jstring>;
+  using Base = LocalStringImpl;
   using Base::Base;
 
-  LocalString(
-      LocalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>&& obj)
+  LocalString(std::nullptr_t) : Base(jstring{nullptr}) {}
+  LocalString(LocalObject<kJavaLangString>&& obj)
       : Base(static_cast<jstring>(obj.Release())) {}
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
   UtfStringView Pin() { return {RefBaseTag<jstring>::object_ref_}; }
-
- private:
-  // Invoked through CRTP on dtor.
-  void ClassSpecificDeleteObjectRef(jstring object_ref) {
-    if (Base::object_ref_) {
-      LifecycleHelper<jstring, LifecycleType::LOCAL>::Delete(object_ref);
-    }
-  }
 };
 
 }  // namespace jni
