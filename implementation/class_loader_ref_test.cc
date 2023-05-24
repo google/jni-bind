@@ -30,7 +30,6 @@ using ::jni::Constructor;
 using ::jni::GlobalClassLoader;
 using ::jni::Jvm;
 using ::jni::JvmRef;
-using ::jni::kDefaultClassLoader;
 using ::jni::kDefaultJvm;
 using ::jni::kNullClassLoader;
 using ::jni::LocalClassLoader;
