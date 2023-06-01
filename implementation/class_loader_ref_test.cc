@@ -24,6 +24,7 @@
 
 namespace {
 
+using ::jni::AdoptGlobal;
 using ::jni::Class;
 using ::jni::ClassLoader;
 using ::jni::Constructor;
@@ -36,6 +37,7 @@ using ::jni::LocalClassLoader;
 using ::jni::LocalObject;
 using ::jni::Method;
 using ::jni::Params;
+using ::jni::PromoteToGlobal;
 using ::jni::Return;
 using ::jni::SupportedClassSet;
 using ::jni::test::AsGlobal;
@@ -85,8 +87,19 @@ TEST_F(JniTest, LocalsAreMoveable) {
   LocalClassLoader<kClassLoader, kJvm> obj_2{std::move(obj_1)};
 }
 
+TEST_F(JniTest, GlobalClassLoadersSupportAdoptionMechanics) {
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(0);
+  GlobalClassLoader<kClassLoader, kJvm> obj_1{AdoptGlobal{}, Fake<jobject>()};
+}
+
+TEST_F(JniTest, GlobalClassLoadersSupportPromoteMechanics) {
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(1);
+  GlobalClassLoader<kClassLoader, kJvm> obj_1{PromoteToGlobal{},
+                                              Fake<jobject>()};
+}
+
 TEST_F(JniTest, GlobalsAreMoveable) {
-  GlobalClassLoader<kClassLoader, kJvm> obj_1{Fake<jobject>()};
+  GlobalClassLoader<kClassLoader, kJvm> obj_1{AdoptGlobal{}, Fake<jobject>()};
   GlobalClassLoader<kClassLoader, kJvm> obj_2{std::move(obj_1)};
 }
 

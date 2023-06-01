@@ -343,12 +343,12 @@ cc_library(
     hdrs = ["global_object.h"],
     deps = [
         ":class",
+        ":forward_declarations",
         ":jni_type",
         ":local_object",
         ":object_ref",
         ":promotion_mechanics",
         "//:jni_dep",
-        "//implementation/jni_helper",
         "//implementation/jni_helper:lifecycle_object",
     ],
 )

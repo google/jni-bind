@@ -17,6 +17,7 @@
 #define JNI_BIND_GLOBAL_OBJECT_H_
 
 #include "implementation/class.h"
+#include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/local_object.h"
@@ -26,63 +27,34 @@
 
 namespace jni {
 
-template <const auto& jvm_v_, const auto& class_loader_v_>
-class ClassLoaderRef;
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+using GlobalObjectImpl =
+    Scoped<LifecycleType::GLOBAL,
+           JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
 
 template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class GlobalObject
-    : public GlobalCtor<LifecycleType::GLOBAL,
-                        GlobalObject<class_v_, class_loader_v_, jvm_v_>,
-                        ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
-                        JniT<jobject, class_v_, class_loader_v_, jvm_v_>,
-
-                        jobject> {
+    : public GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
  public:
-  template <const auto& jvm_v, const auto& class_loader_v>
-  friend class ClassLoaderRef;
-
-  using Base =
-      GlobalCtor<LifecycleType::GLOBAL,
-                 GlobalObject<class_v_, class_loader_v_, jvm_v_>,
-                 ObjectRefBuilder_t<class_v_, class_loader_v_, jvm_v_>,
-                 JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
+  using Base = GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
   using Base::Base;
-
   using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
 
-  // Constructs a new global object using the local object's default
-  // constructor.
-  explicit GlobalObject()
-      : GlobalObject(LifecycleT::Promote(
-            LocalObject<class_v_, class_loader_v_, jvm_v_>{}.Release())) {}
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  GlobalObject(GlobalObject<class_v, class_loader_v, jvm_v>&& obj)
+      : Base(obj.Release()) {}
 
-  template <const auto& class_v,
-            const auto& class_loader_v = kDefaultClassLoader,
-            const auto& jvm_v = kDefaultJvm>
-  explicit GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&& lhs)
-      : GlobalObject(LifecycleT::Promote(lhs.Release())) {}
-
-  // Note: Comparison is only constrained to the class name, and not the
-  // classloader or JVM (fully constraining classloaders is very complex).
-  template <typename T,
-            typename = std::enable_if_t<
-                ::jni::metaprogramming::DeepEqual_v<GlobalObject, T>>>
-  GlobalObject(T&& rhs) : Base(rhs.Release()) {}
-
-  // Constructs a new object using arg based ctor.
   template <typename... Ts>
-  explicit GlobalObject(Ts&&... ts)
-      : GlobalObject(
-            LifecycleT::Promote(LocalObject<class_v_, class_loader_v_, jvm_v_>{
-                std::forward<Ts>(ts)...}
-                                    .Release())) {}
+  GlobalObject(Ts&&... vals) : Base(std::forward<Ts&&>(vals)...) {
+    RefBaseTag<jobject>::object_ref_ =
+        LifecycleT::Promote(RefBaseTag<jobject>::object_ref_);
+  }
 
-  ~GlobalObject() {
-    if (Base::object_ref_) {
-      LifecycleT::Delete(Base::object_ref_);
-    }
+  GlobalObject() {
+    RefBaseTag<jobject>::object_ref_ =
+        LifecycleT::Promote(RefBaseTag<jobject>::object_ref_);
   }
 };
 

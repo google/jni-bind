@@ -28,18 +28,13 @@
 
 namespace jni {
 
-class GlobalString
-    : public GlobalCtor<
-          LifecycleType::GLOBAL, GlobalString, StringRefBase<GlobalString>,
-          JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>,
-          jobject, jstring> {
- public:
-  friend class StringRefBase<GlobalString>;
+using GlobalStringImpl =
+    Scoped<LifecycleType::GLOBAL, JniT<jstring, kJavaLangString>, jobject,
+           jstring>;
 
-  using Base = GlobalCtor<
-      LifecycleType::GLOBAL, GlobalString, StringRefBase<GlobalString>,
-      JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>, jobject,
-      jstring>;
+class GlobalString : public GlobalStringImpl {
+ public:
+  using Base = GlobalStringImpl;
   using Base::Base;
 
   using LifecycleT = LifecycleHelper<jstring, LifecycleType::GLOBAL>;
@@ -54,18 +49,6 @@ class GlobalString
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
   UtfStringView Pin() { return {RefBaseTag<jstring>::object_ref_}; }
-
- private:
-  // Construction from jstring requires |PromoteToGlobal| or |AdoptGlobal|.
-  explicit GlobalString(jstring obj) : Base(obj) {}
-
-  // Construction from jstring requires |PromoteToGlobal| or |AdoptGlobal|.
-  explicit GlobalString(jobject obj) : Base(static_cast<jstring>(obj)) {}
-
-  // Invoked through CRTP on dtor.
-  void ClassSpecificDeleteObjectRef(jstring object_ref) {
-    LifecycleT::Delete(object_ref);
-  }
 };
 
 }  // namespace jni

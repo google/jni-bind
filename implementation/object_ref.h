@@ -115,7 +115,7 @@ class ConstructorValidator : public ObjectRef<JniT> {
   // is built in Java and then passed through to JNI.
   ConstructorValidator(typename JniT::StorageType obj) : Base(obj) {}
 
-  template <const auto& jvm_v, const auto& class_loader_v>
+  template <LifecycleType, const auto& jvm_v, const auto& class_loader_v>
   friend class ClassLoaderRef;
 
   static constexpr std::size_t kNumConstructors =

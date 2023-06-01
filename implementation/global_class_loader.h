@@ -29,29 +29,14 @@ namespace jni {
 
 template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
 class GlobalClassLoader
-    : public GlobalCtor<
-          LifecycleType::GLOBAL, GlobalClassLoader<class_loader_v_, jvm_v_>,
-          ClassLoaderRef<jvm_v_, class_loader_v_>,
-          JniT<jobject, kJavaLangClassLoader, class_loader_v_, jvm_v_>,
-          jobject> {
+    : public ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_> {
  public:
-  using Base = GlobalCtor<
-      LifecycleType::GLOBAL, GlobalClassLoader<class_loader_v_, jvm_v_>,
-      ClassLoaderRef<jvm_v_, class_loader_v_>,
-      JniT<jobject, kJavaLangClassLoader, class_loader_v_, jvm_v_>, jobject>;
-  using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
-
+  using Base = ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_>;
   using Base::Base;
 
   template <const auto& class_loader_v, const auto& jvm_v>
   GlobalClassLoader(GlobalClassLoader<class_loader_v, jvm_v>&& rhs)
       : Base(rhs.Release()) {}
-
-  ~GlobalClassLoader() {
-    if (Base::object_ref_) {
-      LifecycleT::Delete(Base::object_ref_);
-    }
-  }
 };
 
 }  // namespace jni

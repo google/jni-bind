@@ -30,74 +30,16 @@
 
 namespace jni {
 
-using LocalClassloaderImpl =
-    Scoped<LifecycleType::LOCAL, JniT<jobject, kJavaLangClassLoader>, jobject>;
-
 template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
-class LocalClassLoader : public LocalClassloaderImpl {
+class LocalClassLoader
+    : public ClassLoaderRef<LifecycleType::LOCAL, class_loader_v_, jvm_v_> {
  public:
-  using Base = LocalClassloaderImpl;
+  using Base = ClassLoaderRef<LifecycleType::LOCAL, class_loader_v_, jvm_v_>;
   using Base::Base;
 
   template <const auto& class_loader_v, const auto& jvm_v>
   explicit LocalClassLoader(LocalClassLoader<class_loader_v, jvm_v>&& lhs)
       : LocalClassLoader(lhs.Release()) {}
-
-  // Returns kDefaultJvm for default class loaded objects, otherwise returns the
-  // jvm associated with this loader.  Default loaders do not use indexing,
-  // whereas non-standard loaders do (to allow for programmatic Jvm teardown).
-  template <const auto& class_v>
-  static constexpr auto& JvmForLoader() {
-    if constexpr (ParentLoaderForClass<class_loader_v_, class_v>() !=
-                  kDefaultClassLoader) {
-      return jvm_v_;
-    } else {
-      return kDefaultJvm;
-    }
-  }
-
-  // WARNING: This is duplicated in class_loader_ref.h, but will be removed
-  // in a downstream CL.
-  template <const auto& class_v, typename... Params>
-  [[nodiscard]] auto BuildLocalObject(Params&&... params) {
-    using JniClassT = JniT<jobject, class_v>;
-    using IdClassT = Id<JniClassT, IdType::CLASS>;
-    static_assert(
-        !(ParentLoaderForClass<class_loader_v_, class_v>() == kNullClassLoader),
-        "Cannot build this class with this loader.");
-
-    if constexpr (ParentLoaderForClass<class_loader_v_, class_v>() !=
-                  kDefaultClassLoader) {
-      ClassRef_t<JniT<jobject, class_v, class_loader_v_, jvm_v_,
-                      0>>::PrimeJClassFromClassLoader([=]() {
-        // Prevent the object (which is a runtime instance of a class) from
-        // falling out of scope so it is not released.
-        LocalObject loaded_class =
-            (*this)("loadClass", IdClassT::kNameUsingDots);
-
-        // We only want to create global references if we are actually going
-        // to use them so that they do not leak.
-        jclass test_class{
-            static_cast<jclass>(static_cast<jobject>(loaded_class))};
-        return static_cast<jclass>(JniEnv::GetEnv()->NewGlobalRef(test_class));
-      });
-    }
-    return LocalObject<class_v,
-                       ParentLoaderForClass<class_loader_v_, class_v>(),
-                       JvmForLoader<class_v>()>{
-        std::forward<Params>(params)...};
-  }
-
-  template <const auto& class_v, typename... Params>
-  [[nodiscard]] auto BuildGlobalObject(Params&&... params) {
-    Scoped obj = BuildLocalObject<class_v>(std::forward<Params>(params)...);
-    jobject promoted_local =
-        LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(obj.Release());
-
-    return GlobalObject<class_v,
-                        ParentLoaderForClass<class_loader_v_, class_v>(),
-                        JvmForLoader<class_v>()>{promoted_local};
-  }
 
  private:
   template <typename>

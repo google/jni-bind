@@ -32,6 +32,10 @@ class GlobalObject;
 template <typename JniT>
 struct ValidatorProxy;
 
+template <LifecycleType lifecycleType, const auto& jvm_v_,
+          const auto& class_loader_v_>
+class ClassLoaderRef;
+
 }  // namespace jni
 
 #endif  // JNI_BIND_TYPE_FORWARD_DECLARATIONS_H_

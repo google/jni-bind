@@ -40,10 +40,13 @@
 
 namespace jni {
 
-template <const auto& jvm_v_, const auto& class_loader_v_>
-class ClassLoaderRef
-    : public ObjectRef<JniT<jobject, kJavaLangClassLoader, kDefaultClassLoader,
-                            kDefaultJvm>> {
+template <LifecycleType lifecycleType>
+using ClassLoaderImpl =
+    Scoped<lifecycleType, JniT<jobject, kJavaLangClassLoader>, jobject>;
+
+template <LifecycleType lifecycleType, const auto& class_loader_v_,
+          const auto& jvm_v_>
+class ClassLoaderRef : public ClassLoaderImpl<lifecycleType> {
  private:
   // Returns kDefaultJvm for default class loaded objects, otherwise returns the
   // jvm associated with this loader.  Default loaders do not use indexing,
@@ -59,9 +62,8 @@ class ClassLoaderRef
   }
 
  public:
-  ClassLoaderRef(jobject class_loader)
-      : ObjectRef<JniT<jobject, kJavaLangClassLoader, kDefaultClassLoader,
-                       kDefaultJvm>>(class_loader) {}
+  using Base = ClassLoaderImpl<lifecycleType>;
+  using Base::Base;
 
   static_assert(class_loader_v_ != kDefaultClassLoader,
                 "Custom class loaders should not use the default class loader,"
@@ -106,7 +108,7 @@ class ClassLoaderRef
 
     return GlobalObject<class_v,
                         ParentLoaderForClass<class_loader_v_, class_v>(),
-                        JvmForLoader<class_v>()>{promoted_local};
+                        JvmForLoader<class_v>()>{AdoptGlobal{}, promoted_local};
   }
 };
 

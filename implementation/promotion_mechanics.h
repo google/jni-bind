@@ -39,45 +39,83 @@ struct PromoteToGlobal {};
 // This is atypical when solely using JNI Bind, use with caution.
 struct AdoptGlobal {};
 
-// Augments a a local constructor of type |Span|.
-// Inheritance and ctor inheritance will continue through |CrtpBase|.
-template <LifecycleType lifecycleType, typename JniT, typename ViableSpan,
-          typename... ViableSpans>
-struct ScopedEntry : public ScopedEntry<lifecycleType, JniT, ViableSpans...> {
-  using Base = ScopedEntry<lifecycleType, JniT, ViableSpans...>;
-  using Base::Base;
-  using Span = typename JniT::SpanType;
-  using LifecycleT = LifecycleHelper<Span, lifecycleType>;
-
-  // "Copy" constructor: Additional reference to object will be created.
-  ScopedEntry(CreateCopy, ViableSpan object)
-      : Base(static_cast<Span>(
-            LifecycleT::NewReference(static_cast<Span>(object)))) {}
-
-  // "Wrap" constructor: Object released at end of scope.
-  ScopedEntry(ViableSpan object) : Base(static_cast<Span>(object)) {}
-
-  template <typename T,
-            typename = std::enable_if_t<
-                ::jni::metaprogramming::DeepEqual_v<ScopedEntry, T> ||
-                std::is_base_of_v<RefBaseTag<Span>, T>>>
-  ScopedEntry(T&& rhs) : Base(rhs.Release()) {}
-};
-
+// Marks the end of `ScopeEntry` daisy chain.
 struct ScopedTerminalTag {};
 
-template <LifecycleType lifecycleType, typename JniT>
-struct ScopedEntry<lifecycleType, JniT, ScopedTerminalTag>
+// Shared implementation common to all `Entry`.
+// template <typename Base, LifecycleType lifecycleType, typename JniT>
+template <typename Base, LifecycleType lifecycleType, typename JniT,
+          typename ViableSpan>
+struct EntryBase : public Base {
+  using Base::Base;
+  using Span = typename JniT::SpanType;
+
+  // `RefBaseTag` move constructor for object of same span type.
+  template <typename T, typename = std::enable_if_t<
+                            ::jni::metaprogramming::DeepEqual_v<EntryBase, T> ||
+                            std::is_base_of_v<RefBaseTag<Span>, T>>>
+  EntryBase(T&& rhs) : Base(rhs.Release()) {}
+
+  // "Copy" constructor: Additional reference to object will be created.
+  EntryBase(CreateCopy, ViableSpan object)
+      : Base(static_cast<Span>(
+            LifecycleHelper<Span, lifecycleType>::NewReference(
+                static_cast<Span>(object)))) {}
+};
+
+// Local scoped entry augmentation.
+template <LifecycleType lifecycleType, typename JniT, typename ViableSpan,
+          typename... ViableSpans>
+struct Entry
+    : public EntryBase<Entry<LifecycleType::LOCAL, JniT, ViableSpans...>,
+                       LifecycleType::LOCAL, JniT, ViableSpan> {
+  using Base = EntryBase<Entry<LifecycleType::LOCAL, JniT, ViableSpans...>,
+                         LifecycleType::LOCAL, JniT, ViableSpan>;
+  using Base::Base;
+
+  // "Wrap" constructor: Object released at end of scope.
+  Entry(ViableSpan object)
+      : Base(static_cast<typename JniT::SpanType>(object)) {}
+};
+
+// Global scoped entry augmentation.
+template <typename JniT, typename ViableSpan, typename... ViableSpans>
+struct Entry<LifecycleType::GLOBAL, JniT, ViableSpan, ViableSpans...>
+    : public EntryBase<Entry<LifecycleType::GLOBAL, JniT, ViableSpans...>,
+                       LifecycleType::GLOBAL, JniT, ViableSpan> {
+  using Base = EntryBase<Entry<LifecycleType::GLOBAL, JniT, ViableSpans...>,
+                         LifecycleType::GLOBAL, JniT, ViableSpan>;
+  using Base::Base;
+
+  // "Promote" constructor: Creates new global, frees |obj| (standard).
+  explicit Entry(PromoteToGlobal, ViableSpan obj)
+      : Base(LifecycleHelper<typename JniT::SpanType,
+                             LifecycleType::GLOBAL>::Promote(obj)) {}
+
+  // "Adopts" a global (non-standard).
+  explicit Entry(AdoptGlobal, ViableSpan obj) : Base(obj) {}
+};
+
+// Terminal Entry (ends daisy chain).
+template <typename JniT>
+struct Entry<LifecycleType::LOCAL, JniT, ScopedTerminalTag>
     : public ValidatorProxy<JniT> {
   using Base = ValidatorProxy<JniT>;
   using Base::Base;
 };
 
+template <typename JniT>
+struct Entry<LifecycleType::GLOBAL, JniT, ScopedTerminalTag>
+    : public ValidatorProxy<JniT> {
+  using Base = ValidatorProxy<JniT>;
+  using Base::Base;
+};
+
+// Local augmentation.
 template <LifecycleType lifecycleType, typename JniT, typename... ViableSpans>
-struct Scoped : public ScopedEntry<lifecycleType, JniT, ViableSpans...,
-                                   ScopedTerminalTag> {
-  using Base =
-      ScopedEntry<lifecycleType, JniT, ViableSpans..., ScopedTerminalTag>;
+struct Scoped
+    : public Entry<lifecycleType, JniT, ViableSpans..., ScopedTerminalTag> {
+  using Base = Entry<lifecycleType, JniT, ViableSpans..., ScopedTerminalTag>;
   using Base::Base;
 
   ~Scoped() {
@@ -91,43 +129,6 @@ struct Scoped : public ScopedEntry<lifecycleType, JniT, ViableSpans...,
 template <LifecycleType lifecycleType, typename JniT, typename... ViableSpans>
 Scoped(Scoped<lifecycleType, JniT, ViableSpans...>)
     -> Scoped<lifecycleType, JniT, ViableSpans...>;
-
-template <LifecycleType val, typename Self, typename CrtpBase, typename JniT,
-          typename... ViableSpans>
-struct GlobalCtor : public CrtpBase {
-  using CrtpBase::CrtpBase;
-};
-
-// Augments a a local constructor of type |Span| (created by |LoadedBy|).
-// Inheritance and ctor inheritance will continue through |Base|.
-template <typename Self, typename CrtpBase, typename JniT, typename ViableSpan,
-          typename... ViableSpans>
-struct GlobalCtor<LifecycleType::GLOBAL, Self, CrtpBase, JniT, ViableSpan,
-                  ViableSpans...>
-    : public GlobalCtor<LifecycleType::GLOBAL, Self, CrtpBase, JniT,
-                        ViableSpans...> {
-  using Base =
-      GlobalCtor<LifecycleType::GLOBAL, Self, CrtpBase, JniT, ViableSpans...>;
-  using Base::Base;
-  using Span = typename JniT::SpanType;
-  using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
-
-  // "Copy" constructor: Additional reference to object will be created.
-  GlobalCtor(CreateCopy, ViableSpan object)
-      : Base(static_cast<Span>(LifecycleT::NewReference(object))) {}
-
-  // "Promote" constructor: Creates new global, frees |obj| (standard).
-  explicit GlobalCtor(PromoteToGlobal, ViableSpan obj)
-      : Base(LifecycleT::Promote(obj)) {}
-
-  // "Adopts" a global (non-standard).
-  explicit GlobalCtor(AdoptGlobal, ViableSpan obj) : Base(obj) {}
-
-  template <typename T, typename = std::enable_if_t<
-                            ::jni::metaprogramming::DeepEqual_v<Self, T> ||
-                            std::is_base_of_v<RefBaseTag<Span>, T>>>
-  GlobalCtor(T&& rhs) : Base(rhs.Release()) {}
-};
 
 }  // namespace jni
 
