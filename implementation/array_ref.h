@@ -28,16 +28,9 @@
 
 namespace jni {
 
-struct ArrayRefPrimitiveBaseTag {};
-
-// Tag for non object array ref like tags (e.g. jintArray but not jobjectArray).
-template <typename JniT>
-struct ArrayRefPrimitiveTag : ArrayRefPrimitiveBaseTag {};
-
 // |SpanType| is primitive types like jint, jfloat, etc.
 template <typename JniT, typename Enable = void>
-class ArrayRef : public RefBase<JniT>,
-                 ArrayRefPrimitiveTag<typename JniT::SpanType> {
+class ArrayRef : public RefBase<JniT> {
  public:
   using SpanType = typename JniT::SpanType;
   using Base = RefBase<JniT>;

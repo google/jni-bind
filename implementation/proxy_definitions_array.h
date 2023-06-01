@@ -26,9 +26,6 @@ namespace jni {
 template <typename Overload>
 struct ArrayHelper;
 
-template <typename SpanType>
-struct ArrayRefPrimitiveTag;
-
 template <typename SpanType, std::size_t kRank, const auto& class_v_,
           const auto& class_loader_v_, const auto& jvm_v_>
 class LocalArray;
@@ -68,8 +65,8 @@ struct Proxy<JArrayType, typename std::enable_if_t<
   static constexpr bool kViable = Helper<ParamSelection, T>::val;
 
   using AsDecl = std::tuple<ArrayTag<JArrayType>>;
-  using AsArg = std::tuple<JArrayType, RefBaseTag<JArrayType>,
-                           ArrayTag<JArrayType>, ArrayRefPrimitiveTag<CDecl>>;
+  using AsArg =
+      std::tuple<JArrayType, RefBaseTag<JArrayType>, ArrayTag<JArrayType>>;
 
   template <typename Id>
   using AsReturn = typename ArrayHelper<Id>::AsReturn;
