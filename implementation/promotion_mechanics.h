@@ -94,6 +94,11 @@ struct Entry<LifecycleType::GLOBAL, JniT, ViableSpan, ViableSpans...>
 
   // "Adopts" a global (non-standard).
   explicit Entry(AdoptGlobal, ViableSpan obj) : Base(obj) {}
+
+ protected:
+  // Causes failure for illegal "wrap" like construction.
+  explicit Entry(ViableSpan object)
+      : Base(static_cast<typename JniT::SpanType>(object)) {}
 };
 
 // Terminal Entry (ends daisy chain).
