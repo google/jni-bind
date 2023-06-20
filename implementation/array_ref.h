@@ -60,6 +60,7 @@ class ArrayRef : public ScopedArrayImpl<JniT> {
   }
 };
 
+// |SpanType| is object.
 template <typename JniT>
 class ArrayRef<
     JniT, std::enable_if_t<std::is_same_v<typename JniT::SpanType, jobject>>>

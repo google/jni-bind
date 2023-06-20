@@ -18,6 +18,7 @@ package com.jnibind.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.AfterClass;
@@ -27,9 +28,9 @@ import org.junit.runners.JUnit4;
 
 /** Exercises array functionality arcross rJNI. */
 @RunWith(JUnit4.class)
-public class ArrayTestMethodRank1 {
+public class ArrayTestFieldRank1 {
   static {
-    System.loadLibrary("array_test_method_rank_1_jni");
+    System.loadLibrary("array_test_field_rank_1_jni");
   }
 
   @AfterClass
@@ -39,29 +40,45 @@ public class ArrayTestMethodRank1 {
 
   static native void jniTearDown();
 
-  native void nativeBooleanTests(ArrayTestMethodRank1 arrayTest, boolean[] intArray);
+  public boolean[] booleanArrayField = {false, false, false};
+  byte[] byteArrayField = {0, 0, 0, 0, 0, 0};
+  char[] charArrayField = {0, 0, 0, 0, 0, 0};
+  short[] shortArrayField = {0, 0, 0, 0, 0, 0};
+  int[] intArrayField = {0, 0, 0, 0, 0, 0};
+  long[] longArrayField = {0, 0, 0, 0, 0, 0};
+  float[] floatArrayField = {0, 0, 0, 0, 0, 0};
+  double[] doubleArrayField = {0, 0, 0, 0, 0, 0};
 
-  native void nativeByteTests(ArrayTestMethodRank1 arrayTest, byte[] byteArray);
+  String[] stringArrayField = {"BAD", "BAD", "BAD"};
+  ObjectTestHelper[] objectArrayField = {
+    new ObjectTestHelper(0, 0, 0), new ObjectTestHelper(1, 1, 1)
+  };
 
-  native void nativeCharTests(ArrayTestMethodRank1 arrayTest, char[] charArray);
+  native void nativeBooleanTests(ArrayTestFieldRank1 arrayTest, boolean[] intArray);
 
-  native void nativeShortTests(ArrayTestMethodRank1 arrayTest, short[] shortArray);
+  native void nativeByteTests(ArrayTestFieldRank1 arrayTest, byte[] byteArray);
 
-  native void nativeIntTests(ArrayTestMethodRank1 arrayTest, int[] intArray);
+  native void nativeCharTests(ArrayTestFieldRank1 arrayTest, char[] charArray);
 
-  native void nativeLongTests(ArrayTestMethodRank1 arrayTest, long[] longArray);
+  native void nativeShortTests(ArrayTestFieldRank1 arrayTest, short[] shortArray);
 
-  native void nativeFloatTests(ArrayTestMethodRank1 arrayTest, float[] floatArray);
+  native void nativeIntTests(ArrayTestFieldRank1 arrayTest, int[] intArray);
 
-  native void nativeDoubleTests(ArrayTestMethodRank1 arrayTest, double[] doubleArray);
+  native void nativeLongTests(ArrayTestFieldRank1 arrayTest, long[] longArray);
 
-  native void nativeStringTests(ArrayTestMethodRank1 arrayTest, String[] stringArray);
+  native void nativeFloatTests(ArrayTestFieldRank1 arrayTest, float[] floatArray);
 
-  native void nativeObjectTests(ArrayTestMethodRank1 arrayTest, ObjectTestHelper[] objectArray);
+  native void nativeDoubleTests(ArrayTestFieldRank1 arrayTest, double[] doubleArray);
 
-  void booleanArray(boolean testForTrue, boolean[] arr) {
+  native void nativeStringTests(ArrayTestFieldRank1 arrayTest, String[] stringArray);
+
+  native void nativeObjectTests(ArrayTestFieldRank1 arrayTest, ObjectTestHelper[] objectArray);
+
+  void booleanArray(boolean baseOffset, boolean stride, boolean[] arr) {
+    // Booleans stride up until true (i.e. once) and then red line.
+    // This isn't intuitive, but allows for generalised testing.
     for (int i = 0; i < arr.length; i++) {
-      if (testForTrue) {
+      if (baseOffset || (i > 0 && stride)) {
         assertTrue(arr[i]);
       } else {
         assertFalse(arr[i]);
@@ -69,53 +86,67 @@ public class ArrayTestMethodRank1 {
     }
   }
 
-  void byteArray(byte baseOffset, byte[] arr) {
+  void byteArray(byte baseOffset, byte stride, byte[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals(i + baseOffset, arr[i]);
+      assertEquals(i * stride + baseOffset, arr[i]);
     }
   }
 
-  void charArray(char baseOffset, char[] arr) {
+  void charArray(char baseOffset, char stride, char[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals(i + baseOffset, arr[i]);
+      assertEquals(i * stride + baseOffset, arr[i]);
     }
   }
 
-  void shortArray(short baseOffset, short[] arr) {
+  void shortArray(short baseOffset, short stride, short[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals(i + baseOffset, arr[i]);
+      assertEquals(i * stride + baseOffset, arr[i]);
     }
   }
 
-  void intArray(int baseOffset, int[] arr) {
+  void intArray(int baseOffset, int stride, int[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals(i + baseOffset, arr[i]);
+      assertEquals(i * stride + baseOffset, arr[i]);
     }
   }
 
-  void longArray(long baseOffset, long[] arr) {
+  void longArray(long baseOffset, long stride, long[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals(i + baseOffset, arr[i]);
+      assertEquals(i * stride + baseOffset, arr[i]);
     }
   }
 
-  void floatArray(float baseOffset, float[] arr) {
+  void floatArray(float baseOffset, float stride, float[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals(i + baseOffset, arr[i], 1.f);
+      assertEquals(i * stride + baseOffset, arr[i], 1.f);
     }
   }
 
-  void doubleArray(double baseOffset, double[] arr) {
+  void doubleArray(double baseOffset, double stride, double[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals((double) i + baseOffset, arr[i], 0);
+      assertEquals((double) i * stride + baseOffset, arr[i], 0);
     }
   }
 
-  void stringArray(String[] arr) {
-    assertEquals(3, arr.length);
-    assertEquals("Foo", arr[0]);
-    assertEquals("Baz", arr[1]);
-    assertEquals("Bar", arr[2]);
+  void stringArray(String[] arr, boolean isFooBazBar) {
+    if (isFooBazBar) {
+      assertEquals(3, arr.length);
+      assertEquals("Foo", arr[0]);
+      assertEquals("Baz", arr[1]);
+      assertEquals("Bar", arr[2]);
+    } else {
+      assertNotEquals("Foo", arr[0]);
+      assertNotEquals("Baz", arr[1]);
+      assertNotEquals("Bar", arr[2]);
+    }
+  }
+
+  void stringEqual(boolean expectEqual, String lhs, String rhs) {
+    if (expectEqual) {
+      assertEquals(lhs, rhs);
+    } else {
+      assertNotEquals(lhs, rhs);
+    }
   }
 
   void objectArray(int objectMemberOffset, ObjectTestHelper[] arr) {

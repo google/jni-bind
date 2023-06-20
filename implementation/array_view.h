@@ -25,7 +25,7 @@
 namespace jni {
 
 // Primitive Rank 1 Arrays.
-template <typename SpanType, std::size_t kRank, typename Enable = void>
+template <typename SpanType, std::size_t kRank = 1, typename Enable = void>
 class ArrayView {
  public:
   struct Iterator {

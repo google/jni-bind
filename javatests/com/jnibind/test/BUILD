@@ -81,6 +81,40 @@ java_test(
 )
 
 ################################################################################
+# Array Test: Fields rank 1.
+################################################################################
+cc_library(
+    name = "array_test_field_rank_1_jni_impl",
+    testonly = 1,
+    srcs = ["array_test_field_rank_1_jni.cc"],
+    deps = [
+        ":object_test_helper_jni",
+        "//:jni_bind",
+        "//metaprogramming:lambda_string",
+    ],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libarray_test_field_rank_1_jni.so",
+    testonly = 1,
+    linkshared = True,
+    deps = [":array_test_field_rank_1_jni_impl"],
+)
+
+java_test(
+    name = "ArrayTestFieldRank1",
+    testonly = 1,
+    srcs = ["ArrayTestFieldRank1.java"],
+    data = [":libarray_test_field_rank_1_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    deps = [
+        ":object_test_helper",
+        "@maven//:com_google_truth_truth_1_1",
+    ],
+)
+
+################################################################################
 # Context Test.
 ################################################################################
 cc_library(
