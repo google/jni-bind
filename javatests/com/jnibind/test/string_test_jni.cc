@@ -20,10 +20,13 @@
 #include "jni_bind.h"
 
 using ::jni::Class;
+using ::jni::CreateCopy;
+using ::jni::GlobalString;
 using ::jni::LocalObject;
 using ::jni::LocalString;
 using ::jni::Method;
 using ::jni::Params;
+using ::jni::PromoteToGlobal;
 using ::jni::Return;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
@@ -62,7 +65,10 @@ JNIEXPORT void JNICALL
 Java_com_jnibind_test_StringTest_jniPassesStringsInManyWays(
     JNIEnv* env, jclass, jobject test_fixture_object, jstring input) {
   LocalObject<kMethodTestHelper> fixture{test_fixture_object};
+
+  GlobalString global_string_lval{CreateCopy{}, input};
   LocalString string_lval{input};
+
   const char* kSimpleTestString{"SimpleTestString"};
   fixture("voidMethodTakesString", "SimpleTestString");
   fixture("voidMethodTakesString", kSimpleTestString);
@@ -70,7 +76,9 @@ Java_com_jnibind_test_StringTest_jniPassesStringsInManyWays(
   fixture("voidMethodTakesString", std::string{"SimpleTestString"});
   fixture("voidMethodTakesString", input);
   fixture("voidMethodTakesString", string_lval);
+  fixture("voidMethodTakesString", global_string_lval);
   fixture("voidMethodTakesString", LocalString{input});
+  fixture("voidMethodTakesString", GlobalString{PromoteToGlobal{}, input});
 }
 
 /** Void return type tests. */

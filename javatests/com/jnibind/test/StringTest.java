@@ -54,7 +54,7 @@ public final class StringTest {
 
     jniPassesStringsInManyWays(rJniStringTestHelper, "SimpleTestString");
 
-    verify(rJniStringTestHelper, times(7)).voidMethodTakesString("SimpleTestString");
+    verify(rJniStringTestHelper, times(9)).voidMethodTakesString("SimpleTestString");
   }
 
   native void jniVoidMethodTakesString(StringTestHelper helper, String s);
