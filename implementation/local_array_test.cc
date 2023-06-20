@@ -245,6 +245,11 @@ TEST_F(JniTest, Array_DifferentiatesWithOverloads) {
 // Strings are unusual in that they have their own type (jstring) but are
 // almost completely objects otherwise.
 ////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, Array_ConstructsFromAnotherStringArray) {
+  LocalArray<jstring> arr_1{Fake<jobjectArray>()};
+  LocalArray<jstring> arr_2{std::move(arr_1)};
+}
+
 TEST_F(JniTest, Array_CorrectSignatureForStringParams) {
   static constexpr Class kClass{
       "ClassThatReturnsArrays",
@@ -257,6 +262,24 @@ TEST_F(JniTest, Array_CorrectSignatureForStringParams) {
 
   LocalArray<jstring> arr{3};
   obj("StringArray", arr);
+}
+
+TEST_F(JniTest, Array_StringsCanBeSetOnLocalString) {
+  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(), 0, _));
+  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(), 1, _));
+  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(), 2, _));
+  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(), 3, _));
+  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(), 4, _));
+
+  const char* kFoo = "kFoo";
+  const std::string kNar = "kNar";
+
+  LocalArray<jstring> arr{5, LocalObject<kJavaLangString>{"Foo"}};
+  arr.Set(0, "Bar");
+  arr.Set(1, std::string{"Baz"});
+  arr.Set(2, std::string_view{"Bar"});
+  arr.Set(3, std::string_view{kFoo});
+  arr.Set(4, std::string_view{kNar});
 }
 
 TEST_F(JniTest, Array_LocalVanillaObjectRValuesCanBeSet) {

@@ -68,6 +68,16 @@ class LocalArray<jstring, kRank_, class_v_, class_loader_v_, jvm_v_>
     return JniArrayHelper<jobject, kRank_>::SetArrayElement(Base::object_ref_,
                                                             idx, val.Release());
   }
+
+  void Set(std::size_t idx, const char* val) { Set(idx, LocalString{val}); }
+
+  void Set(std::size_t idx, std::string val) {
+    Set(idx, LocalString{std::move(val)});
+  }
+
+  void Set(std::size_t idx, std::string_view val) {
+    Set(idx, LocalString{val});
+  }
 };
 
 }  // namespace jni
