@@ -39,8 +39,9 @@ struct JniArrayHelperBase {
 // Rank 2+ arrays all behave like object arrays.
 template <typename SpannedType, std::size_t kRank>
 struct JniArrayHelper : public JniArrayHelperBase {
-  static inline jobjectArray NewArray(std::size_t size, jclass class_id,
-                                      jobject initial_element) {
+  static inline jobjectArray NewArray(std::size_t size,
+                                      jclass class_id = nullptr,
+                                      jobject initial_element = nullptr) {
     return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
                                                  initial_element);
   }

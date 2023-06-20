@@ -16,7 +16,9 @@
 #ifndef JNI_BIND_TYPE_FORWARD_DECLARATIONS_H_
 #define JNI_BIND_TYPE_FORWARD_DECLARATIONS_H_
 
+#include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/lifecycle_object.h"
+#include "implementation/jvm.h"
 
 namespace jni {
 

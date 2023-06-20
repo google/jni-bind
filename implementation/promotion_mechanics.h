@@ -18,6 +18,7 @@
 
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/object_ref.h"
@@ -75,7 +76,7 @@ struct Entry
 
   // "Wrap" constructor: Object released at end of scope.
   Entry(ViableSpan object)
-      : Base(static_cast<typename JniT::SpanType>(object)) {}
+      : Base(static_cast<typename JniT::StorageType>(object)) {}
 };
 
 // Global scoped entry augmentation.
@@ -89,7 +90,7 @@ struct Entry<LifecycleType::GLOBAL, JniT, ViableSpan, ViableSpans...>
 
   // "Promote" constructor: Creates new global, frees |obj| (standard).
   explicit Entry(PromoteToGlobal, ViableSpan obj)
-      : Base(LifecycleHelper<typename JniT::SpanType,
+      : Base(LifecycleHelper<typename JniT::StorageType,
                              LifecycleType::GLOBAL>::Promote(obj)) {}
 
   // "Adopts" a global (non-standard).
@@ -98,7 +99,7 @@ struct Entry<LifecycleType::GLOBAL, JniT, ViableSpan, ViableSpans...>
  protected:
   // Causes failure for illegal "wrap" like construction.
   explicit Entry(ViableSpan object)
-      : Base(static_cast<typename JniT::SpanType>(object)) {}
+      : Base(reinterpret_cast<typename JniT::SpanType>(object)) {}
 };
 
 // Terminal Entry (ends daisy chain).
@@ -125,7 +126,7 @@ struct Scoped
 
   ~Scoped() {
     if (Base::object_ref_) {
-      LifecycleHelper<typename JniT::SpanType, lifecycleType>::Delete(
+      LifecycleHelper<typename JniT::StorageType, lifecycleType>::Delete(
           Base::object_ref_);
     }
   }

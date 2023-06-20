@@ -62,40 +62,6 @@ class LocalArray
     static_assert(kRank == kRank_ && class_v == class_v_ &&
                   class_loader_v == class_loader_v_);
   }
-
-  // Construct from LocalObject lvalue (object is used as template).
-  //
-  // e.g.
-  //  LocalArray arr { 5, LocalObject<kClass> {args...} };
-  //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
-  template <template <const auto&, const auto&, const auto&>
-            class ObjectContainer,
-            const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  LocalArray(
-      std::size_t size,
-      const ObjectContainer<class_v, class_loader_v, jvm_v>& local_object)
-      : Base(JniArrayHelper<jobject, kRank_>::NewArray(
-            size,
-            ObjectClassRefT::GetAndMaybeLoadClassRef(
-                static_cast<jobject>(local_object)),
-            static_cast<jobject>(local_object))) {}
-
-  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  LocalArray(std::size_t size,
-             const Scoped<LifecycleType::LOCAL,
-                          JniT<jobject, class_v, class_loader_v, jvm_v>,
-                          jobject>& local_object)
-      : Base(JniArrayHelper<jobject, kRank_>::NewArray(
-            size,
-            ObjectClassRefT::GetAndMaybeLoadClassRef(
-                static_cast<jobject>(local_object)),
-            static_cast<jobject>(local_object))) {}
-
-  ~LocalArray() {
-    if (Base::object_ref_) {
-      LifecycleHelper<jobject, LifecycleType::LOCAL>::Delete(Base::object_ref_);
-    }
-  }
 };
 
 template <template <const auto&, const auto&, const auto&>

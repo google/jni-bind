@@ -32,11 +32,13 @@ cc_library(
         ":class",
         ":default_class_loader",
         ":jni_type",
+        ":local_object",
         ":object_ref",
         ":ref_base",
         "//:jni_dep",
         "//implementation/jni_helper:jni_array_helper",
         "//implementation/jni_helper:lifecycle",
+        "//implementation/jni_helper:lifecycle_object",
     ],
 )
 
@@ -184,6 +186,7 @@ cc_library(
         "//:jni_dep",
         "//class_defs:java_lang_classes",
         "//implementation/jni_helper:jni_env",
+        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
         "//metaprogramming:contains",
         "//metaprogramming:queryable_map",
@@ -321,7 +324,11 @@ cc_library(
 cc_library(
     name = "forward_declarations",
     hdrs = ["forward_declarations.h"],
-    deps = ["//implementation/jni_helper:lifecycle_object"],
+    deps = [
+        ":default_class_loader",
+        ":jvm",
+        "//implementation/jni_helper:lifecycle_object",
+    ],
 )
 
 cc_library(
@@ -334,6 +341,7 @@ cc_library(
         ":promotion_mechanics",
         "//:jni_dep",
         "//class_defs:java_lang_classes",
+        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
     ],
 )
@@ -349,6 +357,7 @@ cc_library(
         ":object_ref",
         ":promotion_mechanics",
         "//:jni_dep",
+        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
     ],
 )
@@ -576,15 +585,15 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
+        ":default_class_loader",
         ":jni_type",
         ":jvm",
         ":jvm_ref",
         ":object_ref",
         ":promotion_mechanics",
         "//:jni_dep",
-        "//implementation/jni_helper",
+        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
-        "//metaprogramming:deep_equal",
     ],
 )
 
@@ -787,6 +796,7 @@ cc_library(
         ":ref_base",
         "//:jni_dep",
         "//implementation/jni_helper",
+        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
         "//metaprogramming:deep_equal",
         "//metaprogramming:pack_discriminator",

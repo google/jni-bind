@@ -134,7 +134,8 @@ class ConstructorValidator : public ObjectRef<JniT> {
   using Permutation_t = typename Helper<Args...>::type;
 
   template <typename... Args,
-            typename std::enable_if<sizeof...(Args) != 0, int>::type = 0>
+            typename std::enable_if<(sizeof...(Args) != 0 && JniT::kRank == 0),
+                                    int>::type = 0>
   ConstructorValidator(Args&&... args)
       : Base(static_cast<typename JniT::StorageType>(
             Permutation_t<Args...>::OverloadRef::Invoke(

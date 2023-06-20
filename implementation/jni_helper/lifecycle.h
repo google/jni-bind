@@ -44,6 +44,13 @@ struct LifecycleLocalBase {
   }
 };
 
+template <typename Span>
+struct LifecycleHelper<Span, LifecycleType::LOCAL>
+    : public LifecycleLocalBase<Span> {
+  using Base = LifecycleLocalBase<Span>;
+  using Base::Base;
+};
+
 // Shared implementation for global jobjects (jobject, jstring).
 template <typename Span>
 struct LifecycleGlobalBase {
@@ -61,6 +68,13 @@ struct LifecycleGlobalBase {
   static inline Span NewReference(Span object) {
     return static_cast<Span>(JniEnv::GetEnv()->NewGlobalRef(object));
   }
+};
+
+template <typename Span>
+struct LifecycleHelper<Span, LifecycleType::GLOBAL>
+    : public LifecycleLocalBase<Span> {
+  using Base = LifecycleGlobalBase<Span>;
+  using Base::Base;
 };
 
 }  // namespace jni

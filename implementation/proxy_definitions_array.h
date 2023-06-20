@@ -104,7 +104,7 @@ struct ArrayHelper {
 
     if constexpr (!std::is_same_v<CDecl_t<RawT>, jobject>) {
       return LocalArray<RawT, kRank, kNoClassSpecified, kDefaultClassLoader,
-                        kDefaultJvm>{nullptr};
+                        kDefaultJvm>{1};
     } else {
       return LocalArray<jobject, kRank, Helper<kVal>::val, kDefaultClassLoader,
                         kDefaultJvm>{jobjectArray{nullptr}};

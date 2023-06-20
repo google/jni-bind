@@ -118,6 +118,33 @@ static_assert(FullArrayStripV(arr8) == kClass);
 static_assert(FullArrayStripV(arr9) == kClass);
 
 ////////////////////////////////////////////////////////////////////////////////
+// Local Materialisation Tests.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, LocalArray_ConstructsBooleanArray) {
+  EXPECT_CALL(*env_, NewBooleanArray(1))
+      .WillOnce(::testing::Return(Fake<jbooleanArray>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(_));
+
+  LocalArray<jboolean> boolean_array_1{1};
+}
+
+TEST_F(JniTest, LocalArray_ConstructsByteArray) {
+  EXPECT_CALL(*env_, NewByteArray(1))
+      .WillOnce(::testing::Return(Fake<jbyteArray>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(_));
+
+  LocalArray<jbyte> byte_array_1{1};
+}
+
+TEST_F(JniTest, LocalArray_ConstructsIntArray) {
+  EXPECT_CALL(*env_, NewIntArray(1))
+      .WillOnce(::testing::Return(Fake<jintArray>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(_));
+
+  LocalArray<jint> int_array_1{1};
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Implementation Tests.
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, Array_HandlesSingleIntArray) {

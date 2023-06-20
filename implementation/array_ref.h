@@ -21,23 +21,35 @@
 #include "implementation/class.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/jni_array_helper.h"
+#include "implementation/jni_helper/lifecycle.h"
+#include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
+#include "implementation/local_object.h"
 #include "implementation/object_ref.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
 
 namespace jni {
 
+// Note: All arrays are local (global arrays of local objects is too confusing).
+template <typename JniT>
+using ScopedArrayImpl =
+    Scoped<LifecycleType::LOCAL, JniT, jarray, typename JniT::StorageType>;
+
 // |SpanType| is primitive types like jint, jfloat, etc.
 template <typename JniT, typename Enable = void>
-class ArrayRef : public RefBase<JniT> {
+class ArrayRef : public ScopedArrayImpl<JniT> {
  public:
-  using SpanType = typename JniT::SpanType;
-  using Base = RefBase<JniT>;
-  using Base::Base;
+  using Base = ScopedArrayImpl<JniT>;
 
+  using Base::Base;
+  using SpanType = typename JniT::SpanType;
+
+  ArrayRef(std::nullptr_t) {}
   ArrayRef(std::size_t size)
       : Base(JniArrayHelper<SpanType, JniT::kRank>::NewArray(size)) {}
+
+  explicit ArrayRef(int size) : ArrayRef(static_cast<std::size_t>(size)) {}
 
   ArrayView<SpanType, JniT::kRank> Pin(bool copy_on_completion = true) {
     return {Base::object_ref_, copy_on_completion, Length()};
@@ -51,11 +63,31 @@ class ArrayRef : public RefBase<JniT> {
 template <typename JniT>
 class ArrayRef<
     JniT, std::enable_if_t<std::is_same_v<typename JniT::SpanType, jobject>>>
-    : public RefBase<JniT> {
+    : public ScopedArrayImpl<JniT> {
  public:
-  using SpanType = jobject;
-  using Base = RefBase<JniT>;
+  using Base = ScopedArrayImpl<JniT>;
   using Base::Base;
+  using SpanType = jobject;
+
+  // Construct from jobject lvalue (object is used as template).
+  explicit ArrayRef(std::size_t size, jobject obj)
+      : Base(JniArrayHelper<jobject, JniT::kRank>::NewArray(
+            size,
+            ClassRef_t<JniT>::GetAndMaybeLoadClassRef(
+                static_cast<jobject>(obj)),
+            static_cast<jobject>(obj))) {}
+
+  // Construct from LocalObject lvalue (object is used as template).
+  //
+  // e.g.
+  //  LocalArray arr { 5, LocalObject<kClass> {args...} };
+  //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
+  template <template <const auto&, const auto&, const auto&>
+            class ObjectContainer,
+            const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  ArrayRef(std::size_t size,
+           const ObjectContainer<class_v, class_loader_v, jvm_v>& obj)
+      : ArrayRef(size, static_cast<jobject>(obj)) {}
 
   std::size_t Length() {
     return JniArrayHelper<jobject, JniT::kRank>::GetLength(Base::object_ref_);
