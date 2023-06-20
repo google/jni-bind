@@ -25,6 +25,7 @@
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_ref.h"
+#include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
@@ -37,9 +38,6 @@ namespace jni {
 
 template <const auto& jvm_v_ = kDefaultJvm>
 class JvmRef;
-
-class ThreadGuard;
-struct ThreadLocalGuardDestructor;
 
 // Helper for JvmRef to enforce correct sequencing of getting and setting
 // process level static fo JavaVM*.
@@ -62,7 +60,8 @@ class JvmRefBase {
 // statements within their lambda, and `ThreadGuard` can't be moved into the
 // lambda because its construction will be on the host thread. This static
 // teardown guarantees a delayed destruction beyond any GlobalObject.
-struct ThreadLocalGuardDestructor {
+class ThreadLocalGuardDestructor {
+ public:
   bool detach_thread_when_all_guards_released_ = false;
 
   // By calling this the compiler is obligated to perform initalisation.

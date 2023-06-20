@@ -29,12 +29,15 @@ class LocalObject;
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class GlobalObject;
 
-template <typename JniT>
-struct ValidatorProxy;
-
 template <LifecycleType lifecycleType, const auto& jvm_v_,
           const auto& class_loader_v_>
 class ClassLoaderRef;
+
+class ThreadGuard;
+class ThreadLocalGuardDestructor;
+
+template <typename JniT>
+struct ValidatorProxy;
 
 }  // namespace jni
 

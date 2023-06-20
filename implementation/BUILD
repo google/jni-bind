@@ -458,6 +458,7 @@ cc_library(
         ":class_ref",
         ":default_class_loader",
         ":field_ref",
+        ":forward_declarations",
         ":jni_type",
         ":jvm",
         ":method_ref",
