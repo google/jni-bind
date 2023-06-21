@@ -129,7 +129,7 @@ public class ArrayTestMethodRank1 {
 
   @Test
   public void booleanTests() {
-    boolean[] arr = {false, false, false};
+    boolean[] arr = {true, true, true};
     nativeBooleanTests(this, arr);
   }
 

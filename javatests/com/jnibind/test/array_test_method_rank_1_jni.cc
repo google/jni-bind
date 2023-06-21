@@ -18,6 +18,7 @@
 
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
+#include "metaprogramming/lambda_string.h"
 
 using ::jni::Array;
 using ::jni::ArrayView;
@@ -27,6 +28,7 @@ using ::jni::LocalObject;
 using ::jni::LocalString;
 using ::jni::Method;
 using ::jni::Params;
+using ::jni::RegularToArrayTypeMap_t;
 using ::jni::Return;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
@@ -47,6 +49,48 @@ static constexpr Class kArrayTestMethodRank1 {
 };
 // clang-format on
 
+// Generic method test suitable for simple primitive types.
+// Strings are passed through lambdas as method indexing is compile time.
+template <typename SpanType, typename MethodNameLambda>
+void GenericMethodTest(LocalObject<kArrayTestMethodRank1> fixture,
+                       LocalArray<SpanType> local_arr, SpanType base,
+                       MethodNameLambda method_name_lambda) {
+  // Simple lvalue pass through works as expected.
+  fixture(method_name_lambda(), base, local_arr);
+
+  // Simple rvalue pass through works as expected.
+  fixture(method_name_lambda(), base, std::move(local_arr));
+
+  // Building a new array, and setting all the values by hand works.
+  LocalArray<SpanType> new_array{8};
+  {
+    ArrayView array_view{new_array.Pin(true)};
+    for (int i = 0; i < new_array.Length(); ++i) {
+      array_view.ptr()[i] = base + static_cast<SpanType>(i);
+    }
+  }
+  fixture(method_name_lambda(), base, new_array);
+
+  // You can pull the view multiple times.
+  {
+    ArrayView array_view{new_array.Pin(true)};
+    for (int i = 0; i < new_array.Length(); ++i) {
+      array_view.ptr()[i] = base + static_cast<SpanType>(i);
+    }
+  }
+
+  // And it can be iterated over.
+  SpanType i{0};
+  for (SpanType& val : new_array.Pin(true)) {
+    // Below we modify the value 2 times but with a bool there's no way,
+    // so we instead just set it back.
+    val = base + i;
+    i++;
+  }
+
+  fixture(method_name_lambda(), base, new_array);
+}
+
 extern "C" {
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
@@ -62,285 +106,62 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTestMethodRank1_jniTearDown(
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeBooleanTests(
     JNIEnv* env, jclass, jobject test_fixture, jbooleanArray boolean_array) {
-  LocalObject<kArrayTestMethodRank1> fixture{test_fixture};
-
-  // Simple lvalue pass through works as expected.
-  LocalArray<jboolean> local_arr{boolean_array};
-  fixture("booleanArray", false, local_arr);
-
-  // Simple rvalue pass through works as expected.
-  fixture("booleanArray", false, LocalArray<jboolean>{boolean_array});
-
-  // Building a new array, and setting all the values by hand works.
-  LocalArray<jboolean> new_array{8};
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] = true;
-    }
-  }
-  fixture("booleanArray", true, new_array);
-
-  // You can pull the view multiple times.
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] = true;
-    }
-  }
-
-  // And it can be iterated over.
-  for (jboolean& val : new_array.Pin(true)) {
-    // Below we modify the value 2 times but with a bool there's no way,
-    // so we instead just set it back.
-    val = false;
-  }
-
-  fixture("booleanArray", false, new_array);
+  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
+                    LocalArray<jboolean>{boolean_array}, jboolean{true},
+                    STR("booleanArray"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeByteTests(
     JNIEnv* env, jclass, jobject test_fixture, jbyteArray byte_array) {
-  LocalObject<kArrayTestMethodRank1> fixture{test_fixture};
-
-  // Simple lvalue pass through works as expected.
-  LocalArray<jbyte> local_arr{byte_array};
-  fixture("byteArray", jbyte{0}, local_arr);
-
-  // Simple rvalue pass through works as expected.
-  fixture("byteArray", jbyte{0}, LocalArray<jbyte>{byte_array});
-
-  // Building a new array, and setting all the values by hand works.
-  LocalArray<jbyte> new_array{8};
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] = static_cast<jbyte>(i);
-    }
-  }
-  fixture("byteArray", jbyte{0}, new_array);
-
-  // You can pull the view multiple times.
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] += 5;
-    }
-  }
-
-  // And it can be iterated over.
-  for (jbyte& val : new_array.Pin(true)) {
-    val += 5;
-  }
-  fixture("byteArray", jbyte{5 + 5}, new_array);
+  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
+                    LocalArray<jbyte>{byte_array}, jbyte{0}, STR("byteArray"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeCharTests(
     JNIEnv* env, jclass, jobject test_fixture, jcharArray char_array) {
-  LocalObject<kArrayTestMethodRank1> fixture{test_fixture};
-
-  // Simple lvalue pass through works as expected.
-  LocalArray<jchar> local_arr{char_array};
-  fixture("charArray", jchar{0}, local_arr);
-
-  // Simple rvalue pass through works as expected.
-  fixture("charArray", jchar{0}, LocalArray<jchar>{char_array});
-
-  // Building a new array, and setting all the values by hand works.
-  LocalArray<jchar> new_array{8};
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] = static_cast<jchar>(i);
-    }
-  }
-  fixture("charArray", jchar{0}, new_array);
-
-  // You can pull the view multiple times.
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] += 5;
-    }
-  }
-
-  // And it can be iterated over.
-  for (jchar& val : new_array.Pin(true)) {
-    val += 5;
-  }
-
-  fixture("charArray", jchar{5 + 5}, new_array);
+  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
+                    LocalArray<jchar>{char_array}, jchar{0}, STR("charArray"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeShortTests(
     JNIEnv* env, jclass, jobject test_fixture, jshortArray short_array) {
-  LocalObject<kArrayTestMethodRank1> fixture{test_fixture};
-
-  // Simple lvalue pass through works as expected.
-  LocalArray<jshort> local_arr{short_array};
-  fixture("shortArray", jshort{0}, local_arr);
-
-  // Simple rvalue pass through works as expected.
-  fixture("shortArray", jshort{0}, LocalArray<jshort>{short_array});
-
-  // Building a new array, and setting all the values by hand works.
-  LocalArray<jshort> new_array{8};
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] = static_cast<jshort>(i);
-    }
-  }
-  fixture("shortArray", jshort{0}, new_array);
-
-  // You can pull the view multiple times.
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] += 5;
-    }
-  }
-
-  // And it can be iterated over.
-  for (jshort& val : new_array.Pin(true)) {
-    val += 5;
-  }
-
-  fixture("shortArray", jshort{5 + 5}, new_array);
+  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
+                    LocalArray<jshort>{short_array}, jshort{0},
+                    STR("shortArray"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeIntTests(JNIEnv* env, jclass,
                                                           jobject test_fixture,
                                                           jintArray int_array) {
-  LocalObject<kArrayTestMethodRank1> fixture{test_fixture};
-
-  // Simple lvalue pass through works as expected.
-  LocalArray<jint> local_arr{int_array};
-  fixture("intArray", 0, local_arr);
-
-  // Simple rvalue pass through works as expected.
-  fixture("intArray", 0, LocalArray<jint>{int_array});
-
-  // Building a new array, and setting all the values by hand works.
-  LocalArray<jint> new_array{8};
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] = i;
-    }
-  }
-  fixture("intArray", 0, new_array);
-
-  // You can pull the view multiple times.
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] += 5;
-    }
-  }
-
-  // And it can be iterated over.
-  for (int& val : new_array.Pin(true)) {
-    val += 5;
-  }
-
-  fixture("intArray", 5 * 2, new_array);
+  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
+                    LocalArray<jint>{int_array}, jint{0}, STR("intArray"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeLongTests(
     JNIEnv* env, jclass, jobject test_fixture, jlongArray long_array) {
-  LocalObject<kArrayTestMethodRank1> fixture{test_fixture};
-
-  // Simple lvalue pass through works as expected.
-  LocalArray<jlong> local_arr{long_array};
-  fixture("longArray", jlong{0}, local_arr);
-
-  // Simple rvalue pass through works as expected.
-  fixture("longArray", jlong{0}, LocalArray<jlong>{long_array});
-
-  // Building a new array, and setting all the values by hand works.
-  LocalArray<jlong> new_array{8};
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] = static_cast<jlong>(i);
-    }
-  }
-  fixture("longArray", jlong{0}, new_array);
-
-  // You can pull the view multiple times.
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] += 5;
-    }
-  }
-
-  // And it can be iterated over.
-  for (jlong& val : new_array.Pin(true)) {
-    val += 5;
-  }
-
-  fixture("longArray", jlong{5 * 2}, new_array);
+  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
+                    LocalArray<jlong>{long_array}, jlong{0}, STR("longArray"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeFloatTests(
     JNIEnv* env, jclass, jobject test_fixture, jfloatArray float_array) {
-  LocalObject<kArrayTestMethodRank1> fixture{test_fixture};
-
-  LocalArray<jfloat> local_arr{float_array};
-  fixture("floatArray", 0.f, local_arr);
-
-  {
-    ArrayView array_view{local_arr.Pin(true)};
-    for (int i = 0; i < local_arr.Length(); ++i) {
-      array_view.ptr()[i] += 2.5f;
-    }
-  }
-  fixture("floatArray", 2.5f, local_arr);
+  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
+                    LocalArray<jfloat>{float_array}, jfloat{0},
+                    STR("floatArray"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeDoubleTests(
     JNIEnv* env, jclass, jobject test_fixture, jdoubleArray double_array) {
-  LocalObject<kArrayTestMethodRank1> fixture{test_fixture};
-
-  // Simple lvalue pass through works as expected.
-  LocalArray<jdouble> local_arr{double_array};
-  fixture("doubleArray", jdouble{0}, local_arr);
-
-  // Simple rvalue pass through works as expected.
-  fixture("doubleArray", jdouble{0}, LocalArray<jdouble>{double_array});
-
-  // Building a new array, and setting all the values by hand works.
-  LocalArray<jdouble> new_array{8};
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] = static_cast<jdouble>(i);
-    }
-  }
-  fixture("doubleArray", jdouble{0}, new_array);
-
-  // You can pull the view multiple times.
-  {
-    ArrayView array_view{new_array.Pin(true)};
-    for (int i = 0; i < new_array.Length(); ++i) {
-      array_view.ptr()[i] += 5;
-    }
-  }
-
-  // And it can be iterated over.
-  for (jdouble& val : new_array.Pin(true)) {
-    val += 5;
-  }
-  fixture("doubleArray", jdouble{5 * 2}, new_array);
+  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
+                    LocalArray<jdouble>{double_array}, jdouble{0},
+                    STR("doubleArray"));
 }
 
 JNIEXPORT void JNICALL

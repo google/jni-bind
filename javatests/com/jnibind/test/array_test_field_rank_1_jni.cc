@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <array>
 #include <cstring>
 #include <memory>
 
@@ -211,22 +212,10 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeStringTests(
   fixture("stringArray", arr, true);
 
   // Iterating over values works.
+  static constexpr std::array vals{"Foo", "Baz", "Bar"};
   int i = 0;
   for (LocalString local_string : arr.Pin()) {
-    switch (i) {
-      case 0:
-        fixture("stringEqual", jboolean{true}, "Foo", "Foo");
-        break;
-      case 1:
-        fixture("stringEqual", jboolean{true}, local_string, "Baz");
-        break;
-      case 2:
-        fixture("stringEqual", jboolean{true}, local_string, "Bar");
-        return;
-      default:
-        return;
-    }
-
+    fixture("stringEqual", jboolean{true}, local_string, vals[i]);
     ++i;
   }
 }

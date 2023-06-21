@@ -10,6 +10,7 @@ cc_library(
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",
+        "//metaprogramming:lambda_string",
     ],
     alwayslink = True,
 )
