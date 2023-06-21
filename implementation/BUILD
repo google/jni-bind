@@ -9,6 +9,8 @@ filegroup(
     srcs = glob(["**/*.h"]),
 )
 
+exports_files(["LICENSE"])
+
 cc_library(
     name = "array",
     hdrs = ["array.h"],
