@@ -7,6 +7,7 @@
 It requires clang enabled at C++17 or later, is compatible with Android, and is unit / E2E tested on `x86`/`ARM` toolchains.
 
 **Many** features and optimisations are included:
+
 - **Object Management**
 - **Compile time method name and argument checking**
 - **Static caching of IDs** *multi-threading support and compile time signature generation.*
@@ -82,8 +83,8 @@ If you're already using Bazel add the following to your WORKSPACE:
 ```starlark
 http_archive(
   name = "jni-bind",
-  urls = ["https://github.com/google/jni-bind/archive/refs/tags/Release-0.9.5-alpha.zip"],
-  strip_prefix = "jni-bind-Release-0.9.5-alpha",
+  urls = ["https://github.com/google/jni-bind/archive/refs/tags/Release-0.9.6-alpha.zip"],
+  strip_prefix = "jni-bind-Release-0.9.6-alpha",
 )
 ```
 
@@ -474,6 +475,7 @@ Sample [local_array.h](implementation/local_array_test.cc), [array_test_jni.cc](
 ## Upcoming Features
 
 Feature requests are welcome! Some upcoming features are:
+
 - Statics
 - Tighter array type validation (arrays are overly permissive for arguments)
 - Better error messages
