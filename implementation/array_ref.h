@@ -70,6 +70,12 @@ class ArrayRef<
   using Base::Base;
   using SpanType = jobject;
 
+  // Construct array with given size and null values.
+  explicit ArrayRef(std::size_t size)
+      : Base(JniArrayHelper<jobject, JniT::kRank>::NewArray(
+            size, ClassRef_t<JniT>::GetAndMaybeLoadClassRef(nullptr),
+            static_cast<jobject>(nullptr))) {}
+
   // Construct from jobject lvalue (object is used as template).
   explicit ArrayRef(std::size_t size, jobject obj)
       : Base(JniArrayHelper<jobject, JniT::kRank>::NewArray(

@@ -94,12 +94,17 @@ TEST_F(JniTest, LocalArray_ConstructsTheRightType) {
   LocalArray<jdouble> double_array{8};
 }
 
+TEST_F(JniTest, LocalArray_ConstructsAnArrayOfNullValues) {
+  EXPECT_CALL(*env_, NewObjectArray(5, _, nullptr));
+  LocalArray<jobject, 1, kClass> local_object_array{5};
+}
+
 TEST_F(JniTest, LocalArray_ConstructsObjectsForLValues) {
   // Unlike POD, objects are constructed with a size, a jclass, and an init
   // object.  This makes for a slightly different API then other objects.
-  EXPECT_CALL(*env_, NewObjectArray(5, _, _));
+  EXPECT_CALL(*env_, NewObjectArray(5, _, Fake<jobject>()));
 
-  LocalObject<kClass> default_object{};
+  LocalObject<kClass> default_object{Fake<jobject>()};
   LocalArray<jobject, 1, kClass> local_object_array{5, default_object};
 }
 

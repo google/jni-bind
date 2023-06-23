@@ -87,7 +87,17 @@ void GenericMethodTest(LocalObject<kArrayTestMethodRank1> fixture,
     val = base + i;
     i++;
   }
+  fixture(method_name_lambda(), base, new_array);
 
+  // You can build an array of null values and set the values manually.
+  LocalArray<SpanType> arr_built_from_null{5};
+  SpanType j{0};
+  for (SpanType& val : new_array.Pin(true)) {
+    // Below we modify the value 2 times but with a bool there's no way,
+    // so we instead just set it back.
+    val = base + j;
+    j++;
+  }
   fixture(method_name_lambda(), base, new_array);
 }
 
