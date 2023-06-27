@@ -43,8 +43,7 @@ struct AdoptGlobal {};
 // Marks the end of `ScopeEntry` daisy chain.
 struct ScopedTerminalTag {};
 
-// Shared implementation common to all `Entry`.
-// template <typename Base, LifecycleType lifecycleType, typename JniT>
+// Shared implementation common to all *local* `Entry`.
 template <typename Base, LifecycleType lifecycleType, typename JniT,
           typename ViableSpan>
 struct EntryBase : public Base {
@@ -52,9 +51,9 @@ struct EntryBase : public Base {
   using Span = typename JniT::SpanType;
 
   // `RefBaseTag` move constructor for object of same span type.
-  template <typename T, typename = std::enable_if_t<
+  template <typename T, typename = std::enable_if_t<(
                             ::jni::metaprogramming::DeepEqual_v<EntryBase, T> ||
-                            std::is_base_of_v<RefBaseTag<Span>, T>>>
+                            std::is_base_of_v<RefBaseTag<Span>, T>)>>
   EntryBase(T&& rhs) : Base(rhs.Release()) {}
 
   // "Copy" constructor: Additional reference to object will be created.
@@ -77,6 +76,27 @@ struct Entry
   // "Wrap" constructor: Object released at end of scope.
   Entry(ViableSpan object)
       : Base(static_cast<typename JniT::StorageType>(object)) {}
+};
+
+// Shared implementation common to all *global* `Entry`.
+template <typename Base, typename JniT, typename ViableSpan>
+struct EntryBase<Base, LifecycleType::GLOBAL, JniT, ViableSpan> : public Base {
+  using Base::Base;
+  using Span = typename JniT::SpanType;
+
+  // `RefBaseTag` move constructor for object of same span type.
+  template <typename T, typename = std::enable_if_t<(
+                            ::jni::metaprogramming::DeepEqual_v<EntryBase, T> ||
+                            std::is_base_of_v<RefBaseTag<Span>, T>)>>
+  EntryBase(T&& rhs)
+      : Base(LifecycleHelper<typename JniT::StorageType,
+                             LifecycleType::GLOBAL>::Promote(rhs.Release())) {}
+
+  // "Copy" constructor: Additional reference to object will be created.
+  EntryBase(CreateCopy, ViableSpan object)
+      : Base(static_cast<Span>(
+            LifecycleHelper<Span, LifecycleType::GLOBAL>::NewReference(
+                static_cast<Span>(object)))) {}
 };
 
 // Global scoped entry augmentation.

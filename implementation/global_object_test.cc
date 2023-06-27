@@ -30,6 +30,7 @@ using ::jni::Constructor;
 using ::jni::CreateCopy;
 using ::jni::Field;
 using ::jni::GlobalObject;
+using ::jni::LocalObject;
 using ::jni::Method;
 using ::jni::Params;
 using ::jni::PromoteToGlobal;
@@ -75,7 +76,7 @@ TEST_F(JniTest, GlobalObject_DoesNotDeleteAnyLocalsForAdoptedGlobalJobject) {
 
   GlobalObject<kClass> global_object{AdoptGlobal{}, Fake<jobject>()};
 
-  EXPECT_NE(jobject{global_object}, nullptr);
+  EXPECT_EQ(jobject{global_object}, Fake<jobject>());
 }
 
 TEST_F(JniTest, GlobalObject_PromotesJobjectsOnConstruction) {
@@ -85,8 +86,32 @@ TEST_F(JniTest, GlobalObject_PromotesJobjectsOnConstruction) {
 
   static constexpr Class kClass{"kClass"};
   GlobalObject<kClass> global_object{PromoteToGlobal{}, Fake<jobject>()};
+  EXPECT_EQ(jobject{global_object}, AsGlobal(Fake<jobject>()));
+}
 
-  EXPECT_NE(jobject{global_object}, nullptr);
+TEST_F(JniTest, GlobalObject_PromotesDecoratedLocals) {
+  EXPECT_CALL(*env_, NewObjectV).Times(0);
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(1);
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jobject>())));
+
+  static constexpr Class kClass{"kClass"};
+  LocalObject<kClass> local_obj{Fake<jobject>()};
+  // GlobalObject<kClass> global_object{local_obj}; // doesn't compile (good).
+  GlobalObject<kClass> global_object{std::move(local_obj)};
+
+  EXPECT_EQ(jobject{global_object}, AsGlobal(Fake<jobject>()));
+}
+
+// Identical to above but Local constructed in place.
+TEST_F(JniTest, GlobalObject_PromotesDecoratedLocalsFromXValue) {
+  EXPECT_CALL(*env_, NewObjectV).Times(0);
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(1);
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jobject>())));
+
+  static constexpr Class kClass{"kClass"};
+  GlobalObject<kClass> global_object{LocalObject<kClass>{Fake<jobject>()}};
+
+  EXPECT_EQ(jobject{global_object}, AsGlobal(Fake<jobject>()));
 }
 
 TEST_F(JniTest, GlobalObject_CallsOnlyDeleteOnWrapCtor) {
