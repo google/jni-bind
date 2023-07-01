@@ -42,26 +42,56 @@ public final class ContextTest {
 
   @Test
   public void testGlobalObjectsPersistAcrossJniOverloads() {
-    long native_context = CreateNativeContextObject(555);
-    assertThat(QueryNativeObject(native_context).intVal1).isEqualTo(555);
-    assertThat(QueryNativeObject(native_context).intVal1).isEqualTo(555);
-    assertThat(QueryNativeObject(native_context).intVal1).isEqualTo(555);
-    assertThat(QueryNativeObject(native_context).intVal1).isEqualTo(555);
-    assertThat(ExtractNativeObject(native_context).intVal1).isEqualTo(555);
-    assertThat(QueryNativeObject(native_context)).isEqualTo(null);
-    assertThat(QueryNativeObject(native_context)).isEqualTo(null);
+    long nativeContext = nativeCreateContext(555);
+    assertThat(nativeQueryObject(nativeContext).intVal1).isEqualTo(555);
+    assertThat(nativeQueryObject(nativeContext).intVal1).isEqualTo(555);
+    assertThat(nativeQueryObject(nativeContext).intVal1).isEqualTo(555);
+    assertThat(nativeQueryObject(nativeContext).intVal1).isEqualTo(555);
+    assertThat(nativeExtractObject(nativeContext).intVal1).isEqualTo(555);
+    assertThat(nativeQueryObject(nativeContext)).isEqualTo(null);
+    assertThat(nativeQueryObject(nativeContext)).isEqualTo(null);
   }
 
   @Test
   public void testGlobalObjectsPersistAcrossJniOverloads2() {
-    assertThat(CreateNativeContextObjectSetValToSum(5, 7).intVal1).isEqualTo(12);
+    assertThat(nativeCreateContextSetValToSum(5, 7).intVal1).isEqualTo(12);
   }
 
   @Test
   public void testGlobalObjectsBeDestroyed() {
-    long native_context = CreateNativeContextObject(9876);
-    assertThat(QueryNativeObject(native_context).intVal1).isEqualTo(9876);
-    DestroyNativeContext(native_context);
+    long nativeContext = nativeCreateContext(9876);
+    assertThat(nativeQueryObject(nativeContext).intVal1).isEqualTo(9876);
+    nativeDestroyContext(nativeContext);
+  }
+
+  @Test
+  public void testObjectsOriginatedFromJavaPersistWhenPromotedToGlobal() {
+    ObjectTestHelper objectTestHelper = new ObjectTestHelper(9876);
+    long nativeContext = nativeCreateContextWithPromotion(objectTestHelper);
+    assertThat(nativeQueryObject(nativeContext).intVal1).isEqualTo(9876);
+    objectTestHelper.intVal1 = 1234;
+    assertThat(nativeQueryObject(nativeContext).intVal1).isEqualTo(1234);
+
+    // Despite the object being deleted here, the native object pins.
+    objectTestHelper = null;
+    assertThat(nativeQueryObject(nativeContext).intVal1).isEqualTo(1234);
+
+    nativeDestroyContext(nativeContext);
+  }
+
+  @Test
+  public void testObjectsOriginatedFromJavaPersistWhenCopied() {
+    ObjectTestHelper objectTestHelper = new ObjectTestHelper(9876);
+    long nativeContext = nativeCreateContextWithCopy(objectTestHelper);
+    assertThat(nativeQueryObject(nativeContext).intVal1).isEqualTo(9876);
+    objectTestHelper.intVal1 = 1234;
+    assertThat(nativeQueryObject(nativeContext).intVal1).isEqualTo(1234);
+
+    // Despite the object being deleted here, the native object pins.
+    objectTestHelper = null;
+    assertThat(nativeQueryObject(nativeContext).intVal1).isEqualTo(1234);
+
+    nativeDestroyContext(nativeContext);
   }
 
   // Some kind of "initial call".  This test suite doesn't override JNIOnload in order to emulate
@@ -74,18 +104,24 @@ public final class ContextTest {
 
   // Causes native code to create an object that will be stored in native code and returned on a
   // subsequent call.  This can only be done with global objects and not local objects.
-  native long CreateNativeContextObject(int val);
+  native long nativeCreateContext(int val);
+
+  // Takes the passed in context and stores copy in the context, returned as long.
+  native long nativeCreateContextWithPromotion(ObjectTestHelper val);
+
+  // Takes the passed in context and stores copy in the context, returned as long.
+  native long nativeCreateContextWithCopy(ObjectTestHelper val);
 
   // Returns an ObjectTestHelper with intVal1 set to the sum of the vals.
-  native ObjectTestHelper CreateNativeContextObjectSetValToSum(int val1, int val2);
+  native ObjectTestHelper nativeCreateContextSetValToSum(int val1, int val2);
 
   // Returns a handle to a global object held within the inner native context.
-  native ObjectTestHelper QueryNativeObject(long context);
+  native ObjectTestHelper nativeQueryObject(long context);
 
   // Returns the handle to the native context, but simultaneously releases it in the process.
-  native ObjectTestHelper ExtractNativeObject(long context);
+  native ObjectTestHelper nativeExtractObject(long context);
 
   // Destroys the entire native context possibly releasing the contained global object.
   // This would be representative of when an app would be shutting down.
-  native void DestroyNativeContext(long context);
+  native void nativeDestroyContext(long context);
 }

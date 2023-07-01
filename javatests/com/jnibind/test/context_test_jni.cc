@@ -21,7 +21,9 @@
 
 namespace {
 
+using ::jni::CreateCopy;
 using ::jni::GlobalObject;
+using ::jni::PromoteToGlobal;
 
 // A struct that could represent context to be maintained across multiple native
 // JNI invocations.  Only global objects can be held in this way, local objects
@@ -50,18 +52,34 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ContextTest_DoSetup(JNIEnv* env,
   jvm.reset(new jni::JvmRef<jni::kDefaultJvm>{env});
 }
 
-JNIEXPORT jlong JNICALL
-Java_com_jnibind_test_ContextTest_CreateNativeContextObject(JNIEnv* env, jclass,
-                                                            jint val) {
+JNIEXPORT jlong JNICALL Java_com_jnibind_test_ContextTest_nativeCreateContext(
+    JNIEnv* env, jclass, jint val) {
   auto* ctx_struct = new ContextStruct{GlobalObject<kObjectTestHelperClass>{}};
   ctx_struct->obj["intVal1"].Set(jint{val});
 
   return reinterpret_cast<jlong>(ctx_struct);
 }
 
+JNIEXPORT jlong JNICALL
+Java_com_jnibind_test_ContextTest_nativeCreateContextWithPromotion(
+    JNIEnv* env, jclass, jobject val) {
+  return reinterpret_cast<jlong>(new ContextStruct{
+      GlobalObject<kObjectTestHelperClass>{PromoteToGlobal{}, val}});
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_jnibind_test_ContextTest_nativeCreateContextWithCopy(JNIEnv* env,
+                                                              jclass,
+                                                              jobject val) {
+  return reinterpret_cast<jlong>(new ContextStruct{
+      .obj = GlobalObject<kObjectTestHelperClass>{CreateCopy{}, val}});
+}
+
 JNIEXPORT jobject JNICALL
-Java_com_jnibind_test_ContextTest_CreateNativeContextObjectSetValToSum(
-    JNIEnv* env, jclass, jint val1, jint val2) {
+Java_com_jnibind_test_ContextTest_nativeCreateContextSetValToSum(JNIEnv* env,
+                                                                 jclass,
+                                                                 jint val1,
+                                                                 jint val2) {
   // Creates a temporary test helper, calls its member method, and releases the
   // returned object across the C API boundary (then destroys the temporary).
   return jni::LocalObject<kObjectTestHelperClass>{}(
@@ -69,19 +87,18 @@ Java_com_jnibind_test_ContextTest_CreateNativeContextObjectSetValToSum(
       .Release();
 }
 
-JNIEXPORT jobject JNICALL Java_com_jnibind_test_ContextTest_QueryNativeObject(
+JNIEXPORT jobject JNICALL Java_com_jnibind_test_ContextTest_nativeQueryObject(
     JNIEnv* env, jclass, void* ctx_void_ptr) {
   ContextStruct* ctx_struct = static_cast<ContextStruct*>(ctx_void_ptr);
   return jobject{ctx_struct->obj};
 }
 
-JNIEXPORT jobject JNICALL Java_com_jnibind_test_ContextTest_ExtractNativeObject(
+JNIEXPORT jobject JNICALL Java_com_jnibind_test_ContextTest_nativeExtractObject(
     JNIEnv* env, jclass, void* ctx_void_ptr) {
-  ContextStruct* ctx_struct = static_cast<ContextStruct*>(ctx_void_ptr);
-  return ctx_struct->obj.Release();
+  return static_cast<ContextStruct*>(ctx_void_ptr)->obj.Release();
 }
 
-JNIEXPORT void JNICALL Java_com_jnibind_test_ContextTest_DestroyNativeContext(
+JNIEXPORT void JNICALL Java_com_jnibind_test_ContextTest_nativeDestroyContext(
     JNIEnv* env, jclass, void* ctx_void_ptr) {
   delete static_cast<ContextStruct*>(ctx_void_ptr);
 }
