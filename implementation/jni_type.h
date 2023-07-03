@@ -180,6 +180,35 @@ struct JniTEqual<JniT<SpanType1, class_v_1, class_loader_v_1, jvm_v_1, kRank_1,
 template <typename T1, typename T2>
 constexpr bool JniTEqual_v = JniTEqual<T1, T2>::val;
 
+template <typename JniT_, typename SpanT>
+struct RawProxy {
+  using RawValT = SpanT;
+
+  static constexpr std::size_t kRank = JniT_::kRank;
+};
+
+template <typename JniT>
+struct RawProxy<JniT, jobject> {
+  using RawValT = decltype(JniT::GetClass());
+
+  const RawValT raw_ = JniT::GetClass();
+  const char* name_ = JniT::GetClass().name_;
+
+  static constexpr std::size_t kRank = JniT::kRank - 1;
+};
+
+// Helper to generate signatures for objects at rank-1 but span types at rank.
+// Used in static selection signature generation (for types like LocalArray).
+template <typename JniT>
+struct JniTSelector {
+  using RawProxyT = RawProxy<JniT, typename JniT::SpanType>;
+  using RawValT = typename RawProxyT::RawValT;
+
+  static constexpr std::size_t kRank = RawProxyT::kRank;
+
+  static constexpr auto Val() { return RawProxyT{}; }
+};
+
 }  // namespace jni
 
 #endif  // JNI_BIND_IMPLEMENTATION_JNI_TYPE_H_

@@ -17,10 +17,15 @@
 #define JNI_BIND_TYPE_FORWARD_DECLARATIONS_H_
 
 #include "implementation/default_class_loader.h"
+#include "implementation/id_type.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jvm.h"
 
 namespace jni {
+
+template <typename JniT_, IdType kIdType_, std::size_t idx,
+          std::size_t secondary_idx, std::size_t tertiary_idx>
+struct Id;
 
 template <LifecycleType lifecycleType, typename JniT, typename... ViableSpans>
 struct Scoped;

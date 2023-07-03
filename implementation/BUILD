@@ -117,6 +117,7 @@ cc_library(
         ":jni_type",
         ":jvm",
         ":method",
+        ":selector_static_info",
         "//:jni_dep",
         "//class_defs:java_lang_classes",
         "//implementation/jni_helper",
@@ -322,6 +323,7 @@ cc_library(
     hdrs = ["forward_declarations.h"],
     deps = [
         ":default_class_loader",
+        ":id_type",
         ":jvm",
         "//implementation/jni_helper:lifecycle_object",
     ],
@@ -910,6 +912,7 @@ cc_library(
         ":array",
         ":class",
         ":field",
+        ":forward_declarations",
         ":id_type",
         ":name_constants",
         ":no_idx",
