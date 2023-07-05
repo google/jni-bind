@@ -61,6 +61,26 @@ struct EntryBase : public Base {
       : Base(static_cast<Span>(
             LifecycleHelper<Span, lifecycleType>::NewReference(
                 static_cast<Span>(object)))) {}
+
+  // Comparison operator for pinned Scoped type (not deep equality).
+  template <typename T, typename = std::enable_if_t<
+                            (std::is_base_of_v<RefBaseTag<Span>, T> ||
+                             std::is_same_v<T, ViableSpan>)>>
+  bool operator==(const T& rhs) const {
+    if constexpr (std::is_base_of_v<RefBaseTag<Span>, T>) {
+      return static_cast<Span>(rhs.object_ref_) == Base::object_ref_;
+    } else if constexpr (std::is_same_v<T, ViableSpan>) {
+      return rhs == Base::object_ref_;
+    }
+  }
+
+  // Comparison inequality operator for pinned Scoped type (not deep equality).
+  template <typename T, typename = std::enable_if_t<
+                            (std::is_base_of_v<RefBaseTag<Span>, T> ||
+                             std::is_same_v<T, ViableSpan>)>>
+  bool operator!=(const T& rhs) const {
+    return !(*this == rhs);
+  }
 };
 
 // Local scoped entry augmentation.

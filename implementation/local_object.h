@@ -52,6 +52,18 @@ template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 LocalObject(LocalObject<class_v_, class_loader_v_, jvm_v_>&&)
     -> LocalObject<class_v_, class_loader_v_, jvm_v_>;
 
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+bool operator==(const jobject& lhs,
+                const LocalObject<class_v_, class_loader_v_, jvm_v_>& rhs) {
+  return lhs == static_cast<jobject>(rhs);
+}
+
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+bool operator!=(const jobject& lhs,
+                const LocalObject<class_v_, class_loader_v_, jvm_v_>& rhs) {
+  return !(lhs == rhs);
+}
+
 }  // namespace jni
 
 #endif  // JNI_BIND_LOCAL_OBJECT_H

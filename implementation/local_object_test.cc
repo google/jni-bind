@@ -173,6 +173,71 @@ TEST_F(JniTest, LocalObject_ReleasesLocalsForAlternateConstructors) {
   EXPECT_CALL(*env_, DeleteLocalRef(_)).Times(3);
 }
 
+TEST_F(JniTest, LocalObject_ComparesAgainstOtherLocalObjects) {
+  static constexpr Class kClass1{"kClass1"};
+  static constexpr Class kClass2{"kClass2"};
+
+  LocalObject<kClass1> val_1{Fake<jobject>(1)};
+  LocalObject<kClass2> val_2{Fake<jobject>(2)};
+
+  EXPECT_TRUE(val_1 == val_1);
+  EXPECT_FALSE(val_1 == val_2);
+  EXPECT_TRUE(val_1 != val_2);
+  EXPECT_TRUE(val_2 == val_2);
+  EXPECT_TRUE(val_2 != val_1);
+  EXPECT_FALSE(val_1 == val_2);
+}
+
+TEST_F(JniTest, LocalObject_ComparesAgainstjobjects) {
+  static constexpr Class kClass{"kClass1"};
+  LocalObject<kClass> val_1{Fake<jobject>()};
+
+  EXPECT_TRUE(val_1 == Fake<jobject>());
+  EXPECT_TRUE(Fake<jobject>() == val_1);
+
+  EXPECT_FALSE(val_1 != Fake<jobject>());
+  EXPECT_FALSE(Fake<jobject>() != val_1);
+}
+
+TEST_F(JniTest, LocalObject_ComparesAgainstOtherLocalObjects_InContainers) {
+  static constexpr Class kClass1{"kClass1"};
+  static constexpr Class kClass2{"kClass2"};
+
+  struct A {
+    LocalObject<kClass1> val_1;
+    LocalObject<kClass2> val_2;
+
+    A(LocalObject<kClass1>&& val_1, LocalObject<kClass2>&& val_2)
+        : val_1(std::move(val_1)), val_2(std::move(val_2)) {}
+
+    A(A&& rhs) : val_1(std::move(rhs.val_1)), val_2(std::move(rhs.val_2)) {}
+
+    bool operator==(const A& rhs) const {
+      return val_1 == rhs.val_1 && val_2 == rhs.val_2;
+    }
+
+    bool operator!=(const A& rhs) const {
+      return val_1 != rhs.val_1 || val_2 != rhs.val_2;
+    }
+  };
+
+  A val_1{LocalObject<kClass1>{Fake<jobject>(1)}, {Fake<jobject>(2)}};
+  A val_2{LocalObject<kClass2>{Fake<jobject>(1)}, {Fake<jobject>(3)}};
+
+  EXPECT_FALSE(val_1 == val_2);
+  EXPECT_TRUE(val_1 != val_2);
+
+  EXPECT_EQ((std::array{A{LocalObject<kClass1>(Fake<jobject>(1)),
+                          LocalObject<kClass2>(Fake<jobject>(2))}}),
+            (std::array{A{LocalObject<kClass1>(Fake<jobject>(1)),
+                          LocalObject<kClass2>(Fake<jobject>(2))}}));
+
+  EXPECT_TRUE((std::array{A{LocalObject<kClass1>(Fake<jobject>(1)),
+                            LocalObject<kClass2>(Fake<jobject>(2))}} !=
+               (std::array{A{LocalObject<kClass1>(Fake<jobject>(1)),
+                             LocalObject<kClass2>(Fake<jobject>(3))}})));
+}
+
 TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnLvalue) {
   static constexpr Class kTestClass1{"TestClass1"};
 
@@ -233,6 +298,20 @@ TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnXvalue) {
 
   LocalObject<kTestClass2> b{};
   b("Foo", LocalObject<kTestClass1>{});
+}
+
+TEST_F(JniTest, LocalObject_MovesInContainerStruct) {
+  static constexpr Class kClass{"TestClass1"};
+
+  struct A {
+    const LocalObject<kClass> val;
+
+    A(LocalObject<kClass>&& in) : val(std::move(in)) {}
+  };
+
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>()));
+
+  A a{LocalObject<kClass>{Fake<jobject>()}};
 }
 
 }  // namespace

@@ -906,6 +906,7 @@ cc_library(
         ":class",
         ":class_loader",
         "//implementation/jni_helper:jni_env",
+        "//implementation/jni_helper:lifecycle",
     ],
 )
 

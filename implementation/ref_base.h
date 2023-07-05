@@ -22,6 +22,7 @@
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/jni_helper/jni_env.h"
+#include "implementation/jni_helper/lifecycle.h"
 
 namespace jni {
 
@@ -31,6 +32,10 @@ namespace jni {
 template <typename StorageType>
 class RefBaseTag {
  public:
+  template <typename Base, LifecycleType lifecycleType, typename JniT,
+            typename ViableSpan>
+  friend struct EntryBase;
+
   RefBaseTag(StorageType object) : object_ref_(object) {}
 
   RefBaseTag(const RefBaseTag& rhs) = delete;
