@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <array>
 #include <optional>
 #include <utility>
 
@@ -39,41 +40,39 @@ using testing::_;
 using testing::InSequence;
 using testing::StrEq;
 
+static constexpr Class kClass{"kClass"};
+static constexpr Class kClass2{"kClass2"};
+
 TEST_F(JniTest, LocalObject_CallsNewAndDeleteOnNewObject) {
   EXPECT_CALL(*env_, NewObjectV).WillOnce(testing::Return(Fake<jobject>()));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>())).Times(1);
 
-  static constexpr Class kClass{"kClass"};
-  LocalObject<kClass> local_object{};
-  EXPECT_EQ(jobject{local_object}, Fake<jobject>());
+  LocalObject<kClass> obj{};
+  EXPECT_EQ(jobject{obj}, Fake<jobject>());
 }
 
 TEST_F(JniTest, LocalObject_CallsOnlyDeleteOnWrapCtor) {
-  static constexpr Class kClass{"kClass"};
-
   EXPECT_CALL(*env_, NewLocalRef).Times(0);
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
 
-  LocalObject<kClass> local_object{Fake<jobject>()};
-  EXPECT_NE(jobject{local_object}, nullptr);
+  LocalObject<kClass> obj{Fake<jobject>()};
+  EXPECT_NE(jobject{obj}, nullptr);
 }
 
 TEST_F(JniTest, LocalObject_CallsNewLocalRefOnCopy) {
-  static constexpr Class kClass{"kClass"};
-
   EXPECT_CALL(*env_, NewLocalRef).WillOnce(::testing::Return(Fake<jobject>(2)));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(2)));
 
-  LocalObject<kClass> local_object{CreateCopy{}, Fake<jobject>(1)};
-  EXPECT_EQ(jobject{local_object}, Fake<jobject>(2));
+  LocalObject<kClass> obj{CreateCopy{}, Fake<jobject>(1)};
+  EXPECT_EQ(jobject{obj}, Fake<jobject>(2));
 }
 
 TEST_F(JniTest, LocalObject_ObjectReturnsInstanceMethods) {
   // This test doesn't use the default JniTest helpers to be a little more
   // explicit about exactly what calls must be made in what order.
-  static constexpr Class java_class_under_test{
-      "com/google/AnotherTestClass",
+  static constexpr Class kClass{
+      "com/google/AnotherClass",
       Method{"Foo", jni::Return<jint>{}, Params<jint>{}},
       Method{"Baz", jni::Return<void>{}, Params<jfloat>{}},
       Method{"AMethodWithAReallyLongNameThatWouldPossiblyBeHardForTemplates"
@@ -100,45 +99,34 @@ TEST_F(JniTest, LocalObject_ObjectReturnsInstanceMethods) {
       .WillOnce(testing::Return(Fake<jmethodID>(2)));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
 
-  LocalObject<java_class_under_test> dynamic_object{};
-  dynamic_object("Foo", 12345);
-  dynamic_object("Baz", 12345.f);
-  dynamic_object(
-      "AMethodWithAReallyLongNameThatWouldPossiblyBeHardForTemplatesToHandle",
+  LocalObject<kClass> obj{};
+  obj("Foo", 12345);
+  obj("Baz", 12345.f);
+  obj("AMethodWithAReallyLongNameThatWouldPossiblyBeHardForTemplatesToHandle",
       12345, 12345.f, 12345, 12345.f, jdouble{12345});
 }
 
 TEST_F(JniTest, LocalObject_CallsDeleteOnceAfterAMoveConstruction) {
-  static constexpr Class kClass{
-      "com/google/CallsDeleteOnceAfterAMoveConstruction"};
-
   EXPECT_CALL(*env_, NewLocalRef).Times(0);
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
 
-  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_1{
-      Fake<jobject>()};
+  LocalObject<kClass> obj_1{Fake<jobject>()};
 
-  EXPECT_NE(jobject{local_object_1}, nullptr);
+  EXPECT_NE(jobject{obj_1}, nullptr);
 
-  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_2{
-      std::move(local_object_1)};
+  LocalObject<kClass> obj_2{std::move(obj_1)};
 
-  EXPECT_NE(jobject{local_object_2}, nullptr);
+  EXPECT_NE(jobject{obj_2}, nullptr);
 }
 
 TEST_F(JniTest, LocalObject_FunctionsProperlyInSTLContainer) {
-  static constexpr Class kClass{
-      "com/google/CallsDeleteOnceAfterAMoveConstruction"};
-
   EXPECT_CALL(*env_, NewLocalRef).Times(0);
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(1)));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(2)));
 
-  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_1{
-      Fake<jobject>(1)};
-  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_2{
-      Fake<jobject>(2)};
-  std::tuple t{std::move(local_object_1), std::move(local_object_2)};
+  LocalObject<kClass> obj_1{Fake<jobject>(1)};
+  LocalObject<kClass> obj_2{Fake<jobject>(2)};
+  std::tuple t{std::move(obj_1), std::move(obj_2)};
 }
 
 TEST_F(JniTest, LocalObject_ValuesWorkAfterMoveConstructor) {
@@ -150,34 +138,29 @@ TEST_F(JniTest, LocalObject_ValuesWorkAfterMoveConstructor) {
   EXPECT_CALL(*env_, CallIntMethodV).Times(3);
   EXPECT_CALL(*env_, SetIntField).Times(4);
 
-  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_1{
-      Fake<jobject>()};
-  local_object_1("Foo", 1);
-  local_object_1("Foo", 2);
-  local_object_1["BarField"].Set(1);
+  LocalObject<kClass> obj_1{Fake<jobject>()};
+  obj_1("Foo", 1);
+  obj_1("Foo", 2);
+  obj_1["BarField"].Set(1);
 
-  LocalObject<kClass, kDefaultClassLoader, kDefaultJvm> local_object_2{
-      std::move(local_object_1)};
-  local_object_2("Foo", 3);
-  local_object_2["BarField"].Set(2);
-  local_object_2["BarField"].Set(3);
-  local_object_2["BarField"].Set(4);
+  LocalObject<kClass> obj_2{std::move(obj_1)};
+  obj_2("Foo", 3);
+  obj_2["BarField"].Set(2);
+  obj_2["BarField"].Set(3);
+  obj_2["BarField"].Set(4);
 }
 
 TEST_F(JniTest, LocalObject_ReleasesLocalsForAlternateConstructors) {
-  static constexpr Class java_class_under_test{
-      "ReleasesLocalsForAlternateConstructors", jni::Constructor<int>{}};
-  LocalObject<java_class_under_test> g1{1};
-  LocalObject<java_class_under_test> g2{2};
-  LocalObject<java_class_under_test> g3{3};
+  static constexpr Class kClass{"ReleasesLocalsForAlternateConstructors",
+                                jni::Constructor<int>{}};
+  LocalObject<kClass> g1{1};
+  LocalObject<kClass> g2{2};
+  LocalObject<kClass> g3{3};
   EXPECT_CALL(*env_, DeleteLocalRef(_)).Times(3);
 }
 
 TEST_F(JniTest, LocalObject_ComparesAgainstOtherLocalObjects) {
-  static constexpr Class kClass1{"kClass1"};
-  static constexpr Class kClass2{"kClass2"};
-
-  LocalObject<kClass1> val_1{Fake<jobject>(1)};
+  LocalObject<kClass> val_1{Fake<jobject>(1)};
   LocalObject<kClass2> val_2{Fake<jobject>(2)};
 
   EXPECT_TRUE(val_1 == val_1);
@@ -200,14 +183,11 @@ TEST_F(JniTest, LocalObject_ComparesAgainstjobjects) {
 }
 
 TEST_F(JniTest, LocalObject_ComparesAgainstOtherLocalObjects_InContainers) {
-  static constexpr Class kClass1{"kClass1"};
-  static constexpr Class kClass2{"kClass2"};
-
   struct A {
-    LocalObject<kClass1> val_1;
+    LocalObject<kClass> val_1;
     LocalObject<kClass2> val_2;
 
-    A(LocalObject<kClass1>&& val_1, LocalObject<kClass2>&& val_2)
+    A(LocalObject<kClass>&& val_1, LocalObject<kClass2>&& val_2)
         : val_1(std::move(val_1)), val_2(std::move(val_2)) {}
 
     A(A&& rhs) : val_1(std::move(rhs.val_1)), val_2(std::move(rhs.val_2)) {}
@@ -221,56 +201,51 @@ TEST_F(JniTest, LocalObject_ComparesAgainstOtherLocalObjects_InContainers) {
     }
   };
 
-  A val_1{LocalObject<kClass1>{Fake<jobject>(1)}, {Fake<jobject>(2)}};
+  A val_1{LocalObject<kClass>{Fake<jobject>(1)}, {Fake<jobject>(2)}};
   A val_2{LocalObject<kClass2>{Fake<jobject>(1)}, {Fake<jobject>(3)}};
 
   EXPECT_FALSE(val_1 == val_2);
   EXPECT_TRUE(val_1 != val_2);
 
-  EXPECT_EQ((std::array{A{LocalObject<kClass1>(Fake<jobject>(1)),
+  EXPECT_EQ((std::array{A{LocalObject<kClass>(Fake<jobject>(1)),
                           LocalObject<kClass2>(Fake<jobject>(2))}}),
-            (std::array{A{LocalObject<kClass1>(Fake<jobject>(1)),
+            (std::array{A{LocalObject<kClass>(Fake<jobject>(1)),
                           LocalObject<kClass2>(Fake<jobject>(2))}}));
 
-  EXPECT_TRUE((std::array{A{LocalObject<kClass1>(Fake<jobject>(1)),
+  EXPECT_TRUE((std::array{A{LocalObject<kClass>(Fake<jobject>(1)),
                             LocalObject<kClass2>(Fake<jobject>(2))}} !=
-               (std::array{A{LocalObject<kClass1>(Fake<jobject>(1)),
+               (std::array{A{LocalObject<kClass>(Fake<jobject>(1)),
                              LocalObject<kClass2>(Fake<jobject>(3))}})));
 }
 
 TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnLvalue) {
-  static constexpr Class kTestClass1{"TestClass1"};
+  static constexpr Class kClass2{
+      "Class2", Method{"Foo", jni::Return{}, jni::Params{kClass}}};
 
-  static constexpr Class kTestClass2{
-      "TestClass2", Method{"Foo", jni::Return{}, jni::Params{kTestClass1}}};
-
-  LocalObject<kTestClass1> a{};
-  LocalObject<kTestClass2> b{};
+  LocalObject<kClass> a{};
+  LocalObject<kClass2> b{};
   b("Foo", a);
 }
 
 TEST_F(JniTest, LocalObject_SupportsReturningAClass) {
-  static constexpr Class kClass2{"kClass2"};
+  static constexpr Class kClass{
+      "Class1", Method{"Foo", jni::Return{kClass2}, jni::Params{}}};
 
-  static constexpr Class kTestClass1{
-      "TestClass1", Method{"Foo", jni::Return{kClass2}, jni::Params{}}};
-
-  LocalObject<kTestClass1> a{};
+  LocalObject<kClass> a{};
   a("Foo");
 }
 
 TEST_F(JniTest, LocalObject_SupportsReturningAString) {
-  static constexpr Class kTestClass1{
-      "TestClass1", Method{"Foo", jni::Return<jstring>{}, jni::Params{}}};
+  static constexpr Class kClass{
+      "Class1", Method{"Foo", jni::Return<jstring>{}, jni::Params{}}};
 
-  LocalObject<kTestClass1> a{};
+  LocalObject<kClass> a{};
   a("Foo");
 }
 
 jobject ReturnOutputOfMethod() {
-  static constexpr Class kClass1{"Class1"};
   static constexpr Class kClass2{
-      "Class2", Method{"Foo", jni::Return{kClass1}, Params<>{}}};
+      "Class2", Method{"Foo", jni::Return{kClass}, Params<>{}}};
 
   return LocalObject<kClass2>{}("Foo").Release();
 }
@@ -280,29 +255,23 @@ TEST_F(JniTest, LocalObject_CompilesWhenReturnReleasing) {
 }
 
 TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnPrvalue) {
-  static constexpr Class kTestClass1{"TestClass1"};
+  static constexpr Class kClass2{
+      "Class2", Method{"Foo", jni::Return{}, jni::Params{kClass}}};
 
-  static constexpr Class kTestClass2{
-      "TestClass2", Method{"Foo", jni::Return{}, jni::Params{kTestClass1}}};
-
-  LocalObject<kTestClass1> a{};
-  LocalObject<kTestClass2> b{};
+  LocalObject<kClass> a{};
+  LocalObject<kClass2> b{};
   b("Foo", std::move(a));
 }
 
 TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnXvalue) {
-  static constexpr Class kTestClass1{"TestClass1"};
+  static constexpr Class kClass2{
+      "Class2", Method{"Foo", jni::Return{}, jni::Params{kClass}}};
 
-  static constexpr Class kTestClass2{
-      "TestClass2", Method{"Foo", jni::Return{}, jni::Params{kTestClass1}}};
-
-  LocalObject<kTestClass2> b{};
-  b("Foo", LocalObject<kTestClass1>{});
+  LocalObject<kClass2> b{};
+  b("Foo", LocalObject<kClass>{});
 }
 
 TEST_F(JniTest, LocalObject_MovesInContainerStruct) {
-  static constexpr Class kClass{"TestClass1"};
-
   struct A {
     const LocalObject<kClass> val;
 
