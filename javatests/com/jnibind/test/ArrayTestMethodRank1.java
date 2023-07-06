@@ -18,6 +18,7 @@ package com.jnibind.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.AfterClass;
@@ -124,6 +125,12 @@ public class ArrayTestMethodRank1 {
       ObjectTestHelper dummyThatMatchesIdx =
           new ObjectTestHelper(idxPlusOffset, idxPlusOffset, idxPlusOffset);
       assertTrue(dummyThatMatchesIdx.isEqualTo(arr[i]));
+    }
+  }
+
+  void objectArrayArrayOfNulls(ObjectTestHelper[] arr) {
+    for (ObjectTestHelper element : arr) {
+      assertNull(element);
     }
   }
 

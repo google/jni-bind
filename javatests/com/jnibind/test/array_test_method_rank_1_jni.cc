@@ -46,6 +46,9 @@ static constexpr Class kArrayTestMethodRank1 {
     Method {"doubleArray", Return<void>{}, Params{jdouble{}, Array{jdouble{}}}},
     Method {"stringArray", Return<void>{}, Params{Array{jstring{}}}},
     Method {"objectArray", Return<void>{}, Params{int{}, Array{kObjectTestHelperClass}}},
+
+    Method {"objectArrayArrayOfNulls",
+      Return<void>{}, Params{Array{kObjectTestHelperClass}}},
 };
 // clang-format on
 
@@ -214,6 +217,10 @@ JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeObjectTests(
     JNIEnv* env, jclass, jobject test_fixture, jobjectArray object_array) {
   LocalObject<kArrayTestMethodRank1> fixture{test_fixture};
+
+  // Creating arrays of nulls with just size works.
+  LocalArray<jobject, 1, kObjectTestHelperClass> local_arr_nulls{5};
+  fixture("objectArrayArrayOfNulls", local_arr_nulls);
 
   // Simple lvalue pass through works as expected.
   LocalArray<jobject, 1, kObjectTestHelperClass> local_arr{object_array};
