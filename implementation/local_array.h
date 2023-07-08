@@ -53,6 +53,15 @@ class LocalArray
       ArrayRef<JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
   using Base::Base;
 
+  // RefTag ctor (supports multi-dimensions, `jobject` if rank > 1).
+  using RefTag = std::conditional_t<(kRank_ > 1), jobject, SpanType>;
+  LocalArray(std::size_t size, RefTag arr)
+      : Base(JniArrayHelper<jobject, kRank_>::NewArray(
+            size,
+            ObjectClassRefT::GetAndMaybeLoadClassRef(static_cast<jobject>(arr)),
+            arr)) {}
+
+  // Rvalue ctor.
   LocalArray(LocalArray<SpanType, kRank_>&& rhs) : Base(rhs.Release()) {}
 
   template <std::size_t kRank, const auto& class_v, const auto& class_loader_v,
