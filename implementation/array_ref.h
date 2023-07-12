@@ -16,6 +16,8 @@
 #ifndef JNI_BIND_ARRAY_REF_H_
 #define JNI_BIND_ARRAY_REF_H_
 
+#include <optional>
+
 #include "implementation/array.h"
 #include "implementation/array_view.h"
 #include "implementation/class.h"
@@ -45,7 +47,6 @@ class ArrayRef : public ScopedArrayImpl<JniT> {
   using Base::Base;
   using SpanType = typename JniT::SpanType;
 
-  ArrayRef(std::nullptr_t) {}
   ArrayRef(std::size_t size)
       : Base(JniArrayHelper<SpanType, JniT::kRank>::NewArray(size)) {}
 
@@ -56,8 +57,16 @@ class ArrayRef : public ScopedArrayImpl<JniT> {
   }
 
   std::size_t Length() {
-    return JniArrayHelper<SpanType, JniT::kRank>::GetLength(Base::object_ref_);
+    if (length_.load() == kNoIdx) {
+      length_.store(
+          JniArrayHelper<SpanType, JniT::kRank>::GetLength(Base::object_ref_));
+    }
+
+    return length_.load();
   }
+
+ private:
+  std::atomic<std::size_t> length_ = kNoIdx;
 };
 
 // |SpanType| is object.

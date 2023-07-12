@@ -511,6 +511,7 @@ cc_library(
         ":forward_declarations",
         ":jni_type",
         ":jvm",
+        ":no_idx",
         ":object",
         "//:jni_dep",
         "//implementation/jni_helper:jni_array_helper",

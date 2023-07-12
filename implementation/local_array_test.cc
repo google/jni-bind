@@ -245,6 +245,17 @@ TEST_F(JniTest, Array_DifferentiatesWithOverloads) {
   obj("Foo", LocalArray<jobject, 1, kClass2>{123, LocalObject<kClass2>{}});
 }
 
+TEST_F(JniTest, Array_CachesLengthExactlyOnceOnFirstRequest) {
+  EXPECT_CALL(*env_, GetArrayLength).Times(0);
+
+  LocalArray<jint> obj{Fake<jintArray>()};
+
+  EXPECT_CALL(*env_, GetArrayLength).Times(1).WillOnce(Return(5));
+  EXPECT_EQ(obj.Length(), 5);
+  EXPECT_EQ(obj.Length(), 5);
+  EXPECT_EQ(obj.Length(), 5);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // String Array Tests.
 // Strings are unusual in that they have their own type (jstring) but are

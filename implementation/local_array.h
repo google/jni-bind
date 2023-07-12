@@ -16,6 +16,7 @@
 #ifndef JNI_BIND_LOCAL_ARRAY_H_
 #define JNI_BIND_LOCAL_ARRAY_H_
 
+#include <atomic>
 #include <cstddef>
 #include <type_traits>
 
@@ -29,6 +30,7 @@
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
+#include "implementation/no_idx.h"
 #include "implementation/object.h"
 #include "jni_dep.h"
 
