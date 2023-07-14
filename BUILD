@@ -88,7 +88,6 @@ cc_library(
     visibility = [":__subpackages__"],
     deps = [
         ":jni_bind",
-        ":jni_dep",
         ":mock_jni_env",
         ":mock_jvm",
         "//implementation:fake_test_constants",
