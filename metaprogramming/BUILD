@@ -917,7 +917,6 @@ cc_library(
     name = "unfurl",
     hdrs = ["unfurl.h"],
     deps = [
-        ":tuple_manipulation",
     ],
 )
 
