@@ -14,7 +14,6 @@ cc_library(
     hdrs = ["array.h"],
     deps = [
         ":array_type_conversion",
-        ":class",
         ":object",
         ":return",
         "//:jni_dep",
@@ -186,7 +185,6 @@ cc_library(
         "//:jni_dep",
         "//class_defs:java_lang_classes",
         "//implementation/jni_helper:jni_env",
-        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
         "//metaprogramming:contains",
         "//metaprogramming:queryable_map",
@@ -240,8 +238,6 @@ cc_library(
     name = "corpus_tag",
     hdrs = ["corpus_tag.h"],
     deps = [
-        "//metaprogramming:concatenate",
-        "//metaprogramming:detect",
     ],
 )
 
@@ -341,7 +337,6 @@ cc_library(
         ":promotion_mechanics",
         "//:jni_dep",
         "//class_defs:java_lang_classes",
-        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
     ],
 )
@@ -357,7 +352,6 @@ cc_library(
         ":object_ref",
         ":promotion_mechanics",
         "//:jni_dep",
-        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
     ],
 )
@@ -586,14 +580,12 @@ cc_library(
     deps = [
         ":class",
         ":class_loader",
-        ":default_class_loader",
         ":jni_type",
         ":jvm",
         ":jvm_ref",
         ":object_ref",
         ":promotion_mechanics",
         "//:jni_dep",
-        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
     ],
 )
@@ -808,16 +800,10 @@ cc_library(
     name = "proxy",
     hdrs = ["proxy.h"],
     deps = [
-        ":array",
         ":class",
         ":class_loader",
         ":corpus",
         ":corpus_tag",
-        ":default_class_loader",
-        ":id",
-        ":id_type",
-        ":jvm",
-        ":name_constants",
         ":object",
         ":proxy_convenience_aliases",
         ":ref_base",
@@ -986,8 +972,6 @@ cc_library(
         ":method",
         ":params",
         "//metaprogramming:base_filter",
-        "//metaprogramming:invocable_map",
-        "//metaprogramming:queryable_map",
     ],
 )
 
