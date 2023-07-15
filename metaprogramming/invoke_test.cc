@@ -24,13 +24,13 @@
 #include "per_element.h"
 #include "same.h"
 
-using jni::metaprogramming::Increment;
-using jni::metaprogramming::Invoke_t;
-using jni::metaprogramming::InvokeAsPack_t;
-using jni::metaprogramming::InvokePerTupArg_t;
-using jni::metaprogramming::InvokePerTupArgAsPack_t;
-using jni::metaprogramming::PerElement;
-using jni::metaprogramming::Same;
+using ::jni::metaprogramming::Increment;
+using ::jni::metaprogramming::Invoke_t;
+using ::jni::metaprogramming::InvokeAsPack_t;
+using ::jni::metaprogramming::InvokePerTupArg_t;
+using ::jni::metaprogramming::InvokePerTupArgAsPack_t;
+using ::jni::metaprogramming::PerElement;
+using ::jni::metaprogramming::Same;
 
 namespace {
 

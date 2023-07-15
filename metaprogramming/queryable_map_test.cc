@@ -28,7 +28,7 @@
 
 namespace {
 
-using jni::metaprogramming::QueryableMap_t;
+using ::jni::metaprogramming::QueryableMap_t;
 
 struct Str {
   const char* name_;

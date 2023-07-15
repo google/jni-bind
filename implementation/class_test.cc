@@ -21,7 +21,7 @@
 
 namespace {
 
-using jni::Class;
+using ::jni::Class;
 
 static constexpr Class k_class_one{"classOne"};
 static constexpr Class k_class_one_prime{"classOne"};

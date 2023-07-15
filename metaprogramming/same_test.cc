@@ -21,7 +21,7 @@
 
 namespace {
 
-using jni::metaprogramming::Same;
+using ::jni::metaprogramming::Same;
 
 static_assert(std::is_same_v<Same<int>::type<int>, std::true_type>);
 static_assert(std::is_same_v<Same<float>::type<float>, std::true_type>);

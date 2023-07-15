@@ -24,7 +24,7 @@
 
 namespace {
 
-using jni::metaprogramming::PerElement;
+using ::jni::metaprogramming::PerElement;
 
 // Metafunction that binds an amount and increments incoming integral constants.
 template <size_t Amt>

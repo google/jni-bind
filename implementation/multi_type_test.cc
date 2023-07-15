@@ -24,16 +24,16 @@
 
 namespace {
 
-using jni::Class;
-using jni::Field;
-using jni::Method;
-using jni::Params;
+using ::jni::Class;
+using ::jni::Field;
+using ::jni::Method;
+using ::jni::Params;
 using ::jni::test::Fake;
-using jni::test::JniTest;
-using testing::_;
-using testing::Eq;
-using testing::Return;
-using testing::StrEq;
+using ::jni::test::JniTest;
+using ::testing::_;
+using ::testing::Eq;
+using ::testing::Return;
+using ::testing::StrEq;
 
 TEST_F(JniTest, MultiTypeTest_SimpleSmokeTestForSingleObject) {
   static constexpr Class object{

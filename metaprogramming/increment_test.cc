@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 #include "invoke.h"
 
-using jni::metaprogramming::Increment_t;
+using ::jni::metaprogramming::Increment_t;
 
 namespace {
 

@@ -27,11 +27,11 @@
 #include "tuple_manipulation.h"
 #include "type_of_nth_element.h"
 
-using jni::metaprogramming::Apply;
-using jni::metaprogramming::Apply_t;
-using jni::metaprogramming::Invoke_t;
-using jni::metaprogramming::InvokePerTupArg_t;
-using jni::metaprogramming::Same;
+using ::jni::metaprogramming::Apply;
+using ::jni::metaprogramming::Apply_t;
+using ::jni::metaprogramming::Invoke_t;
+using ::jni::metaprogramming::InvokePerTupArg_t;
+using ::jni::metaprogramming::Same;
 
 namespace {
 

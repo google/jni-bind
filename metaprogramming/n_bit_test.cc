@@ -22,8 +22,8 @@
 
 namespace {
 
-using jni::metaprogramming::Increment_t;
-using jni::metaprogramming::NBit;
+using ::jni::metaprogramming::Increment_t;
+using ::jni::metaprogramming::NBit;
 
 // Unary
 static_assert(NBit<0, 0>::value_ == 0);

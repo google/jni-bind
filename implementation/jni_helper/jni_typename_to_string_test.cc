@@ -21,7 +21,7 @@
 
 namespace {
 
-using jni::JavaTypeToString;
+using ::jni::JavaTypeToString;
 
 TEST(TypeToString, CompilesBasicTypeTests) {
   using namespace std::literals;

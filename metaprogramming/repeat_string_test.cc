@@ -18,7 +18,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-using jni::metaprogramming::RepeatString_v;
+using ::jni::metaprogramming::RepeatString_v;
 
 namespace {
 

@@ -22,14 +22,14 @@
 
 namespace {
 
-using jni::Class;
-using jni::LocalObject;
-using jni::Method;
-using jni::Overload;
-using jni::Params;
-using jni::test::JniTest;
-using testing::_;
-using testing::StrEq;
+using ::jni::Class;
+using ::jni::LocalObject;
+using ::jni::Method;
+using ::jni::Overload;
+using ::jni::Params;
+using ::jni::test::JniTest;
+using ::testing::_;
+using ::testing::StrEq;
 
 TEST_F(JniTest, MethodRef_AsksForCorrectMethods1) {
   static constexpr Class kClass{

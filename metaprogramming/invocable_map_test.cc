@@ -27,7 +27,7 @@
 
 namespace {
 
-using jni::metaprogramming::InvocableMap_t;
+using ::jni::metaprogramming::InvocableMap_t;
 
 struct Str {
   const char* name_;

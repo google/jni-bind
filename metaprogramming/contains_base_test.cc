@@ -22,8 +22,8 @@
 
 namespace {
 
-using jni::metaprogramming::Contains_v;
-using jni::metaprogramming::ContainsBase_v;
+using ::jni::metaprogramming::Contains_v;
+using ::jni::metaprogramming::ContainsBase_v;
 
 struct A {};
 struct B : A {};

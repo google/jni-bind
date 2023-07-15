@@ -23,8 +23,8 @@
 
 #include <gtest/gtest.h>
 
-using jni::metaprogramming::ExtractTupleFromType_t;
-using jni::metaprogramming::TupleToType_t;
+using ::jni::metaprogramming::ExtractTupleFromType_t;
+using ::jni::metaprogramming::TupleToType_t;
 
 namespace {
 

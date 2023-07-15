@@ -23,8 +23,8 @@
 #include "invoke.h"
 #include "same.h"
 
-using jni::metaprogramming::Same;
-using jni::metaprogramming::Unwrap_t;
+using ::jni::metaprogramming::Same;
+using ::jni::metaprogramming::Unwrap_t;
 
 namespace {
 

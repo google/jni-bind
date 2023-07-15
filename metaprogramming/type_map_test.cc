@@ -26,9 +26,9 @@
 
 namespace {
 
-using jni::metaprogramming::LambdaStringToType;
-using jni::metaprogramming::StringAsType;
-using jni::metaprogramming::TypemapBuilder_t;
+using ::jni::metaprogramming::LambdaStringToType;
+using ::jni::metaprogramming::StringAsType;
+using ::jni::metaprogramming::TypemapBuilder_t;
 
 TEST(TypeMap, CompilesWhenEmptyWithOrWithoutCallableArgs) {
   static_assert(

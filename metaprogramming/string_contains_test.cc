@@ -19,7 +19,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-using jni::metaprogramming::StringContains_v;
+using ::jni::metaprogramming::StringContains_v;
 
 namespace {
 

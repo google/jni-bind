@@ -24,10 +24,10 @@
 
 namespace {
 
-using jni::metaprogramming::Contains_v;
-using jni::metaprogramming::Unfurl_t;
-using jni::metaprogramming::UnfurlConjunction_v;
-using jni::metaprogramming::UnfurlDisjunction_v;
+using ::jni::metaprogramming::Contains_v;
+using ::jni::metaprogramming::Unfurl_t;
+using ::jni::metaprogramming::UnfurlConjunction_v;
+using ::jni::metaprogramming::UnfurlDisjunction_v;
 
 struct A {};
 struct B {};

@@ -36,9 +36,9 @@ using ::jni::Method;
 using ::jni::Params;
 using ::jni::test::Fake;
 using ::jni::test::JniTest;
-using testing::_;
-using testing::InSequence;
-using testing::StrEq;
+using ::testing::_;
+using ::testing::InSequence;
+using ::testing::StrEq;
 
 static constexpr Class kClass{"kClass"};
 static constexpr Class kClass2{"kClass2"};

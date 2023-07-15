@@ -19,7 +19,7 @@
 #include <tuple>
 #include <type_traits>
 
-using jni::metaprogramming::BaseFilter_t;
+using ::jni::metaprogramming::BaseFilter_t;
 
 namespace {
 

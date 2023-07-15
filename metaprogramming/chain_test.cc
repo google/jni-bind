@@ -22,11 +22,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-using jni::metaprogramming::Chain;
-using jni::metaprogramming::Increment;
-using jni::metaprogramming::Increment_t;
-using jni::metaprogramming::Invoke_t;
-using jni::metaprogramming::Same;
+using ::jni::metaprogramming::Chain;
+using ::jni::metaprogramming::Increment;
+using ::jni::metaprogramming::Increment_t;
+using ::jni::metaprogramming::Invoke_t;
+using ::jni::metaprogramming::Same;
 
 namespace {
 

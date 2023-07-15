@@ -302,11 +302,11 @@ std::string_view jni_string_view = utf_string_view.ToString();
 Sometimes you need to reference a class that doesn't yet have a corresponding JNI Bind definition (possibly due to a circular dependency or self reference). This can be obviated by defining the class inline.
 
 ```cpp
-using jni::Class;
-using jni::Constructor;
-using jni::Return;
-using jni::Method;
-using jni::Params;
+using ::jni::Class;
+using ::jni::Constructor;
+using ::jni::Return;
+using ::jni::Method;
+using ::jni::Params;
 
 static constexpr Class kClass {
   "com/project/kClass",

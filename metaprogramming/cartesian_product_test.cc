@@ -26,13 +26,13 @@
 
 namespace {
 
-using jni::metaprogramming::CartesianProduct;
-using jni::metaprogramming::CartesianProduct_t;
-using jni::metaprogramming::GenerateBitSequenceFromTupSets_t;
-using jni::metaprogramming::InvokeAsPack_t;
-using jni::metaprogramming::NBit;
-using jni::metaprogramming::NBitSequence;
-using jni::metaprogramming::TupleUnroller_t;
+using ::jni::metaprogramming::CartesianProduct;
+using ::jni::metaprogramming::CartesianProduct_t;
+using ::jni::metaprogramming::GenerateBitSequenceFromTupSets_t;
+using ::jni::metaprogramming::InvokeAsPack_t;
+using ::jni::metaprogramming::NBit;
+using ::jni::metaprogramming::NBitSequence;
+using ::jni::metaprogramming::TupleUnroller_t;
 
 template <typename... Ts>
 using Tup = std::tuple<Ts...>;

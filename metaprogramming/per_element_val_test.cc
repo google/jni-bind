@@ -20,7 +20,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-using jni::metaprogramming::PerElementVal_v;
+using ::jni::metaprogramming::PerElementVal_v;
 
 namespace {
 

@@ -21,15 +21,15 @@
 
 namespace {
 
-using jni::metaprogramming::Max;
-using jni::metaprogramming::Max_t;
-using jni::metaprogramming::Max_v;
-using jni::metaprogramming::Min;
-using jni::metaprogramming::Min_v;
-using jni::metaprogramming::Reduce_t;
-using jni::metaprogramming::ReduceAsPack_t;
-using jni::metaprogramming::ReduceAsPack_v;
-using jni::metaprogramming::Val_t;
+using ::jni::metaprogramming::Max;
+using ::jni::metaprogramming::Max_t;
+using ::jni::metaprogramming::Max_v;
+using ::jni::metaprogramming::Min;
+using ::jni::metaprogramming::Min_v;
+using ::jni::metaprogramming::Reduce_t;
+using ::jni::metaprogramming::ReduceAsPack_t;
+using ::jni::metaprogramming::ReduceAsPack_v;
+using ::jni::metaprogramming::Val_t;
 
 static_assert(Max_v<Val_t<1>, Val_t<2>> == 2);
 static_assert(Max_v<Val_t<2>, Val_t<1>> == 2);

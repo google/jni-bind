@@ -20,12 +20,12 @@
 
 namespace {
 
-using jni::Class;
-using jni::Constructor;
-using jni::LocalObject;
-using jni::test::JniTest;
-using testing::_;
-using testing::StrEq;
+using ::jni::Class;
+using ::jni::Constructor;
+using ::jni::LocalObject;
+using ::jni::test::JniTest;
+using ::testing::_;
+using ::testing::StrEq;
 
 TEST_F(JniTest, ConstructorDoesntCompile) {
   static constexpr Class c{

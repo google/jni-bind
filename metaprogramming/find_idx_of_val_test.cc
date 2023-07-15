@@ -21,10 +21,10 @@
 
 #include <gtest/gtest.h>
 
-using jni::metaprogramming::FindIdxOfVal_idx;
-using jni::metaprogramming::FindIdxOfValInTup_idx;
-using jni::metaprogramming::FindIdxOfValInTupWithComparator_idx;
-using jni::metaprogramming::FindIdxOfValWithComparator_idx;
+using ::jni::metaprogramming::FindIdxOfVal_idx;
+using ::jni::metaprogramming::FindIdxOfValInTup_idx;
+using ::jni::metaprogramming::FindIdxOfValInTupWithComparator_idx;
+using ::jni::metaprogramming::FindIdxOfValWithComparator_idx;
 
 namespace {
 

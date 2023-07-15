@@ -18,8 +18,8 @@
 
 namespace {
 
-using jni::metaprogramming::kNegativeOne;
-using jni::metaprogramming::ModifiedMax;
+using ::jni::metaprogramming::kNegativeOne;
+using ::jni::metaprogramming::ModifiedMax;
 
 // Null sets work.
 static_assert(ModifiedMax({}) == kNegativeOne);

@@ -24,11 +24,11 @@
 
 namespace {
 
-using jni::InvokeHelper;
-using jni::test::Fake;
-using jni::test::JniTest;
-using testing::_;
-using testing::Return;
+using ::jni::InvokeHelper;
+using ::jni::test::Fake;
+using ::jni::test::JniTest;
+using ::testing::_;
+using ::testing::Return;
 
 TEST_F(JniTest, InvokeHelper_InvokesVoidMethod) {
   EXPECT_CALL(*env_, CallVoidMethodV(Fake<jobject>(), Fake<jmethodID>(), _))

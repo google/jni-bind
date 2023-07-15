@@ -20,7 +20,7 @@
 
 namespace {
 
-using jni::metaprogramming::TupleFromSize_t;
+using ::jni::metaprogramming::TupleFromSize_t;
 
 struct A {};
 

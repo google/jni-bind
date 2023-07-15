@@ -21,7 +21,7 @@
 
 #include <gtest/gtest.h>
 
-using jni::metaprogramming::Interleaved;
+using ::jni::metaprogramming::Interleaved;
 
 namespace {
 

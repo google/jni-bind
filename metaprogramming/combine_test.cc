@@ -21,7 +21,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-using jni::metaprogramming::Combine_t;
+using ::jni::metaprogramming::Combine_t;
 
 namespace {
 

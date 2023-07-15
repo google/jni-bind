@@ -20,8 +20,8 @@
 
 namespace {
 
-using jni::metaprogramming::FunctionTraitsArg_t;
-using jni::metaprogramming::FunctionTraitsReturn_t;
+using ::jni::metaprogramming::FunctionTraitsArg_t;
+using ::jni::metaprogramming::FunctionTraitsReturn_t;
 
 void VFoo() {}
 void VFoo_I(int) {}

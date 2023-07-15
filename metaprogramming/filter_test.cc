@@ -23,8 +23,8 @@
 
 namespace {
 
-using jni::metaprogramming::Filter_t;
-using jni::metaprogramming::Same;
+using ::jni::metaprogramming::Filter_t;
+using ::jni::metaprogramming::Same;
 
 struct A {};
 struct B {};

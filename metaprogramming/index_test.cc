@@ -20,9 +20,9 @@
 
 namespace {
 
-using jni::metaprogramming::Index_t;
-using jni::metaprogramming::Index_Tup;
-using jni::metaprogramming::IndexEntry;
+using ::jni::metaprogramming::Index_t;
+using ::jni::metaprogramming::Index_Tup;
+using ::jni::metaprogramming::IndexEntry;
 
 struct A {};
 struct B {};

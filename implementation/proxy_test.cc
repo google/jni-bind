@@ -23,15 +23,15 @@
 #include "jni_test.h"
 #include "metaprogramming/concatenate.h"
 
-using jni::AsDecl_t;
-using jni::Class;
-using jni::ClassLoader;
-using jni::GlobalObject;
-using jni::LocalObject;
-using jni::Proxy_t;
-using jni::Return_t;
-using jni::metaprogramming::TypeToTypeMapQuery_t;
-using jni::test::JniTest;
+using ::jni::AsDecl_t;
+using ::jni::Class;
+using ::jni::ClassLoader;
+using ::jni::GlobalObject;
+using ::jni::LocalObject;
+using ::jni::Proxy_t;
+using ::jni::Return_t;
+using ::jni::metaprogramming::TypeToTypeMapQuery_t;
+using ::jni::test::JniTest;
 
 namespace jni {
 

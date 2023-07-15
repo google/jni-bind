@@ -21,8 +21,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-using jni::metaprogramming::Even_t;
-using jni::metaprogramming::Odd_t;
+using ::jni::metaprogramming::Even_t;
+using ::jni::metaprogramming::Odd_t;
 
 namespace {
 

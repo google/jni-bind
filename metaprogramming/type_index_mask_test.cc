@@ -21,7 +21,7 @@
 
 namespace {
 
-using jni::metaprogramming::TypeTupFromIndexMask_t;
+using ::jni::metaprogramming::TypeTupFromIndexMask_t;
 
 struct A {};
 struct B {};
