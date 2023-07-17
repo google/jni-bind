@@ -81,10 +81,11 @@ using JT = JniT<jobject, kClass1>;
 ////////////////////////////////////////////////////////////////////////////////
 // Class.
 ////////////////////////////////////////////////////////////////////////////////
-using kClass = Id<JT, IdType::CLASS>;
+using ClassIdT = Id<JT, IdType::CLASS>;
 
-static_assert(kClass::Name() == std::string_view{"com/google/kClass1"});
-static_assert(kClass::kNameUsingDots == std::string_view{"com.google.kClass1"});
+static_assert(ClassIdT::Name() == std::string_view{"com/google/kClass1"});
+static_assert(ClassIdT::kNameUsingDots ==
+              std::string_view{"com.google.kClass1"});
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructors

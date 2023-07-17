@@ -46,15 +46,14 @@ static constexpr Class kClass{"kClass"};
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, LocalArray_BuildsAndDestroys) {
   EXPECT_CALL(*env_, NewIntArray(1)).WillOnce(Return(Fake<jintArray>()));
-  EXPECT_CALL(*env_, DeleteLocalRef(_));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>()));
 
   LocalArray<jint> int_array_1{1};
 }
 
 TEST_F(JniTest, LocalArray_IsImplicitlyConvertibleToSpanType) {
-  EXPECT_EQ(static_cast<jintArray>(
-                LocalArray<jint>{reinterpret_cast<jintArray>(0xAAAA)}),
-            reinterpret_cast<jintArray>(0xAAAA));
+  EXPECT_EQ(static_cast<jintArray>(LocalArray<jint>{Fake<jintArray>()}),
+            Fake<jintArray>());
 }
 
 TEST_F(JniTest, LocalArray_ConstructsIntArrayWithCorrectSize) {
@@ -96,6 +95,7 @@ TEST_F(JniTest, LocalArray_ConstructsTheRightType) {
 
 TEST_F(JniTest, LocalArray_ConstructsAnArrayOfNullValues) {
   EXPECT_CALL(*env_, NewObjectArray(5, _, nullptr));
+  EXPECT_CALL(*env_, FindClass(StrEq("kClass")));
   LocalArray<jobject, 1, kClass> local_object_array{5};
 }
 
@@ -267,15 +267,17 @@ TEST_F(JniTest, Array_ConstructsFromAnotherStringArray) {
 }
 
 TEST_F(JniTest, Array_CorrectSignatureForStringParams) {
+  EXPECT_CALL(*env_, FindClass(StrEq("ClassThatReturnsArrays")));
+  EXPECT_CALL(*env_, FindClass(StrEq("java/lang/String")));
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("StringArray"),
+                                 StrEq("([Ljava/lang/String;)V")));
+
   static constexpr Class kClass{
       "ClassThatReturnsArrays",
       Method{"StringArray", jni::Return{}, jni::Params{Array{jstring{}}}},
   };
 
   LocalObject<kClass> obj{jobject{nullptr}};
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("StringArray"),
-                                 StrEq("([Ljava/lang/String;)V")));
-
   LocalArray<jstring> arr{3};
   obj("StringArray", arr);
 }
@@ -299,6 +301,10 @@ TEST_F(JniTest, Array_StringsCanBeSetOnLocalString) {
 }
 
 TEST_F(JniTest, Array_LocalVanillaObjectRValuesCanBeSet) {
+  // Unfortunately this is getting cached separately by `LocalArray`.
+  // In the future, this should drop to 1.
+  EXPECT_CALL(*env_, FindClass(StrEq("java/lang/String"))).Times(2);
+
   EXPECT_CALL(*env_, DeleteLocalRef(_)).Times(2);  // array, in place obj
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>())).Times(2);  // FindClass
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>())).Times(0);
