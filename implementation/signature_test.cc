@@ -26,12 +26,14 @@ using ::jni::Field;
 using ::jni::Id;
 using ::jni::IdType;
 using ::jni::JniT;
+using ::jni::JniTSelector;
 using ::jni::kNoIdx;
 using ::jni::Method;
 using ::jni::Overload;
 using ::jni::Params;
 using ::jni::Rank;
 using ::jni::Return;
+using ::jni::SelectorStaticInfo;
 using ::jni::Signature_v;
 
 static constexpr Class kClass1{
@@ -65,7 +67,19 @@ static constexpr Class kClass1{
 using JT = JniT<jobject, kClass1>;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Constructors
+// Class (i.e. self).
+////////////////////////////////////////////////////////////////////////////////
+using kSelf1 = Id<JT, IdType::CLASS, kNoIdx, 0>;
+using JniSelfT = JniTSelector<jni::LocalArray<jobject, 3, kClass1>::JniT_>;
+using StaticSelectorInfoSelf = SelectorStaticInfo<JniSelfT>;
+
+static_assert(std::string_view{"LkClass1;"} ==
+              Signature_v<Id<JT, IdType::CLASS>>);
+static_assert(std::string_view{"[[LkClass1;"} ==
+              StaticSelectorInfoSelf::TypeName());
+
+////////////////////////////////////////////////////////////////////////////////
+// Constructors.
 ////////////////////////////////////////////////////////////////////////////////
 using kCtor0 = Id<JT, IdType::OVERLOAD, kNoIdx, 0>;
 using kCtor1 = Id<JT, IdType::OVERLOAD, kNoIdx, 1>;
@@ -89,7 +103,7 @@ static_assert(std::string_view{"([I)V"} == Signature_v<kCtor3>);
 static_assert(std::string_view{"([[I)V"} == Signature_v<kCtor4>);
 
 ////////////////////////////////////////////////////////////////////////////////
-// Methods (Overload sets with only one overload)
+// Methods (Overload sets with only one overload).
 ////////////////////////////////////////////////////////////////////////////////
 static_assert(std::string_view{"S"} ==
               Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 1, 0>>);
@@ -154,7 +168,7 @@ static_assert(std::string_view{"()[[LkClass2;"} ==
               Signature_v<kMethod4Overload3>);
 
 ////////////////////////////////////////////////////////////////////////////////
-// Fields (Overload sets with only one overload)
+// Fields (Overload sets with only one overload).
 ////////////////////////////////////////////////////////////////////////////////
 using kField0 = Id<JT, IdType::FIELD, 0>;
 using kField1 = Id<JT, IdType::FIELD, 1>;

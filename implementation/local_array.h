@@ -48,15 +48,32 @@ class LocalArray
     : public ArrayRef<
           JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>> {
  public:
+  static constexpr Class kClass{class_v_.name_};
+  static constexpr std::size_t kRank = kRank_;
+
+  using RawValT = std::conditional_t<std::is_same_v<jobject, SpanType>,
+                                     std::decay_t<decltype(kClass)>, SpanType>;
+
   using JniT_ = JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>;
-  using ObjectClassRefT = ClassRef_t<JniT_>;
 
   using Base =
       ArrayRef<JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
   using Base::Base;
 
+  using RefTag = std::conditional_t<(kRank_ > 1), jobject, SpanType>;
+
+  // RefTag ctor (supports multi-dimensions, `jobject` if rank > 1).
+  LocalArray(std::size_t size, RefTag arr)
+      : Base(JniArrayHelper<jobject, kRank_>::NewArray(
+            size,
+            ClassRef_t<JniT_>::GetAndMaybeLoadClassRef(
+                static_cast<jobject>(arr)),
+            arr)) {}
+
+  // Rvalue ctor.
   LocalArray(LocalArray<SpanType, kRank_>&& rhs) : Base(rhs.Release()) {}
 
+  // Rvalue ctor.
   template <std::size_t kRank, const auto& class_v, const auto& class_loader_v,
             const auto& jvm_v>
   LocalArray(LocalArray<jobject, kRank, class_v, class_loader_v, jvm_v>&& rhs)
@@ -64,6 +81,25 @@ class LocalArray
     static_assert(kRank == kRank_ && class_v == class_v_ &&
                   class_loader_v == class_loader_v_);
   }
+
+  // Construct from decorated object lvalue (object is used as template).
+  //
+  // e.g.
+  //  LocalArray arr { 5, LocalObject<kClass> {args...} };
+  //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
+  template <template <const auto&, const auto&, const auto&>
+            class ObjectContainer,
+            const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  LocalArray(
+      std::size_t size,
+      const ObjectContainer<class_v, class_loader_v, jvm_v>& local_object)
+      : Base(JniArrayHelper<jobject, kRank_>::NewArray(
+            size,
+            ClassRef_t<JniT_>::GetAndMaybeLoadClassRef(
+                static_cast<jobject>(local_object)),
+            static_cast<jobject>(local_object))) {}
+
+  operator jobject() { return static_cast<jobject>(Base::object_ref_); }
 };
 
 template <template <const auto&, const auto&, const auto&>
@@ -85,8 +121,19 @@ LocalArray(std::size_t, SpanType)
     -> LocalArray<SpanType, 1, kNoClassSpecified, kDefaultClassLoader,
                   kDefaultJvm>;
 
-template <const auto& kArrayVal>
-struct LocalArrayBuildFromArray_Helper {};
+template <typename SpanType, std::size_t kRank_minus_1>
+LocalArray(std::size_t, LocalArray<SpanType, kRank_minus_1>)
+    -> LocalArray<SpanType, kRank_minus_1 + 1>;
+
+template <typename SpanType, std::size_t kRank_minus_1, const auto& class_v,
+          const auto& class_loader_v, const auto& jvm_v>
+LocalArray(std::size_t,
+           LocalArray<SpanType, kRank_minus_1, class_v, class_loader_v, jvm_v>)
+    -> LocalArray<SpanType, kRank_minus_1 + 1>;
+
+template <typename SpanType, std::size_t kRank_minus_1>
+LocalArray(std::size_t, LocalArray<SpanType, kRank_minus_1>&&)
+    -> LocalArray<SpanType, kRank_minus_1 + 1>;
 
 template <typename TUndecayed>
 struct ProxyHelper;

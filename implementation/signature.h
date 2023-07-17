@@ -21,6 +21,7 @@
 #include "implementation/array.h"
 #include "implementation/class.h"
 #include "implementation/field.h"
+#include "implementation/forward_declarations.h"
 #include "implementation/id_type.h"
 #include "implementation/name_constants.h"
 #include "implementation/no_idx.h"
@@ -29,10 +30,6 @@
 #include "metaprogramming/name_constants.h"
 
 namespace jni {
-
-template <typename JniT_, IdType kIdType_, std::size_t idx,
-          std::size_t secondary_idx, std::size_t tertiary_idx>
-struct Id;
 
 // Takes an Id and produces its signature.
 template <typename>
@@ -70,8 +67,10 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
   // For methods and ctors generates the signature, e.g. "(II)LClass1;".
   // For parameters, emits just a type name.
   static constexpr std::string_view Val() {
-    if constexpr (kIdType_ == IdType::FIELD ||
-                  kIdType_ == IdType::STATIC_FIELD) {
+    if constexpr (kIdType_ == IdType::CLASS) {
+      return SelectorStaticInfo<IdT>::TypeName();
+    } else if constexpr (kIdType_ == IdType::FIELD ||
+                         kIdType_ == IdType::STATIC_FIELD) {
       return SelectorStaticInfo<IdT>::TypeName();
     } else if constexpr (kIdType_ == IdType::OVERLOAD_SET) {
       return "NOT_IMPLEMENTED";

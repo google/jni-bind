@@ -32,6 +32,7 @@
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/method.h"
+#include "implementation/selector_static_info.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
 
@@ -73,9 +74,20 @@ class ClassRef {
       return return_value.LoadAndMaybeInit([]() {
         GetDefaultLoadedClassList().push_back(&return_value);
 
-        return static_cast<jclass>(
-            LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
-                JniHelper::FindClass(JniT::kName.data())));
+        // FindClass uses plain name (e.g. "kClass") for rank 0, qualified
+        // class names when used in arrays (e.g. "[LkClass;"). This doesn't
+        // come up in the API until rank 2.
+        if constexpr (JniT::kRank <= 1) {
+          return static_cast<jclass>(
+              LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
+                  JniHelper::FindClass(JniT::kName.data())));
+        } else {
+          return static_cast<jclass>(
+              LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
+                  JniHelper::FindClass(
+                      SelectorStaticInfo<JniTSelector<JniT>>::TypeName()
+                          .data())));
+        }
       });
     } else {
       // For non default classloader, storage in class member.
