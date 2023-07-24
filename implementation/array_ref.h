@@ -69,29 +69,59 @@ class ArrayRef : public ScopedArrayImpl<JniT> {
   std::atomic<std::size_t> length_ = kNoIdx;
 };
 
-// |SpanType| is object.
+// Shared behaviour for object like arrays.
 template <typename JniT>
-class ArrayRef<
-    JniT, std::enable_if_t<std::is_same_v<typename JniT::SpanType, jobject>>>
-    : public ScopedArrayImpl<JniT> {
+class ArrayRefBase : public ScopedArrayImpl<JniT> {
  public:
   using Base = ScopedArrayImpl<JniT>;
   using Base::Base;
-  using SpanType = jobject;
+  using SpanType = typename JniT::SpanType;
 
   // Construct array with given size and null values.
-  explicit ArrayRef(std::size_t size)
+  explicit ArrayRefBase(std::size_t size)
       : Base(JniArrayHelper<jobject, JniT::kRank>::NewArray(
             size, ClassRef_t<JniT>::GetAndMaybeLoadClassRef(nullptr),
             static_cast<jobject>(nullptr))) {}
 
   // Construct from jobject lvalue (object is used as template).
-  explicit ArrayRef(std::size_t size, jobject obj)
+  explicit ArrayRefBase(std::size_t size, jobject obj)
       : Base(JniArrayHelper<jobject, JniT::kRank>::NewArray(
             size,
             ClassRef_t<JniT>::GetAndMaybeLoadClassRef(
                 static_cast<jobject>(obj)),
             static_cast<jobject>(obj))) {}
+
+  // Object arrays cannot be efficiently pinned like primitive types can.
+  ArrayView<SpanType, JniT::kRank> Pin() {
+    return {Base::object_ref_, false, Length()};
+  }
+
+  std::size_t Length() {
+    return JniArrayHelper<jobject, JniT::kRank>::GetLength(Base::object_ref_);
+  }
+
+  // Note: Globals are not permitted in a local array because it makes reasoning
+  // about them confusing.
+  //
+  // TODO(b/406948932): Permit lvalues of locals and globals as technically
+  // they're both viable (the scope will be extended as expected).
+  void Set(
+      std::size_t idx,
+      LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v>&& val) {
+    JniArrayHelper<jobject, JniT::kRank>::SetArrayElement(Base::object_ref_,
+                                                          idx, val.Release());
+  }
+};
+
+// |SpanType| is object and rank is 1.
+template <typename JniT>
+class ArrayRef<
+    JniT, std::enable_if_t<(std::is_same_v<typename JniT::SpanType, jobject> &&
+                            JniT::kRank == 1)>> : public ArrayRefBase<JniT> {
+ public:
+  using Base = ArrayRefBase<JniT>;
+  using Base::Base;
+  using SpanType = typename JniT::SpanType;
 
   // Construct from LocalObject lvalue (object is used as template).
   //
@@ -105,31 +135,29 @@ class ArrayRef<
            const ObjectContainer<class_v, class_loader_v, jvm_v>& obj)
       : ArrayRef(size, static_cast<jobject>(obj)) {}
 
-  std::size_t Length() {
-    return JniArrayHelper<jobject, JniT::kRank>::GetLength(Base::object_ref_);
-  }
-
-  // Object arrays cannot be efficiently pinned like primitive types can.
-  ArrayView<jobject, JniT::kRank> Pin() {
-    return {Base::object_ref_, false, Length()};
-  }
-
   LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v> Get(
       std::size_t idx) {
     return {JniArrayHelper<jobject, JniT::kRank>::GetArrayElement(
         Base::object_ref_, idx)};
   }
+};
 
-  // Note: Globals are not permitted in a local array because it makes reasoning
-  // about them confusing.
-  //
-  // TODO(b/406948932): Permit lvalues of locals and globals as technically
-  // they're both viable (the scope will be extended as expected).
-  void Set(
-      std::size_t idx,
-      LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v>&& val) {
-    return JniArrayHelper<jobject, JniT::kRank>::SetArrayElement(
-        Base::object_ref_, idx, val.Release());
+// |SpanType| is object or rank is > 1.
+template <typename JniT>
+class ArrayRef<JniT, std::enable_if_t<(JniT::kRank > 1)>>
+    : public ArrayRefBase<JniT> {
+ public:
+  using Base = ArrayRefBase<JniT>;
+  using Base::Base;
+
+  template <typename SpanType, std::size_t kRank_, const auto& class_v_,
+            const auto& class_loader_v_, const auto& jvm_v_>
+  void Set(std::size_t idx, const LocalArray<SpanType, kRank_, class_v_,
+                                             class_loader_v_, jvm_v_>& val) {
+    using ElementT =
+        typename JniArrayHelper<SpanType, JniT::kRank - 1>::AsArrayType;
+    JniArrayHelper<ElementT, JniT::kRank>::SetArrayElement(
+        Base::object_ref_, idx, static_cast<ElementT>(val));
   }
 };
 

@@ -29,6 +29,8 @@ using ::testing::_;
 using ::testing::Return;
 using ::testing::StrEq;
 
+static constexpr Class kClass{"kClass"};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Multi-Dimensional Construction.
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +54,42 @@ TEST_F(JniTest, Array_BuildsFromSizeForMultiDimensionalArray_primitive_lvalue) {
   LocalArray<jint, 2>{std::size_t{10}, arr};
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Setters.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, Array_SetsIntValues) {
+  EXPECT_CALL(
+      *env_, SetObjectArrayElement(Fake<jobjectArray>(), 0, Fake<jintArray>()));
+  EXPECT_CALL(
+      *env_, SetObjectArrayElement(Fake<jobjectArray>(), 1, Fake<jintArray>()));
+  EXPECT_CALL(
+      *env_, SetObjectArrayElement(Fake<jobjectArray>(), 2, Fake<jintArray>()));
+
+  LocalArray<jint, 1> array_arg{Fake<jintArray>()};
+  LocalArray<jint, 2> arr{std::size_t{10}, Fake<jobjectArray>()};
+  arr.Set(0, array_arg);
+  arr.Set(1, array_arg);
+  arr.Set(2, std::move(array_arg));
+}
+
+TEST_F(JniTest, Array_SetsObjectValues) {
+  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(1), 0,
+                                           Fake<jobjectArray>(2)));
+  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(1), 1,
+                                           Fake<jobjectArray>(2)));
+  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(1), 2,
+                                           Fake<jobjectArray>(2)));
+
+  LocalArray<jobject, 1, kClass> array_arg{Fake<jobjectArray>(2)};
+  LocalArray<jint, 2> arr{Fake<jobjectArray>(1)};
+  arr.Set(0, array_arg);
+  arr.Set(1, array_arg);
+  arr.Set(2, std::move(array_arg));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Iteration.
+////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, Array_IteratesOver1DRange) {
   std::array expected{10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
 
@@ -84,7 +122,6 @@ TEST_F(JniTest, Array_WorksWithSTLComparison) {
 
 TEST_F(JniTest, Array_WorksWithSTLComparisonOfObjects) {
   std::array expected{Fake<jobject>(1), Fake<jobject>(2), Fake<jobject>(3)};
-  static constexpr Class kClass{"kClass"};
 
   EXPECT_CALL(*env_, GetArrayLength).WillOnce(Return(3));
   EXPECT_CALL(*env_, GetObjectArrayElement)
@@ -99,7 +136,6 @@ TEST_F(JniTest, Array_WorksWithSTLComparisonOfObjects) {
 }
 
 TEST_F(JniTest, Array_WorksWithSTLComparisonOfRichlyDecoratedObjects) {
-  static constexpr Class kClass{"kClass"};
   std::array expected{LocalObject<kClass>{Fake<jobject>(1)},
                       LocalObject<kClass>{Fake<jobject>(2)},
                       LocalObject<kClass>{Fake<jobject>(3)}};
