@@ -55,6 +55,23 @@ TEST_F(JniTest, Array_BuildsFromSizeForMultiDimensionalArray_primitive_lvalue) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Getters.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, Array_GetsIntValues) {
+  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 0))
+      .WillOnce(::testing::Return(Fake<jintArray>(0)));
+  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 1))
+      .WillOnce(::testing::Return(Fake<jintArray>(1)));
+  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 2))
+      .WillOnce(::testing::Return(Fake<jintArray>(2)));
+  LocalArray<jint, 2> arr{std::size_t{10}, Fake<jobjectArray>()};
+
+  EXPECT_EQ((static_cast<jintArray>(arr.Get(0))), (Fake<jintArray>(0)));
+  EXPECT_EQ((static_cast<jintArray>(arr.Get(1))), (Fake<jintArray>(1)));
+  EXPECT_EQ((static_cast<jintArray>(arr.Get(2))), (Fake<jintArray>(2)));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Setters.
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, Array_SetsIntValues) {

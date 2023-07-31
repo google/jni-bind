@@ -150,6 +150,19 @@ class ArrayRef<JniT, std::enable_if_t<(JniT::kRank > 1)>>
   using Base = ArrayRefBase<JniT>;
   using Base::Base;
 
+  static constexpr std::decay_t<decltype(JniT::GetClass())> clazz =
+      JniT::GetClass();
+  static constexpr std::decay_t<decltype(JniT::GetClassLoader())> class_loader =
+      JniT::GetClassLoader();
+  static constexpr std::decay_t<decltype(JniT::GetJvm())> jvm = JniT::GetJvm();
+
+  LocalArray<typename JniT::SpanType, JniT::kRank - 1, clazz, class_loader, jvm>
+  Get(std::size_t idx) {
+    return {static_cast<jarray>(
+        JniArrayHelper<typename JniT::SpanType, JniT::kRank>::GetArrayElement(
+            Base::object_ref_, idx))};
+  }
+
   template <typename SpanType, std::size_t kRank_, const auto& class_v_,
             const auto& class_loader_v_, const auto& jvm_v_>
   void Set(std::size_t idx, const LocalArray<SpanType, kRank_, class_v_,
