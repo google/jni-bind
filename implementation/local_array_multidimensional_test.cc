@@ -41,7 +41,7 @@ TEST_F(JniTest, Array_BuildsFromSizeForMultiDimensionalArray_no_value) {
 }
 
 TEST_F(JniTest, Array_BuildsFromSizeForMultiDimensionalArray_primitive_xref) {
-  EXPECT_CALL(*env_, FindClass(StrEq("[[I")));
+  EXPECT_CALL(*env_, FindClass(StrEq("[I")));
   EXPECT_CALL(*env_, NewObjectArray(10, _, Fake<jintArray>()));
 
   LocalArray<jint, 2>{std::size_t{10}, LocalArray<jint>{Fake<jintArray>()}};
@@ -156,7 +156,7 @@ TEST_F(JniTest, Array_2D_Iterates) {
   int a[5] = {1, 2, 3, 4, 5};
   std::array expected{1, 2, 3, 4, 5};
 
-  EXPECT_CALL(*env_, FindClass(StrEq("[[I")));
+  EXPECT_CALL(*env_, FindClass(StrEq("[I")));
   EXPECT_CALL(*env_, NewObjectArray(5, _, Fake<jobjectArray>()));
   EXPECT_CALL(*env_, GetArrayLength)
       .WillOnce(Return(5))   // outer

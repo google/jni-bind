@@ -41,6 +41,10 @@ template <typename SpanType_, const auto& class_v_,
 struct JniT {
   static constexpr std::size_t kRank = kRank_;
 
+  // Same as this type, except uses rank-1.
+  using RankLess1 = JniT<SpanType_, class_v_, class_loader_v_, jvm_v_,
+                         kRank_ - 1, class_idx_, class_loader_idx_>;
+
   static constexpr bool MinimallySpecified() {
     return (class_v_ == kNoClassSpecified
                 ? true

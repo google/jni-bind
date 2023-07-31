@@ -85,7 +85,8 @@ class ClassRef {
           return static_cast<jclass>(
               LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
                   JniHelper::FindClass(
-                      SelectorStaticInfo<JniTSelector<JniT>>::TypeName()
+                      SelectorStaticInfo<
+                          JniTSelector<typename JniT::RankLess1>>::TypeName()
                           .data())));
         }
       });
