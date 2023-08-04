@@ -16,6 +16,8 @@
 #ifndef JNI_BIND_JNI_BIND_H_
 #define JNI_BIND_JNI_BIND_H_
 
+// IWYU pragma: begin_exports
+
 // <jni.h> include helper.
 #include "jni_dep.h"
 
@@ -60,5 +62,7 @@
 #include "implementation/local_object.h"
 #include "implementation/local_string.h"
 #include "implementation/promotion_mechanics.h"
+
+// IWYU pragma: end_exports
 
 #endif  // JNI_BIND_JNI_BIND_H_
