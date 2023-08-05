@@ -34,6 +34,7 @@ using ::jni::Params;
 using ::jni::Return;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
+static jobject blah;
 
 // clang-format off
 static constexpr Class kArrayTestFieldRank1 {
