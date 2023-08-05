@@ -32,6 +32,9 @@ class JniHelper {
   // returned jclass is a local.
   static jclass FindClass(const char* name);
 
+  // A test to trigger clang-tidy.
+  void Foo(jint blah) {}
+
   // Returns a local ref jclass for the given jobject.
   // Note, if the object is polymorphic it may be a sub or superclass.
   static jclass GetObjectClass(jobject object);
