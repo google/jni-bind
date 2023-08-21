@@ -74,12 +74,12 @@ class LocalArray
   LocalArray(LocalArray<SpanType, kRank_>&& rhs) : Base(rhs.Release()) {}
 
   // Rvalue ctor.
-  template <std::size_t kRank, const auto& class_v, const auto& class_loader_v,
-            const auto& jvm_v>
-  LocalArray(LocalArray<jobject, kRank, class_v, class_loader_v, jvm_v>&& rhs)
+  template <typename SpanType_, std::size_t kRank, const auto& class_v,
+            const auto& class_loader_v, const auto& jvm_v>
+  LocalArray(LocalArray<SpanType_, kRank, class_v, class_loader_v, jvm_v>&& rhs)
       : Base(rhs.Release()) {
-    static_assert(kRank == kRank_ && class_v == class_v_ &&
-                  class_loader_v == class_loader_v_);
+    static_assert(std::is_same_v<SpanType, SpanType_> && kRank == kRank_ &&
+                  class_v == class_v_ && class_loader_v == class_loader_v_);
   }
 
   // Construct from decorated object lvalue (object is used as template).

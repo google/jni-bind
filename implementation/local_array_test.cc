@@ -128,6 +128,20 @@ TEST_F(JniTest, LocalArray_ConstructsTheRightTypeForRValues) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Primitive Tests.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, MethodAcceptsLocalIntArray) {
+  static constexpr Class kClass{
+      "ArrayMultiTest",
+      Method{"Foo", jni::Return<void>{}, Params{Array<int>{}}}};
+
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([I)V")));
+
+  LocalObject<kClass> obj{jobject{nullptr}};
+  obj("Foo", LocalArray<jint, 1>{10});
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Object Array Tests.
 //
 // These have been Made separate to guarantee signature isn't cached and RValue
