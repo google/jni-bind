@@ -23,26 +23,41 @@
 
 namespace jni {
 
+// Id.
 template <typename JniT_, IdType kIdType_, std::size_t idx,
           std::size_t secondary_idx, std::size_t tertiary_idx>
 struct Id;
 
+// Scope.
 template <LifecycleType lifecycleType, typename JniT, typename... ViableSpans>
 struct Scoped;
 
+// Objects.
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class LocalObject;
 
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class GlobalObject;
 
+// Strings.
+class LocalString;
+class GlobalString;
+
+// Arrays.
+template <typename SpanType, std::size_t kRank_, const auto& class_v_,
+          const auto& class_loader_v_, const auto& jvm_v_>
+class LocalArray;
+
+// Classloaders.
 template <LifecycleType lifecycleType, const auto& jvm_v_,
           const auto& class_loader_v_>
 class ClassLoaderRef;
 
+// Thread Guards.
 class ThreadGuard;
 class ThreadLocalGuardDestructor;
 
+// ValidatorProxy.
 template <typename JniT>
 struct ValidatorProxy;
 
