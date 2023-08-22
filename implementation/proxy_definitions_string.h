@@ -22,6 +22,7 @@
 
 #include "class_defs/java_lang_classes.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/lifecycle_string.h"
 #include "implementation/jvm.h"
 #include "implementation/proxy.h"
@@ -29,12 +30,6 @@
 
 namespace jni {
 
-class LocalString;
-class GlobalString;
-
-template <typename SpanType, std::size_t kRank, const auto& class_v_,
-          const auto& class_loader_v_, const auto& jvm_v_>
-class LocalArray;
 
 template <typename JString>
 struct Proxy<JString,

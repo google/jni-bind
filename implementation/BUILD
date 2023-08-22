@@ -874,6 +874,7 @@ cc_library(
     hdrs = ["proxy_definitions_string.h"],
     deps = [
         ":default_class_loader",
+        ":forward_declarations",
         ":jvm",
         ":proxy",
         ":ref_base",
