@@ -225,4 +225,66 @@ TEST_F(JniTest, Array_2D_Iterates) {
   // 1 + 3 + 6 + 10 + 15 = 35
   EXPECT_EQ(sum, 35);
 }
+
+// Identical to above except with raw loops.
+TEST_F(JniTest, Array_2D_Iterates_Raw_loops) {
+  int a[5] = {1, 2, 3, 4, 5};
+  std::array expected{1, 2, 3, 4, 5};
+
+  EXPECT_CALL(*env_, FindClass(StrEq("[I")));
+  EXPECT_CALL(*env_, NewObjectArray(5, _, Fake<jobjectArray>()));
+  EXPECT_CALL(*env_, GetArrayLength)
+      .WillOnce(Return(5))   // outer
+      .WillOnce(Return(1))   // inner: 1, running sum: 1
+      .WillOnce(Return(2))   // inner: 1, running sum: 3
+      .WillOnce(Return(3))   // inner: 1, running sum: 6
+      .WillOnce(Return(4))   // inner: 1, running sum: 10
+      .WillOnce(Return(5));  // inner: 1, running sum: 15
+
+  // 5: Once per outer array element.
+  EXPECT_CALL(*env_, GetObjectArrayElement)
+      .WillOnce(Return(Fake<jintArray>(1)))
+      .WillOnce(Return(Fake<jintArray>(2)))
+      .WillOnce(Return(Fake<jintArray>(3)))
+      .WillOnce(Return(Fake<jintArray>(4)))
+      .WillOnce(Return(Fake<jintArray>(5)));
+
+  // All the returned intArrays are deleted.
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(1)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(2)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(3)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(4)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(5)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobjectArray>()));
+
+  // 5 (outer array length) * 2 (pins per) = 10
+  EXPECT_CALL(*env_, GetIntArrayElements).Times(10).WillRepeatedly(Return(a));
+  EXPECT_CALL(*env_, ReleaseIntArrayElements).Times(10);
+
+  LocalArray<jint, 2> new_array{5, Fake<jobjectArray>()};
+
+  int sum = 0;
+  int loop_size = new_array.Length();
+  for (int i = 0; i < loop_size; ++i) {
+    LocalArray<jint, 1> arr_1d{new_array.Get(i)};
+
+    // Note: Each `Pin` below triggers a separate `GetIntArrayElements`.
+    {
+      auto pinn = arr_1d.Pin();
+      EXPECT_TRUE(std::equal(pinn.begin(), pinn.end(), expected.begin()));
+    }
+
+    // Note: GetArrayLength is not called again (it's cached).
+    {
+      for (jint val : arr_1d.Pin()) {
+        sum += val;
+      }
+    }
+  }
+
+  // 1 + 3 + 6 + 10 + 15 = 35
+  EXPECT_EQ(sum, 35);
+}
+
 }  // namespace

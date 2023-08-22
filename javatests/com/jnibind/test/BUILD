@@ -1,11 +1,11 @@
 licenses(["notice"])
 
 ################################################################################
-# Array Test: Methods rank 1.
+# Array Test: Methods Rank 1.
 ################################################################################
 cc_library(
     name = "array_test_method_rank_1_jni_impl",
-    testonly = 1,
+    testonly = True,
     srcs = ["array_test_method_rank_1_jni.cc"],
     deps = [
         ":object_test_helper_jni",
@@ -17,20 +17,107 @@ cc_library(
 
 cc_binary(
     name = "libarray_test_method_rank_1_jni.so",
-    testonly = 1,
+    testonly = True,
     linkshared = True,
     deps = [":array_test_method_rank_1_jni_impl"],
 )
 
 java_test(
     name = "ArrayTestMethodRank1",
-    testonly = 1,
+    testonly = True,
     srcs = ["ArrayTestMethodRank1.java"],
     data = [":libarray_test_method_rank_1_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth_1_1",
+    ],
+)
+
+################################################################################
+# Array Test: Methods Rank 2.
+################################################################################
+cc_library(
+    name = "array_test_method_rank_2_jni_impl",
+    testonly = True,
+    srcs = ["array_test_method_rank_2_jni.cc"],
+    deps = [
+        ":modulo",
+        ":object_test_helper_jni",
+        "//:jni_bind",
+        "//metaprogramming:lambda_string",
+    ],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libarray_test_method_rank_2_jni.so",
+    testonly = True,
+    linkshared = True,
+    deps = [":array_test_method_rank_2_jni_impl"],
+)
+
+java_test(
+    name = "ArrayTestMethodRank2",
+    testonly = True,
+    srcs = ["ArrayTestMethodRank2.java"],
+    data = [":libarray_test_method_rank_2_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    deps = [
+        ":object_test_helper",
+        "@maven//:com_google_truth_truth_1_1",
+    ],
+)
+
+################################################################################
+# Array Test: Fields Rank 1.
+################################################################################
+cc_library(
+    name = "array_test_field_rank_1_jni_impl",
+    testonly = True,
+    srcs = ["array_test_field_rank_1_jni.cc"],
+    deps = [
+        ":object_test_helper_jni",
+        "//:jni_bind",
+        "//metaprogramming:lambda_string",
+    ],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libarray_test_field_rank_1_jni.so",
+    testonly = True,
+    linkshared = True,
+    deps = [":array_test_field_rank_1_jni_impl"],
+)
+
+java_test(
+    name = "ArrayTestFieldRank1",
+    testonly = True,
+    srcs = ["ArrayTestFieldRank1.java"],
+    data = [":libarray_test_field_rank_1_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    deps = [
+        ":object_test_helper",
+        "@maven//:com_google_truth_truth_1_1",
+    ],
+)
+
+################################################################################
+# Modulo Helper.
+################################################################################
+cc_library(
+    name = "modulo",
+    testonly = True,
+    hdrs = ["modulo.h"],
+)
+
+cc_test(
+    name = "modulo_test",
+    srcs = ["modulo_test.cc"],
+    deps = [
+        ":modulo",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -69,7 +156,7 @@ java_binary(
 
 java_test(
     name = "ClassLoaderTest",
-    testonly = 1,
+    testonly = True,
     srcs = [
         "ClassLoaderTest.java",
     ],
@@ -79,40 +166,6 @@ java_test(
     ],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     deps = ["@maven//:com_google_truth_truth_1_1"],
-)
-
-################################################################################
-# Array Test: Fields rank 1.
-################################################################################
-cc_library(
-    name = "array_test_field_rank_1_jni_impl",
-    testonly = 1,
-    srcs = ["array_test_field_rank_1_jni.cc"],
-    deps = [
-        ":object_test_helper_jni",
-        "//:jni_bind",
-        "//metaprogramming:lambda_string",
-    ],
-    alwayslink = True,
-)
-
-cc_binary(
-    name = "libarray_test_field_rank_1_jni.so",
-    testonly = 1,
-    linkshared = True,
-    deps = [":array_test_field_rank_1_jni_impl"],
-)
-
-java_test(
-    name = "ArrayTestFieldRank1",
-    testonly = 1,
-    srcs = ["ArrayTestFieldRank1.java"],
-    data = [":libarray_test_field_rank_1_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
-    deps = [
-        ":object_test_helper",
-        "@maven//:com_google_truth_truth_1_1",
-    ],
 )
 
 ################################################################################
@@ -136,7 +189,7 @@ cc_binary(
 
 java_test(
     name = "ContextTest",
-    testonly = 1,
+    testonly = True,
     srcs = ["ContextTest.java"],
     data = [":libcontext_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
@@ -152,7 +205,7 @@ java_test(
 ################################################################################
 cc_library(
     name = "field_test_jni_impl",
-    testonly = 1,
+    testonly = True,
     srcs = ["field_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
@@ -163,14 +216,14 @@ cc_library(
 
 cc_binary(
     name = "libfield_test_jni.so",
-    testonly = 1,
+    testonly = True,
     linkshared = True,
     deps = [":field_test_jni_impl"],
 )
 
 java_test(
     name = "FieldTest",
-    testonly = 1,
+    testonly = True,
     srcs = [
         "FieldTest.java",
         "FieldTestHelper.java",
@@ -188,7 +241,7 @@ java_test(
 ################################################################################
 cc_library(
     name = "global_object_test_jni_impl",
-    testonly = 1,
+    testonly = True,
     srcs = ["global_object_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
@@ -199,14 +252,14 @@ cc_library(
 
 cc_binary(
     name = "libglobal_object_test_jni.so",
-    testonly = 1,
+    testonly = True,
     linkshared = True,
     deps = [":global_object_test_jni_impl"],
 )
 
 java_test(
     name = "GlobalObjectTest",
-    testonly = 1,
+    testonly = True,
     srcs = ["GlobalObjectTest.java"],
     data = [":libglobal_object_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
@@ -222,7 +275,7 @@ java_test(
 ################################################################################
 cc_library(
     name = "local_object_test_jni_impl",
-    testonly = 1,
+    testonly = True,
     srcs = ["local_object_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
@@ -233,14 +286,14 @@ cc_library(
 
 cc_binary(
     name = "liblocal_object_test_jni.so",
-    testonly = 1,
+    testonly = True,
     linkshared = True,
     deps = [":local_object_test_jni_impl"],
 )
 
 java_test(
     name = "LocalObjectTest",
-    testonly = 1,
+    testonly = True,
     srcs = ["LocalObjectTest.java"],
     data = [":liblocal_object_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
@@ -256,7 +309,7 @@ java_test(
 ################################################################################
 cc_library(
     name = "method_test_jni_impl",
-    testonly = 1,
+    testonly = True,
     srcs = ["method_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
@@ -267,14 +320,14 @@ cc_library(
 
 cc_binary(
     name = "libmethod_test_jni.so",
-    testonly = 1,
+    testonly = True,
     linkshared = True,
     deps = [":method_test_jni_impl"],
 )
 
 java_test(
     name = "MethodTest",
-    testonly = 1,
+    testonly = True,
     srcs = [
         "MethodTest.java",
         "MethodTestHelper.java",
@@ -289,7 +342,7 @@ java_test(
 )
 
 ################################################################################
-# ObjectTestHelper (used as a return value for testing).
+# Object Test Helper: Shared Object used as a return value for testing.
 ################################################################################
 java_library(
     name = "object_test_helper",
@@ -307,7 +360,7 @@ cc_library(
 #################################################################################
 cc_library(
     name = "static_test_jni_impl",
-    testonly = 1,
+    testonly = True,
     srcs = ["static_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
@@ -318,14 +371,14 @@ cc_library(
 
 cc_binary(
     name = "libstatic_test_jni.so",
-    testonly = 1,
+    testonly = True,
     linkshared = True,
     deps = [":static_test_jni_impl"],
 )
 
 java_test(
     name = "StaticTest",
-    testonly = 1,
+    testonly = True,
     srcs = [
         "StaticTest.java",
         "StaticTestHelper.java",
@@ -344,7 +397,7 @@ java_test(
 #################################################################################
 cc_library(
     name = "string_test_jni_impl",
-    testonly = 1,
+    testonly = True,
     srcs = ["string_test_jni.cc"],
     deps = [
         ":object_test_helper_jni",
@@ -355,14 +408,14 @@ cc_library(
 
 cc_binary(
     name = "libstring_test_jni.so",
-    testonly = 1,
+    testonly = True,
     linkshared = True,
     deps = [":string_test_jni_impl"],
 )
 
 java_test(
     name = "StringTest",
-    testonly = 1,
+    testonly = True,
     srcs = [
         "StringTest.java",
         "StringTestHelper.java",
@@ -397,7 +450,7 @@ cc_binary(
 
 java_test(
     name = "ThreadTest",
-    testonly = 1,
+    testonly = True,
     srcs = ["ThreadTest.java"],
     data = [":libthread_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
