@@ -104,20 +104,36 @@ java_test(
 )
 
 ################################################################################
-# Modulo Helper.
+# Builder Test.
 ################################################################################
 cc_library(
-    name = "modulo",
+    name = "builder_jni_impl",
     testonly = True,
-    hdrs = ["modulo.h"],
+    srcs = ["builder_jni.cc"],
+    deps = [
+        ":object_test_helper_jni",
+        "//:jni_bind",
+        "//metaprogramming:lambda_string",
+    ],
+    alwayslink = True,
 )
 
-cc_test(
-    name = "modulo_test",
-    srcs = ["modulo_test.cc"],
+cc_binary(
+    name = "libbuilder_jni.so",
+    testonly = True,
+    linkshared = True,
+    deps = [":builder_jni_impl"],
+)
+
+java_test(
+    name = "BuilderTest",
+    testonly = True,
+    srcs = ["BuilderTest.java"],
+    data = [":libbuilder_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     deps = [
-        ":modulo",
-        "@googletest//:gtest_main",
+        ":object_test_helper",
+        "@maven//:com_google_truth_truth_1_1",
     ],
 )
 
@@ -338,6 +354,24 @@ java_test(
         "@maven//:com_google_truth_truth_1_1",
         "@maven//:junit_junit_4_13_1",
         "@maven//:org_mockito_mockito_core_2_28_2",
+    ],
+)
+
+################################################################################
+# Modulo Helper.
+################################################################################
+cc_library(
+    name = "modulo",
+    testonly = True,
+    hdrs = ["modulo.h"],
+)
+
+cc_test(
+    name = "modulo_test",
+    srcs = ["modulo_test.cc"],
+    deps = [
+        ":modulo",
+        "@googletest//:gtest_main",
     ],
 )
 

@@ -397,6 +397,7 @@ cc_library(
         ":no_idx",
         ":proxy_convenience_aliases",
         ":selector_static_info",
+        ":self",
         ":signature",
         "//metaprogramming:replace_string",
     ],
@@ -641,11 +642,13 @@ cc_library(
     deps = [
         ":class_loader",
         ":class_ref",
+        ":default_class_loader",
         ":id_type",
         ":jni_type",
         ":method",
         ":params",
         ":proxy",
+        ":proxy_convenience_aliases",
         ":proxy_definitions",
         ":proxy_definitions_array",
         ":proxy_definitions_string",
@@ -820,6 +823,7 @@ cc_library(
         ":object",
         ":proxy_convenience_aliases",
         ":ref_base",
+        ":self",
         "//:jni_dep",
         "//metaprogramming:cartesian_product",
         "//metaprogramming:combine",
@@ -853,6 +857,7 @@ cc_library(
         ":object",
         ":proxy",
         ":ref_base",
+        ":self",
         "//:jni_dep",
         "//implementation/jni_helper:lifecycle",
     ],
@@ -968,9 +973,11 @@ cc_library(
     hdrs = ["selector_static_info.h"],
     deps = [
         ":array",
+        ":id_type",
         ":name_constants",
         ":object",
         ":return",
+        ":self",
         ":void",
         "//implementation/jni_helper:jni_typename_to_string",
         "//metaprogramming:name_constants",
@@ -1040,4 +1047,20 @@ cc_library(
 cc_library(
     name = "void",
     hdrs = ["void.h"],
+)
+
+cc_library(
+    name = "self",
+    hdrs = ["self.h"],
+    deps = [":static"],
+)
+
+cc_test(
+    name = "self_test",
+    srcs = ["self_test.cc"],
+    deps = [
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
 )

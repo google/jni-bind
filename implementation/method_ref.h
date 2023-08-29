@@ -19,10 +19,12 @@
 
 #include <mutex>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 #include "implementation/class_loader.h"
 #include "implementation/class_ref.h"
+#include "implementation/default_class_loader.h"
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/invoke.h"
 #include "implementation/jni_helper/invoke_static.h"
@@ -33,6 +35,7 @@
 #include "implementation/method.h"
 #include "implementation/params.h"
 #include "implementation/proxy.h"
+#include "implementation/proxy_convenience_aliases.h"
 #include "implementation/proxy_definitions.h"
 #include "implementation/proxy_definitions_array.h"
 #include "implementation/proxy_definitions_string.h"
@@ -59,14 +62,18 @@ template <typename IdT_, IdType kReturnIDType>
 struct OverloadRef {
   using IdT = IdT_;
   using ReturnIdT = typename IdT::template ChangeIdType<kReturnIDType>;
-  using ReturnProxied =
-      Return_t<typename ReturnIdT::MaterializeCDeclT, ReturnIdT>;
+  using SelfIdT = typename IdT::template ChangeIdType<IdType::CLASS>;
+
+  using ReturnProxied = std::conditional_t<
+      ReturnIdT::kIsSelf,
+      Return_t<typename SelfIdT::MaterializeCDeclT, SelfIdT>,
+      Return_t<typename ReturnIdT::MaterializeCDeclT, ReturnIdT> >;
 
   static jmethodID GetMethodID(jclass clazz) {
     static jni::metaprogramming::DoubleLockedValue<jmethodID> return_value;
 
     return return_value.LoadAndMaybeInit([=]() {
-      if constexpr (IdT_::JniT::GetClassLoader() == kDefaultClassLoader) {
+      if constexpr (IdT::JniT::GetClassLoader() == kDefaultClassLoader) {
         GetDefaultLoadedMethodList().push_back(&return_value);
       }
 

@@ -20,16 +20,28 @@
 #include <string_view>
 
 #include "implementation/array.h"
+#include "implementation/id_type.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
 #include "implementation/name_constants.h"
 #include "implementation/object.h"
 #include "implementation/return.h"
+#include "implementation/self.h"
 #include "implementation/void.h"
 #include "metaprogramming/name_constants.h"
 #include "metaprogramming/repeat_string.h"
 #include "metaprogramming/string_concatenate.h"
 
 namespace jni {
+
+template <bool useParent, typename T>
+struct ParentIfSelf {
+  using type = T;
+};
+
+template <typename T>
+struct ParentIfSelf<true, T> {
+  using type = typename T::template ChangeIdType<IdType::CLASS>;
+};
 
 // Helper to generate full signature information for a "selected" value, and
 // possibly some container information.  Here, |Selector| is |MethodSelection|,
@@ -39,10 +51,13 @@ namespace jni {
 // types can be used that represent a specific selection upon an object.  This
 // consolidates all signature info.
 //
-// |Selector| must express a type alias for RawVal (e.g. jint, Class{...}, etc.)
-// and a type alias |RawValT| which is std::decay_t<RawVal>;
-template <typename Selector>
+// |Selector| a type alias |RawValT| (e.g. jint, Class{...}, etc...).
+template <typename SelectorIn>
 struct SelectorStaticInfo {
+  static constexpr inline bool kIsSelf =
+      std::is_same_v<Self, typename SelectorIn::RawValT>;
+  using Selector = typename ParentIfSelf<kIsSelf, SelectorIn>::type;
+
   template <std::size_t I>
   struct IthRawTypeMember {
     template <typename T>
@@ -95,6 +110,10 @@ struct SelectorStaticInfo {
 
   static constexpr std::string_view UndecoratedTypeName() {
     if constexpr (kIsObject) {
+      return metaprogramming::StringConcatenate_v<
+          metaprogramming::Constants::L, kTypeNameOrNothingIfNotAnObject,
+          metaprogramming::Constants::semi_colon>;
+    } else if constexpr (kIsSelf) {
       return metaprogramming::StringConcatenate_v<
           metaprogramming::Constants::L, kTypeNameOrNothingIfNotAnObject,
           metaprogramming::Constants::semi_colon>;

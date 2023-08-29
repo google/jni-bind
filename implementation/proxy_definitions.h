@@ -35,6 +35,7 @@
 #include "implementation/object.h"
 #include "implementation/proxy.h"
 #include "implementation/ref_base.h"
+#include "implementation/self.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -171,6 +172,48 @@ struct Proxy<JObject,
   using AsReturn = typename Helper<Id>::type;
 
   static jobject ProxyAsArg(jobject obj) { return obj; };
+
+  // Applies for both local and global.
+  template <typename T>
+  static jobject ProxyAsArg(T& t) {
+    return jobject{t};
+  };
+
+  // Applies for both local and global.
+  template <typename T>
+  static jobject ProxyAsArg(T&& t) {
+    return t.Release();
+  };
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Self Proxy Definitions.
+////////////////////////////////////////////////////////////////////////////////
+template <typename SelfType>
+struct Proxy<SelfType,
+             typename std::enable_if_t<std::is_same_v<SelfType, Self>>>
+    : public ProxyBase<jobject> {
+  using AsDecl = std::tuple<Self>;
+  using AsArg = std::tuple<Self>;
+
+  template <typename IdT>
+  using SelfIdT_t = typename IdT::template ChangeIdType<IdType::CLASS>;
+
+  template <typename Id>
+  struct Helper {
+    static constexpr auto kClass{Id::Val()};
+    static constexpr auto kClassLoader{Id::JniT::GetClassLoader()};
+
+    // TODO(b/174272629): Class loaders should also be enforced.
+    using type = LocalObject<kClass, kClassLoader, kDefaultJvm>;
+  };
+
+  template <typename Id>
+  using AsReturn = typename Helper<Id>::type;
+
+  template <typename IdT, typename T>
+  static constexpr bool kViable =
+      Proxy<jobject>::template kViable<SelfIdT_t<IdT>, T>;
 
   // Applies for both local and global.
   template <typename T>

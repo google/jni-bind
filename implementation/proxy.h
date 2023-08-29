@@ -29,6 +29,7 @@
 #include "implementation/object.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/ref_base.h"
+#include "implementation/self.h"
 #include "jni_dep.h"
 #include "metaprogramming/cartesian_product.h"
 #include "metaprogramming/combine.h"
@@ -51,7 +52,7 @@ struct Proxy;
 // CDecls for all declarable types (these index into proxy definitions).
 using AllKeys =
     Corpus_t<JniUserDefinedCorpusTag, void, jboolean, jbyte, jshort, jint,
-             jfloat, jlong, jchar, jdouble, jstring, jobject, jarray,
+             jfloat, jlong, jchar, jdouble, jstring, jobject, Self, jarray,
              jobjectArray, jintArray, jbooleanArray, jbyteArray, jcharArray,
              jshortArray, jdoubleArray, jfloatArray, jlongArray>;
 

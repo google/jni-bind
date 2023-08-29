@@ -34,6 +34,7 @@ using ::jni::Params;
 using ::jni::Rank;
 using ::jni::Return;
 using ::jni::SelectorStaticInfo;
+using ::jni::Self;
 using ::jni::Signature_v;
 
 static constexpr Class kClass1{
@@ -61,6 +62,10 @@ static constexpr Class kClass1{
         Overload{jni::Return{Array<jboolean, 3>{}}, Params{Array<jshort, 3>{}}},
         Overload{jni::Return{Array{Class{"kClass2"}, Rank<2>{}}}, Params{}},
     },
+    Method{"m5", jni::Return{Self{}}, Params{}},
+    Method{"m6", jni::Return{}, Params{Self{}}},
+    Method{"m7", jni::Return{}, Params{Self{}, Self{}}},
+    Method{"m8", jni::Return{Self{}}, Params{Self{}, Self{}}},
     Field{"f0", int{}},
     Field{"f1", Class{"kClass2"}}};
 
@@ -166,6 +171,23 @@ static_assert(std::string_view{"([[F)[[Z"} == Signature_v<kMethod4Overload1>);
 static_assert(std::string_view{"([[[S)[[[Z"} == Signature_v<kMethod4Overload2>);
 static_assert(std::string_view{"()[[LkClass2;"} ==
               Signature_v<kMethod4Overload3>);
+
+////////////////////////////////////////////////////////////////////////////////
+// Self Referencing Method (gives richly decorated self back).
+////////////////////////////////////////////////////////////////////////////////
+using kMethod5 = Id<JT, IdType::OVERLOAD, 5, 0>;
+static_assert(std::string_view{"()LkClass1;"} == Signature_v<kMethod5>.data());
+
+using kMethod6 = Id<JT, IdType::OVERLOAD, 6, 0>;
+static_assert(std::string_view{"(LkClass1;)V"} == Signature_v<kMethod6>.data());
+
+using kMethod7 = Id<JT, IdType::OVERLOAD, 7, 0>;
+static_assert(std::string_view{"(LkClass1;LkClass1;)V"} ==
+              Signature_v<kMethod7>.data());
+
+using kMethod8 = Id<JT, IdType::OVERLOAD, 8, 0>;
+static_assert(std::string_view{"(LkClass1;LkClass1;)LkClass1;"} ==
+              Signature_v<kMethod8>.data());
 
 ////////////////////////////////////////////////////////////////////////////////
 // Fields (Overload sets with only one overload).

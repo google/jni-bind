@@ -22,11 +22,11 @@
 #include <tuple>
 #include <type_traits>
 
-#include "constructor.h"
-#include "field.h"
-#include "object.h"
+#include "implementation/constructor.h"
+#include "implementation/field.h"
 #include "implementation/method.h"
 #include "implementation/no_idx.h"
+#include "implementation/object.h"
 #include "implementation/static.h"
 #include "jni_dep.h"
 #include "metaprogramming/all_unique.h"

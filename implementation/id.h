@@ -31,6 +31,7 @@
 #include "implementation/no_idx.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/selector_static_info.h"
+#include "implementation/self.h"
 #include "implementation/signature.h"
 #include "metaprogramming/replace_string.h"
 
@@ -180,6 +181,7 @@ struct Id {
   using CDecl = CDecl_t<VoidIfVoid_t<MaterializeT>>;
 
   static constexpr std::size_t kRank = Rankifier::Rank(Val());
+  static constexpr bool kIsSelf = std::is_same_v<RawValT, Self>;
 
   static constexpr const char* Name() {
     if constexpr (kIdType == IdType::CLASS) {
