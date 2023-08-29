@@ -23,6 +23,14 @@
 
 namespace jni {
 
+// Use these pass through macros to avoid clang-tidy warnings.
+#define JNI_BIND_EXPORT JNIEXPORT
+#define JNI_BIND_CALL JNICALL
+
+// Helper macro for defining native JNI entrypoints.
+#define JNI_BIND_C_ENTRYPOINT(class_name, return_type, method_name, ...) \
+  return_type class_name_##method_name(JNIEnv*, jclass, ##__VA_ARGS__)
+
 // Id.
 template <typename JniT_, IdType kIdType_, std::size_t idx,
           std::size_t secondary_idx, std::size_t tertiary_idx>
