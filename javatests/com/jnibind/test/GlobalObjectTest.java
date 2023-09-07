@@ -63,6 +63,24 @@ public final class GlobalObjectTest {
     assertThat(object.intVal3).isEqualTo(3);
   }
 
+  native ObjectTestHelper jniTakeLocalOutputThroughCopyAssignment(ObjectTestHelper object);
+
+  @Test
+  public void createFromCopyAssignmentIntoGlobal() {
+    ObjectTestHelper inObject = new ObjectTestHelper(1, 2, 3);
+    ObjectTestHelper outObject = jniTakeLocalOutputThroughCopyAssignment(inObject);
+
+    assertThat(inObject).isNotEqualTo(null);
+    assertThat(inObject.intVal1).isEqualTo(1);
+    assertThat(inObject.intVal2).isEqualTo(2);
+    assertThat(inObject.intVal3).isEqualTo(3);
+
+    assertThat(outObject).isNotEqualTo(null);
+    assertThat(outObject.intVal1).isEqualTo(1);
+    assertThat(outObject.intVal2).isEqualTo(2);
+    assertThat(outObject.intVal3).isEqualTo(3);
+  }
+
   // Takes a test helper and returns the output of |methodTakesGlobalObjectReturnsNewObject|.
   native ObjectTestHelper jniBuildNewObjectsFromExistingObjects(
       GlobalObjectTest testHelperObject, ObjectTestHelper objectToMutate);
@@ -116,4 +134,5 @@ public final class GlobalObjectTest {
     assertThat(object.intVal2).isEqualTo(11);
     assertThat(object.intVal3).isEqualTo(16);
   }
+  
 }

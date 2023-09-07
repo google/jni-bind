@@ -78,4 +78,13 @@ Java_com_jnibind_test_GlobalObjectTest_jniMaterializeNewGlobalObjectSetIntVal159
       .Release();
 }
 
+JNIEXPORT jobject JNICALL
+Java_com_jnibind_test_GlobalObjectTest_jniTakeLocalOutputThroughCopyAssignment(
+    JNIEnv* env, jclass, jobject jtest_obj) {
+  jni::GlobalObject<kGlobalObjectTestClass> ret;
+  ret = jni::LocalObject<kGlobalObjectTestClass>{jtest_obj};
+
+  return ret.Release();
+}
+
 }  // extern "C"

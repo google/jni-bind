@@ -56,6 +56,17 @@ class GlobalObject
     RefBaseTag<jobject>::object_ref_ =
         LifecycleT::Promote(RefBaseTag<jobject>::object_ref_);
   }
+
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  GlobalObject& operator=(LocalObject<class_v, class_loader_v, jvm_v>&& rhs) {
+    static_assert(::jni::metaprogramming::DeepEqual_v<
+                  LocalObject<class_v_, class_loader_v_, jvm_v_>,
+                  LocalObject<class_v, class_loader_v, jvm_v>>);
+    Base::MaybeReleaseUnderlyingObject();
+    Base::object_ref_ = rhs.Release();
+
+    return *this;
+  }
 };
 
 template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>

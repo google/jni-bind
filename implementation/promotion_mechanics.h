@@ -164,12 +164,16 @@ struct Scoped
   using Base = Entry<lifecycleType, JniT, ViableSpans..., ScopedTerminalTag>;
   using Base::Base;
 
-  ~Scoped() {
+ protected:
+  void MaybeReleaseUnderlyingObject() {
     if (Base::object_ref_) {
       LifecycleHelper<typename JniT::StorageType, lifecycleType>::Delete(
           Base::object_ref_);
     }
   }
+
+ public:
+  ~Scoped() { MaybeReleaseUnderlyingObject(); }
 };
 
 template <LifecycleType lifecycleType, typename JniT, typename... ViableSpans>

@@ -239,4 +239,15 @@ TEST_F(JniTest, GlobalObject_SupportsPassingAPrvalue) {
   b("Foo", std::move(a));
 }
 
+TEST_F(JniTest, GlobalObjects_PromoteRValuesFromEmittedLValues) {
+  static constexpr Class kClass1{"TestClass1"};
+  static constexpr Class kClass2{
+      "TestClass2", Method{"Foo", jni::Return{kClass1}, jni::Params{}}};
+
+  LocalObject<kClass2> b{};
+  GlobalObject<kClass1> a{b("Foo")};
+
+  a = b("Foo");
+}
+
 }  // namespace
