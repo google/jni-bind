@@ -72,7 +72,15 @@ class ObjectRef
   ObjectRef& operator=(const ObjectRef& rhs) = delete;
 
   jclass GetJClass() const {
-    return ClassRef_t<JniT>::GetAndMaybeLoadClassRef(RefBase::object_ref_);
+    // jobject != jstring but both derive from this class.
+    // Args are passed to recover class ref from class loader, and nullptr is
+    // always safe. `GetAndMaybeLoadClassRef` requires jobject, so using
+    // `RefBase::object_ref_` below obiates ubsan failures.
+    if constexpr (std::is_same_v<typename JniT::SpanType, jobject>) {
+      return ClassRef_t<JniT>::GetAndMaybeLoadClassRef(RefBase::object_ref_);
+    } else {
+      return ClassRef_t<JniT>::GetAndMaybeLoadClassRef(nullptr);
+    }
   }
 
  public:
