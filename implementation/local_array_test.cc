@@ -225,10 +225,13 @@ TEST_F(JniTest, Array_DifferentiatesBetweenClassesWithEqualRank) {
   static constexpr Class kClass4{"kClass4"};
 
   static constexpr Class kClass{
-      "kClass1", Method{"Foo", jni::Return<void>{}, Params{Array{kClass2}}},
+      "kClass1",
+      Method{"Foo", jni::Return<void>{}, Params{Array{kClass2}}},
       Method{"Bar", jni::Return<void>{}, Params{Array{kClass3}}},
       Method{"Baz", jni::Return<void>{}, Params{Array{kClass4}}},
-      Method{"Gnar", jni::Return<void>{}, Params{Array{Class{"kClass4"}}}}};
+      Method{"Gnar", jni::Return<void>{}, Params{Array{Class{"kClass4"}}}},
+      Method{"Moo", jni::Return<void>{}, Params{Array{Class{"kClass4"}}}},
+  };
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), _))
       .Times(testing::AnyNumber());
@@ -236,13 +239,20 @@ TEST_F(JniTest, Array_DifferentiatesBetweenClassesWithEqualRank) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Bar"), StrEq("([LkClass3;)V")));
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Baz"), StrEq("([LkClass4;)V")));
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Gnar"), StrEq("([LkClass4;)V")));
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Moo"), StrEq("([LkClass4;)V")));
 
   LocalObject<kClass> obj{jobject{nullptr}};
   obj("Foo", LocalArray<jobject, 1, kClass2>{123, LocalObject<kClass2>{}});
   obj("Bar", LocalArray<jobject, 1, kClass3>{123, LocalObject<kClass3>{}});
   // obj("Bar", LocalArray{123, LocalObject<kClass2>{}}); // doesn't compile.
+
+  // These calls don't trigger new GetMethod calls.
+  // Note this includes calls to both forward definition and full definition.
   obj("Baz", LocalArray<jobject, 1, kClass4>{123, LocalObject<kClass4>{}});
   obj("Gnar", LocalArray<jobject, 1, kClass4>{123, LocalObject<kClass4>{}});
+
+  // This call requires a new method lookup (different function name).
+  obj("Moo", LocalArray<jobject, 1, kClass4>{123, LocalObject<kClass4>{}});
 }
 
 TEST_F(JniTest, Array_DifferentiatesWithOverloads) {

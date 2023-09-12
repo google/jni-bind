@@ -206,7 +206,7 @@ class JvmRef : public JvmRefBase {
     //     ReleaseAllClassRefsForDefaultClassLoader will only ever be torn down
     //     by JvmRef::~JvmRef, and JvmRef cannot be moved, therefore it is
     //     guaranteed to be in a single threaded context.
-    auto& default_loaded_class_list = GetDefaultLoadedClassList();
+    auto& default_loaded_class_list = GetDefaultLoadedClassList<jclass>();
     for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
          default_loaded_class_list) {
       maybe_loaded_class_id->Reset([](jclass clazz) {
@@ -216,7 +216,8 @@ class JvmRef : public JvmRefBase {
     default_loaded_class_list.clear();
 
     // Methods do not need to be released, just forgotten.
-    auto& default_loaded_method_ref_list = GetDefaultLoadedMethodList();
+    auto& default_loaded_method_ref_list =
+        GetDefaultLoadedClassList<jmethodID>();
     for (metaprogramming::DoubleLockedValue<jmethodID>* cached_method_id :
          default_loaded_method_ref_list) {
       cached_method_id->Reset();

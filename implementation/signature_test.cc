@@ -75,7 +75,7 @@ using JT = JniT<jobject, kClass1>;
 // Class (i.e. self).
 ////////////////////////////////////////////////////////////////////////////////
 using kSelf1 = Id<JT, IdType::CLASS, kNoIdx, 0>;
-using JniSelfT = JniTSelector<jni::LocalArray<jobject, 3, kClass1>::JniT_>;
+using JniSelfT = JniTSelector<jni::LocalArray<jobject, 3, kClass1>::JniT_, -1>;
 using StaticSelectorInfoSelf = SelectorStaticInfo<JniSelfT>;
 
 static_assert(std::string_view{"LkClass1;"} ==

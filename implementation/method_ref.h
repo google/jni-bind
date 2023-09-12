@@ -17,8 +17,7 @@
 #ifndef JNI_BIND_METHOD_REF_H
 #define JNI_BIND_METHOD_REF_H
 
-#include <mutex>
-#include <tuple>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 
@@ -40,6 +39,7 @@
 #include "implementation/proxy_definitions_array.h"
 #include "implementation/proxy_definitions_string.h"
 #include "implementation/ref_base.h"
+#include "implementation/ref_storage.h"
 #include "implementation/return.h"
 #include "implementation/signature.h"
 #include "implementation/void.h"
@@ -51,16 +51,26 @@
 
 namespace jni {
 
-// See JvmRef::~JvmRef.
-static inline auto& GetDefaultLoadedMethodList() {
-  static auto* ret_val =
-      new std::vector<metaprogramming::DoubleLockedValue<jmethodID>*>{};
-  return *ret_val;
-}
+// Transforms a OverloadRef IdT into a fully qualified ID. Storage is keyed
+// against these IDs to reduce excess MethodID lookups.
+template <typename IdT>
+struct OverloadRefUniqueId {
+  static constexpr std::string_view kDash = "#";
+  static constexpr std::string_view kClassQualifier{IdT::Class().name_};
+  static constexpr std::string_view kOverloadName{IdT::Name()};
+
+  // IdT::Name will be the overload name (e.g. "Foo").
+  // Dashes are solely for readability in debugging.
+  static constexpr std::string_view TypeName() {
+    return metaprogramming::StringConcatenate_v<
+        kClassQualifier, kDash, kOverloadName, kDash, Signature_v<IdT>>;
+  }
+};
 
 template <typename IdT_, IdType kReturnIDType>
 struct OverloadRef {
   using IdT = IdT_;
+
   using ReturnIdT = typename IdT::template ChangeIdType<kReturnIDType>;
   using SelfIdT = typename IdT::template ChangeIdType<IdType::CLASS>;
 
@@ -70,21 +80,21 @@ struct OverloadRef {
       Return_t<typename ReturnIdT::MaterializeCDeclT, ReturnIdT> >;
 
   static jmethodID GetMethodID(jclass clazz) {
-    static jni::metaprogramming::DoubleLockedValue<jmethodID> return_value;
+    static auto get_lambda =
+        [clazz](metaprogramming::DoubleLockedValue<jmethodID>* storage) {
+          GetDefaultLoadedClassList<jmethodID>().push_back(storage);
 
-    return return_value.LoadAndMaybeInit([=]() {
-      if constexpr (IdT::JniT::GetClassLoader() == kDefaultClassLoader) {
-        GetDefaultLoadedMethodList().push_back(&return_value);
-      }
+          if constexpr (IdT::kIsStatic) {
+            return jni::JniHelper::GetStaticMethodID(clazz, IdT::Name(),
+                                                     Signature_v<IdT>.data());
+          } else {
+            return jni::JniHelper::GetMethodID(clazz, IdT::Name(),
+                                               Signature_v<IdT>.data());
+          }
+        };
 
-      if constexpr (IdT::kIsStatic) {
-        return jni::JniHelper::GetStaticMethodID(clazz, IdT::Name(),
-                                                 Signature_v<IdT>.data());
-      } else {
-        return jni::JniHelper::GetMethodID(clazz, IdT::Name(),
-                                           Signature_v<IdT>.data());
-      }
-    });
+    return RefStorage<decltype(get_lambda), OverloadRefUniqueId<IdT>>::Get(
+        get_lambda);
   }
 
   template <typename... Params>

@@ -17,36 +17,33 @@
 #ifndef JNI_BIND_CLASS_REF_H_
 #define JNI_BIND_CLASS_REF_H_
 
-#include <atomic>
-#include <mutex>  // NOLINT
 #include <vector>
 
 #include "class_defs/java_lang_classes.h"
-#include "implementation/class.h"
-#include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/invoke.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_helper/lifecycle_string.h"
 #include "implementation/jni_type.h"
-#include "implementation/jvm.h"
-#include "implementation/method.h"
+#include "implementation/ref_storage.h"
 #include "implementation/selector_static_info.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
 
 namespace jni {
 
+static inline jclass LoadClassFromObject(const char* name, jobject object_ref);
+
 // See JvmRef::~JvmRef.
-static std::vector<metaprogramming::DoubleLockedValue<jclass>*>&
+template <typename T>
+static std::vector<metaprogramming::DoubleLockedValue<T>*>&
 GetDefaultLoadedClassList() {
   static auto* ret_val =
-      new std::vector<metaprogramming::DoubleLockedValue<jclass>*>{};
+      new std::vector<metaprogramming::DoubleLockedValue<T>*>{};
   return *ret_val;
 }
-
-static inline jclass LoadClassFromObject(const char* name, jobject object_ref);
 
 // Represents a a jclass instance for a specific class. 4 flavours exist:
 //   1) Default JVM, default class loader.
@@ -68,11 +65,11 @@ class ClassRef {
 
   static jclass GetAndMaybeLoadClassRef(
       jobject optional_object_to_build_loader_from) {
-    // For the default classloader, storage in function local static.
+    // For the default classloader, storage in uniquely IDed struct static.
     if constexpr (JniT::GetClassLoader() == kDefaultClassLoader) {
-      static metaprogramming::DoubleLockedValue<jclass> return_value;
-      return return_value.LoadAndMaybeInit([]() {
-        GetDefaultLoadedClassList().push_back(&return_value);
+      static auto get_lambda = [](metaprogramming::DoubleLockedValue<jclass>*
+                                      storage) {
+        GetDefaultLoadedClassList<jclass>().push_back(storage);
 
         // FindClass uses plain name (e.g. "kClass") for rank 0, qualified
         // class names when used in arrays (e.g. "[LkClass;"). This doesn't
@@ -85,11 +82,15 @@ class ClassRef {
           return static_cast<jclass>(
               LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
                   JniHelper::FindClass(
-                      SelectorStaticInfo<
-                          JniTSelector<typename JniT::RankLess1>>::TypeName()
+                      SelectorStaticInfo<JniTSelector<typename JniT::RankLess1,
+                                                      -1>>::TypeName()
                           .data())));
         }
-      });
+      };
+
+      return RefStorage<
+          decltype(get_lambda),
+          SelectorStaticInfo<JniTSelector<JniT, 0>>>::Get(get_lambda);
     } else {
       // For non default classloader, storage in class member.
       return class_ref_.LoadAndMaybeInit([=]() {

@@ -36,6 +36,7 @@ cc_library(
         "//implementation:constructor",
         "//implementation:corpus",
         "//implementation:corpus_tag",
+        "//implementation:default_class_loader",
         "//implementation:field",
         "//implementation:forward_declarations",
         "//implementation:global_class_loader",

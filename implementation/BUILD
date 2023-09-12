@@ -111,17 +111,15 @@ cc_library(
     name = "class_ref",
     hdrs = ["class_ref.h"],
     deps = [
-        ":class",
-        ":class_loader",
         ":default_class_loader",
         ":jni_type",
-        ":jvm",
-        ":method",
+        ":ref_storage",
         ":selector_static_info",
         "//:jni_dep",
         "//class_defs:java_lang_classes",
         "//implementation/jni_helper",
         "//implementation/jni_helper:invoke",
+        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
         "//implementation/jni_helper:lifecycle_string",
         "//metaprogramming:double_locked_value",
@@ -195,6 +193,17 @@ cc_library(
 cc_test(
     name = "class_loader_ref_test",
     srcs = ["class_loader_ref_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "class_loader_ref_second_test",
+    srcs = ["class_loader_ref_second_test.cc"],
     deps = [
         ":fake_test_constants",
         "//:jni_bind",
@@ -393,12 +402,16 @@ cc_library(
         ":class_loader",
         ":field",
         ":id_type",
+        ":jni_type",
         ":name_constants",
         ":no_idx",
         ":proxy_convenience_aliases",
+        ":ref_storage",
         ":selector_static_info",
         ":self",
         ":signature",
+        "//metaprogramming:double_locked_value",
+        "//metaprogramming:lambda_string",
         "//metaprogramming:replace_string",
     ],
 )
@@ -429,6 +442,7 @@ cc_library(
         ":jvm",
         ":loaded_by",
         ":no_idx",
+        "//:jni_dep",
         "//metaprogramming:replace_string",
         "//metaprogramming:vals_equal",
     ],
@@ -653,6 +667,7 @@ cc_library(
         ":proxy_definitions_array",
         ":proxy_definitions_string",
         ":ref_base",
+        ":ref_storage",
         ":return",
         ":signature",
         ":void",
@@ -917,6 +932,16 @@ cc_library(
 )
 
 cc_library(
+    name = "ref_storage",
+    hdrs = ["ref_storage.h"],
+    deps = [
+        ":signature",
+        "//metaprogramming:double_locked_value",
+        "//metaprogramming:lambda_string",
+    ],
+)
+
+cc_library(
     name = "return",
     hdrs = ["return.h"],
     deps = [":void"],
@@ -944,6 +969,7 @@ cc_test(
     srcs = ["signature_test.cc"],
     deps = [
         "//:jni_bind",
+        "//:jni_test",
         "@googletest//:gtest_main",
     ],
 )
@@ -1045,11 +1071,6 @@ cc_library(
 )
 
 cc_library(
-    name = "void",
-    hdrs = ["void.h"],
-)
-
-cc_library(
     name = "self",
     hdrs = ["self.h"],
     deps = [":static"],
@@ -1063,4 +1084,9 @@ cc_test(
         "//:jni_test",
         "@googletest//:gtest_main",
     ],
+)
+
+cc_library(
+    name = "void",
+    hdrs = ["void.h"],
 )

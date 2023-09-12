@@ -31,6 +31,7 @@
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/constructor.h"
+#include "implementation/default_class_loader.h"
 #include "implementation/field.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/id.h"

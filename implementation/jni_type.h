@@ -28,6 +28,7 @@
 #include "implementation/jvm.h"
 #include "implementation/loaded_by.h"
 #include "implementation/no_idx.h"
+#include "jni_dep.h"
 #include "metaprogramming/replace_string.h"
 #include "metaprogramming/vals_equal.h"
 
@@ -40,6 +41,7 @@ template <typename SpanType_, const auto& class_v_,
           std::size_t class_loader_idx_ = kNoIdx>
 struct JniT {
   static constexpr std::size_t kRank = kRank_;
+  static_assert(kRank != -1);
 
   // Same as this type, except uses rank-1.
   using RankLess1 = JniT<SpanType_, class_v_, class_loader_v_, jvm_v_,
@@ -184,28 +186,28 @@ struct JniTEqual<JniT<SpanType1, class_v_1, class_loader_v_1, jvm_v_1, kRank_1,
 template <typename T1, typename T2>
 constexpr bool JniTEqual_v = JniTEqual<T1, T2>::val;
 
-template <typename JniT_, typename SpanT>
+template <typename JniT_, typename SpanT, int kLessRank>
 struct RawProxy {
   using RawValT = SpanT;
-
   static constexpr std::size_t kRank = JniT_::kRank;
+  const RawValT raw_{0};
 };
 
-template <typename JniT>
-struct RawProxy<JniT, jobject> {
+template <typename JniT, int kLessRank>
+struct RawProxy<JniT, jobject, kLessRank> {
   using RawValT = decltype(JniT::GetClass());
 
   const RawValT raw_ = JniT::GetClass();
   const char* name_ = JniT::GetClass().name_;
 
-  static constexpr std::size_t kRank = JniT::kRank - 1;
+  static constexpr std::size_t kRank = JniT::kRank + kLessRank;
 };
 
 // Helper to generate signatures for objects at rank-1 but span types at rank.
 // Used in static selection signature generation (for types like LocalArray).
-template <typename JniT>
+template <typename JniT, int kLessRank>
 struct JniTSelector {
-  using RawProxyT = RawProxy<JniT, typename JniT::SpanType>;
+  using RawProxyT = RawProxy<JniT, typename JniT::SpanType, kLessRank>;
   using RawValT = typename RawProxyT::RawValT;
 
   static constexpr std::size_t kRank = RawProxyT::kRank;

@@ -283,4 +283,21 @@ TEST_F(JniTest, LocalObject_MovesInContainerStruct) {
   A a{LocalObject<kClass>{Fake<jobject>()}};
 }
 
+TEST_F(JniTest, LocalObject_DoesntCrossTalkOverClassMethodIds) {
+  static constexpr Class kClass{
+      "kClass", Method{"Foo", jni::Return{}, jni::Params<int>{}}};
+
+  static constexpr Class kClass2{
+      "kClass2", Method{"Foo", jni::Return{}, jni::Params<int>{}}};
+
+  EXPECT_CALL(*env_, GetMethodID(_, _, StrEq("(I)V"))).Times(2);
+
+  LocalObject<kClass> obj_1{Fake<jobject>(1)};
+  LocalObject<kClass2> obj_2{Fake<jobject>(2)};
+
+  // These are different method IDs (they are different classes).
+  obj_1("Foo", 1);
+  obj_2("Foo", 1);
+}
+
 }  // namespace

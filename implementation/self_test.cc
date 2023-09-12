@@ -50,14 +50,10 @@ TEST_F(JniTest, SelfCanBeUsedAsAReturnValue) {
 
 TEST_F(JniTest, SelfCanBeUsedAsAReturnValueAndMaintainsRichDecoration) {
   EXPECT_CALL(*env_, GetMethodID).Times(AnyNumber());
-
-  // TODO(b/143908983): This is overactive for successive calls.
-  // JniT needs to be collapsed to prevent downstream proxies querying ID.
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("build"), StrEq("()LBuilder;")))
-      .Times(2);
+  EXPECT_CALL(*env_, GetMethodID(_, StrEq("build"), StrEq("()LBuilder;")));
 
   LocalObject<kClass> obj{Fake<jobject>()};
-  obj("build")("build");
+  obj("build")("build")("build");
 }
 
 TEST_F(JniTest, SelfCanBeUsedAsParam) {
