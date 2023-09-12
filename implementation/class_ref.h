@@ -36,15 +36,6 @@ namespace jni {
 
 static inline jclass LoadClassFromObject(const char* name, jobject object_ref);
 
-// See JvmRef::~JvmRef.
-template <typename T>
-static std::vector<metaprogramming::DoubleLockedValue<T>*>&
-GetDefaultLoadedClassList() {
-  static auto* ret_val =
-      new std::vector<metaprogramming::DoubleLockedValue<T>*>{};
-  return *ret_val;
-}
-
 // Represents a a jclass instance for a specific class. 4 flavours exist:
 //   1) Default JVM, default class loader.
 //   2) Non-default JVM, default class loader.
@@ -69,7 +60,7 @@ class ClassRef {
     if constexpr (JniT::GetClassLoader() == kDefaultClassLoader) {
       static auto get_lambda = [](metaprogramming::DoubleLockedValue<jclass>*
                                       storage) {
-        GetDefaultLoadedClassList<jclass>().push_back(storage);
+        DefaultRefs<jclass>().push_back(storage);
 
         // FindClass uses plain name (e.g. "kClass") for rank 0, qualified
         // class names when used in arrays (e.g. "[LkClass;"). This doesn't

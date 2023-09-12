@@ -482,6 +482,7 @@ cc_library(
         ":jni_type",
         ":jvm",
         ":method_ref",
+        ":ref_storage",
         "//:jni_dep",
         "//implementation/jni_helper:lifecycle_object",
         "//metaprogramming:double_locked_value",

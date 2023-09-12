@@ -16,10 +16,22 @@
 #ifndef JNI_BIND_IMPLEMENTATION_REF_STORAGE_H_
 #define JNI_BIND_IMPLEMENTATION_REF_STORAGE_H_
 
+#include <vector>
+
 #include "metaprogramming/double_locked_value.h"
 #include "metaprogramming/lambda_string.h"
 
 namespace jni {
+
+// Used as shared storage of lists for IDs like jclass, jMethod, etc.
+// Only applicable for Jvms not fully specified (i.e. default classloader).
+// See JvmRef::~JvmRef.
+template <typename T>
+static std::vector<metaprogramming::DoubleLockedValue<T>*>& DefaultRefs() {
+  static auto* ret_val =
+      new std::vector<metaprogramming::DoubleLockedValue<T>*>{};
+  return *ret_val;
+}
 
 // Provides a static inline `DoubleLockedValue<T>` val against a `UniqueID`.
 template <typename UniqueID, typename T>

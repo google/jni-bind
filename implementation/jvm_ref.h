@@ -30,6 +30,7 @@
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/method_ref.h"
+#include "implementation/ref_storage.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
 #include "metaprogramming/function_traits.h"
@@ -206,7 +207,7 @@ class JvmRef : public JvmRefBase {
     //     ReleaseAllClassRefsForDefaultClassLoader will only ever be torn down
     //     by JvmRef::~JvmRef, and JvmRef cannot be moved, therefore it is
     //     guaranteed to be in a single threaded context.
-    auto& default_loaded_class_list = GetDefaultLoadedClassList<jclass>();
+    auto& default_loaded_class_list = DefaultRefs<jclass>();
     for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
          default_loaded_class_list) {
       maybe_loaded_class_id->Reset([](jclass clazz) {
@@ -216,8 +217,7 @@ class JvmRef : public JvmRefBase {
     default_loaded_class_list.clear();
 
     // Methods do not need to be released, just forgotten.
-    auto& default_loaded_method_ref_list =
-        GetDefaultLoadedClassList<jmethodID>();
+    auto& default_loaded_method_ref_list = DefaultRefs<jmethodID>();
     for (metaprogramming::DoubleLockedValue<jmethodID>* cached_method_id :
          default_loaded_method_ref_list) {
       cached_method_id->Reset();

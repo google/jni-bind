@@ -82,7 +82,7 @@ struct OverloadRef {
   static jmethodID GetMethodID(jclass clazz) {
     static auto get_lambda =
         [clazz](metaprogramming::DoubleLockedValue<jmethodID>* storage) {
-          GetDefaultLoadedClassList<jmethodID>().push_back(storage);
+          DefaultRefs<jmethodID>().push_back(storage);
 
           if constexpr (IdT::kIsStatic) {
             return jni::JniHelper::GetStaticMethodID(clazz, IdT::Name(),
