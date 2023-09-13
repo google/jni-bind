@@ -29,7 +29,6 @@
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
-#include "implementation/method_ref.h"
 #include "implementation/ref_storage.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"

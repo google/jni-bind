@@ -30,7 +30,6 @@
 #include "implementation/local_object.h"
 #include "implementation/local_string.h"
 #include "implementation/method.h"
-#include "implementation/method_ref.h"
 #include "implementation/object_ref.h"
 #include "implementation/params.h"
 #include "implementation/return.h"

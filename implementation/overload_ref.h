@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef JNI_BIND_METHOD_REF_H
-#define JNI_BIND_METHOD_REF_H
+#ifndef JNI_BIND_OVERLOAD_REF_H
+#define JNI_BIND_OVERLOAD_REF_H
 
 #include <string_view>
 #include <type_traits>
@@ -124,4 +124,4 @@ struct OverloadRef {
 
 }  // namespace jni
 
-#endif  // JNI_BIND_METHOD_REF_H
+#endif  // JNI_BIND_OVERLOAD_REF_H

@@ -31,7 +31,6 @@
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm_ref.h"
-#include "implementation/method_ref.h"
 #include "implementation/method_selection.h"
 #include "implementation/proxy.h"
 #include "implementation/ref_base.h"

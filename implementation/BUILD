@@ -653,7 +653,7 @@ cc_library(
 
 cc_library(
     name = "method_ref",
-    hdrs = ["method_ref.h"],
+    hdrs = ["overload_ref.h"],
     deps = [
         ":class_loader",
         ":class_ref",
