@@ -61,6 +61,12 @@ public class ObjectTestHelper {
         && this.intVal3 == rhs.intVal3;
   }
 
+  public void increment(int val) {
+    intVal1 += val;
+    intVal2 += val;
+    intVal3 += val;
+  }
+
   public int intVal1;
   public int intVal2;
   public int intVal3;

@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "modulo.h"
+#include "javatests/com/jnibind/test/object_test_helper_jni.h"
 #include "jni_bind.h"
 #include "metaprogramming/lambda_string.h"
 
@@ -44,6 +45,9 @@ static constexpr Class kFixture {
     Method {"long2D", Return<void>{}, Params{jlong{}, Array{jlong{}, Rank<2>{}}}},
     Method {"float2D", Return<void>{}, Params{float{}, Array{jfloat{}, Rank<2>{}}}},
     Method {"double2D", Return<void>{}, Params{jdouble{}, Array{jdouble{}, Rank<2>{}}}},
+    Method {"string2D", Return<void>{}, Params{Array{jstring{}, Rank<2>{}}}},
+    Method {"object1D", Return<void>{}, Params{Array{kObjectTestHelperClass, Rank<1>{}}}},
+    Method {"object2D", Return<void>{}, Params{int{}, Array{kObjectTestHelperClass, Rank<2>{}}}},
 };
 // clang-format on
 
@@ -187,6 +191,67 @@ Java_com_jnibind_test_ArrayTestMethodRank2_nativeDoubleTests2D(
     JNIEnv*, jclass, jobject fixture, jobjectArray arr) {
   GenericMethodTest(LocalObject<kFixture>{fixture}, STR("double2D"),
                     LocalArray<jdouble, 2>{arr});
+}
+
+JNIEXPORT void JNICALL
+Java_com_jnibind_test_ArrayTestMethodRank2_nativeObjectTests2D(
+    JNIEnv* env, jclass, jobject fixture_jobject,
+    jobjectArray arr_jobjectArray) {
+  LocalObject<kFixture> fixture{fixture_jobject};
+
+  // Simple lvalue pass through works as expected.
+  LocalArray<jobject, 2, kObjectTestHelperClass> arr{arr_jobjectArray};
+  fixture("object2D", 0, arr);
+
+  // Simple rvalue pass through works as expected.
+  fixture("object2D", 0, std::move(arr));
+
+  // Building a new array, and setting all the values by hand works.
+  LocalArray<jobject, 2, kObjectTestHelperClass> new_array{3, nullptr};
+
+  LocalArray<jobject, 1, kObjectTestHelperClass> row1{3};
+  row1.Set(0, LocalObject<kObjectTestHelperClass>{0, 0, 0});
+  row1.Set(1, LocalObject<kObjectTestHelperClass>{1, 1, 1});
+  row1.Set(2, LocalObject<kObjectTestHelperClass>{2, 2, 2});
+
+  LocalArray<jobject, 1, kObjectTestHelperClass> row2{3};
+  row2.Set(0, LocalObject<kObjectTestHelperClass>{3, 3, 3});
+  row2.Set(1, LocalObject<kObjectTestHelperClass>{4, 4, 4});
+  row2.Set(2, LocalObject<kObjectTestHelperClass>{5, 5, 5});
+
+  LocalArray<jobject, 1, kObjectTestHelperClass> row3{3};
+  row3.Set(0, LocalObject<kObjectTestHelperClass>{6, 6, 6});
+  row3.Set(1, LocalObject<kObjectTestHelperClass>{7, 7, 7});
+  row3.Set(2, LocalObject<kObjectTestHelperClass>{8, 8, 8});
+
+  new_array.Set(0, row1);
+  new_array.Set(1, row2);
+  new_array.Set(2, row3);
+
+  fixture("object2D", 0, new_array);
+
+  // You can pull the view multiple times with iterators (each value ticked 1).
+  {
+    for (LocalArray<jobject, 1> inner_array : new_array.Pin()) {
+      for (LocalObject<kObjectTestHelperClass> obj : inner_array.Pin()) {
+        obj("increment", 1);
+      }
+    }
+    fixture("object2D", 1, new_array);
+  }
+
+  // You can pull the view multiple times with raw loops.
+  {
+    for (int i = 0; i < new_array.Length(); ++i) {
+      LocalArray<jobject, 1, kObjectTestHelperClass> inn_arr{new_array.Get(i)};
+      for (int j = 0; j < inn_arr.Length(); ++j) {
+        inn_arr.Get(j)("increment", 1);
+      }
+    }
+  }
+
+  // Each variant increments base by 1, so 2 is used here.
+  fixture("object2D", 2, new_array);
 }
 
 }  // extern "C"

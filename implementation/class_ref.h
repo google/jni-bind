@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_CLASS_REF_H_
 #define JNI_BIND_CLASS_REF_H_
 
+#include <type_traits>
 #include <vector>
 
 #include "class_defs/java_lang_classes.h"
@@ -70,11 +71,17 @@ class ClassRef {
               LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
                   JniHelper::FindClass(JniT::kName.data())));
         } else {
+          // Primitive types drop their rank by 1 because of how their
+          // signatures get derived in array_ref.h.
+          using JniTForLifecycle = std::conditional_t<
+              std::is_same_v<jobject, typename JniT::SpanType>, JniT,
+              typename JniT::RankLess1>;
+
           return static_cast<jclass>(
               LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
                   JniHelper::FindClass(
-                      SelectorStaticInfo<JniTSelector<typename JniT::RankLess1,
-                                                      -1>>::TypeName()
+                      SelectorStaticInfo<
+                          JniTSelector<JniTForLifecycle, -1>>::TypeName()
                           .data())));
         }
       };

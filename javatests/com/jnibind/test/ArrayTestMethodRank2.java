@@ -144,8 +144,20 @@ public class ArrayTestMethodRank2 {
     }
   }
 
+  void object1D(ObjectTestHelper[] arr) {
+    for (ObjectTestHelper element : arr) {
+      System.out.println(element);
+    }
+  }
+
   void object2D(int objectMemberOffset, ObjectTestHelper[][] arr) {
-    // TODO(b/143908983): Add object based test.
+    int curVal = objectMemberOffset;
+    for (ObjectTestHelper[] objectList : arr) {
+      for (ObjectTestHelper element : objectList) {
+        assertTrue(element.isEqualTo(new ObjectTestHelper(curVal, curVal, curVal)));
+        curVal++;
+      }
+    }
   }
 
   /** 2D Tests. * */
@@ -230,15 +242,15 @@ public class ArrayTestMethodRank2 {
     nativeDoubleTests2D(this, arr);
   }
 
-  /*
-  // TODO(b/143908983): Add object based test.
   @Test
   public void objectTests2D() {
-    ObjectTestHelper[] objectTestHelper = {
-      new ObjectTestHelper(0, 0, 0), new ObjectTestHelper(1, 1, 1), new ObjectTestHelper(2, 2, 2)
+    ObjectTestHelper[][] arr = {
+      {new ObjectTestHelper(0, 0, 0), new ObjectTestHelper(1, 1, 1), new ObjectTestHelper(2, 2, 2)},
+      {new ObjectTestHelper(3, 3, 3), new ObjectTestHelper(4, 4, 4), new ObjectTestHelper(5, 5, 5)},
+      {new ObjectTestHelper(6, 6, 6), new ObjectTestHelper(7, 7, 7), new ObjectTestHelper(8, 8, 8)},
     };
 
-    nativeObjectTests2D(this, objectTestHelper);
+    object2D(0, arr);
+    nativeObjectTests2D(this, arr);
   }
-  */
 }

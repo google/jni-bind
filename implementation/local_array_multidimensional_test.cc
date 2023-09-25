@@ -287,4 +287,39 @@ TEST_F(JniTest, Array_2D_Iterates_Raw_loops) {
   EXPECT_EQ(sum, 35);
 }
 
+// Identical to above except with object loops.
+TEST_F(JniTest, Array_2D_Iterates_Raw_loops_of_Objects) {
+  EXPECT_CALL(*env_, FindClass(StrEq("[LkClass;")));
+  EXPECT_CALL(*env_, NewObjectArray(5, _, Fake<jobjectArray>(100)));
+  EXPECT_CALL(*env_, GetArrayLength).WillOnce(Return(5));  // outer
+
+  EXPECT_CALL(*env_, GetObjectArrayElement)
+      .WillOnce(Return(Fake<jobjectArray>(1)))
+      .WillOnce(Return(Fake<jobjectArray>(2)))
+      .WillOnce(Return(Fake<jobjectArray>(3)))
+      .WillOnce(Return(Fake<jobjectArray>(4)))
+      .WillOnce(Return(Fake<jobjectArray>(5)));
+
+  // All the returned objectArrays are deleted.
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobjectArray>(1)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobjectArray>(2)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobjectArray>(3)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobjectArray>(4)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobjectArray>(5)));
+
+  // Note: This is just 0 (default), not 100. 100 is the sample (i.e. template)
+  // object, no arg is the default that is created.
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobjectArray>()));
+
+  LocalArray<jobject, 2, kClass> new_array{5, Fake<jobjectArray>(100)};
+  EXPECT_EQ(jobject{new_array}, Fake<jobjectArray>());
+
+  int i = 1;
+  for (LocalArray<jobject, 1, kClass> arr : new_array.Pin()) {
+    EXPECT_EQ(jobject(arr), Fake<jobjectArray>(i));
+    ++i;
+  }
+}
+
 }  // namespace
