@@ -224,4 +224,15 @@ public class MethodTest {
     verify(rJniTestHelper).foo(123.f);
     verify(rJniTestHelper).foo(123.f, 456.f);
   }
+
+  /** Overload Tests: int double disambiguation */
+  native void jniCallFooOverload4(MethodTestHelper mockMethodTestHelper);
+
+  @Test
+  public void intAndDoubleDifferentiateOnOverload() {
+    jniCallFooOverload4(rJniTestHelper);
+
+    verify(rJniTestHelper).intDouble(123, 456.);
+    verify(rJniTestHelper).intDouble(456., 123);
+  }
 }

@@ -113,4 +113,8 @@ public class MethodTestHelper {
   public int foo(float f1, float f2) {
     return -1;
   }
+
+  public void intDouble(int v1, double v2) {}
+
+  public void intDouble(double v1, int v2) {}
 }

@@ -68,6 +68,12 @@ constexpr Class kMethodTestHelper {
       Overload { Return<int>{}, Params<jfloat>{}},
       Overload { Return<int>{}, Params<jfloat,jfloat>{}}
     },
+
+    // Overloaded double/int Tests.
+    Method{"intDouble",
+      Overload { Return<void>{}, Params<jint, jdouble>{}},
+      Overload { Return<void>{}, Params<jdouble, jint>{}}
+    },
 };
 // clang-format on
 
@@ -249,6 +255,14 @@ JNIEXPORT int JNICALL Java_com_jnibind_test_MethodTest_jniCallFooOverload3(
     JNIEnv* env, jclass, jobject object) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
   return gtest_helper("foo", 123.f, 456.f);
+}
+
+/** Overload int/double disambiguation. */
+JNIEXPORT void JNICALL Java_com_jnibind_test_MethodTest_jniCallFooOverload4(
+    JNIEnv* env, jclass, jobject object) {
+  LocalObject<kMethodTestHelper> gtest_helper{object};
+  gtest_helper("intDouble", 123, 456.);
+  gtest_helper("intDouble", 456., 123);
 }
 
 }  // extern "C"
