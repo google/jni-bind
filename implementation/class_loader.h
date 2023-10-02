@@ -54,27 +54,10 @@ class ClassLoader : public Object {
   explicit constexpr ClassLoader(const char* class_loader_name)
       : Object(class_loader_name) {}
 
-  // Default classloader (no name needed).
   explicit constexpr ClassLoader(
       ParentLoader_ parent_loader,
       SupportedClassSet<SupportedClasses_...> supported_class_set)
-      __attribute__((
-          enable_if(parent_loader == kDefaultClassLoader,
-                    "You must provide a name for classloaders (except "
-                    "kNullClassLoader and kDefaultClassLoader)")))
-      : Object("__JNI_BIND_DEFAULT_CLASS_LOADER__"),
-        parent_loader_(parent_loader),
-        supported_classes_(supported_class_set.supported_classes_) {}
-
-  // Null classloader (no name needed).
-  explicit constexpr ClassLoader(
-      ParentLoader_ parent_loader,
-      SupportedClassSet<SupportedClasses_...> supported_class_set)
-      __attribute__((
-          enable_if(parent_loader == kNullClassLoader,
-                    "You must provide a name for classloaders (except "
-                    "kNullClassLoader and kDefaultClassLoader)")))
-      : Object("__JNI_BIND_NULL_CLASS_LOADER__"),
+      : Object("__JNI_NO_NAME_GIVEN__"),
         parent_loader_(parent_loader),
         supported_classes_(supported_class_set.supported_classes_) {}
 
