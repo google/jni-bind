@@ -55,7 +55,7 @@ Constructor(ParamsRaw...) -> Constructor<ParamsRaw...>;
 
 template <typename... LhsParams, typename... RhsParams>
 constexpr bool operator==(const Constructor<LhsParams...>& lhs,
-                          const Constructor<LhsParams...>& rhs) {
+                          const Constructor<RhsParams...>& rhs) {
   return lhs.params_ == rhs.params_;
 }
 
