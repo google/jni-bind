@@ -153,8 +153,13 @@ struct JniT {
     }
   }
 
+  // Some compilers seem to only be OK if this indirection is used.
+  static constexpr auto& kMinimalSpanningClass = MinimalSpanningClass();
+  static constexpr auto& kMinimalSpanningClassLoader =
+      MinimalSpanningClassLoader();
+
   using MinimallySpanningType =
-      JniT<SpanType_, MinimalSpanningClass(), MinimalSpanningClassLoader(),
+      JniT<SpanType_, kMinimalSpanningClass, kMinimalSpanningClassLoader,
            jvm_v_, kRank, MinimalClassIdx(), MinimalClassLoaderIdx()>;
 };
 
