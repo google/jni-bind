@@ -287,6 +287,25 @@ cc_test(
 )
 
 cc_library(
+    name = "deep_equal_diminished",
+    hdrs = ["deep_equal_diminished.h"],
+    deps = [
+        ":pack_discriminator",
+        ":vals_equal_diminished",
+    ],
+)
+
+cc_test(
+    name = "deep_equal_diminished_test",
+    srcs = ["deep_equal_diminished_test.cc"],
+    deps = [
+        ":deep_equal_diminished",
+        ":pack_discriminator",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "detect",
     hdrs = ["detect.h"],
 )
@@ -973,6 +992,9 @@ cc_library(
 cc_library(
     name = "vals_equal",
     hdrs = ["vals_equal.h"],
+
+    # This is incompatibel with MSVC, do not use.
+    visibility = ["//visibility:private"],
     deps = [":vals"],
 )
 
@@ -982,6 +1004,21 @@ cc_test(
     deps = [
         ":vals",
         ":vals_equal",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "vals_equal_diminished",
+    hdrs = ["vals_equal_diminished.h"],
+    deps = [":vals"],
+)
+
+cc_test(
+    name = "vals_equal_diminished_test",
+    srcs = ["vals_equal_diminished_test.cc"],
+    deps = [
+        ":vals_equal_diminished",
         "@googletest//:gtest_main",
     ],
 )

@@ -364,6 +364,7 @@ cc_library(
         ":promotion_mechanics",
         "//:jni_dep",
         "//implementation/jni_helper:lifecycle_object",
+        "//metaprogramming:deep_equal_diminished",
     ],
 )
 
@@ -444,7 +445,7 @@ cc_library(
         ":no_idx",
         "//:jni_dep",
         "//metaprogramming:replace_string",
-        "//metaprogramming:vals_equal",
+        "//metaprogramming:vals_equal_diminished",
     ],
 )
 
@@ -823,7 +824,7 @@ cc_library(
         "//implementation/jni_helper",
         "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
-        "//metaprogramming:deep_equal",
+        "//metaprogramming:deep_equal_diminished",
         "//metaprogramming:pack_discriminator",
     ],
 )

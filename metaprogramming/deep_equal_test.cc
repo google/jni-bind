@@ -15,9 +15,7 @@
  */
 #include "metaprogramming/deep_equal.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-#include "metaprogramming/pack_discriminator.h"
+#include <tuple>
 
 namespace {
 

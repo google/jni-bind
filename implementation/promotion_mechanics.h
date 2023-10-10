@@ -16,6 +16,8 @@
 #ifndef JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_H_
 #define JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_H_
 
+#include <type_traits>
+
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/lifecycle.h"
@@ -24,7 +26,7 @@
 #include "implementation/object_ref.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
-#include "metaprogramming/deep_equal.h"
+#include "metaprogramming/deep_equal_diminished.h"
 #include "metaprogramming/pack_discriminator.h"
 
 namespace jni {
@@ -51,9 +53,10 @@ struct EntryBase : public Base {
   using Span = typename JniT::SpanType;
 
   // `RefBaseTag` move constructor for object of same span type.
-  template <typename T, typename = std::enable_if_t<(
-                            ::jni::metaprogramming::DeepEqual_v<EntryBase, T> ||
-                            std::is_base_of_v<RefBaseTag<Span>, T>)>>
+  template <typename T,
+            typename = std::enable_if_t<
+                (::jni::metaprogramming::DeepEqualDiminished_v<EntryBase, T> ||
+                 std::is_base_of_v<RefBaseTag<Span>, T>)>>
   EntryBase(T&& rhs) : Base(rhs.Release()) {}
 
   // "Copy" constructor: Additional reference to object will be created.
@@ -105,9 +108,10 @@ struct EntryBase<Base, LifecycleType::GLOBAL, JniT, ViableSpan> : public Base {
   using Span = typename JniT::SpanType;
 
   // `RefBaseTag` move constructor for object of same span type.
-  template <typename T, typename = std::enable_if_t<(
-                            ::jni::metaprogramming::DeepEqual_v<EntryBase, T> ||
-                            std::is_base_of_v<RefBaseTag<Span>, T>)>>
+  template <typename T,
+            typename = std::enable_if_t<
+                (::jni::metaprogramming::DeepEqualDiminished_v<EntryBase, T> ||
+                 std::is_base_of_v<RefBaseTag<Span>, T>)>>
   EntryBase(T&& rhs)
       : Base(LifecycleHelper<typename JniT::StorageType,
                              LifecycleType::GLOBAL>::Promote(rhs.Release())) {}

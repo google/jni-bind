@@ -30,7 +30,7 @@
 #include "implementation/no_idx.h"
 #include "jni_dep.h"
 #include "metaprogramming/replace_string.h"
-#include "metaprogramming/vals_equal.h"
+#include "metaprogramming/vals_equal_diminished.h"
 
 namespace jni {
 
@@ -177,10 +177,12 @@ struct JniTEqual<JniT<SpanType1, class_v_1, class_loader_v_1, jvm_v_1, kRank_1,
                       class_idx_2, class_loader_idx_2>> {
   static constexpr bool val =
       std::is_same_v<SpanType1, SpanType2> &&
-      metaprogramming::ValsEqual_cr_v<class_v_1, class_v_2> &&
-      metaprogramming::ValsEqual_cr_v<class_loader_v_1, class_loader_v_2> &&
-      metaprogramming::ValsEqual_cr_v<jvm_v_1, jvm_v_2> && kRank_1 == kRank_2 &&
-      class_idx_1 == class_idx_2 && class_loader_idx_1 == class_loader_idx_2;
+      metaprogramming::ValsEqualDiminished_cr_v<class_v_1, class_v_2> &&
+      metaprogramming::ValsEqualDiminished_cr_v<class_loader_v_1,
+                                                class_loader_v_2> &&
+      metaprogramming::ValsEqualDiminished_cr_v<jvm_v_1, jvm_v_2> &&
+      kRank_1 == kRank_2 && class_idx_1 == class_idx_2 &&
+      class_loader_idx_1 == class_loader_idx_2;
 };
 
 template <typename T1, typename T2>
