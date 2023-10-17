@@ -1034,6 +1034,20 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "passthrough",
+    hdrs = ["passthrough.h"],
+)
+
+cc_test(
+    name = "passthrough_test",
+    srcs = ["passthrough_test.cc"],
+    deps = [
+        ":passthrough",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_test(
     name = "zip_invoke_test",
     srcs = ["zip_invoke_test.cc"],
