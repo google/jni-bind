@@ -21,8 +21,8 @@
 
 namespace {
 
-using ::jni::CreateCopy;
 using ::jni::GlobalObject;
+using ::jni::NewRef;
 using ::jni::PromoteToGlobal;
 
 // A struct that could represent context to be maintained across multiple native
@@ -72,7 +72,7 @@ Java_com_jnibind_test_ContextTest_nativeCreateContextWithCopy(JNIEnv* env,
                                                               jclass,
                                                               jobject val) {
   return reinterpret_cast<jlong>(new ContextStruct{
-      .obj = GlobalObject<kObjectTestHelperClass>{CreateCopy{}, val}});
+      .obj = GlobalObject<kObjectTestHelperClass>{NewRef{}, val}});
 }
 
 JNIEXPORT jobject JNICALL

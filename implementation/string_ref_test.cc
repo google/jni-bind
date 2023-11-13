@@ -21,12 +21,12 @@
 namespace {
 
 using ::jni::AdoptGlobal;
-using ::jni::CreateCopy;
 using ::jni::GlobalObject;
 using ::jni::GlobalString;
 using ::jni::kJavaLangString;
 using ::jni::LocalObject;
 using ::jni::LocalString;
+using ::jni::NewRef;
 using ::jni::UtfStringView;
 using ::jni::test::AsNewLocalReference;
 using ::jni::test::Fake;
@@ -68,7 +68,7 @@ TEST_F(JniTest, LocalString_CopiesFromObject) {
   EXPECT_CALL(*env_, DeleteLocalRef(AsNewLocalReference(Fake<jobject>())));
   EXPECT_CALL(*env_, NewLocalRef(Fake<jobject>()));
 
-  LocalString decorated_object{CreateCopy{}, Fake<jobject>()};
+  LocalString decorated_object{NewRef{}, Fake<jobject>()};
 
   EXPECT_EQ(jstring{decorated_object}, AsNewLocalReference(Fake<jobject>()));
 }
@@ -78,7 +78,7 @@ TEST_F(JniTest, LocalString_CopiesFromJString) {
   EXPECT_CALL(*env_, NewLocalRef(Fake<jstring>(1)))
       .WillOnce(::testing::Return(Fake<jstring>(2)));
 
-  LocalString decorated_object{CreateCopy{}, Fake<jstring>(1)};
+  LocalString decorated_object{NewRef{}, Fake<jstring>(1)};
 
   EXPECT_EQ(jstring{decorated_object}, Fake<jstring>(2));
 }

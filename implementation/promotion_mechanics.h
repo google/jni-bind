@@ -51,7 +51,7 @@ struct EntryBase : public Base {
   EntryBase(AdoptLocal, ViableSpan object) : Base(object) {}
 
   // "Copy" constructor: Additional reference to object will be created.
-  EntryBase(CreateCopy, ViableSpan object)
+  EntryBase(NewRef, ViableSpan object)
       : EntryBase(AdoptLocal{},
                   object
                       ? static_cast<Span>(
@@ -122,7 +122,7 @@ struct EntryBase<Base, LifecycleType::GLOBAL, JniT, ViableSpan> : public Base {
                              LifecycleType::GLOBAL>::Promote(rhs.Release())) {}
 
   // "Copy" constructor: Additional reference to object will be created.
-  EntryBase(CreateCopy, ViableSpan object)
+  EntryBase(NewRef, ViableSpan object)
       : Base(static_cast<Span>(
             LifecycleHelper<Span, LifecycleType::GLOBAL>::NewReference(
                 static_cast<Span>(object)))) {}

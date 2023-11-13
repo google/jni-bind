@@ -27,12 +27,12 @@
 namespace {
 
 using ::jni::Class;
-using ::jni::CreateCopy;
 using ::jni::Field;
 using ::jni::kDefaultClassLoader;
 using ::jni::kDefaultJvm;
 using ::jni::LocalObject;
 using ::jni::Method;
+using ::jni::NewRef;
 using ::jni::Params;
 using ::jni::test::AsNewLocalReference;
 using ::jni::test::Fake;
@@ -82,7 +82,7 @@ TEST_F(JniTest, LocalObject_CallsNewLocalRefOnCopy) {
   EXPECT_CALL(*env_, NewLocalRef).WillOnce(::testing::Return(Fake<jobject>(2)));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(2)));
 
-  LocalObject<kClass> obj{CreateCopy{}, Fake<jobject>(1)};
+  LocalObject<kClass> obj{NewRef{}, Fake<jobject>(1)};
   EXPECT_EQ(jobject{obj}, Fake<jobject>(2));
 }
 

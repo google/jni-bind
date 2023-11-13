@@ -20,11 +20,11 @@
 #include "jni_bind.h"
 
 using ::jni::Class;
-using ::jni::CreateCopy;
 using ::jni::GlobalString;
 using ::jni::LocalObject;
 using ::jni::LocalString;
 using ::jni::Method;
+using ::jni::NewRef;
 using ::jni::Params;
 using ::jni::PromoteToGlobal;
 using ::jni::Return;
@@ -66,7 +66,7 @@ Java_com_jnibind_test_StringTest_jniPassesStringsInManyWays(
     JNIEnv* env, jclass, jobject test_fixture_object, jstring input) {
   LocalObject<kMethodTestHelper> fixture{test_fixture_object};
 
-  GlobalString global_string_lval{CreateCopy{}, input};
+  GlobalString global_string_lval{NewRef{}, input};
   LocalString string_lval{input};
 
   const char* kSimpleTestString{"SimpleTestString"};

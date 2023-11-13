@@ -6951,7 +6951,7 @@ namespace jni {
 
 // Creates an additional reference to the underlying object.
 // When used for local, presumes local, for global, presumes global.
-struct CreateCopy {};
+struct NewRef {};
 
 // This tag allows the constructor to promote underlying jobject for you.
 struct PromoteToGlobal {};
@@ -6977,7 +6977,7 @@ struct EntryBase : public Base {
   EntryBase(T&& rhs) : Base(rhs.Release()) {}
 
   // "Copy" constructor: Additional reference to object will be created.
-  EntryBase(CreateCopy, ViableSpan object)
+  EntryBase(NewRef, ViableSpan object)
       : Base(static_cast<Span>(
             LifecycleHelper<Span, lifecycleType>::NewReference(
                 static_cast<Span>(object)))) {}
@@ -7033,7 +7033,7 @@ struct EntryBase<Base, LifecycleType::GLOBAL, JniT, ViableSpan> : public Base {
                              LifecycleType::GLOBAL>::Promote(rhs.Release())) {}
 
   // "Copy" constructor: Additional reference to object will be created.
-  EntryBase(CreateCopy, ViableSpan object)
+  EntryBase(NewRef, ViableSpan object)
       : Base(static_cast<Span>(
             LifecycleHelper<Span, LifecycleType::GLOBAL>::NewReference(
                 static_cast<Span>(object)))) {}

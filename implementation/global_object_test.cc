@@ -28,11 +28,11 @@ using ::jni::AdoptGlobal;
 using ::jni::AdoptLocal;
 using ::jni::Class;
 using ::jni::Constructor;
-using ::jni::CreateCopy;
 using ::jni::Field;
 using ::jni::GlobalObject;
 using ::jni::LocalObject;
 using ::jni::Method;
+using ::jni::NewRef;
 using ::jni::Params;
 using ::jni::PromoteToGlobal;
 using ::jni::test::AsGlobal;
@@ -133,7 +133,7 @@ TEST_F(JniTest, GlobalObject_CallsNewGlobalRefOnCopy) {
   EXPECT_CALL(*env_, DeleteGlobalRef(Fake<jobject>(2)));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(1))).Times(0);
 
-  GlobalObject<kClass> global_object{CreateCopy{}, Fake<jobject>(1)};
+  GlobalObject<kClass> global_object{NewRef{}, Fake<jobject>(1)};
   EXPECT_EQ(jobject{global_object}, Fake<jobject>(2));
 }
 
