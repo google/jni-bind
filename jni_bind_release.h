@@ -15,7 +15,7 @@
  */
 
 /*******************************************************************************
- * JNI Bind Version 0.9.7.
+ * JNI Bind Version 0.9.8.
  * Alpha Public Release.
  ********************************************************************************
  * This header is the single header version which you can use to quickly test or
@@ -847,8 +847,8 @@ namespace jni {
 class JniHelper {
  public:
   // Finds a class with "name".  Note, the classloader used is whatever is
-  // present on the statck when this is caled.  No caching is performed,
-  // returned jclass is a local.
+  // present on the stack when this is called.  No caching is performed,
+  // returned `jclass` is a local.
   static jclass FindClass(const char* name);
 
   // Returns a local ref jclass for the given jobject.
@@ -1121,7 +1121,7 @@ Constructor(ParamsRaw...) -> Constructor<ParamsRaw...>;
 
 template <typename... LhsParams, typename... RhsParams>
 constexpr bool operator==(const Constructor<LhsParams...>& lhs,
-                          const Constructor<LhsParams...>& rhs) {
+                          const Constructor<RhsParams...>& rhs) {
   return lhs.params_ == rhs.params_;
 }
 
@@ -1803,27 +1803,10 @@ class ClassLoader : public Object {
   explicit constexpr ClassLoader(const char* class_loader_name)
       : Object(class_loader_name) {}
 
-  // Default classloader (no name needed).
   explicit constexpr ClassLoader(
       ParentLoader_ parent_loader,
       SupportedClassSet<SupportedClasses_...> supported_class_set)
-      __attribute__((
-          enable_if(parent_loader == kDefaultClassLoader,
-                    "You must provide a name for classloaders (except "
-                    "kNullClassLoader and kDefaultClassLoader)")))
-      : Object("__JNI_BIND_DEFAULT_CLASS_LOADER__"),
-        parent_loader_(parent_loader),
-        supported_classes_(supported_class_set.supported_classes_) {}
-
-  // Null classloader (no name needed).
-  explicit constexpr ClassLoader(
-      ParentLoader_ parent_loader,
-      SupportedClassSet<SupportedClasses_...> supported_class_set)
-      __attribute__((
-          enable_if(parent_loader == kNullClassLoader,
-                    "You must provide a name for classloaders (except "
-                    "kNullClassLoader and kDefaultClassLoader)")))
-      : Object("__JNI_BIND_NULL_CLASS_LOADER__"),
+      : Object("__JNI_NO_NAME_GIVEN__"),
         parent_loader_(parent_loader),
         supported_classes_(supported_class_set.supported_classes_) {}
 
@@ -1943,43 +1926,6 @@ constexpr const auto& ParentLoaderForClass() {
 
 }  // namespace jni
 
-#include <tuple>
-#include <utility>
-
-namespace jni::metaprogramming {
-
-// Metafunction to take a sequence of indices, and produce the corresponding
-// elements in sequences of tuples.
-template <std::size_t... sizes>
-struct TypeIndexMask {
-  template <typename, typename... Ts>
-  struct GetHelper {};
-
-  template <std::size_t... Is, typename... Ts>
-  struct GetHelper<std::index_sequence<Is...>, Ts...> {
-    using type = std::tuple<TypeOfNthTupleElement_t<Is, Ts>...>;
-  };
-
-  template <typename... Ts>
-  using Get = typename GetHelper<std::index_sequence<sizes...>, Ts...>::type;
-
-  template <typename>
-  struct SequenceGenerator {};
-
-  template <typename... Ts>
-  struct SequenceGenerator<std::tuple<Ts...>> {
-    using type = Get<Ts...>;
-  };
-
-  template <typename Tup>
-  using type = typename SequenceGenerator<Tup>::type;
-};
-
-template <typename TupOfTypes, std::size_t... sizes>
-using TypeTupFromIndexMask_t =
-    typename TypeIndexMask<sizes...>::template type<TupOfTypes>;
-
-}  // namespace jni::metaprogramming
 
 namespace jni::metaprogramming {
 
@@ -2076,55 +2022,6 @@ struct Constants {
 
 }  // namespace jni::metaprogramming
 
-#include <algorithm>
-#include <utility>
-
-namespace jni::metaprogramming {
-
-// Represents a value that can be [0, max], and an overflow bit.
-// When incremented, the type will rollover, and set its overflow bit.
-template <size_t cur_value, size_t max = 1, bool overflow_bit = false>
-struct NBit {
-  static constexpr size_t value_ = cur_value;
-  static constexpr size_t overflow_bit_ = overflow_bit;
-
-  // Only unary values will ever need the clamp.
-  using Increment =
-      NBit<(value_ == max ? 0 : std::clamp(value_ + 1, size_t{0}, max)), max,
-           value_ == max>;
-
-  using ResetOverflow = NBit<cur_value, max, false>;
-};
-
-}  // namespace jni::metaprogramming
-
-#include <type_traits>
-#include <utility>
-
-namespace jni::metaprogramming {
-
-// Metafunction to increment types a certain number of times.
-// Types must export a type alias "Increment" which increments the type once.
-template <std::size_t I>
-struct Increment {
-  template <typename T, std::size_t Idx>
-  struct IncrementCountHelper {
-    using type = typename Increment<Idx - 1>::template type<T>::Increment;
-  };
-
-  template <typename T>
-  struct IncrementCountHelper<T, 0> {
-    using type = T;
-  };
-
-  template <typename T>
-  using type = typename IncrementCountHelper<T, I>::type;
-};
-
-template <typename T, std::size_t I = 1>
-using Increment_t = typename Increment<I>::template type<T>;
-
-}  // namespace jni::metaprogramming
 
 namespace jni {
 
@@ -2398,106 +2295,61 @@ struct ValsConstRef {
 }  // namespace jni::metaprogramming
 
 #include <tuple>
-
-namespace jni::metaprogramming {
-
-struct Reverse {
-  template <typename... Ts>
-  struct Helper {
-    using type = std::tuple<>;
-  };
-
-  template <typename... Ts>
-  using Helper_t = typename Helper<std::tuple<Ts...>>::type;
-
-  template <typename T1, typename... Ts>
-  struct Helper<std::tuple<T1, Ts...>> {
-    using type = ConcatenateTup_t<Helper_t<Ts...>, std::tuple<T1>>;
-  };
-
-  template <typename... Ts>
-  using type = Helper_t<Ts...>;
-};
-
-template <typename... Ts>
-using Reverse_t = typename Reverse::template type<Ts...>;
-
-template <typename Tup>
-using Reverse_Tup = TupleUnroller_t<Reverse, Tup>;
-
-}  // namespace jni::metaprogramming
-
-#include <algorithm>
-#include <tuple>
 #include <utility>
 
 namespace jni::metaprogramming {
 
-template <typename...>
-struct NBitSequence {};
+// Metafunction to take a sequence of indices, and produce the corresponding
+// elements in sequences of tuples.
+template <std::size_t... sizes>
+struct TypeIndexMask {
+  template <typename, typename... Ts>
+  struct GetHelper {};
 
-template <>
-struct NBitSequence<> {
-  using Increment = NBitSequence<>;
+  template <std::size_t... Is, typename... Ts>
+  struct GetHelper<std::index_sequence<Is...>, Ts...> {
+    using type = std::tuple<TypeOfNthTupleElement_t<Is, Ts>...>;
+  };
+
+  template <typename... Ts>
+  using Get = typename GetHelper<std::index_sequence<sizes...>, Ts...>::type;
+
+  template <typename>
+  struct SequenceGenerator {};
+
+  template <typename... Ts>
+  struct SequenceGenerator<std::tuple<Ts...>> {
+    using type = Get<Ts...>;
+  };
+
+  template <typename Tup>
+  using type = typename SequenceGenerator<Tup>::type;
 };
 
-// Represents a sequence of "NBits".  This can be useful for generating
-// selections of pools of objects of various sizes.
-//
-// For a sequence with N values, a tuple of size N that contains tuples whose
-// sizes match those of max_values can be selected from using TypeMask.
-//
-// In other words, a sequence of N sets of sizes K0, K1, K2...KN can represent a
-// single selection with an NBitSequence where sizeof...(values) == N and
-// sizeof...(max_values) == N where Ki == max_values[i].
-template <size_t... values, size_t... max_values, bool... overflows>
-struct NBitSequence<NBit<values, max_values, overflows>...> {
-  static constexpr size_t sequence_size_ = sizeof...(values);
+template <typename TupOfTypes, std::size_t... sizes>
+using TypeTupFromIndexMask_t =
+    typename TypeIndexMask<sizes...>::template type<TupOfTypes>;
 
-  using Sequence = std::tuple<NBit<values, max_values, overflows>...>;
-  using TypeMask = TypeIndexMask<values...>;
+}  // namespace jni::metaprogramming
 
-  template <size_t I>
-  using GetBit = TypeOfNthTupleElement_t<I, Sequence>;
+#include <algorithm>
+#include <utility>
 
-  // Helper method to compare values of all NBits.
-  template <size_t... Bits>
-  static constexpr bool Same(std::index_sequence<Bits...> = {}) {
-    static_assert(sizeof...(Bits) == sizeof...(values));
-    return std::is_same_v<std::index_sequence<values...>,
-                          std::index_sequence<Bits...>>;
-  }
+namespace jni::metaprogramming {
 
-  static constexpr size_t max_representable_size_ = ((max_values + 1) * ...);
+// Represents a value that can be [0, max], and an overflow bit.
+// When incremented, the type will rollover, and set its overflow bit.
+template <size_t cur_value, size_t max = 1, bool overflow_bit = false>
+struct NBit {
+  static constexpr size_t value_ = cur_value;
+  static constexpr size_t overflow_bit_ = overflow_bit;
 
-  template <size_t... Bits>
-  static constexpr bool same_ = Same(std::index_sequence<Bits...>{});
+  // Only unary values will ever need the clamp.
+  using Increment =
+      NBit<(value_ == max ? 0 : std::clamp(value_ + 1, size_t{0}, max)), max,
+           value_ == max>;
 
-  // If the next bit is overflowing (i.e. it just rolled over), this current
-  // value increments. Bits only overflow for a single cycle, otherwise higher
-  // order bits flip when no rollover is happening.
-  template <size_t I>
-  struct IncrementedBit {
-    using type = std::conditional_t<IncrementedBit<I + 1>::type::overflow_bit_,
-                                    typename GetBit<I>::Increment,
-                                    typename GetBit<I>::ResetOverflow>;
-  };
-
-  template <>
-  struct IncrementedBit<sequence_size_ - 1> {
-    using type = typename GetBit<sequence_size_ - 1>::Increment;
-  };
-
-  template <typename index_sequence>
-  struct IncrementSequenceHelper {};
-
-  template <size_t... Is>
-  struct IncrementSequenceHelper<std::index_sequence<Is...>> {
-    using type = NBitSequence<typename IncrementedBit<Is>::type...>;
-  };
-
-  using Increment = typename IncrementSequenceHelper<
-      std::make_index_sequence<sequence_size_>>::type;
+  using ResetOverflow = NBit<cur_value, max, false>;
 };
 
 }  // namespace jni::metaprogramming
@@ -2545,38 +2397,31 @@ using LambdaStringToType = decltype(LambdaToStr(std::declval<NameLambda>()));
 
 }  // namespace jni::metaprogramming
 
-#include <tuple>
 #include <type_traits>
+#include <utility>
 
 namespace jni::metaprogramming {
 
-// Metafunction that detects a partial specialisation for a Container.
-template <template <typename> class Container>
-struct Detect {
-  template <typename T, typename Enable = void>
-  struct Helper {
-    static constexpr bool val = false;
-    using type = std::tuple<>;
+// Metafunction to increment types a certain number of times.
+// Types must export a type alias "Increment" which increments the type once.
+template <std::size_t I>
+struct Increment {
+  template <typename T, std::size_t Idx>
+  struct IncrementCountHelper {
+    using type = typename Increment<Idx - 1>::template type<T>::Increment;
   };
 
   template <typename T>
-  struct Helper<T, std::void_t<typename Container<T>::type>> {
-    static constexpr bool val = true;
-    using type = typename Container<T>::type;
+  struct IncrementCountHelper<T, 0> {
+    using type = T;
   };
 
   template <typename T>
-  using type = typename Helper<T>::type;
-
-  template <typename T>
-  static constexpr bool val = Helper<T>::val;
+  using type = typename IncrementCountHelper<T, I>::type;
 };
 
-template <template <typename> class Container, typename T>
-using Detect_t = typename Detect<Container>::template type<T>;
-
-template <template <typename> class Container, typename T>
-static constexpr bool Detect_v = Detect<Container>::template val<T>;
+template <typename T, std::size_t I = 1>
+using Increment_t = typename Increment<I>::template type<T>;
 
 }  // namespace jni::metaprogramming
 
@@ -2741,6 +2586,10 @@ namespace jni {
 #define JNI_BIND_C_ENTRYPOINT(class_name, return_type, method_name, ...) \
   return_type class_name_##method_name(JNIEnv*, jclass, ##__VA_ARGS__)
 
+// ArrayView Helper.
+template <typename T>
+struct ArrayViewHelper;
+
 // Id.
 template <typename JniT_, IdType kIdType_, std::size_t idx,
           std::size_t secondary_idx, std::size_t tertiary_idx>
@@ -2781,6 +2630,412 @@ struct ValidatorProxy;
 
 }  // namespace jni
 
+#include <cstddef>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+// This class is a diminished form of `ValsEqual` that treats everything as an
+//  auto const&. Unfortunately, MSVC appears to have a bug that makes compiling
+// `ValsEqual` impossible, however, JNI Bind only ever needs auto const&.
+template <typename T>
+struct ValsEqualDiminished {
+  template <typename T1, typename T2>
+  struct Helper {
+    static constexpr bool val = std::is_same_v<T1, T2>;
+  };
+
+  template <template <const auto&...> class Container1, const auto&... V1s_,
+            template <const auto&...> class Container2, const auto&... V2s_>
+  struct Helper<Container1<V1s_...>, Container2<V2s_...>> {
+    static constexpr bool val = ((V1s_ == V2s_) && ...);
+  };
+
+  template <typename T2>
+  static constexpr bool val = Helper<T, T2>::val;
+};
+
+template <typename T1, typename T2>
+static constexpr bool ValsEqualDiminished_v =
+    ValsEqualDiminished<T1>::template val<T2>;
+
+template <auto V1, auto V2>
+static constexpr bool ValsEqualDiminished_v_v =
+    ValsEqualDiminished<Vals<V1>>::template val<Vals<V2>>;
+
+template <auto& V1, auto& V2>
+static constexpr bool ValsEqualDiminished_r_v =
+    ValsEqualDiminished<ValsRef<V1>>::template val<ValsRef<V2>>;
+
+template <const auto& V1, const auto& V2>
+static constexpr bool ValsEqualDiminished_cr_v =
+    ValsEqualDiminished<ValsConstRef<V1>>::template val<ValsConstRef<V2>>;
+
+}  // namespace jni::metaprogramming
+
+#include <tuple>
+
+namespace jni::metaprogramming {
+
+struct Reverse {
+  template <typename... Ts>
+  struct Helper {
+    using type = std::tuple<>;
+  };
+
+  template <typename... Ts>
+  using Helper_t = typename Helper<std::tuple<Ts...>>::type;
+
+  template <typename T1, typename... Ts>
+  struct Helper<std::tuple<T1, Ts...>> {
+    using type = ConcatenateTup_t<Helper_t<Ts...>, std::tuple<T1>>;
+  };
+
+  template <typename... Ts>
+  using type = Helper_t<Ts...>;
+};
+
+template <typename... Ts>
+using Reverse_t = typename Reverse::template type<Ts...>;
+
+template <typename Tup>
+using Reverse_Tup = TupleUnroller_t<Reverse, Tup>;
+
+}  // namespace jni::metaprogramming
+
+#include <string_view>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+template <char sought_char, char new_char>
+struct Replace {
+  template <const std::string_view& str, typename IndexSequence>
+  struct Helper;
+
+  template <const std::string_view& str, std::size_t... Is>
+  struct Helper<str, std::index_sequence<Is...>> {
+    static constexpr std::string_view val = StringAsType<(
+        str[Is] == sought_char ? new_char : str[Is])...>::chars_as_sv;
+  };
+
+  template <const std::string_view& str>
+  static constexpr std::string_view val =
+      Helper<str, std::make_index_sequence<str.length()>>::val;
+};
+
+template <const std::string_view& str, char sought_char, char new_char>
+static constexpr auto Replace_v =
+    Replace<sought_char, new_char>::template val<str>;
+
+}  // namespace jni::metaprogramming
+
+#include <algorithm>
+#include <tuple>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+template <typename...>
+struct NBitSequence {};
+
+template <>
+struct NBitSequence<> {
+  using Increment = NBitSequence<>;
+};
+
+// Represents a sequence of "NBits".  This can be useful for generating
+// selections of pools of objects of various sizes.
+//
+// For a sequence with N values, a tuple of size N that contains tuples whose
+// sizes match those of max_values can be selected from using TypeMask.
+//
+// In other words, a sequence of N sets of sizes K0, K1, K2...KN can represent a
+// single selection with an NBitSequence where sizeof...(values) == N and
+// sizeof...(max_values) == N where Ki == max_values[i].
+template <size_t... values, size_t... max_values, bool... overflows>
+struct NBitSequence<NBit<values, max_values, overflows>...> {
+  static constexpr size_t sequence_size_ = sizeof...(values);
+
+  using Sequence = std::tuple<NBit<values, max_values, overflows>...>;
+  using TypeMask = TypeIndexMask<values...>;
+
+  template <size_t I>
+  using GetBit = TypeOfNthTupleElement_t<I, Sequence>;
+
+  // Helper method to compare values of all NBits.
+  template <size_t... Bits>
+  static constexpr bool Same(std::index_sequence<Bits...> = {}) {
+    static_assert(sizeof...(Bits) == sizeof...(values));
+    return std::is_same_v<std::index_sequence<values...>,
+                          std::index_sequence<Bits...>>;
+  }
+
+  static constexpr size_t max_representable_size_ = ((max_values + 1) * ...);
+
+  template <size_t... Bits>
+  static constexpr bool same_ = Same(std::index_sequence<Bits...>{});
+
+  // If the next bit is overflowing (i.e. it just rolled over), this current
+  // value increments. Bits only overflow for a single cycle, otherwise higher
+  // order bits flip when no rollover is happening.
+  template <size_t I>
+  struct IncrementedBit {
+    using type = std::conditional_t<IncrementedBit<I + 1>::type::overflow_bit_,
+                                    typename GetBit<I>::Increment,
+                                    typename GetBit<I>::ResetOverflow>;
+  };
+
+  template <>
+  struct IncrementedBit<sequence_size_ - 1> {
+    using type = typename GetBit<sequence_size_ - 1>::Increment;
+  };
+
+  template <typename index_sequence>
+  struct IncrementSequenceHelper {};
+
+  template <size_t... Is>
+  struct IncrementSequenceHelper<std::index_sequence<Is...>> {
+    using type = NBitSequence<typename IncrementedBit<Is>::type...>;
+  };
+
+  using Increment = typename IncrementSequenceHelper<
+      std::make_index_sequence<sequence_size_>>::type;
+};
+
+}  // namespace jni::metaprogramming
+
+#include <atomic>
+#include <functional>
+#include <mutex>
+
+namespace jni::metaprogramming {
+
+// This class is intended to mimic a function local static except that it
+// supports being reset. The object is constructed with a lambda and all
+// subsequent loads will be thread safe, invoking the lambda once (and only
+// once) if the currently stored value is T{0}.
+//
+// This class is thread-safe.  Loads will be cheap (after a potentially
+// expensive initial init), stores are expensive.
+template <typename T_>
+class DoubleLockedValue {
+ public:
+  template <typename Lambda>
+  inline T_ LoadAndMaybeInit(Lambda lambda) {
+    // Typical case, value already initialised, perform cheap load and return.
+    T_ return_value = value_.load(std::memory_order_acquire);
+
+    if (return_value != T_{0}) {
+      return return_value;
+    }
+
+    // Value was nil (uninitialised), perform heavy-weight lock.
+    std::lock_guard<std::mutex> lock_guard{lock_};
+
+    // Check another thread didn't race to lock before.
+    return_value = value_.load(std::memory_order_acquire);
+    if (return_value != T_{}) {
+      return return_value;
+    }
+
+    // Perform the potentially expensive initialisation and return.
+    return_value = lambda();
+    value_.store(return_value, std::memory_order_release);
+    return return_value;
+  }
+
+  // Sets the value to {0}.
+  inline void Reset() {
+    std::lock_guard<std::mutex> lock_guard{lock_};
+    value_.store(0, std::memory_order_release);
+  }
+
+  // Sets the value to {0} and iff the value was not {0} prior to being torn
+  // down, the teardown lambda will be invoked with this value.
+  template <typename TeardownLambda>
+  inline void Reset(TeardownLambda lambda) {
+    std::lock_guard<std::mutex> lock_guard{lock_};
+    auto val = value_.load();
+    if (val != 0) {
+      lambda(val);
+      value_.store(0, std::memory_order_release);
+    }
+  }
+
+ private:
+  std::atomic<T_> value_ = {0};
+  std::mutex lock_;
+};
+
+}  // namespace jni::metaprogramming
+
+#include <tuple>
+#include <type_traits>
+
+namespace jni::metaprogramming {
+
+// Metafunction that detects a partial specialisation for a Container.
+template <template <typename> class Container>
+struct Detect {
+  template <typename T, typename Enable = void>
+  struct Helper {
+    static constexpr bool val = false;
+    using type = std::tuple<>;
+  };
+
+  template <typename T>
+  struct Helper<T, std::void_t<typename Container<T>::type>> {
+    static constexpr bool val = true;
+    using type = typename Container<T>::type;
+  };
+
+  template <typename T>
+  using type = typename Helper<T>::type;
+
+  template <typename T>
+  static constexpr bool val = Helper<T>::val;
+};
+
+template <template <typename> class Container, typename T>
+using Detect_t = typename Detect<Container>::template type<T>;
+
+template <template <typename> class Container, typename T>
+static constexpr bool Detect_v = Detect<Container>::template val<T>;
+
+}  // namespace jni::metaprogramming
+
+#include <type_traits>
+
+namespace jni {
+
+// Takes an Id and produces its signature.
+template <typename>
+struct Signature {};
+
+template <typename JniT_, IdType kIdType_, std::size_t idx,
+          std::size_t secondary_idx, std::size_t tertiary_idx>
+struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
+  using IdT = Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>;
+
+  static constexpr IdType kChildIdType = kIdType_ == IdType::OVERLOAD
+                                             ? IdType::OVERLOAD_PARAM
+                                             : IdType::STATIC_OVERLOAD_PARAM;
+
+  template <typename IdxPack>
+  struct Helper;
+
+  template <std::size_t... Is>
+  struct Helper<std::index_sequence<Is...>> {
+    template <std::size_t I>
+    struct Val {
+      static constexpr std::string_view val =
+          Signature<Id<JniT_, kChildIdType, idx, secondary_idx, I>>::val;
+    };
+
+    static constexpr std::string_view val =
+        metaprogramming::StringConcatenate_v<Val<Is>::val...>;
+  };
+
+  struct ReturnHelper {
+    static constexpr std::string_view val =
+        Signature<Id<JniT_, kChildIdType, idx, secondary_idx, kNoIdx>>::val;
+  };
+
+  // For methods and ctors generates the signature, e.g. "(II)LClass1;".
+  // For parameters, emits just a type name.
+  static constexpr std::string_view Val() {
+    if constexpr (kIdType_ == IdType::CLASS) {
+      return SelectorStaticInfo<IdT>::TypeName();
+    } else if constexpr (kIdType_ == IdType::FIELD ||
+                         kIdType_ == IdType::STATIC_FIELD) {
+      return SelectorStaticInfo<IdT>::TypeName();
+    } else if constexpr (kIdType_ == IdType::OVERLOAD_SET) {
+      return "NOT_IMPLEMENTED";
+    } else if constexpr (kIdType_ == IdType::OVERLOAD ||
+                         kIdType_ == IdType::STATIC_OVERLOAD) {
+      using Idxs = std::make_index_sequence<IdT::NumParams()>;
+      if constexpr (IdT::kIsConstructor) {
+        return metaprogramming::StringConcatenate_v<
+            metaprogramming::Constants::left_parenthesis, Helper<Idxs>::val,
+            metaprogramming::Constants::right_parenthesis,
+            metaprogramming::Constants::V>;
+      } else {
+        return metaprogramming::StringConcatenate_v<
+            metaprogramming::Constants::left_parenthesis, Helper<Idxs>::val,
+            metaprogramming::Constants::right_parenthesis, ReturnHelper::val>;
+      }
+    } else if constexpr (kIdType_ == IdType::OVERLOAD_PARAM ||
+                         kIdType_ == IdType::STATIC_OVERLOAD_PARAM) {
+      return SelectorStaticInfo<IdT>::TypeName();
+    }
+
+    return "NOT_IMPLEMENTED";
+  }
+
+  static constexpr std::string_view val{Val()};
+};
+
+template <typename T>
+static constexpr auto Signature_v = Signature<T>::val;
+
+}  // namespace jni
+
+namespace jni {
+
+struct LoaderTag {};
+
+// Annotation for use in function and field declarations. When used as argument
+// the underlying object must come from the same class loader.
+template <typename ClassLoaderT, typename ClassT>
+struct LoadedBy : LoaderTag {
+  const ClassLoaderT class_loader_;
+  const ClassT class_;
+
+  static_assert(
+      !std::is_same_v<ClassLoaderT, ClassLoader<DefaultClassLoader>>,
+      "LoadedBy is not required for the default loader (it's implicit).");
+
+  constexpr LoadedBy(ClassLoaderT class_loader, ClassT clazz)
+      : class_loader_(class_loader), class_(clazz) {}
+};
+
+template <typename ClassLoaderT, typename ClassT>
+LoadedBy(ClassLoaderT, ClassT) -> LoadedBy<ClassLoaderT, ClassT>;
+
+template <typename T>
+struct IsLoadedBy {
+  static constexpr bool val = false;
+};
+
+template <typename ClassLoaderT, typename ClassT>
+struct IsLoadedBy<LoadedBy<ClassLoaderT, ClassT>> {
+  static constexpr bool val = true;
+};
+
+template <typename T>
+static constexpr bool IsLoadedBy_v = IsLoadedBy<T>::val;
+
+template <typename T>
+constexpr auto StripClassFromLoadedBy(T val) {
+  if constexpr (IsLoadedBy_v<T>) {
+    return val.class_;
+  } else {
+    return val;
+  }
+}
+
+template <typename T>
+constexpr auto StripClassLoaderFromLoadedBy(T val) {
+  if constexpr (IsLoadedBy_v<T>) {
+    return val.class_loader_;
+  } else {
+    return val;
+  }
+}
+
+}  // namespace jni
+
 namespace jni {
 
 // Provide this base tag to UserDefined to enable custom types.
@@ -2792,73 +3047,6 @@ struct UserDefined;
 
 }  // namespace jni
 
-#include <cstddef>
-#include <utility>
-
-namespace jni::metaprogramming {
-
-// Performs a deep equality comparison of T, but is leniant about containers.
-// Returns true iff types are equal or both types are containers and their
-// non-type template parameters are equal.
-template <typename T>
-struct ValsEqual {
-  template <typename T1, typename T2, typename Enable = void>
-  struct Helper {
-    static constexpr bool val = std::is_same_v<T1, T2>;
-  };
-
-  // Value comparison.
-  template <template <const auto...> class Container1, const auto... V1s_,
-            template <const auto...> class Container2, const auto... V2s_>
-  struct Helper<Container1<V1s_...>, Container2<V2s_...>,
-                std::enable_if_t<((V1s_ == V2s_) && ...)>> {
-    static constexpr bool val = true;
-  };
-
-  // LHS l-reference, RHS value.
-  template <template <const auto&...> class Container1, const auto&... V1s_,
-            template <const auto...> class Container2, const auto... V2s_>
-  struct Helper<Container1<V1s_...>, Container2<V2s_...>,
-                std::enable_if_t<((V1s_ == V2s_) && ...)>> {
-    static constexpr bool val = true;
-  };
-
-  // LHS value, RHS l-reference.
-  template <template <const auto...> class Container1, const auto... V1s_,
-            template <const auto&...> class Container2, const auto&... V2s_>
-  struct Helper<Container1<V1s_...>, Container2<V2s_...>,
-                std::enable_if_t<((V1s_ == V2s_) && ...)>> {
-    static constexpr bool val = true;
-  };
-
-  // RHS l-reference, RHS l-reference.
-  template <template <const auto&...> class Container1, const auto&... V1s_,
-            template <const auto&...> class Container2, const auto&... V2s_>
-  struct Helper<Container1<V1s_...>, Container2<V2s_...>,
-                std::enable_if_t<((V1s_ == V2s_) && ...)>> {
-    static constexpr bool val = true;
-  };
-
-  template <typename T2>
-  static constexpr bool val = Helper<T, T2>::val;
-};
-
-template <typename T1, typename T2>
-static constexpr bool ValsEqual_v = ValsEqual<T1>::template val<T2>;
-
-template <auto V1, auto V2>
-static constexpr bool ValsEqual_v_v =
-    ValsEqual<Vals<V1>>::template val<Vals<V2>>;
-
-template <auto& V1, auto& V2>
-static constexpr bool ValsEqual_r_v =
-    ValsEqual<ValsRef<V1>>::template val<ValsRef<V2>>;
-
-template <const auto& V1, const auto& V2>
-static constexpr bool ValsEqual_cr_v =
-    ValsEqual<ValsConstRef<V1>>::template val<ValsConstRef<V2>>;
-
-}  // namespace jni::metaprogramming
 
 namespace jni::metaprogramming {
 
@@ -2901,32 +3089,6 @@ using UniqueSet_Tup = TupleUnroller_t<UniqueSet, Tup>;
 
 }  // namespace jni::metaprogramming
 
-#include <string_view>
-#include <utility>
-
-namespace jni::metaprogramming {
-
-template <char sought_char, char new_char>
-struct Replace {
-  template <const std::string_view& str, typename IndexSequence>
-  struct Helper;
-
-  template <const std::string_view& str, std::size_t... Is>
-  struct Helper<str, std::index_sequence<Is...>> {
-    static constexpr std::string_view val = StringAsType<(
-        str[Is] == sought_char ? new_char : str[Is])...>::chars_as_sv;
-  };
-
-  template <const std::string_view& str>
-  static constexpr std::string_view val =
-      Helper<str, std::make_index_sequence<str.length()>>::val;
-};
-
-template <const std::string_view& str, char sought_char, char new_char>
-static constexpr auto Replace_v =
-    Replace<sought_char, new_char>::template val<str>;
-
-}  // namespace jni::metaprogramming
 
 #include <tuple>
 
@@ -3045,79 +3207,48 @@ using CartesianProduct_t = typename CartesianProduct::template type<Tups...>;
 
 }  // namespace jni::metaprogramming
 
-#include <type_traits>
+#include <vector>
 
 namespace jni {
 
-// Takes an Id and produces its signature.
-template <typename>
-struct Signature {};
+// Used as shared storage of lists for IDs like jclass, jMethod, etc.
+// Only applicable for Jvms not fully specified (i.e. default classloader).
+// See JvmRef::~JvmRef.
+template <typename T>
+static std::vector<metaprogramming::DoubleLockedValue<T>*>& DefaultRefs() {
+  static auto* ret_val =
+      new std::vector<metaprogramming::DoubleLockedValue<T>*>{};
+  return *ret_val;
+}
 
-template <typename JniT_, IdType kIdType_, std::size_t idx,
-          std::size_t secondary_idx, std::size_t tertiary_idx>
-struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
-  using IdT = Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>;
-
-  static constexpr IdType kChildIdType = kIdType_ == IdType::OVERLOAD
-                                             ? IdType::OVERLOAD_PARAM
-                                             : IdType::STATIC_OVERLOAD_PARAM;
-
-  template <typename IdxPack>
-  struct Helper;
-
-  template <std::size_t... Is>
-  struct Helper<std::index_sequence<Is...>> {
-    template <std::size_t I>
-    struct Val {
-      static constexpr std::string_view val =
-          Signature<Id<JniT_, kChildIdType, idx, secondary_idx, I>>::val;
-    };
-
-    static constexpr std::string_view val =
-        metaprogramming::StringConcatenate_v<Val<Is>::val...>;
-  };
-
-  struct ReturnHelper {
-    static constexpr std::string_view val =
-        Signature<Id<JniT_, kChildIdType, idx, secondary_idx, kNoIdx>>::val;
-  };
-
-  // For methods and ctors generates the signature, e.g. "(II)LClass1;".
-  // For parameters, emits just a type name.
-  static constexpr std::string_view Val() {
-    if constexpr (kIdType_ == IdType::CLASS) {
-      return SelectorStaticInfo<IdT>::TypeName();
-    } else if constexpr (kIdType_ == IdType::FIELD ||
-                         kIdType_ == IdType::STATIC_FIELD) {
-      return SelectorStaticInfo<IdT>::TypeName();
-    } else if constexpr (kIdType_ == IdType::OVERLOAD_SET) {
-      return "NOT_IMPLEMENTED";
-    } else if constexpr (kIdType_ == IdType::OVERLOAD ||
-                         kIdType_ == IdType::STATIC_OVERLOAD) {
-      using Idxs = std::make_index_sequence<IdT::NumParams()>;
-      if constexpr (IdT::kIsConstructor) {
-        return metaprogramming::StringConcatenate_v<
-            metaprogramming::Constants::left_parenthesis, Helper<Idxs>::val,
-            metaprogramming::Constants::right_parenthesis,
-            metaprogramming::Constants::V>;
-      } else {
-        return metaprogramming::StringConcatenate_v<
-            metaprogramming::Constants::left_parenthesis, Helper<Idxs>::val,
-            metaprogramming::Constants::right_parenthesis, ReturnHelper::val>;
-      }
-    } else if constexpr (kIdType_ == IdType::OVERLOAD_PARAM ||
-                         kIdType_ == IdType::STATIC_OVERLOAD_PARAM) {
-      return SelectorStaticInfo<IdT>::TypeName();
-    }
-
-    return "NOT_IMPLEMENTED";
-  }
-
-  static constexpr std::string_view val{Val()};
+// Provides a static inline `DoubleLockedValue<T>` val against a `UniqueID`.
+template <typename UniqueID, typename T>
+struct StaticDoubleLock {
+  static inline metaprogramming::DoubleLockedValue<T> val;
 };
 
-template <typename T>
-static constexpr auto Signature_v = Signature<T>::val;
+// Takes a GetLambda and only invokes it for the first time on equal values of
+// `SignatureLambda`. This is useful for putting `const char*` into type IDs.
+template <typename GetLambda, typename SignatureLambda>
+struct RefStorage {
+  // Return of `GetLambda`.
+  using ReturnT = decltype(std::declval<GetLambda>()(nullptr));
+
+  // Compile-time unique ID.
+  static constexpr auto kSignature = []() {
+    return SignatureLambda::TypeName().data();
+  };
+  using Signature = metaprogramming::LambdaStringToType<decltype(kSignature)>;
+
+  // Common ID-wide double locked value.
+  using Storage = StaticDoubleLock<Signature, ReturnT>;
+
+  // Retrieves the guarded value, possibly invoking the expensive lambda.
+  static ReturnT Get(GetLambda lambda) {
+    return StaticDoubleLock<Signature, ReturnT>::val.LoadAndMaybeInit(
+        std::bind(lambda, &Storage::val));
+  }
+};
 
 }  // namespace jni
 
@@ -3125,11 +3256,13 @@ static constexpr auto Signature_v = Signature<T>::val;
 
 namespace jni {
 
+struct RefBaseBase {};
+
 // Used to detect RefBase in type proxying.
 // This is useful, e.g. when you want to say "an object that might be passed"
 // but the object's type (i.e. full name + loader information) is unknown.
 template <typename StorageType>
-class RefBaseTag {
+class RefBaseTag : public RefBaseBase {
  public:
   template <typename Base, LifecycleType lifecycleType, typename JniT,
             typename ViableSpan>
@@ -3189,59 +3322,198 @@ using RefBaseT_t = typename T::RefBaseT;
 
 }  // namespace jni
 
+#include <type_traits>
+#include <variant>
 
 namespace jni {
 
-struct LoaderTag {};
+template <typename SpanType_, const auto& class_v_,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm, std::size_t kRank_ = 0,
+          std::size_t class_idx_ = kNoIdx,
+          std::size_t class_loader_idx_ = kNoIdx>
+struct JniT {
+  static constexpr std::size_t kRank = kRank_;
+  static_assert(kRank != -1);
 
-// Annotation for use in function and field declarations. When used as argument
-// the underlying object must come from the same class loader.
-template <typename ClassLoaderT, typename ClassT>
-struct LoadedBy : LoaderTag {
-  const ClassLoaderT class_loader_;
-  const ClassT class_;
+  // Same as this type, except uses rank-1.
+  using RankLess1 = JniT<SpanType_, class_v_, class_loader_v_, jvm_v_,
+                         kRank_ - 1, class_idx_, class_loader_idx_>;
 
-  static_assert(
-      !std::is_same_v<ClassLoaderT, ClassLoader<DefaultClassLoader>>,
-      "LoadedBy is not required for the default loader (it's implicit).");
+  static constexpr bool MinimallySpecified() {
+    return (class_v_ == kNoClassSpecified
+                ? true
+                : (class_idx_ == kNoIdx ? true : false)) &&
+           (class_loader_v_ == kDefaultClassLoader
+                ? true
+                : (class_loader_idx_ == kNoIdx ? true : false));
+  }
 
-  constexpr LoadedBy(ClassLoaderT class_loader, ClassT clazz)
-      : class_loader_(class_loader), class_(clazz) {}
+  static constexpr auto GetClass() {
+    if constexpr (class_idx_ != kNoIdx) {
+      return StripClassFromLoadedBy(
+          std::get<class_idx_>(GetClassLoader().supported_classes_));
+    } else {
+      return StripClassFromLoadedBy(class_v_);
+    }
+  }
+
+  static constexpr auto GetClassLoader() {
+    if constexpr (class_loader_idx_ != kNoIdx) {
+      return StripClassLoaderFromLoadedBy(
+          std::get<class_loader_idx_>(jvm_v_.class_loaders_));
+    } else {
+      return StripClassLoaderFromLoadedBy(class_loader_v_);
+    }
+  }
+
+  static constexpr std::string_view kName{GetClass().name_};
+  static constexpr std::string_view kNameWithDots{
+      metaprogramming::Replace_v<kName, '/', '.'>};
+
+  static constexpr const auto& GetJvm() { return jvm_v_; }
+
+  static constexpr auto GetStatic() {
+    return FullArrayStripV(GetClass()).static_;
+  }
+
+  static constexpr decltype(GetClass()) class_v = GetClass();
+  static constexpr decltype(GetClassLoader()) class_loader_v = GetClassLoader();
+  static constexpr decltype(jvm_v_) jvm_v = jvm_v_;
+  static constexpr decltype(GetStatic()) static_v = GetStatic();
+
+  using SpanType = SpanType_;
+  using StorageType = typename StorageHelper<SpanType_, kRank>::type;
+
+  using ClassT = std::decay_t<ArrayStrip_t<std::decay_t<decltype(GetClass())>>>;
+  using ClassLoaderT = std::decay_t<decltype(GetClassLoader())>;
+  using JvmT = std::decay_t<decltype(jvm_v)>;
+  using StaticT = std::decay_t<decltype(GetStatic())>;
+
+  static constexpr ClassT stripped_class_v{FullArrayStripV(GetClass())};
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Minimal Spanning type (allows perfect caching for fully specified jvm).
+  ////////////////////////////////////////////////////////////////////////////
+
+  // kNoIdx for default loader, then provided idx, then calculated idx.
+  static constexpr std::size_t MinimalClassIdx() {
+    if constexpr (class_idx_ != kNoIdx) {
+      // Fully specified (already).
+      return class_idx_;
+    } else if constexpr (class_loader_v_ == kDefaultClassLoader) {
+      // Partially specified.
+      return kNoIdx;
+    } else {
+      if constexpr (class_loader_v_.template IdxOfClass<class_v>() !=
+                    kClassNotInLoaderSetIdx) {
+        return class_loader_v_.template IdxOfClass<class_v>();
+      } else {
+        return kNoIdx;
+      }
+    }
+  }
+
+  // kNoIdx for default jvm, then provided idx, then calculated idx.
+  static constexpr std::size_t MinimalClassLoaderIdx() {
+    // Fully specified (already).
+    if constexpr (class_loader_idx_ != kNoIdx) {
+      return class_loader_idx_;
+    } else if constexpr (jvm_v_ == kDefaultJvm) {
+      // Partially specified.
+      return kNoIdx;
+    } else {
+      // Fully specified (derived).
+      return jvm_v_.template IdxOfClassLoader<class_loader_v>();
+    }
+  }
+
+  static constexpr auto& MinimalSpanningClass() {
+    if constexpr (MinimalClassIdx() == kNoIdx) {
+      // If idx uncomputable, use provided.
+      return class_v_;
+    } else {
+      return kNoClassSpecified;
+    }
+  }
+
+  static constexpr auto& MinimalSpanningClassLoader() {
+    if constexpr (MinimalClassLoaderIdx() == kNoIdx) {
+      // If idx uncomputable, use provided.
+      return class_loader_v_;
+    } else {
+      return kNoClassLoaderSpecified;
+    }
+  }
+
+  // Some compilers seem to only be OK if this indirection is used.
+  static constexpr auto& kMinimalSpanningClass = MinimalSpanningClass();
+  static constexpr auto& kMinimalSpanningClassLoader =
+      MinimalSpanningClassLoader();
+
+  using MinimallySpanningType =
+      JniT<SpanType_, kMinimalSpanningClass, kMinimalSpanningClassLoader,
+           jvm_v_, kRank, MinimalClassIdx(), MinimalClassLoaderIdx()>;
 };
 
-template <typename ClassLoaderT, typename ClassT>
-LoadedBy(ClassLoaderT, ClassT) -> LoadedBy<ClassLoaderT, ClassT>;
-
-template <typename T>
-struct IsLoadedBy {
+template <typename T1, typename T2>
+struct JniTEqual {
   static constexpr bool val = false;
 };
 
-template <typename ClassLoaderT, typename ClassT>
-struct IsLoadedBy<LoadedBy<ClassLoaderT, ClassT>> {
-  static constexpr bool val = true;
+template <
+    typename SpanType1, const auto& class_v_1, const auto& class_loader_v_1,
+    const auto& jvm_v_1, std::size_t kRank_1, std::size_t class_idx_1,
+    std::size_t class_loader_idx_1,
+
+    typename SpanType2, const auto& class_v_2, const auto& class_loader_v_2,
+    const auto& jvm_v_2, std::size_t kRank_2, std::size_t class_idx_2,
+    std::size_t class_loader_idx_2>
+struct JniTEqual<JniT<SpanType1, class_v_1, class_loader_v_1, jvm_v_1, kRank_1,
+                      class_idx_1, class_loader_idx_1>,
+                 JniT<SpanType2, class_v_2, class_loader_v_2, jvm_v_2, kRank_2,
+                      class_idx_2, class_loader_idx_2>> {
+  static constexpr bool val =
+      std::is_same_v<SpanType1, SpanType2> &&
+      metaprogramming::ValsEqualDiminished_cr_v<class_v_1, class_v_2> &&
+      metaprogramming::ValsEqualDiminished_cr_v<class_loader_v_1,
+                                                class_loader_v_2> &&
+      metaprogramming::ValsEqualDiminished_cr_v<jvm_v_1, jvm_v_2> &&
+      kRank_1 == kRank_2 && class_idx_1 == class_idx_2 &&
+      class_loader_idx_1 == class_loader_idx_2;
 };
 
-template <typename T>
-static constexpr bool IsLoadedBy_v = IsLoadedBy<T>::val;
+template <typename T1, typename T2>
+constexpr bool JniTEqual_v = JniTEqual<T1, T2>::val;
 
-template <typename T>
-constexpr auto StripClassFromLoadedBy(T val) {
-  if constexpr (IsLoadedBy_v<T>) {
-    return val.class_;
-  } else {
-    return val;
-  }
-}
+template <typename JniT_, typename SpanT, int kLessRank>
+struct RawProxy {
+  using RawValT = SpanT;
+  static constexpr std::size_t kRank = JniT_::kRank;
+  const RawValT raw_{0};
+};
 
-template <typename T>
-constexpr auto StripClassLoaderFromLoadedBy(T val) {
-  if constexpr (IsLoadedBy_v<T>) {
-    return val.class_loader_;
-  } else {
-    return val;
-  }
-}
+template <typename JniT, int kLessRank>
+struct RawProxy<JniT, jobject, kLessRank> {
+  using RawValT = decltype(JniT::GetClass());
+
+  const RawValT raw_ = JniT::GetClass();
+  const char* name_ = JniT::GetClass().name_;
+
+  static constexpr std::size_t kRank = JniT::kRank + kLessRank;
+};
+
+// Helper to generate signatures for objects at rank-1 but span types at rank.
+// Used in static selection signature generation (for types like LocalArray).
+template <typename JniT, int kLessRank>
+struct JniTSelector {
+  using RawProxyT = RawProxy<JniT, typename JniT::SpanType, kLessRank>;
+  using RawValT = typename RawProxyT::RawValT;
+
+  static constexpr std::size_t kRank = RawProxyT::kRank;
+
+  static constexpr auto Val() { return RawProxyT{}; }
+};
 
 }  // namespace jni
 
@@ -3331,71 +3603,6 @@ template <typename... T0, typename... T1>
 struct Interleaved<std::tuple<T0...>, std::tuple<T1...>> {
   using type = std::remove_pointer_t<
       decltype(Interleave<std::tuple<T0...>, std::tuple<T1...>>())>;
-};
-
-}  // namespace jni::metaprogramming
-
-#include <mutex>
-#include <atomic>
-#include <functional>
-
-namespace jni::metaprogramming {
-
-// This class is intended to mimic a function local static except that it
-// supports being reset. The object is constructed with a lambda and all
-// subsequent loads will be thread safe, invoking the lambda once (and only
-// once) if the currently stored value is T{0}.
-//
-// This class is thread-safe.  Loads will be cheap (after a potentially
-// expensive initial init), stores are expensive.
-template<typename T_>
-class DoubleLockedValue {
- public:
-  template <typename Lambda>
-  inline T_ LoadAndMaybeInit(Lambda lambda) {
-    // Typical case, value already initialised, perform cheap load and return.
-    T_ return_value = value_.load(std::memory_order_acquire);
-
-    if(return_value != T_{0}) {
-      return return_value;
-    }
-
-    // Value was nil (uninitialised), perform heavy-weight lock.
-    std::lock_guard<std::mutex> lock_guard {lock_};
-
-    // Check another thread didn't race to lock before.
-    return_value = value_.load(std::memory_order_acquire);
-    if(return_value != T_{}) {
-      return return_value;
-    }
-
-    // Perform the potentially expensive initialisation and return.
-    return_value = lambda();
-    value_.store(return_value, std::memory_order_release);
-    return return_value;
-  }
-
-  // Sets the value to {0}.
-  inline void Reset() {
-    std::lock_guard<std::mutex> lock_guard {lock_};
-    value_.store(0, std::memory_order_release);
-  }
-
-  // Sets the value to {0} and iff the value was not {0} prior to being torn
-  // down, the teardown lambda will be invoked with this value.
-  template <typename TeardownLambda>
-  inline void Reset(TeardownLambda lambda) {
-    std::lock_guard<std::mutex> lock_guard {lock_};
-    auto val = value_.load();
-    if(val != 0) {
-      lambda(val);
-      value_.store(0, std::memory_order_release);
-    }
-  }
-
- private:
-  std::atomic<T_> value_ = {0};
-  std::mutex lock_;
 };
 
 }  // namespace jni::metaprogramming
@@ -4042,192 +4249,6 @@ struct ProxyBase {
 
 }  // namespace jni
 
-#include <type_traits>
-#include <variant>
-
-namespace jni {
-
-template <typename SpanType_, const auto& class_v_,
-          const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm, std::size_t kRank_ = 0,
-          std::size_t class_idx_ = kNoIdx,
-          std::size_t class_loader_idx_ = kNoIdx>
-struct JniT {
-  static constexpr std::size_t kRank = kRank_;
-
-  // Same as this type, except uses rank-1.
-  using RankLess1 = JniT<SpanType_, class_v_, class_loader_v_, jvm_v_,
-                         kRank_ - 1, class_idx_, class_loader_idx_>;
-
-  static constexpr bool MinimallySpecified() {
-    return (class_v_ == kNoClassSpecified
-                ? true
-                : (class_idx_ == kNoIdx ? true : false)) &&
-           (class_loader_v_ == kDefaultClassLoader
-                ? true
-                : (class_loader_idx_ == kNoIdx ? true : false));
-  }
-
-  static constexpr auto GetClass() {
-    if constexpr (class_idx_ != kNoIdx) {
-      return StripClassFromLoadedBy(
-          std::get<class_idx_>(GetClassLoader().supported_classes_));
-    } else {
-      return StripClassFromLoadedBy(class_v_);
-    }
-  }
-
-  static constexpr auto GetClassLoader() {
-    if constexpr (class_loader_idx_ != kNoIdx) {
-      return StripClassLoaderFromLoadedBy(
-          std::get<class_loader_idx_>(jvm_v_.class_loaders_));
-    } else {
-      return StripClassLoaderFromLoadedBy(class_loader_v_);
-    }
-  }
-
-  static constexpr std::string_view kName{GetClass().name_};
-  static constexpr std::string_view kNameWithDots{
-      metaprogramming::Replace_v<kName, '/', '.'>};
-
-  static constexpr const auto& GetJvm() { return jvm_v_; }
-
-  static constexpr auto GetStatic() {
-    return FullArrayStripV(GetClass()).static_;
-  }
-
-  static constexpr decltype(GetClass()) class_v = GetClass();
-  static constexpr decltype(GetClassLoader()) class_loader_v = GetClassLoader();
-  static constexpr decltype(jvm_v_) jvm_v = jvm_v_;
-  static constexpr decltype(GetStatic()) static_v = GetStatic();
-
-  using SpanType = SpanType_;
-  using StorageType = typename StorageHelper<SpanType_, kRank>::type;
-
-  using ClassT = std::decay_t<ArrayStrip_t<std::decay_t<decltype(GetClass())>>>;
-  using ClassLoaderT = std::decay_t<decltype(GetClassLoader())>;
-  using JvmT = std::decay_t<decltype(jvm_v)>;
-  using StaticT = std::decay_t<decltype(GetStatic())>;
-
-  static constexpr ClassT stripped_class_v{FullArrayStripV(GetClass())};
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Minimal Spanning type (allows perfect cacheing for fully specified jvm).
-  ////////////////////////////////////////////////////////////////////////////
-
-  // kNoIdx for default loader, then provided idx, then calculated idx.
-  static constexpr std::size_t MinimalClassIdx() {
-    if constexpr (class_idx_ != kNoIdx) {
-      // Fully specified (already).
-      return class_idx_;
-    } else if constexpr (class_loader_v_ == kDefaultClassLoader) {
-      // Partially specified.
-      return kNoIdx;
-    } else {
-      if constexpr (class_loader_v_.template IdxOfClass<class_v>() !=
-                    kClassNotInLoaderSetIdx) {
-        return class_loader_v_.template IdxOfClass<class_v>();
-      } else {
-        return kNoIdx;
-      }
-    }
-  }
-
-  // kNoIdx for default jvm, then provided idx, then calculated idx.
-  static constexpr std::size_t MinimalClassLoaderIdx() {
-    // Fully specified (already).
-    if constexpr (class_loader_idx_ != kNoIdx) {
-      return class_loader_idx_;
-    } else if constexpr (jvm_v_ == kDefaultJvm) {
-      // Partially specified.
-      return kNoIdx;
-    } else {
-      // Fully specified (derived).
-      return jvm_v_.template IdxOfClassLoader<class_loader_v>();
-    }
-  }
-
-  static constexpr auto& MinimalSpanningClass() {
-    if constexpr (MinimalClassIdx() == kNoIdx) {
-      // If idx uncomputable, use provided.
-      return class_v_;
-    } else {
-      return kNoClassSpecified;
-    }
-  }
-
-  static constexpr auto& MinimalSpanningClassLoader() {
-    if constexpr (MinimalClassLoaderIdx() == kNoIdx) {
-      // If idx uncomputable, use provided.
-      return class_loader_v_;
-    } else {
-      return kNoClassLoaderSpecified;
-    }
-  }
-
-  using MinimallySpanningType =
-      JniT<SpanType_, MinimalSpanningClass(), MinimalSpanningClassLoader(),
-           jvm_v_, kRank, MinimalClassIdx(), MinimalClassLoaderIdx()>;
-};
-
-template <typename T1, typename T2>
-struct JniTEqual {
-  static constexpr bool val = false;
-};
-
-template <
-    typename SpanType1, const auto& class_v_1, const auto& class_loader_v_1,
-    const auto& jvm_v_1, std::size_t kRank_1, std::size_t class_idx_1,
-    std::size_t class_loader_idx_1,
-
-    typename SpanType2, const auto& class_v_2, const auto& class_loader_v_2,
-    const auto& jvm_v_2, std::size_t kRank_2, std::size_t class_idx_2,
-    std::size_t class_loader_idx_2>
-struct JniTEqual<JniT<SpanType1, class_v_1, class_loader_v_1, jvm_v_1, kRank_1,
-                      class_idx_1, class_loader_idx_1>,
-                 JniT<SpanType2, class_v_2, class_loader_v_2, jvm_v_2, kRank_2,
-                      class_idx_2, class_loader_idx_2>> {
-  static constexpr bool val =
-      std::is_same_v<SpanType1, SpanType2> &&
-      metaprogramming::ValsEqual_cr_v<class_v_1, class_v_2> &&
-      metaprogramming::ValsEqual_cr_v<class_loader_v_1, class_loader_v_2> &&
-      metaprogramming::ValsEqual_cr_v<jvm_v_1, jvm_v_2> && kRank_1 == kRank_2 &&
-      class_idx_1 == class_idx_2 && class_loader_idx_1 == class_loader_idx_2;
-};
-
-template <typename T1, typename T2>
-constexpr bool JniTEqual_v = JniTEqual<T1, T2>::val;
-
-template <typename JniT_, typename SpanT>
-struct RawProxy {
-  using RawValT = SpanT;
-
-  static constexpr std::size_t kRank = JniT_::kRank;
-};
-
-template <typename JniT>
-struct RawProxy<JniT, jobject> {
-  using RawValT = decltype(JniT::GetClass());
-
-  const RawValT raw_ = JniT::GetClass();
-  const char* name_ = JniT::GetClass().name_;
-
-  static constexpr std::size_t kRank = JniT::kRank - 1;
-};
-
-// Helper to generate signatures for objects at rank-1 but span types at rank.
-// Used in static selection signature generation (for types like LocalArray).
-template <typename JniT>
-struct JniTSelector {
-  using RawProxyT = RawProxy<JniT, typename JniT::SpanType>;
-  using RawValT = typename RawProxyT::RawValT;
-
-  static constexpr std::size_t kRank = RawProxyT::kRank;
-
-  static constexpr auto Val() { return RawProxyT{}; }
-};
-
-}  // namespace jni
 
 #include <cstddef>
 #include <limits>
@@ -5584,6 +5605,23 @@ struct Proxy<SelfType,
 
 }  // namespace jni
 
+namespace jni {
+
+// Adopts a local.
+struct AdoptLocal {};
+
+// Creates an additional reference to the underlying object.
+// When used for local, presumes local, for global, presumes global.
+struct NewRef {};
+
+// This tag allows the constructor to promote underlying jobject for you.
+struct PromoteToGlobal {};
+
+// CAUTION: This tag assume the underlying jobject has been pinned as a global.
+// This is atypical when solely using JNI Bind, use with caution.
+struct AdoptGlobal {};
+
+}  // namespace jni
 
 namespace jni {
 
@@ -5595,19 +5633,10 @@ struct FieldSelection {
 
 }  // namespace jni
 
-#include <atomic>
-#include <mutex>  // NOLINT
+#include <type_traits>
 #include <vector>
 
 namespace jni {
-
-// See JvmRef::~JvmRef.
-static std::vector<metaprogramming::DoubleLockedValue<jclass>*>&
-GetDefaultLoadedClassList() {
-  static auto* ret_val =
-      new std::vector<metaprogramming::DoubleLockedValue<jclass>*>{};
-  return *ret_val;
-}
 
 static inline jclass LoadClassFromObject(const char* name, jobject object_ref);
 
@@ -5631,28 +5660,38 @@ class ClassRef {
 
   static jclass GetAndMaybeLoadClassRef(
       jobject optional_object_to_build_loader_from) {
-    // For the default classloader, storage in function local static.
+    // For the default classloader, storage in uniquely IDed struct static.
     if constexpr (JniT::GetClassLoader() == kDefaultClassLoader) {
-      static metaprogramming::DoubleLockedValue<jclass> return_value;
-      return return_value.LoadAndMaybeInit([]() {
-        GetDefaultLoadedClassList().push_back(&return_value);
+      static auto get_lambda =
+          [](metaprogramming::DoubleLockedValue<jclass>* storage) {
+            DefaultRefs<jclass>().push_back(storage);
 
-        // FindClass uses plain name (e.g. "kClass") for rank 0, qualified
-        // class names when used in arrays (e.g. "[LkClass;"). This doesn't
-        // come up in the API until rank 2.
-        if constexpr (JniT::kRank <= 1) {
-          return static_cast<jclass>(
-              LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
-                  JniHelper::FindClass(JniT::kName.data())));
-        } else {
-          return static_cast<jclass>(
-              LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
-                  JniHelper::FindClass(
-                      SelectorStaticInfo<
-                          JniTSelector<typename JniT::RankLess1>>::TypeName()
-                          .data())));
-        }
-      });
+            // FindClass uses plain name (e.g. "kClass") for rank 0, qualified
+            // class names when used in arrays (e.g. "[LkClass;"). This doesn't
+            // come up in the API until rank 2.
+            if constexpr (JniT::kRank <= 1) {
+              return static_cast<jclass>(
+                  LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
+                      JniHelper::FindClass(JniT::kName.data())));
+            } else {
+              // Primitive types drop their rank by 1 because of how their
+              // signatures get derived in array_ref.h.
+              using JniTForLifecycle = std::conditional_t<
+                  std::is_same_v<jobject, typename JniT::SpanType>, JniT,
+                  typename JniT::RankLess1>;
+
+              return static_cast<jclass>(
+                  LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
+                      JniHelper::FindClass(
+                          SelectorStaticInfo<
+                              JniTSelector<JniTForLifecycle, -1>>::TypeName()
+                              .data())));
+            }
+          };
+
+      return RefStorage<
+          decltype(get_lambda),
+          SelectorStaticInfo<JniTSelector<JniT, 0>>>::Get(get_lambda);
     } else {
       // For non default classloader, storage in class member.
       return class_ref_.LoadAndMaybeInit([=]() {
@@ -5909,23 +5948,32 @@ using Call_t = typename Call::type<T>;
 
 }  // namespace jni::metaprogramming
 
-#include <mutex>
-#include <tuple>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 
 namespace jni {
 
-// See JvmRef::~JvmRef.
-static inline auto& GetDefaultLoadedMethodList() {
-  static auto* ret_val =
-      new std::vector<metaprogramming::DoubleLockedValue<jmethodID>*>{};
-  return *ret_val;
-}
+// Transforms a OverloadRef IdT into a fully qualified ID. Storage is keyed
+// against these IDs to reduce excess MethodID lookups.
+template <typename IdT>
+struct OverloadRefUniqueId {
+  static constexpr std::string_view kDash = "#";
+  static constexpr std::string_view kClassQualifier{IdT::Class().name_};
+  static constexpr std::string_view kOverloadName{IdT::Name()};
+
+  // IdT::Name will be the overload name (e.g. "Foo").
+  // Dashes are solely for readability in debugging.
+  static constexpr std::string_view TypeName() {
+    return metaprogramming::StringConcatenate_v<
+        kClassQualifier, kDash, kOverloadName, kDash, Signature_v<IdT>>;
+  }
+};
 
 template <typename IdT_, IdType kReturnIDType>
 struct OverloadRef {
   using IdT = IdT_;
+
   using ReturnIdT = typename IdT::template ChangeIdType<kReturnIDType>;
   using SelfIdT = typename IdT::template ChangeIdType<IdType::CLASS>;
 
@@ -5935,21 +5983,21 @@ struct OverloadRef {
       Return_t<typename ReturnIdT::MaterializeCDeclT, ReturnIdT>>;
 
   static jmethodID GetMethodID(jclass clazz) {
-    static jni::metaprogramming::DoubleLockedValue<jmethodID> return_value;
+    static auto get_lambda =
+        [clazz](metaprogramming::DoubleLockedValue<jmethodID>* storage) {
+          DefaultRefs<jmethodID>().push_back(storage);
 
-    return return_value.LoadAndMaybeInit([=]() {
-      if constexpr (IdT::JniT::GetClassLoader() == kDefaultClassLoader) {
-        GetDefaultLoadedMethodList().push_back(&return_value);
-      }
+          if constexpr (IdT::kIsStatic) {
+            return jni::JniHelper::GetStaticMethodID(clazz, IdT::Name(),
+                                                     Signature_v<IdT>.data());
+          } else {
+            return jni::JniHelper::GetMethodID(clazz, IdT::Name(),
+                                               Signature_v<IdT>.data());
+          }
+        };
 
-      if constexpr (IdT::kIsStatic) {
-        return jni::JniHelper::GetStaticMethodID(clazz, IdT::Name(),
-                                                 Signature_v<IdT>.data());
-      } else {
-        return jni::JniHelper::GetMethodID(clazz, IdT::Name(),
-                                           Signature_v<IdT>.data());
-      }
-    });
+    return RefStorage<decltype(get_lambda), OverloadRefUniqueId<IdT>>::Get(
+        get_lambda);
   }
 
   template <typename... Params>
@@ -5965,14 +6013,23 @@ struct OverloadRef {
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
     } else if constexpr (IdT::kIsConstructor) {
       return ReturnProxied{
+          AdoptLocal{},
           LifecycleHelper<jobject, LifecycleType::LOCAL>::Construct(
               clazz, mthd,
               Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
-      return static_cast<ReturnProxied>(
-          InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(
-              object, clazz, mthd,
-              Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...));
+      if constexpr (std::is_base_of_v<RefBaseBase, ReturnProxied>) {
+        return ReturnProxied{
+            AdoptLocal{},
+            InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(
+                object, clazz, mthd,
+                Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
+      } else {
+        return static_cast<ReturnProxied>(
+            InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(
+                object, clazz, mthd,
+                Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...));
+      }
     }
   }
 };
@@ -6041,9 +6098,16 @@ class FieldRef {
   }
 
   ReturnProxied Get() {
-    return {FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
-                        IdT::kIsStatic>::GetValue(SelfVal(),
-                                                  GetFieldID(class_ref_))};
+    if constexpr (std::is_base_of_v<RefBaseBase, ReturnProxied>) {
+      return {AdoptLocal{},
+              FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
+                          IdT::kIsStatic>::GetValue(SelfVal(),
+                                                    GetFieldID(class_ref_))};
+    } else {
+      return {FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
+                          IdT::kIsStatic>::GetValue(SelfVal(),
+                                                    GetFieldID(class_ref_))};
+    }
   }
 
   template <typename T>
@@ -6439,7 +6503,7 @@ class JvmRef : public JvmRefBase {
     //     ReleaseAllClassRefsForDefaultClassLoader will only ever be torn down
     //     by JvmRef::~JvmRef, and JvmRef cannot be moved, therefore it is
     //     guaranteed to be in a single threaded context.
-    auto& default_loaded_class_list = GetDefaultLoadedClassList();
+    auto& default_loaded_class_list = DefaultRefs<jclass>();
     for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
          default_loaded_class_list) {
       maybe_loaded_class_id->Reset([](jclass clazz) {
@@ -6449,7 +6513,7 @@ class JvmRef : public JvmRefBase {
     default_loaded_class_list.clear();
 
     // Methods do not need to be released, just forgotten.
-    auto& default_loaded_method_ref_list = GetDefaultLoadedMethodList();
+    auto& default_loaded_method_ref_list = DefaultRefs<jmethodID>();
     for (metaprogramming::DoubleLockedValue<jmethodID>* cached_method_id :
          default_loaded_method_ref_list) {
       cached_method_id->Reset();
@@ -6488,16 +6552,17 @@ JvmRef(JavaVM*) -> JvmRef<kDefaultJvm>;
 namespace jni::metaprogramming {
 
 template <typename T1>
-struct DeepEqual;
+struct DeepEqualDiminished;
 
 template <typename T1, typename T2>
-static constexpr bool DeepEqual_v = DeepEqual<T1>::template val<T2>;
+static constexpr bool DeepEqualDiminished_v =
+    DeepEqualDiminished<T1>::template val<T2>;
 
 template <typename Container1>
-struct TypesEqual;
+struct TypesEqualDiminished;
 
 template <typename Container1_>
-struct TypesEqual {
+struct TypesEqualDiminished {
   template <typename Container1, typename Container2>
   struct Helper;
 
@@ -6509,7 +6574,7 @@ struct TypesEqual {
       if constexpr (sizeof...(T1s) == sizeof...(T2s)) {
         // Containers are interchangeable (i.e. the same).
         if constexpr (std::is_same_v<Container1<T1s...>, Container2<T1s...>>) {
-          return (DeepEqual_v<T1s, T2s> && ...);
+          return (DeepEqualDiminished_v<T1s, T2s> && ...);
         } else {
           return false;
         }
@@ -6525,8 +6590,10 @@ struct TypesEqual {
   static constexpr bool val = Helper<Container1_, Container2>::val;
 };
 
+// Identical to `DeepEqual` except using diminished value comparison.
+// This is to obviate an MSVC compiler bug (see `ValsEqualDiminished`).
 template <typename T1>
-struct DeepEqual {
+struct DeepEqualDiminished {
   template <PackType pack_type_1, PackType pack_type_2>
   static constexpr bool Compatible() {
     if constexpr (pack_type_1 == PackType::NOT_CONTAINER ||
@@ -6554,9 +6621,9 @@ struct DeepEqual {
     } else if constexpr (PackDiscriminator_e<T1> == PackType::NOT_CONTAINER) {
       return std::is_same_v<T1, T2>;
     } else if constexpr (PackDiscriminator_e<T1> == PackType::TYPES) {
-      return TypesEqual<T1>::template val<T2>;
+      return TypesEqualDiminished<T1>::template val<T2>;
     } else {
-      return ValsEqual_v<T1, T2>;
+      return ValsEqualDiminished_v<T1, T2>;
     }
 
     return true;
@@ -6603,7 +6670,15 @@ class ObjectRef
   ObjectRef& operator=(const ObjectRef& rhs) = delete;
 
   jclass GetJClass() const {
-    return ClassRef_t<JniT>::GetAndMaybeLoadClassRef(RefBase::object_ref_);
+    // jobject != jstring but both derive from this class.
+    // Args are passed to recover class ref from class loader, and nullptr is
+    // always safe. `GetAndMaybeLoadClassRef` requires jobject, so using
+    // `RefBase::object_ref_` below obiates ubsan failures.
+    if constexpr (std::is_same_v<typename JniT::SpanType, jobject>) {
+      return ClassRef_t<JniT>::GetAndMaybeLoadClassRef(RefBase::object_ref_);
+    } else {
+      return ClassRef_t<JniT>::GetAndMaybeLoadClassRef(nullptr);
+    }
   }
 
  public:
@@ -6947,18 +7022,9 @@ struct JniArrayHelper<jobject, kRank> : public JniArrayHelperBase {
 
 }  // namespace jni
 
+#include <type_traits>
+
 namespace jni {
-
-// Creates an additional reference to the underlying object.
-// When used for local, presumes local, for global, presumes global.
-struct NewRef {};
-
-// This tag allows the constructor to promote underlying jobject for you.
-struct PromoteToGlobal {};
-
-// CAUTION: This tag assume the underlying jobject has been pinned as a global.
-// This is atypical when solely using JNI Bind, use with caution.
-struct AdoptGlobal {};
 
 // Marks the end of `ScopeEntry` daisy chain.
 struct ScopedTerminalTag {};
@@ -6971,16 +7037,21 @@ struct EntryBase : public Base {
   using Span = typename JniT::SpanType;
 
   // `RefBaseTag` move constructor for object of same span type.
-  template <typename T, typename = std::enable_if_t<(
-                            ::jni::metaprogramming::DeepEqual_v<EntryBase, T> ||
-                            std::is_base_of_v<RefBaseTag<Span>, T>)>>
+  template <typename T,
+            typename = std::enable_if_t<
+                (::jni::metaprogramming::DeepEqualDiminished_v<EntryBase, T> ||
+                 std::is_base_of_v<RefBaseTag<Span>, T>)>>
   EntryBase(T&& rhs) : Base(rhs.Release()) {}
+  EntryBase(AdoptLocal, ViableSpan object) : Base(object) {}
 
   // "Copy" constructor: Additional reference to object will be created.
   EntryBase(NewRef, ViableSpan object)
-      : Base(static_cast<Span>(
-            LifecycleHelper<Span, lifecycleType>::NewReference(
-                static_cast<Span>(object)))) {}
+      : EntryBase(AdoptLocal{},
+                  object
+                      ? static_cast<Span>(
+                            LifecycleHelper<Span, lifecycleType>::NewReference(
+                                static_cast<Span>(object)))
+                      : nullptr) {}
 
   // Comparison operator for pinned Scoped type (not deep equality).
   template <typename T, typename = std::enable_if_t<
@@ -7013,9 +7084,20 @@ struct Entry
                          LifecycleType::LOCAL, JniT, ViableSpan>;
   using Base::Base;
 
-  // "Wrap" constructor: Object released at end of scope.
+  // "Wrap" constructor: Newly created object released at end of scope.
+  // Wrap constructors automatically create a new local because objects passed
+  // into JNI should not be released, and LocalObject<KClass>(jni_arg) is
+  // common.
   Entry(ViableSpan object)
-      : Base(static_cast<typename JniT::StorageType>(object)) {}
+      : Base(AdoptLocal{},
+             object ? LifecycleHelper<typename JniT::StorageType,
+                                      LifecycleType::LOCAL>::
+                          NewReference(
+                              static_cast<typename JniT::StorageType>(object))
+                    : nullptr) {}
+
+  Entry(AdoptLocal, ViableSpan object)
+      : Base(AdoptLocal{}, static_cast<typename JniT::StorageType>(object)) {}
 };
 
 // Shared implementation common to all *global* `Entry`.
@@ -7025,9 +7107,10 @@ struct EntryBase<Base, LifecycleType::GLOBAL, JniT, ViableSpan> : public Base {
   using Span = typename JniT::SpanType;
 
   // `RefBaseTag` move constructor for object of same span type.
-  template <typename T, typename = std::enable_if_t<(
-                            ::jni::metaprogramming::DeepEqual_v<EntryBase, T> ||
-                            std::is_base_of_v<RefBaseTag<Span>, T>)>>
+  template <typename T,
+            typename = std::enable_if_t<
+                (::jni::metaprogramming::DeepEqualDiminished_v<EntryBase, T> ||
+                 std::is_base_of_v<RefBaseTag<Span>, T>)>>
   EntryBase(T&& rhs)
       : Base(LifecycleHelper<typename JniT::StorageType,
                              LifecycleType::GLOBAL>::Promote(rhs.Release())) {}
@@ -7084,12 +7167,16 @@ struct Scoped
   using Base = Entry<lifecycleType, JniT, ViableSpans..., ScopedTerminalTag>;
   using Base::Base;
 
-  ~Scoped() {
+ protected:
+  void MaybeReleaseUnderlyingObject() {
     if (Base::object_ref_) {
       LifecycleHelper<typename JniT::StorageType, lifecycleType>::Delete(
           Base::object_ref_);
     }
   }
+
+ public:
+  ~Scoped() { MaybeReleaseUnderlyingObject(); }
 };
 
 template <LifecycleType lifecycleType, typename JniT, typename... ViableSpans>
@@ -7176,9 +7263,13 @@ class LocalObject : public LocalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
   using Base = LocalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
   using Base::Base;
 
+  template <typename T>
+  LocalObject(ArrayViewHelper<T> array_view_helper)
+      : LocalObject(AdoptLocal{}, array_view_helper.val_) {}
+
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   LocalObject(LocalObject<class_v, class_loader_v, jvm_v>&& obj)
-      : Base(obj.Release()) {}
+      : Base(AdoptLocal{}, obj.Release()) {}
 };
 
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
@@ -7202,6 +7293,14 @@ bool operator!=(const jobject& lhs,
 #include <iterator>
 
 namespace jni {
+
+template <typename T>
+struct ArrayViewHelper {
+  const T& val_;
+  operator T() const { return val_; }
+
+  ArrayViewHelper(const T& val) : val_(val) {}
+};
 
 // Primitive Rank 1 Arrays.
 template <typename SpanType, std::size_t kRank = 1, typename Enable = void>
@@ -7324,12 +7423,12 @@ class ArrayView<
       return tmp;
     }
 
-    PinHelper_t operator*() const {
+    ArrayViewHelper<PinHelper_t> operator*() const {
       if constexpr (kRank >= 2) {
-        return static_cast<PinHelper_t>(
-            JniArrayHelper<jobject, kRank>::GetArrayElement(arr_, idx_));
+        return {static_cast<PinHelper_t>(
+            JniArrayHelper<jobject, kRank>::GetArrayElement(arr_, idx_))};
       } else {
-        return JniArrayHelper<SpanType, kRank>::GetArrayElement(arr_, idx_);
+        return {JniArrayHelper<SpanType, kRank>::GetArrayElement(arr_, idx_)};
       }
     }
 
@@ -7393,7 +7492,11 @@ class LocalString : public LocalStringImpl {
 
   LocalString(std::nullptr_t) : Base(jstring{nullptr}) {}
   LocalString(LocalObject<kJavaLangString>&& obj)
-      : Base(static_cast<jstring>(obj.Release())) {}
+      : Base(AdoptLocal{}, static_cast<jstring>(obj.Release())) {}
+
+  template <typename T>
+  LocalString(ArrayViewHelper<T> array_view_helper)
+      : LocalString(AdoptLocal{}, array_view_helper.val_) {}
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
@@ -7433,6 +7536,17 @@ class GlobalObject
     RefBaseTag<jobject>::object_ref_ =
         LifecycleT::Promote(RefBaseTag<jobject>::object_ref_);
   }
+
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  GlobalObject& operator=(LocalObject<class_v, class_loader_v, jvm_v>&& rhs) {
+    static_assert(::jni::metaprogramming::DeepEqualDiminished_v<
+                  LocalObject<class_v_, class_loader_v_, jvm_v_>,
+                  LocalObject<class_v, class_loader_v, jvm_v>>);
+    Base::MaybeReleaseUnderlyingObject();
+    Base::object_ref_ = rhs.Release();
+
+    return *this;
+  }
 };
 
 template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
@@ -7460,7 +7574,12 @@ class ArrayRef : public ScopedArrayImpl<JniT> {
   using SpanType = typename JniT::SpanType;
 
   ArrayRef(std::size_t size)
-      : Base(JniArrayHelper<SpanType, JniT::kRank>::NewArray(size)) {}
+      : Base(AdoptLocal{},
+             JniArrayHelper<SpanType, JniT::kRank>::NewArray(size)) {}
+
+  template <typename T>
+  ArrayRef(const ArrayViewHelper<T>& array_view_helper)
+      : Base(AdoptLocal{}, array_view_helper.val) {}
 
   explicit ArrayRef(int size) : ArrayRef(static_cast<std::size_t>(size)) {}
 
@@ -7491,17 +7610,18 @@ class ArrayRefBase : public ScopedArrayImpl<JniT> {
 
   // Construct array with given size and null values.
   explicit ArrayRefBase(std::size_t size)
-      : Base(JniArrayHelper<jobject, JniT::kRank>::NewArray(
-            size, ClassRef_t<JniT>::GetAndMaybeLoadClassRef(nullptr),
-            static_cast<jobject>(nullptr))) {}
+      : Base(AdoptLocal{},
+             JniArrayHelper<jobject, JniT::kRank>::NewArray(
+                 size, ClassRef_t<JniT>::GetAndMaybeLoadClassRef(nullptr),
+                 static_cast<jobject>(nullptr))) {}
 
   // Construct from jobject lvalue (object is used as template).
   explicit ArrayRefBase(std::size_t size, jobject obj)
-      : Base(JniArrayHelper<jobject, JniT::kRank>::NewArray(
-            size,
-            ClassRef_t<JniT>::GetAndMaybeLoadClassRef(
-                static_cast<jobject>(obj)),
-            static_cast<jobject>(obj))) {}
+      : Base(AdoptLocal{}, JniArrayHelper<jobject, JniT::kRank>::NewArray(
+                               size,
+                               ClassRef_t<JniT>::GetAndMaybeLoadClassRef(
+                                   static_cast<jobject>(obj)),
+                               static_cast<jobject>(obj))) {}
 
   // Object arrays cannot be efficiently pinned like primitive types can.
   ArrayView<SpanType, JniT::kRank> Pin() {
@@ -7520,8 +7640,8 @@ class ArrayRefBase : public ScopedArrayImpl<JniT> {
   void Set(
       std::size_t idx,
       LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v>&& val) {
-    JniArrayHelper<jobject, JniT::kRank>::SetArrayElement(Base::object_ref_,
-                                                          idx, val.Release());
+    AdoptLocal{}, JniArrayHelper<jobject, JniT::kRank>::SetArrayElement(
+                      Base::object_ref_, idx, val.Release());
   }
 };
 
@@ -7570,9 +7690,11 @@ class ArrayRef<JniT, std::enable_if_t<(JniT::kRank > 1)>>
 
   LocalArray<typename JniT::SpanType, JniT::kRank - 1, clazz, class_loader, jvm>
   Get(std::size_t idx) {
-    return {static_cast<jarray>(
-        JniArrayHelper<typename JniT::SpanType, JniT::kRank>::GetArrayElement(
-            Base::object_ref_, idx))};
+    return {AdoptLocal{},
+            static_cast<jarray>(
+                JniArrayHelper<typename JniT::SpanType,
+                               JniT::kRank>::GetArrayElement(Base::object_ref_,
+                                                             idx))};
   }
 
   template <typename SpanType, std::size_t kRank_, const auto& class_v_,
@@ -7622,20 +7744,25 @@ class LocalArray
 
   // RefTag ctor (supports multi-dimensions, `jobject` if rank > 1).
   LocalArray(std::size_t size, RefTag arr)
-      : Base(JniArrayHelper<jobject, kRank_>::NewArray(
-            size,
-            ClassRef_t<JniT_>::GetAndMaybeLoadClassRef(
-                static_cast<jobject>(arr)),
-            arr)) {}
+      : Base(AdoptLocal{}, JniArrayHelper<jobject, kRank_>::NewArray(
+                               size,
+                               ClassRef_t<JniT_>::GetAndMaybeLoadClassRef(
+                                   static_cast<jobject>(arr)),
+                               arr)) {}
+
+  template <typename T>
+  LocalArray(ArrayViewHelper<T> array_view_helper)
+      : LocalArray(AdoptLocal{}, array_view_helper.val_) {}
 
   // Rvalue ctor.
-  LocalArray(LocalArray<SpanType, kRank_>&& rhs) : Base(rhs.Release()) {}
+  LocalArray(LocalArray<SpanType, kRank_>&& rhs)
+      : Base(AdoptLocal{}, rhs.Release()) {}
 
   // Rvalue ctor.
   template <typename SpanType_, std::size_t kRank, const auto& class_v,
             const auto& class_loader_v, const auto& jvm_v>
   LocalArray(LocalArray<SpanType_, kRank, class_v, class_loader_v, jvm_v>&& rhs)
-      : Base(rhs.Release()) {
+      : Base(AdoptLocal{}, rhs.Release()) {
     static_assert(std::is_same_v<SpanType, SpanType_> && kRank == kRank_ &&
                   class_v == class_v_ && class_loader_v == class_loader_v_);
   }
@@ -7850,7 +7977,7 @@ class LocalClassLoader
 
   template <const auto& class_loader_v, const auto& jvm_v>
   explicit LocalClassLoader(LocalClassLoader<class_loader_v, jvm_v>&& lhs)
-      : LocalClassLoader(lhs.Release()) {}
+      : LocalClassLoader(AdoptLocal{}, lhs.Release()) {}
 
  private:
   template <typename>
