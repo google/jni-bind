@@ -100,7 +100,7 @@ struct JniT {
   static constexpr ClassT stripped_class_v{FullArrayStripV(GetClass())};
 
   ////////////////////////////////////////////////////////////////////////////
-  // Minimal Spanning type (allows perfect cacheing for fully specified jvm).
+  // Minimal Spanning type (allows perfect caching for fully specified jvm).
   ////////////////////////////////////////////////////////////////////////////
 
   // kNoIdx for default loader, then provided idx, then calculated idx.

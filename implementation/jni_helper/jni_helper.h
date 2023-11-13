@@ -28,7 +28,7 @@ namespace jni {
 class JniHelper {
  public:
   // Finds a class with "name".  Note, the classloader used is whatever is
-  // present on the stack when this is called.  No cacheing is performed,
+  // present on the stack when this is called.  No caching is performed,
   // returned `jclass` is a local.
   static jclass FindClass(const char* name);
 

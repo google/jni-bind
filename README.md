@@ -166,13 +166,13 @@ jni::Class definitions are static (the class names of any Java object is known i
 
 Local and global objects manage lifetimes of underlying `jobjects` using the normal RAII mechanism of C++. **`jni::LocalObject` always fall off scope at the conclusion of the surrounding JNI call and are valid only to a single thread, however `jni::GlobalObject` may be held indefinitely and are thread safe**.
 
-`jni::LocalObject` is built by either wrapping constructing it from a `jobject` passed to native JNI from Java, or constructing a new object from native (see [Constructors](constructors)).
+`jni::LocalObject` is built by either wrapping a `jobject` passed to native JNI from Java, or constructing a new object from native (see [Constructors](constructors)).
 
-When `jni::LocalObject` or `jni::GlobalObject` falls off scope, it will unpin the underlying `jobject`, making it available for garbage collection by the JVM.  If you want to to prevent this call `Release()`. This is useful to return a `jobject` back from native, or to simply pass to another native component that isn't JNI Bind aware.  Calling methods for a released object is undefined.
+When `jni::LocalObject` or `jni::GlobalObject` falls off scope, it will unpin the underlying `jobject`, making it available for garbage collection by the JVM.  If you want to to prevent this, call `Release()`. This is useful to return a `jobject` back from native, or to simply pass to another native component that isn't JNI Bind aware.  Calling methods for a released object is undefined.
 
 When possible try to avoid using raw `jobject`. Managing lifetimes with regular JNI is difficult, e.g. `jobject` can mean either local or global object (the former will be automatically unpinned at the end of the JNI call, but the latter won't and must be deleted _exactly_ once).
 
-Because jobject does not uniquely identify its underlying storage, it is presumed to always be local.  If you want to build a global, you must use either `jni::PromoteToGlobal` or `jni::AdoptGlobal`. e.g.
+Because `jobject` does not uniquely identify its underlying storage, it is presumed to always be local.  If you want to build a global, you must use either `jni::PromoteToGlobal` or `jni::AdoptGlobal`. e.g.
 
 ```cpp
 jobject obj1, obj2, obj3;
@@ -181,6 +181,10 @@ jni::LocalObject local_obj {obj1}; // Fine, given local semantics.
 jni::GlobalObject global_obj_1 {PromoteToGlobal{}, obj2}; // obj2 will be promoted.
 jni::GlobalObject global_obj_2 {AdoptGlobal{}, obj3}; // obj3 will *not* be promoted.
 ```
+  When using a jobject you may add `NewRef{}` which creates a new local reference, or `AdoptLocal{}` which takes full ownership.
+
+*Because JNI objects passed to native should never be deleted, `NewRef` is used by default (so that `LocalObject` may always call delete).  A non-deleting `FastLocal` that does not delete may be added in the future.  In general you shouldn't need to worry about this.*
+
 
 [Sample C++](javatests/com/jnibind/test/context_test_jni.cc), [Sample Java](javatests/com/jnibind/test/ContextTest.java)
 
