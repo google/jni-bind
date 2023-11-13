@@ -33,6 +33,7 @@
 #include "implementation/jni_type.h"
 #include "implementation/method.h"
 #include "implementation/params.h"
+#include "implementation/promotion_mechanics_tags.h"
 #include "implementation/proxy.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/proxy_definitions.h"
@@ -110,14 +111,23 @@ struct OverloadRef {
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
     } else if constexpr (IdT::kIsConstructor) {
       return ReturnProxied{
+          AdoptLocal{},
           LifecycleHelper<jobject, LifecycleType::LOCAL>::Construct(
               clazz, mthd,
               Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
     } else {
-      return static_cast<ReturnProxied>(
-          InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(
-              object, clazz, mthd,
-              Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...));
+      if constexpr (std::is_base_of_v<RefBaseBase, ReturnProxied>) {
+        return ReturnProxied{
+            AdoptLocal{},
+            InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(
+                object, clazz, mthd,
+                Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
+      } else {
+        return static_cast<ReturnProxied>(
+            InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(
+                object, clazz, mthd,
+                Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...));
+      }
     }
   }
 };

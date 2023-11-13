@@ -6,6 +6,7 @@
 
 namespace {
 
+using ::jni::AdoptLocal;
 using ::jni::Class;
 using ::jni::ClassLoader;
 using ::jni::Constructor;
@@ -83,7 +84,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   // Code under test.
   JvmRef<kClassLoaderJvm> jvm_ref{jvm_.get()};
   LocalClassLoader<kClassLoader, kClassLoaderJvm> class_loader{
-      Fake<jobject>(1)};
+      AdoptLocal{}, Fake<jobject>(1)};
 
   auto custom_loader_object = class_loader.BuildLocalObject<kClass>(jint{1});
 

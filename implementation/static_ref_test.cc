@@ -21,6 +21,7 @@
 
 namespace {
 
+using ::jni::AdoptLocal;
 using ::jni::Array;
 using ::jni::Class;
 using ::jni::Field;
@@ -174,7 +175,8 @@ TEST_F(JniTest, StaticField_StringSet) {
   EXPECT_CALL(*env_,
               SetStaticObjectField(_, Fake<jfieldID>(), Fake<jstring>()));
 
-  StaticRef<kClass>{}["stringField"].Set(LocalString{Fake<jstring>()});
+  StaticRef<kClass>{}["stringField"].Set(
+      LocalString{AdoptLocal{}, Fake<jstring>()});
 }
 
 TEST_F(JniTest, StaticField_ObjectSet) {
@@ -184,7 +186,8 @@ TEST_F(JniTest, StaticField_ObjectSet) {
   EXPECT_CALL(*env_,
               SetStaticObjectField(_, Fake<jfieldID>(), Fake<jobject>()));
 
-  StaticRef<kClass>{}["classField"].Set(LocalObject<kClass2>{Fake<jobject>()});
+  StaticRef<kClass>{}["classField"].Set(
+      LocalObject<kClass2>{AdoptLocal{}, Fake<jobject>()});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

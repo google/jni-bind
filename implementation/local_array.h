@@ -32,6 +32,7 @@
 #include "implementation/jvm.h"
 #include "implementation/no_idx.h"
 #include "implementation/object.h"
+#include "implementation/promotion_mechanics_tags.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -64,20 +65,25 @@ class LocalArray
 
   // RefTag ctor (supports multi-dimensions, `jobject` if rank > 1).
   LocalArray(std::size_t size, RefTag arr)
-      : Base(JniArrayHelper<jobject, kRank_>::NewArray(
-            size,
-            ClassRef_t<JniT_>::GetAndMaybeLoadClassRef(
-                static_cast<jobject>(arr)),
-            arr)) {}
+      : Base(AdoptLocal{}, JniArrayHelper<jobject, kRank_>::NewArray(
+                               size,
+                               ClassRef_t<JniT_>::GetAndMaybeLoadClassRef(
+                                   static_cast<jobject>(arr)),
+                               arr)) {}
+
+  template <typename T>
+  LocalArray(ArrayViewHelper<T> array_view_helper)
+      : LocalArray(AdoptLocal{}, array_view_helper.val_) {}
 
   // Rvalue ctor.
-  LocalArray(LocalArray<SpanType, kRank_>&& rhs) : Base(rhs.Release()) {}
+  LocalArray(LocalArray<SpanType, kRank_>&& rhs)
+      : Base(AdoptLocal{}, rhs.Release()) {}
 
   // Rvalue ctor.
   template <typename SpanType_, std::size_t kRank, const auto& class_v,
             const auto& class_loader_v, const auto& jvm_v>
   LocalArray(LocalArray<SpanType_, kRank, class_v, class_loader_v, jvm_v>&& rhs)
-      : Base(rhs.Release()) {
+      : Base(AdoptLocal{}, rhs.Release()) {
     static_assert(std::is_same_v<SpanType, SpanType_> && kRank == kRank_ &&
                   class_v == class_v_ && class_loader_v == class_loader_v_);
   }

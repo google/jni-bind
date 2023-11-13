@@ -23,6 +23,7 @@
 
 namespace {
 
+using ::jni::AdoptLocal;
 using ::jni::ArrayView;
 using ::jni::CDecl_t;
 using ::jni::Class;
@@ -95,14 +96,14 @@ TEST_F(JniTest, ArrayView_GetsAndReleaseArrayBuffer) {
                          Eq(Fake<jdoubleArray>()),
                          Eq(Fake<jdouble*>()), 0));
 
-  LocalArray<jboolean> boolean_array{Fake<jbooleanArray>()};
-  LocalArray<jbyte> byte_array{Fake<jbyteArray>()};
-  LocalArray<jchar> char_array{Fake<jcharArray>()};
-  LocalArray<jshort> short_array{Fake<jshortArray>()};
-  LocalArray<jint> int_array{Fake<jintArray>()};
-  LocalArray<jlong> long_array{Fake<jlongArray>()};
-  LocalArray<jfloat> float_array{Fake<jfloatArray>()};
-  LocalArray<jdouble> double_array{Fake<jdoubleArray>()};
+  LocalArray<jboolean> boolean_array{AdoptLocal{}, Fake<jbooleanArray>()};
+  LocalArray<jbyte> byte_array{AdoptLocal{}, Fake<jbyteArray>()};
+  LocalArray<jchar> char_array{AdoptLocal{}, Fake<jcharArray>()};
+  LocalArray<jshort> short_array{AdoptLocal{}, Fake<jshortArray>()};
+  LocalArray<jint> int_array{AdoptLocal{}, Fake<jintArray>()};
+  LocalArray<jlong> long_array{AdoptLocal{}, Fake<jlongArray>()};
+  LocalArray<jfloat> float_array{AdoptLocal{}, Fake<jfloatArray>()};
+  LocalArray<jdouble> double_array{AdoptLocal{}, Fake<jdoubleArray>()};
 
   ArrayView<jboolean, 1> boolean_array_pin = {boolean_array.Pin()};
   ArrayView<jbyte, 1> byte_array_pin = {byte_array.Pin()};
@@ -121,7 +122,7 @@ TEST_F(JniTest, LocalArrayView_AllowsCTAD) {
                          Eq(Fake<jbooleanArray>()),
                          Eq(Fake<jboolean*>()), 0));
 
-  LocalArray<jboolean> boolean_array{Fake<jbooleanArray>()};
+  LocalArray<jboolean> boolean_array{AdoptLocal{}, Fake<jbooleanArray>()};
   ArrayView ctad_array_view{boolean_array.Pin()};
 
   // Despite supporting construction from xvalue, move ctor is deleted (good).
@@ -300,7 +301,7 @@ TEST_F(JniTest, ArrayView_ShallowObjectsAreIterable) {
       .WillOnce(::testing::Return(Fake<jobject>(2)))
       .WillOnce(::testing::Return(Fake<jobject>(3)));
 
-  LocalArray<jobject> obj_arr{Fake<jobjectArray>()};
+  LocalArray<jobject> obj_arr{AdoptLocal{}, Fake<jobjectArray>()};
   ArrayView<jobject, 1> obj_view = obj_arr.Pin();
 
   EXPECT_TRUE(std::equal(obj_view.begin(), obj_view.end(), fake_vals.begin(),
@@ -318,7 +319,7 @@ TEST_F(JniTest, ArrayView_RichObjectsAreIterable) {
       .WillOnce(::testing::Return(Fake<jobject>(2)))
       .WillOnce(::testing::Return(Fake<jobject>(3)));
 
-  LocalArray<jobject, 1, kClass> obj_arr{Fake<jobjectArray>()};
+  LocalArray<jobject, 1, kClass> obj_arr{AdoptLocal{}, Fake<jobjectArray>()};
   auto obj_view = obj_arr.Pin();
 
   // Note: GlobalObject will fail to compile here. This is good, the user
@@ -350,7 +351,7 @@ TEST_F(JniTest, ArrayView_Rank2IntArraysAreIterable) {
   EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 2))
       .WillOnce(::testing::Return(Fake<jintArray>(3)));
 
-  LocalArray<jint, 2> int_arr_rank_2{Fake<jobjectArray>()};
+  LocalArray<jint, 2> int_arr_rank_2{AdoptLocal{}, Fake<jobjectArray>()};
   ArrayView<jint, 2> int_rank2_view = int_arr_rank_2.Pin();
 
   EXPECT_TRUE(std::equal(int_rank2_view.begin(), int_rank2_view.end(),
@@ -375,7 +376,7 @@ TEST_F(JniTest, ArrayView_Rank2ObjectkArraysAreIterable) {
   EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 2))
       .WillOnce(::testing::Return(Fake<jobjectArray>(3)));
 
-  LocalArray<jobject, 2> int_arr_rank_2{Fake<jobjectArray>()};
+  LocalArray<jobject, 2> int_arr_rank_2{AdoptLocal{}, Fake<jobjectArray>()};
   ArrayView<jobject, 2> int_rank2_view = int_arr_rank_2.Pin();
 
   EXPECT_TRUE(std::equal(int_rank2_view.begin(), int_rank2_view.end(),
@@ -403,7 +404,7 @@ TEST_F(JniTest, ArrayView_Rank3IntArraysAreIterable) {
   EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 2))
       .WillOnce(::testing::Return(Fake<jobjectArray>()));
 
-  LocalArray<jint, 3> int_arr_rank_3{Fake<jobjectArray>()};
+  LocalArray<jint, 3> int_arr_rank_3{AdoptLocal{}, Fake<jobjectArray>()};
   ArrayView<jint, 3> int_rank_3_view = int_arr_rank_3.Pin();
 
   EXPECT_TRUE(std::equal(int_rank_3_view.begin(), int_rank_3_view.end(),
@@ -426,7 +427,7 @@ TEST_F(JniTest, ArrayView_Rank3ObjectkArraysAreIterable) {
   EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(0), 2))
       .WillOnce(::testing::Return(Fake<jobjectArray>(3)));
 
-  LocalArray<jobject, 3> object_arr_rank_3{Fake<jobjectArray>(0)};
+  LocalArray<jobject, 3> object_arr_rank_3{AdoptLocal{}, Fake<jobjectArray>(0)};
   ArrayView<jobject, 3> object_rank_3_view = object_arr_rank_3.Pin();
 
   EXPECT_TRUE(std::equal(object_rank_3_view.begin(), object_rank_3_view.end(),

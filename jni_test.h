@@ -32,12 +32,18 @@
 namespace jni::test {
 
 static constexpr std::size_t kGlobalOffset = 0xBABA0000000000;
+static constexpr std::size_t kCopyOffset = 0X100000000000A0;
 
 // "Translates" a fake local object into its global counterpart.
 // This obviously isn't doing anything meaningful, however, it provides distinct
 // values for anything faking a promotion to a global.
 inline jclass AsGlobal(jclass clazz) {
   return reinterpret_cast<jclass>(clazz + kGlobalOffset);
+}
+
+template <typename T>
+inline T AsNewLocalReference(T obj) {
+  return reinterpret_cast<T>(obj + kCopyOffset);
 }
 
 inline jobject AsGlobal(jobject object) {
@@ -99,6 +105,10 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
     ON_CALL(*env_, GetFieldID).WillByDefault(Return(Fake<jfieldID>()));
     ON_CALL(*env_, NewObjectArray).WillByDefault(Return(Fake<jobjectArray>()));
     ON_CALL(*env_, NewObjectV).WillByDefault(Return(Fake<jobject>()));
+
+    ON_CALL(*env_, NewLocalRef)
+        .WillByDefault(testing::Invoke(
+            [&](jobject object) { return AsNewLocalReference(object); }));
 
     ON_CALL(*env_, NewGlobalRef)
         .WillByDefault(testing::Invoke([&](jobject object) {

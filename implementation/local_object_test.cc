@@ -34,6 +34,7 @@ using ::jni::kDefaultJvm;
 using ::jni::LocalObject;
 using ::jni::Method;
 using ::jni::Params;
+using ::jni::test::AsNewLocalReference;
 using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
@@ -42,6 +43,14 @@ using ::testing::StrEq;
 
 static constexpr Class kClass{"kClass"};
 static constexpr Class kClass2{"kClass2"};
+
+TEST_F(JniTest, LocalObject_DoesntTryToDeleteNull) {
+  EXPECT_CALL(*env_, NewLocalRef).Times(0);
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(0);
+
+  LocalObject<kClass> obj{jobject{nullptr}};
+  EXPECT_EQ(jobject{obj}, nullptr);
+}
 
 TEST_F(JniTest, LocalObject_CallsNewAndDeleteOnNewObject) {
   EXPECT_CALL(*env_, NewObjectV).WillOnce(testing::Return(Fake<jobject>()));
@@ -53,11 +62,20 @@ TEST_F(JniTest, LocalObject_CallsNewAndDeleteOnNewObject) {
 }
 
 TEST_F(JniTest, LocalObject_CallsOnlyDeleteOnWrapCtor) {
-  EXPECT_CALL(*env_, NewLocalRef).Times(0);
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
+  EXPECT_CALL(*env_, NewLocalRef).Times(1);
+  EXPECT_CALL(*env_, DeleteLocalRef(AsNewLocalReference(Fake<jobject>())))
+      .Times(1);
 
   LocalObject<kClass> obj{Fake<jobject>()};
   EXPECT_NE(jobject{obj}, nullptr);
+}
+
+TEST_F(JniTest, LocalObject_CallsNewLocalRefByDefault) {
+  EXPECT_CALL(*env_, NewLocalRef).WillOnce(::testing::Return(Fake<jobject>(2)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(2)));
+
+  LocalObject<kClass> obj{Fake<jobject>(1)};
+  EXPECT_EQ(jobject{obj}, Fake<jobject>(2));
 }
 
 TEST_F(JniTest, LocalObject_CallsNewLocalRefOnCopy) {
@@ -107,8 +125,9 @@ TEST_F(JniTest, LocalObject_ObjectReturnsInstanceMethods) {
 }
 
 TEST_F(JniTest, LocalObject_CallsDeleteOnceAfterAMoveConstruction) {
-  EXPECT_CALL(*env_, NewLocalRef).Times(0);
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
+  EXPECT_CALL(*env_, NewLocalRef).Times(1);
+  EXPECT_CALL(*env_, DeleteLocalRef(AsNewLocalReference(Fake<jobject>())))
+      .Times(1);
 
   LocalObject<kClass> obj_1{Fake<jobject>()};
 
@@ -120,9 +139,9 @@ TEST_F(JniTest, LocalObject_CallsDeleteOnceAfterAMoveConstruction) {
 }
 
 TEST_F(JniTest, LocalObject_FunctionsProperlyInSTLContainer) {
-  EXPECT_CALL(*env_, NewLocalRef).Times(0);
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(1)));
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(2)));
+  EXPECT_CALL(*env_, NewLocalRef).Times(2);
+  EXPECT_CALL(*env_, DeleteLocalRef(AsNewLocalReference(Fake<jobject>(1))));
+  EXPECT_CALL(*env_, DeleteLocalRef(AsNewLocalReference(Fake<jobject>(2))));
 
   LocalObject<kClass> obj_1{Fake<jobject>(1)};
   LocalObject<kClass> obj_2{Fake<jobject>(2)};
@@ -175,11 +194,11 @@ TEST_F(JniTest, LocalObject_ComparesAgainstjobjects) {
   static constexpr Class kClass{"kClass1"};
   LocalObject<kClass> val_1{Fake<jobject>()};
 
-  EXPECT_TRUE(val_1 == Fake<jobject>());
-  EXPECT_TRUE(Fake<jobject>() == val_1);
+  EXPECT_TRUE(val_1 == AsNewLocalReference(Fake<jobject>()));
+  EXPECT_TRUE(AsNewLocalReference(Fake<jobject>()) == val_1);
 
-  EXPECT_FALSE(val_1 != Fake<jobject>());
-  EXPECT_FALSE(Fake<jobject>() != val_1);
+  EXPECT_FALSE(val_1 != AsNewLocalReference(Fake<jobject>()));
+  EXPECT_FALSE(AsNewLocalReference(Fake<jobject>()) != val_1);
 }
 
 TEST_F(JniTest, LocalObject_ComparesAgainstOtherLocalObjects_InContainers) {
@@ -278,7 +297,7 @@ TEST_F(JniTest, LocalObject_MovesInContainerStruct) {
     A(LocalObject<kClass>&& in) : val(std::move(in)) {}
   };
 
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(AsNewLocalReference(Fake<jobject>())));
 
   A a{LocalObject<kClass>{Fake<jobject>()}};
 }

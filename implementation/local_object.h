@@ -20,12 +20,14 @@
 
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
+#include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/jvm_ref.h"
 #include "implementation/object_ref.h"
 #include "implementation/promotion_mechanics.h"
+#include "implementation/promotion_mechanics_tags.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -43,9 +45,13 @@ class LocalObject : public LocalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
   using Base = LocalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
   using Base::Base;
 
+  template <typename T>
+  LocalObject(ArrayViewHelper<T> array_view_helper)
+      : LocalObject(AdoptLocal{}, array_view_helper.val_) {}
+
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   LocalObject(LocalObject<class_v, class_loader_v, jvm_v>&& obj)
-      : Base(obj.Release()) {}
+      : Base(AdoptLocal{}, obj.Release()) {}
 };
 
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>

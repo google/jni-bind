@@ -28,6 +28,7 @@ using ::jni::kJavaLangString;
 using ::jni::LocalObject;
 using ::jni::LocalString;
 using ::jni::UtfStringView;
+using ::jni::test::AsNewLocalReference;
 using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
@@ -49,7 +50,7 @@ TEST_F(JniTest, LocalString_NullPtrT) { LocalString str{nullptr}; }
 
 TEST_F(JniTest, LocalString_IsImplicitlyConvertible) {
   LocalString str{Fake<jstring>()};
-  EXPECT_EQ(static_cast<jstring>(str), Fake<jstring>());
+  EXPECT_EQ(static_cast<jstring>(str), AsNewLocalReference(Fake<jstring>()));
 }
 
 TEST_F(JniTest, LocalString_NullWorks) {
@@ -58,19 +59,18 @@ TEST_F(JniTest, LocalString_NullWorks) {
 }
 
 TEST_F(JniTest, LocalString_ConstructsFromObject) {
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(AsNewLocalReference(Fake<jobject>())));
   LocalObject<kJavaLangString> undecorated_object{Fake<jobject>()};
   LocalString decorated_object{std::move(undecorated_object)};
 }
 
 TEST_F(JniTest, LocalString_CopiesFromObject) {
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(2)));
-  EXPECT_CALL(*env_, NewLocalRef(Fake<jobject>(1)))
-      .WillOnce(::testing::Return(Fake<jobject>(2)));
+  EXPECT_CALL(*env_, DeleteLocalRef(AsNewLocalReference(Fake<jobject>())));
+  EXPECT_CALL(*env_, NewLocalRef(Fake<jobject>()));
 
-  LocalString decorated_object{CreateCopy{}, Fake<jobject>(1)};
+  LocalString decorated_object{CreateCopy{}, Fake<jobject>()};
 
-  EXPECT_EQ(jstring{decorated_object}, Fake<jobject>(2));
+  EXPECT_EQ(jstring{decorated_object}, AsNewLocalReference(Fake<jobject>()));
 }
 
 TEST_F(JniTest, LocalString_CopiesFromJString) {

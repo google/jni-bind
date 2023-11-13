@@ -25,6 +25,7 @@
 namespace {
 
 using ::jni::AdoptGlobal;
+using ::jni::AdoptLocal;
 using ::jni::Class;
 using ::jni::Constructor;
 using ::jni::CreateCopy;
@@ -95,7 +96,7 @@ TEST_F(JniTest, GlobalObject_PromotesDecoratedLocals) {
   EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jobject>())));
 
   static constexpr Class kClass{"kClass"};
-  LocalObject<kClass> local_obj{Fake<jobject>()};
+  LocalObject<kClass> local_obj{AdoptLocal{}, Fake<jobject>()};
   // GlobalObject<kClass> global_object{local_obj}; // doesn't compile (good).
   GlobalObject<kClass> global_object{std::move(local_obj)};
 
@@ -109,7 +110,8 @@ TEST_F(JniTest, GlobalObject_PromotesDecoratedLocalsFromXValue) {
   EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jobject>())));
 
   static constexpr Class kClass{"kClass"};
-  GlobalObject<kClass> global_object{LocalObject<kClass>{Fake<jobject>()}};
+  GlobalObject<kClass> global_object{
+      LocalObject<kClass>{AdoptLocal{}, Fake<jobject>()}};
 
   EXPECT_EQ(jobject{global_object}, AsGlobal(Fake<jobject>()));
 }

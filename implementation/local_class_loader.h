@@ -21,11 +21,13 @@
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/class_loader_ref.h"
+#include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jvm.h"
 #include "implementation/jvm_ref.h"
 #include "implementation/local_object.h"
 #include "implementation/promotion_mechanics.h"
+#include "implementation/promotion_mechanics_tags.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -39,7 +41,7 @@ class LocalClassLoader
 
   template <const auto& class_loader_v, const auto& jvm_v>
   explicit LocalClassLoader(LocalClassLoader<class_loader_v, jvm_v>&& lhs)
-      : LocalClassLoader(lhs.Release()) {}
+      : LocalClassLoader(AdoptLocal{}, lhs.Release()) {}
 
  private:
   template <typename>

@@ -24,6 +24,14 @@
 
 namespace jni {
 
+template <typename T>
+struct ArrayViewHelper {
+  const T& val_;
+  operator T() const { return val_; }
+
+  ArrayViewHelper(const T& val) : val_(val) {}
+};
+
 // Primitive Rank 1 Arrays.
 template <typename SpanType, std::size_t kRank = 1, typename Enable = void>
 class ArrayView {
@@ -145,12 +153,12 @@ class ArrayView<
       return tmp;
     }
 
-    PinHelper_t operator*() const {
+    ArrayViewHelper<PinHelper_t> operator*() const {
       if constexpr (kRank >= 2) {
-        return static_cast<PinHelper_t>(
-            JniArrayHelper<jobject, kRank>::GetArrayElement(arr_, idx_));
+        return {static_cast<PinHelper_t>(
+            JniArrayHelper<jobject, kRank>::GetArrayElement(arr_, idx_))};
       } else {
-        return JniArrayHelper<SpanType, kRank>::GetArrayElement(arr_, idx_);
+        return {JniArrayHelper<SpanType, kRank>::GetArrayElement(arr_, idx_)};
       }
     }
 

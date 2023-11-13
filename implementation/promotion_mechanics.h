@@ -24,23 +24,13 @@
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/object_ref.h"
+#include "implementation/promotion_mechanics_tags.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
 #include "metaprogramming/deep_equal_diminished.h"
 #include "metaprogramming/pack_discriminator.h"
 
 namespace jni {
-
-// Creates an additional reference to the underlying object.
-// When used for local, presumes local, for global, presumes global.
-struct CreateCopy {};
-
-// This tag allows the constructor to promote underlying jobject for you.
-struct PromoteToGlobal {};
-
-// CAUTION: This tag assume the underlying jobject has been pinned as a global.
-// This is atypical when solely using JNI Bind, use with caution.
-struct AdoptGlobal {};
 
 // Marks the end of `ScopeEntry` daisy chain.
 struct ScopedTerminalTag {};
@@ -58,12 +48,16 @@ struct EntryBase : public Base {
                 (::jni::metaprogramming::DeepEqualDiminished_v<EntryBase, T> ||
                  std::is_base_of_v<RefBaseTag<Span>, T>)>>
   EntryBase(T&& rhs) : Base(rhs.Release()) {}
+  EntryBase(AdoptLocal, ViableSpan object) : Base(object) {}
 
   // "Copy" constructor: Additional reference to object will be created.
   EntryBase(CreateCopy, ViableSpan object)
-      : Base(static_cast<Span>(
-            LifecycleHelper<Span, lifecycleType>::NewReference(
-                static_cast<Span>(object)))) {}
+      : EntryBase(AdoptLocal{},
+                  object
+                      ? static_cast<Span>(
+                            LifecycleHelper<Span, lifecycleType>::NewReference(
+                                static_cast<Span>(object)))
+                      : nullptr) {}
 
   // Comparison operator for pinned Scoped type (not deep equality).
   template <typename T, typename = std::enable_if_t<
@@ -96,9 +90,20 @@ struct Entry
                          LifecycleType::LOCAL, JniT, ViableSpan>;
   using Base::Base;
 
-  // "Wrap" constructor: Object released at end of scope.
+  // "Wrap" constructor: Newly created object released at end of scope.
+  // Wrap constructors automatically create a new local because objects passed
+  // into JNI should not be released, and LocalObject<KClass>(jni_arg) is
+  // common.
   Entry(ViableSpan object)
-      : Base(static_cast<typename JniT::StorageType>(object)) {}
+      : Base(AdoptLocal{},
+             object ? LifecycleHelper<typename JniT::StorageType,
+                                      LifecycleType::LOCAL>::
+                          NewReference(
+                              static_cast<typename JniT::StorageType>(object))
+                    : nullptr) {}
+
+  Entry(AdoptLocal, ViableSpan object)
+      : Base(AdoptLocal{}, static_cast<typename JniT::StorageType>(object)) {}
 };
 
 // Shared implementation common to all *global* `Entry`.

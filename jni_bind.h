@@ -65,6 +65,7 @@
 #include "implementation/local_object.h"
 #include "implementation/local_string.h"
 #include "implementation/promotion_mechanics.h"
+#include "implementation/promotion_mechanics_tags.h"
 
 // IWYU pragma: end_exports
 

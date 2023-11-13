@@ -21,13 +21,16 @@
 #include "implementation/array.h"
 #include "implementation/array_view.h"
 #include "implementation/class.h"
+#include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
+#include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/jni_array_helper.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/local_object.h"
 #include "implementation/object_ref.h"
+#include "implementation/promotion_mechanics_tags.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
 
@@ -48,7 +51,12 @@ class ArrayRef : public ScopedArrayImpl<JniT> {
   using SpanType = typename JniT::SpanType;
 
   ArrayRef(std::size_t size)
-      : Base(JniArrayHelper<SpanType, JniT::kRank>::NewArray(size)) {}
+      : Base(AdoptLocal{},
+             JniArrayHelper<SpanType, JniT::kRank>::NewArray(size)) {}
+
+  template <typename T>
+  ArrayRef(const ArrayViewHelper<T>& array_view_helper)
+      : Base(AdoptLocal{}, array_view_helper.val) {}
 
   explicit ArrayRef(int size) : ArrayRef(static_cast<std::size_t>(size)) {}
 
@@ -79,17 +87,18 @@ class ArrayRefBase : public ScopedArrayImpl<JniT> {
 
   // Construct array with given size and null values.
   explicit ArrayRefBase(std::size_t size)
-      : Base(JniArrayHelper<jobject, JniT::kRank>::NewArray(
-            size, ClassRef_t<JniT>::GetAndMaybeLoadClassRef(nullptr),
-            static_cast<jobject>(nullptr))) {}
+      : Base(AdoptLocal{},
+             JniArrayHelper<jobject, JniT::kRank>::NewArray(
+                 size, ClassRef_t<JniT>::GetAndMaybeLoadClassRef(nullptr),
+                 static_cast<jobject>(nullptr))) {}
 
   // Construct from jobject lvalue (object is used as template).
   explicit ArrayRefBase(std::size_t size, jobject obj)
-      : Base(JniArrayHelper<jobject, JniT::kRank>::NewArray(
-            size,
-            ClassRef_t<JniT>::GetAndMaybeLoadClassRef(
-                static_cast<jobject>(obj)),
-            static_cast<jobject>(obj))) {}
+      : Base(AdoptLocal{}, JniArrayHelper<jobject, JniT::kRank>::NewArray(
+                               size,
+                               ClassRef_t<JniT>::GetAndMaybeLoadClassRef(
+                                   static_cast<jobject>(obj)),
+                               static_cast<jobject>(obj))) {}
 
   // Object arrays cannot be efficiently pinned like primitive types can.
   ArrayView<SpanType, JniT::kRank> Pin() {
@@ -108,8 +117,8 @@ class ArrayRefBase : public ScopedArrayImpl<JniT> {
   void Set(
       std::size_t idx,
       LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v>&& val) {
-    JniArrayHelper<jobject, JniT::kRank>::SetArrayElement(Base::object_ref_,
-                                                          idx, val.Release());
+    AdoptLocal{}, JniArrayHelper<jobject, JniT::kRank>::SetArrayElement(
+                      Base::object_ref_, idx, val.Release());
   }
 };
 
@@ -158,9 +167,11 @@ class ArrayRef<JniT, std::enable_if_t<(JniT::kRank > 1)>>
 
   LocalArray<typename JniT::SpanType, JniT::kRank - 1, clazz, class_loader, jvm>
   Get(std::size_t idx) {
-    return {static_cast<jarray>(
-        JniArrayHelper<typename JniT::SpanType, JniT::kRank>::GetArrayElement(
-            Base::object_ref_, idx))};
+    return {AdoptLocal{},
+            static_cast<jarray>(
+                JniArrayHelper<typename JniT::SpanType,
+                               JniT::kRank>::GetArrayElement(Base::object_ref_,
+                                                             idx))};
   }
 
   template <typename SpanType, std::size_t kRank_, const auto& class_v_,

@@ -26,11 +26,13 @@
 
 namespace jni {
 
+struct RefBaseBase {};
+
 // Used to detect RefBase in type proxying.
 // This is useful, e.g. when you want to say "an object that might be passed"
 // but the object's type (i.e. full name + loader information) is unknown.
 template <typename StorageType>
-class RefBaseTag {
+class RefBaseTag : public RefBaseBase {
  public:
   template <typename Base, LifecycleType lifecycleType, typename JniT,
             typename ViableSpan>

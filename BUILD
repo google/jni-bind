@@ -56,6 +56,7 @@ cc_library(
         "//implementation:no_idx",
         "//implementation:params",
         "//implementation:promotion_mechanics",
+        "//implementation:promotion_mechanics_tags",
         "//implementation:return",
         "//implementation:selector_static_info",
         "//implementation:self",

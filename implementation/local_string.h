@@ -18,10 +18,12 @@
 #define JNI_BIND_LOCAL_STRING_H_
 
 #include "class_defs/java_lang_classes.h"
+#include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/lifecycle_string.h"
 #include "implementation/local_object.h"
 #include "implementation/promotion_mechanics.h"
+#include "implementation/promotion_mechanics_tags.h"
 #include "implementation/ref_base.h"
 #include "implementation/string_ref.h"
 #include "jni_dep.h"
@@ -46,7 +48,11 @@ class LocalString : public LocalStringImpl {
 
   LocalString(std::nullptr_t) : Base(jstring{nullptr}) {}
   LocalString(LocalObject<kJavaLangString>&& obj)
-      : Base(static_cast<jstring>(obj.Release())) {}
+      : Base(AdoptLocal{}, static_cast<jstring>(obj.Release())) {}
+
+  template <typename T>
+  LocalString(ArrayViewHelper<T> array_view_helper)
+      : LocalString(AdoptLocal{}, array_view_helper.val_) {}
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.

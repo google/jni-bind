@@ -29,7 +29,10 @@
 #include "implementation/jni_helper/field_value.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/static_field_value.h"
+#include "implementation/promotion_mechanics_tags.h"
 #include "implementation/proxy.h"
+#include "implementation/proxy_convenience_aliases.h"
+#include "implementation/ref_base.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
 #include "metaprogramming/optional_wrap.h"
@@ -91,9 +94,16 @@ class FieldRef {
   }
 
   ReturnProxied Get() {
-    return {FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
-                        IdT::kIsStatic>::GetValue(SelfVal(),
-                                                  GetFieldID(class_ref_))};
+    if constexpr (std::is_base_of_v<RefBaseBase, ReturnProxied>) {
+      return {AdoptLocal{},
+              FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
+                          IdT::kIsStatic>::GetValue(SelfVal(),
+                                                    GetFieldID(class_ref_))};
+    } else {
+      return {FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
+                          IdT::kIsStatic>::GetValue(SelfVal(),
+                                                    GetFieldID(class_ref_))};
+    }
   }
 
   template <typename T>

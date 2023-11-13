@@ -19,6 +19,7 @@
 
 namespace {
 
+using ::jni::AdoptLocal;
 using ::jni::ArrayView;
 using ::jni::Class;
 using ::jni::LocalArray;
@@ -44,13 +45,14 @@ TEST_F(JniTest, Array_BuildsFromSizeForMultiDimensionalArray_primitive_xref) {
   EXPECT_CALL(*env_, FindClass(StrEq("[I")));
   EXPECT_CALL(*env_, NewObjectArray(10, _, Fake<jintArray>()));
 
-  LocalArray<jint, 2>{std::size_t{10}, LocalArray<jint>{Fake<jintArray>()}};
+  LocalArray<jint, 2>{std::size_t{10},
+                      LocalArray<jint>{AdoptLocal{}, Fake<jintArray>()}};
 }
 
 TEST_F(JniTest, Array_BuildsFromSizeForMultiDimensionalArray_primitive_lvalue) {
   EXPECT_CALL(*env_, NewObjectArray(10, _, Fake<jintArray>()));
 
-  LocalArray<jint> arr{Fake<jintArray>()};
+  LocalArray<jint> arr{AdoptLocal{}, Fake<jintArray>()};
   LocalArray<jint, 2>{std::size_t{10}, arr};
 }
 
@@ -82,7 +84,7 @@ TEST_F(JniTest, Array_SetsIntValues) {
   EXPECT_CALL(
       *env_, SetObjectArrayElement(Fake<jobjectArray>(), 2, Fake<jintArray>()));
 
-  LocalArray<jint, 1> array_arg{Fake<jintArray>()};
+  LocalArray<jint, 1> array_arg{AdoptLocal{}, Fake<jintArray>()};
   LocalArray<jint, 2> arr{std::size_t{10}, Fake<jobjectArray>()};
   arr.Set(0, array_arg);
   arr.Set(1, array_arg);
@@ -97,8 +99,8 @@ TEST_F(JniTest, Array_SetsObjectValues) {
   EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(1), 2,
                                            Fake<jobjectArray>(2)));
 
-  LocalArray<jobject, 1, kClass> array_arg{Fake<jobjectArray>(2)};
-  LocalArray<jint, 2> arr{Fake<jobjectArray>(1)};
+  LocalArray<jobject, 1, kClass> array_arg{AdoptLocal{}, Fake<jobjectArray>(2)};
+  LocalArray<jint, 2> arr{AdoptLocal{}, Fake<jobjectArray>(1)};
   arr.Set(0, array_arg);
   arr.Set(1, array_arg);
   arr.Set(2, std::move(array_arg));
@@ -114,7 +116,7 @@ TEST_F(JniTest, Array_IteratesOver1DRange) {
   EXPECT_CALL(*env_, GetIntArrayElements)
       .WillRepeatedly(Return(expected.data()));
 
-  LocalArray<jint, 1> new_array{Fake<jintArray>()};
+  LocalArray<jint, 1> new_array{AdoptLocal{}, Fake<jintArray>()};
 
   int i{0};
   for (jint val : new_array.Pin()) {
@@ -131,7 +133,7 @@ TEST_F(JniTest, Array_WorksWithSTLComparison) {
   EXPECT_CALL(*env_, GetIntArrayElements)
       .WillRepeatedly(Return(expected.data()));
 
-  LocalArray<jint, 1> new_array{Fake<jintArray>()};
+  LocalArray<jint, 1> new_array{AdoptLocal{}, Fake<jintArray>()};
   ArrayView array_view = new_array.Pin();
   EXPECT_TRUE(
       std::equal(array_view.begin(), array_view.end(), expected.begin()));
@@ -153,9 +155,9 @@ TEST_F(JniTest, Array_WorksWithSTLComparisonOfObjects) {
 }
 
 TEST_F(JniTest, Array_WorksWithSTLComparisonOfRichlyDecoratedObjects) {
-  std::array expected{LocalObject<kClass>{Fake<jobject>(1)},
-                      LocalObject<kClass>{Fake<jobject>(2)},
-                      LocalObject<kClass>{Fake<jobject>(3)}};
+  std::array expected{LocalObject<kClass>{AdoptLocal{}, Fake<jobject>(1)},
+                      LocalObject<kClass>{AdoptLocal{}, Fake<jobject>(2)},
+                      LocalObject<kClass>{AdoptLocal{}, Fake<jobject>(3)}};
 
   EXPECT_CALL(*env_, GetArrayLength).WillOnce(Return(3));
   EXPECT_CALL(*env_, GetObjectArrayElement)
@@ -163,7 +165,7 @@ TEST_F(JniTest, Array_WorksWithSTLComparisonOfRichlyDecoratedObjects) {
       .WillOnce(Return(Fake<jobject>(2)))
       .WillOnce(Return(Fake<jobject>(3)));
 
-  LocalArray<jobject, 1, kClass> new_array{Fake<jobjectArray>()};
+  LocalArray<jobject, 1, kClass> new_array{AdoptLocal{}, Fake<jobjectArray>()};
   ArrayView array_view = new_array.Pin();
   EXPECT_TRUE(
       std::equal(array_view.begin(), array_view.end(), expected.begin()));
@@ -250,12 +252,12 @@ TEST_F(JniTest, Array_2D_Iterates_Raw_loops) {
       .WillOnce(Return(Fake<jintArray>(5)));
 
   // All the returned intArrays are deleted.
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>()));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(1)));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(2)));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(3)));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(4)));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(5)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>()));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobjectArray>()));
 
   // 5 (outer array length) * 2 (pins per) = 10

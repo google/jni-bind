@@ -25,6 +25,7 @@
 namespace {
 
 using ::jni::AdoptGlobal;
+using ::jni::AdoptLocal;
 using ::jni::Class;
 using ::jni::ClassLoader;
 using ::jni::Constructor;
@@ -157,7 +158,8 @@ TEST_F(JniTestForClassLoaders,
        ClassLoaderRefTest_DefaultLoadedObjectBuildsWithClassLoadedObject) {
   JvmRef<kJvm> jvm_ref{jvm_.get()};
 
-  LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
+  LocalClassLoader<kClassLoader, kJvm> local_class_loader{AdoptLocal{},
+                                                          Fake<jobject>()};
   LocalObject<kClass1, kClassLoader> a =
       local_class_loader.BuildLocalObject<kClass1>();
   LocalObject<kClass2> b{a};
@@ -308,7 +310,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   // Code under test.
   jni::JvmRef<atypical_jvm_definition> jvm_ref{jvm_.get()};
   jni::LocalObject<class_under_test, class_loader, atypical_jvm_definition>
-      obj1{Fake<jobject>(1)};
+      obj1{AdoptLocal{}, Fake<jobject>(1)};
   obj1("Foo");
 
   this->TearDown();

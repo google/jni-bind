@@ -24,6 +24,7 @@
 
 namespace {
 
+using ::jni::AdoptLocal;
 using ::jni::Class;
 using ::jni::Field;
 using ::jni::GlobalObject;
@@ -159,9 +160,9 @@ TEST_F(JniTest, Field_ObjectSet) {
       Field{"classField", kClass2}};
 
   LocalObject<kClass> obj{};
-  LocalObject<kClass2> some_obj{Fake<jobject>()};
+  LocalObject<kClass2> some_obj{AdoptLocal{}, Fake<jobject>()};
   obj["classField"].Set(Fake<jobject>());
-  obj["classField"].Set(LocalObject<kClass2>{Fake<jobject>()});
+  obj["classField"].Set(LocalObject<kClass2>{AdoptLocal{}, Fake<jobject>()});
   obj["classField"].Set(some_obj);
   obj["classField"].Set(std::move(some_obj));
 }

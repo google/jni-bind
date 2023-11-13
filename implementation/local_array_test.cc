@@ -22,6 +22,7 @@
 namespace {
 
 using ::jni::AdoptGlobal;
+using ::jni::AdoptLocal;
 using ::jni::Array;
 using ::jni::CDecl_t;
 using ::jni::Class;
@@ -33,6 +34,7 @@ using ::jni::LocalObject;
 using ::jni::LocalString;
 using ::jni::Method;
 using ::jni::Params;
+using ::jni::test::AsNewLocalReference;
 using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
@@ -52,8 +54,14 @@ TEST_F(JniTest, LocalArray_BuildsAndDestroys) {
 }
 
 TEST_F(JniTest, LocalArray_IsImplicitlyConvertibleToSpanType) {
+  EXPECT_EQ(
+      static_cast<jintArray>(LocalArray<jint>{AdoptLocal{}, Fake<jintArray>()}),
+      Fake<jintArray>());
+}
+
+TEST_F(JniTest, LocalArray_MakesNewReferenceByDefault) {
   EXPECT_EQ(static_cast<jintArray>(LocalArray<jint>{Fake<jintArray>()}),
-            Fake<jintArray>());
+            AsNewLocalReference(Fake<jintArray>()));
 }
 
 TEST_F(JniTest, LocalArray_ConstructsIntArrayWithCorrectSize) {
@@ -104,7 +112,7 @@ TEST_F(JniTest, LocalArray_ConstructsObjectsForLValues) {
   // object.  This makes for a slightly different API then other objects.
   EXPECT_CALL(*env_, NewObjectArray(5, _, Fake<jobject>()));
 
-  LocalObject<kClass> default_object{Fake<jobject>()};
+  LocalObject<kClass> default_object{AdoptLocal{}, Fake<jobject>()};
   LocalArray<jobject, 1, kClass> local_object_array{5, default_object};
 }
 
