@@ -26,7 +26,7 @@ namespace jni {
 
 template <typename T>
 struct ArrayViewHelper {
-  const T& val_;
+  const T val_;
   operator T() const { return val_; }
 
   ArrayViewHelper(const T& val) : val_(val) {}
