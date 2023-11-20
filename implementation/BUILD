@@ -987,8 +987,18 @@ cc_library(
 )
 
 cc_test(
-    name = "signature_test",
-    srcs = ["signature_test.cc"],
+    name = "signature_method_test",
+    srcs = ["signature_method_test.cc"],
+    deps = [
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "signature_field_test",
+    srcs = ["signature_field_test.cc"],
     deps = [
         "//:jni_bind",
         "//:jni_test",
