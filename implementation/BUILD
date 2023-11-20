@@ -22,6 +22,17 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "array_test",
+    srcs = ["array_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "array_ref",
     hdrs = ["array_ref.h"],
@@ -45,8 +56,41 @@ cc_library(
 )
 
 cc_test(
-    name = "array_test",
-    srcs = ["array_test.cc"],
+    name = "local_array_iteration_test",
+    srcs = ["local_array_iteration_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "local_array_method_test",
+    srcs = ["local_array_method_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "local_array_method_multidimensional_test",
+    srcs = ["local_array_method_multidimensional_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "local_array_string_test",
+    srcs = ["local_array_string_test.cc"],
     deps = [
         ":fake_test_constants",
         "//:jni_bind",

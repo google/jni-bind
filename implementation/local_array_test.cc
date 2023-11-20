@@ -44,27 +44,30 @@ using ::testing::StrEq;
 static constexpr Class kClass{"kClass"};
 
 ////////////////////////////////////////////////////////////////////////////////
+// Convertability.
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, IsImplicitlyConvertibleToSpanType) {
+  EXPECT_EQ(
+      static_cast<jintArray>(LocalArray<jint>{AdoptLocal{}, Fake<jintArray>()}),
+      Fake<jintArray>());
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Construction Tests.
 ////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, LocalArray_BuildsAndDestroys) {
+TEST_F(JniTest, BuildsAndDestroys) {
   EXPECT_CALL(*env_, NewIntArray(1)).WillOnce(Return(Fake<jintArray>()));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>()));
 
   LocalArray<jint> int_array_1{1};
 }
 
-TEST_F(JniTest, LocalArray_IsImplicitlyConvertibleToSpanType) {
-  EXPECT_EQ(
-      static_cast<jintArray>(LocalArray<jint>{AdoptLocal{}, Fake<jintArray>()}),
-      Fake<jintArray>());
-}
-
-TEST_F(JniTest, LocalArray_MakesNewReferenceByDefault) {
+TEST_F(JniTest, MakesNewReferenceByDefault) {
   EXPECT_EQ(static_cast<jintArray>(LocalArray<jint>{Fake<jintArray>()}),
             AsNewLocalReference(Fake<jintArray>()));
 }
 
-TEST_F(JniTest, LocalArray_ConstructsIntArrayWithCorrectSize) {
+TEST_F(JniTest, ConstructsIntArrayWithCorrectSize) {
   EXPECT_CALL(*env_, NewIntArray(1)).WillOnce(Return(Fake<jintArray>(1)));
   EXPECT_CALL(*env_, NewIntArray(2)).WillOnce(Return(Fake<jintArray>(2)));
   EXPECT_CALL(*env_, NewIntArray(3)).WillOnce(Return(Fake<jintArray>(3)));
@@ -81,7 +84,7 @@ TEST_F(JniTest, LocalArray_ConstructsIntArrayWithCorrectSize) {
   LocalArray<jint> int_array_4{4};
 }
 
-TEST_F(JniTest, LocalArray_ConstructsTheRightType) {
+TEST_F(JniTest, ConstructsTheRightType) {
   EXPECT_CALL(*env_, NewBooleanArray(1));
   EXPECT_CALL(*env_, NewByteArray(2));
   EXPECT_CALL(*env_, NewCharArray(3));
@@ -101,13 +104,13 @@ TEST_F(JniTest, LocalArray_ConstructsTheRightType) {
   LocalArray<jdouble> double_array{8};
 }
 
-TEST_F(JniTest, LocalArray_ConstructsAnArrayOfNullValues) {
+TEST_F(JniTest, ConstructsAnArrayOfNullValues) {
   EXPECT_CALL(*env_, NewObjectArray(5, _, nullptr));
   EXPECT_CALL(*env_, FindClass(StrEq("kClass")));
   LocalArray<jobject, 1, kClass> local_object_array{5};
 }
 
-TEST_F(JniTest, LocalArray_ConstructsObjectsForLValues) {
+TEST_F(JniTest, ConstructsObjectsForLValues) {
   // Unlike POD, objects are constructed with a size, a jclass, and an init
   // object.  This makes for a slightly different API then other objects.
   EXPECT_CALL(*env_, NewObjectArray(5, _, Fake<jobject>()));
@@ -116,17 +119,7 @@ TEST_F(JniTest, LocalArray_ConstructsObjectsForLValues) {
   LocalArray<jobject, 1, kClass> local_object_array{5, default_object};
 }
 
-// Same as above for jstring.
-TEST_F(JniTest, LocalStringArray_ConstructsObjectsForLValues) {
-  // Unlike POD, objects are constructed with a size, a jclass, and an init
-  // object.  This makes for a slightly different API then other objects.
-  EXPECT_CALL(*env_, NewObjectArray);
-
-  LocalObject<kClass> default_object{};
-  LocalArray<jobject, 1, kClass> local_object_array{5, default_object};
-}
-
-TEST_F(JniTest, LocalArray_ConstructsTheRightTypeForRValues) {
+TEST_F(JniTest, ConstructsTheRightTypeForRValues) {
   EXPECT_CALL(*env_, NewObjectArray(5, _, _)).Times(2);
 
   LocalObject<kClass> default_object{};
@@ -135,228 +128,33 @@ TEST_F(JniTest, LocalArray_ConstructsTheRightTypeForRValues) {
       5, std::move(default_object)};
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Primitive Tests.
-////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, MethodAcceptsLocalIntArray) {
-  static constexpr Class kClass{
-      "ArrayMultiTest",
-      Method{"Foo", jni::Return<void>{}, Params{Array<int>{}}}};
+TEST_F(JniTest, ConstructsBooleanArray) {
+  EXPECT_CALL(*env_, NewBooleanArray(1))
+      .WillOnce(::testing::Return(Fake<jbooleanArray>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(_));
 
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([I)V")));
-
-  LocalObject<kClass> obj{jobject{nullptr}};
-  obj("Foo", LocalArray<jint, 1>{10});
+  LocalArray<jboolean> boolean_array_1{1};
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Object Array Tests.
-//
-// These have been Made separate to guarantee signature isn't cached and RValue
-// path is still exercised. Note that testing a method is all or nothing, so
-// if a constructor is queried there is a test for a GetMethod with "<init>".
-////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, Array_Method_HandlesLValueLocalObject) {
-  static constexpr Class kClass2{"kClass2"};
+TEST_F(JniTest, ConstructsByteArray) {
+  EXPECT_CALL(*env_, NewByteArray(1))
+      .WillOnce(::testing::Return(Fake<jbyteArray>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(_));
 
-  static constexpr Class kClass{
-      "ArrayMultiTest",
-      Method{"Foo", jni::Return<void>{}, Params{Array{kClass2}}},
-  };
-
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([LkClass2;)V")));
-
-  LocalObject<kClass> obj{jobject{nullptr}};
-  obj("Foo", LocalArray<jobject, 1, kClass2>{123, obj});
+  LocalArray<jbyte> byte_array_1{1};
 }
 
-TEST_F(JniTest, Array_Field_HandlesLValueLocalObject) {
-  static constexpr Class kClass2{"kClass2"};
+TEST_F(JniTest, ConstructsIntArray) {
+  EXPECT_CALL(*env_, NewIntArray(1))
+      .WillOnce(::testing::Return(Fake<jintArray>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(_));
 
-  static constexpr Class kClass{
-      "ArrayMultiTest",
-      Field{"Foo", Array{kClass2}},
-  };
-
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("Foo"), StrEq("[LkClass2;")));
-
-  LocalObject<kClass> obj{Fake<jobject>()};
-  LocalArray<jobject, 1, kClass2>{obj["Foo"].Get()};
+  LocalArray<jint> int_array_1{1};
 }
 
-TEST_F(JniTest, Array_HandlesLValueGlobalObject) {
-  static constexpr Class kClass2{"kClass2"};
-
-  static constexpr Class kClass{
-      "ArrayMultiTest",
-      Method{"Foo", jni::Return<void>{}, Params{Array{kClass2}}},
-  };
-
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([LkClass2;)V")));
-
-  GlobalObject<kClass> obj{AdoptGlobal{}, jobject{nullptr}};
-  obj("Foo", LocalArray<jobject, 1, kClass2>{jobjectArray{nullptr}});
-}
-
-TEST_F(JniTest, Array_HandlesRValueLocal) {
-  static constexpr Class kClass2{"kClass2"};
-
-  static constexpr Class kClass{
-      "ArrayMultiTest",
-      Method{"Foo", jni::Return<void>{}, Params{Array{kClass2}}},
-  };
-
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), _));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([LkClass2;)V")));
-
-  LocalObject<kClass> obj{jobject{nullptr}};
-  obj("Foo", LocalArray<jobject, 1, kClass2>{123, LocalObject<kClass2>{}});
-}
-
-TEST_F(JniTest, Array_HandlesRValueGlobal) {
-  static constexpr Class kClass2{"kClass2"};
-  static constexpr Class kClass{
-      "ArrayMultiTest",
-      Method{"Foo", jni::Return<void>{}, Params{Array{kClass2}}},
-  };
-
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), _));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([LkClass2;)V")));
-
-  LocalObject<kClass> obj{jobject{nullptr}};
-  obj("Foo", LocalArray<jobject, 1, kClass2>{123, LocalObject<kClass2>{}});
-}
-
-TEST_F(JniTest, Array_DifferentiatesBetweenClassesWithEqualRank) {
-  static constexpr Class kClass2{"kClass2"};
-  static constexpr Class kClass3{"kClass3"};
-  static constexpr Class kClass4{"kClass4"};
-
-  static constexpr Class kClass{
-      "kClass1",
-      Method{"Foo", jni::Return<void>{}, Params{Array{kClass2}}},
-      Method{"Bar", jni::Return<void>{}, Params{Array{kClass3}}},
-      Method{"Baz", jni::Return<void>{}, Params{Array{kClass4}}},
-      Method{"Gnar", jni::Return<void>{}, Params{Array{Class{"kClass4"}}}},
-      Method{"Moo", jni::Return<void>{}, Params{Array{Class{"kClass4"}}}},
-  };
-
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), _))
-      .Times(testing::AnyNumber());
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([LkClass2;)V")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Bar"), StrEq("([LkClass3;)V")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Baz"), StrEq("([LkClass4;)V")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Gnar"), StrEq("([LkClass4;)V")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Moo"), StrEq("([LkClass4;)V")));
-
-  LocalObject<kClass> obj{jobject{nullptr}};
-  obj("Foo", LocalArray<jobject, 1, kClass2>{123, LocalObject<kClass2>{}});
-  obj("Bar", LocalArray<jobject, 1, kClass3>{123, LocalObject<kClass3>{}});
-  // obj("Bar", LocalArray{123, LocalObject<kClass2>{}}); // doesn't compile.
-
-  // These calls don't trigger new GetMethod calls.
-  // Note this includes calls to both forward definition and full definition.
-  obj("Baz", LocalArray<jobject, 1, kClass4>{123, LocalObject<kClass4>{}});
-  obj("Gnar", LocalArray<jobject, 1, kClass4>{123, LocalObject<kClass4>{}});
-
-  // This call requires a new method lookup (different function name).
-  obj("Moo", LocalArray<jobject, 1, kClass4>{123, LocalObject<kClass4>{}});
-}
-
-TEST_F(JniTest, Array_DifferentiatesWithOverloads) {
-  static constexpr Class kClass2{"kClass2"};
-  static constexpr Class kClass{
-      "ArrayMultiTest",
-      Method{"Foo", jni::Return<void>{}, Params{Array{kClass2}}},
-  };
-
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("<init>"), _));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("([LkClass2;)V")));
-
-  LocalObject<kClass> obj{jobject{nullptr}};
-  obj("Foo", LocalArray<jobject, 1, kClass2>{123, LocalObject<kClass2>{}});
-}
-
-TEST_F(JniTest, Array_CachesLengthExactlyOnceOnFirstRequest) {
-  EXPECT_CALL(*env_, GetArrayLength).Times(0);
-
-  LocalArray<jint> obj{Fake<jintArray>()};
-
-  EXPECT_CALL(*env_, GetArrayLength).Times(1).WillOnce(Return(5));
-  EXPECT_EQ(obj.Length(), 5);
-  EXPECT_EQ(obj.Length(), 5);
-  EXPECT_EQ(obj.Length(), 5);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// String Array Tests.
-// Strings are unusual in that they have their own type (jstring) but are
-// almost completely objects otherwise.
-////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, Array_ConstructsFromAnotherStringArray) {
-  LocalArray<jstring> arr_1{Fake<jobjectArray>()};
-  LocalArray<jstring> arr_2{std::move(arr_1)};
-}
-
-TEST_F(JniTest, Array_CorrectSignatureForStringParams) {
-  EXPECT_CALL(*env_, FindClass(StrEq("ClassThatReturnsArrays")));
-  EXPECT_CALL(*env_, FindClass(StrEq("java/lang/String")));
-  EXPECT_CALL(*env_, GetMethodID(_, StrEq("StringArray"),
-                                 StrEq("([Ljava/lang/String;)V")));
-
-  static constexpr Class kClass{
-      "ClassThatReturnsArrays",
-      Method{"StringArray", jni::Return{}, jni::Params{Array{jstring{}}}},
-  };
-
-  LocalObject<kClass> obj{jobject{nullptr}};
-  LocalArray<jstring> arr{3};
-  obj("StringArray", arr);
-}
-
-/*
-// TODO(b/143908983): Restore after fixing ubsan failures.
-TEST_F(JniTest, Array_StringsCanBeSetOnLocalString) {
-  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(), 0, _));
-  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(), 1, _));
-  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(), 2, _));
-  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(), 3, _));
-  EXPECT_CALL(*env_, SetObjectArrayElement(Fake<jobjectArray>(), 4, _));
-
-  const char* kFoo = "kFoo";
-  const std::string kNar = "kNar";
-
-  LocalArray<jstring> arr{5, LocalObject<kJavaLangString>{"Foo"}};
-  arr.Set(0, "Bar");
-  arr.Set(1, std::string{"Baz"});
-  arr.Set(2, std::string_view{"Bar"});
-  arr.Set(3, std::string_view{kFoo});
-  arr.Set(4, std::string_view{kNar});
-}
-*/
-
-TEST_F(JniTest, Array_LocalVanillaObjectRValuesCanBeSet) {
-  // Unfortunately this is getting cached separately by `LocalArray`.
-  // In the future, this should drop to 1.
-  EXPECT_CALL(*env_, FindClass(StrEq("java/lang/String"))).Times(2);
-
-  EXPECT_CALL(*env_, DeleteLocalRef(_)).Times(2);  // array, in place obj
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>())).Times(2);  // FindClass
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>())).Times(0);
-
-  LocalArray<jobject, 1, kJavaLangString> arr{
-      3, LocalObject<kJavaLangString>{"Foo"}};
-  arr.Set(0, LocalObject<kJavaLangString>{Fake<jstring>()});
-}
-
-TEST_F(JniTest, Array_LocalStringRValuesCanBeSet) {
-  EXPECT_CALL(*env_, DeleteLocalRef(_))
-      .Times(1);  // array (object is moved from)
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>()));  // FindClass
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>())).Times(0);
-
-  LocalArray<jstring> arr{3};
-  arr.Set(0, LocalString{Fake<jstring>()});
+TEST_F(JniTest, ConstructsFromRValue) {
+  LocalArray<jint> arr{jintArray{nullptr}};
+  LocalArray<jint> arr2{std::move(arr)};
 }
 
 }  // namespace

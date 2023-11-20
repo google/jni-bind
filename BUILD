@@ -57,6 +57,7 @@ cc_library(
         "//implementation:params",
         "//implementation:promotion_mechanics",
         "//implementation:promotion_mechanics_tags",
+        "//implementation:ref_base",
         "//implementation:return",
         "//implementation:selector_static_info",
         "//implementation:self",

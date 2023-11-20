@@ -339,28 +339,18 @@ TEST_F(JniTest, Array_Field_Object_Test) {
   obj["ObjectArrayRank1"].Get().Get(2);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// String Fields.
-////////////////////////////////////////////////////////////////////////////////
-TEST_F(JniTest, Array_CorrectFieldSignatureForStrings) {
+TEST_F(JniTest, Array_Field_HandlesLValueLocalObject) {
+  static constexpr Class kClass2{"kClass2"};
+
   static constexpr Class kClass{
-      "kClass",
-      Field{"StringArrayRank1", Array{jstring{}}},
-      Field{"StringArrayRank2", Array{jstring{}, Rank<2>{}}},
-      Field{"StringArrayRank3", Array{jstring{}, Rank<3>{}}},
+      "ArrayMultiTest",
+      Field{"Foo", Array{kClass2}},
   };
 
-  LocalObject<kClass> obj{jobject{nullptr}};
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("StringArrayRank1"),
-                                StrEq("[Ljava/lang/String;")));
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("StringArrayRank2"),
-                                StrEq("[[Ljava/lang/String;")));
-  EXPECT_CALL(*env_, GetFieldID(_, StrEq("StringArrayRank3"),
-                                StrEq("[[[Ljava/lang/String;")));
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("Foo"), StrEq("[LkClass2;")));
 
-  LocalArray<jstring> arr1 = obj["StringArrayRank1"].Get();
-  LocalArray<jstring, 2> arr2 = obj["StringArrayRank2"].Get();
-  LocalArray<jstring, 3> arr3 = obj["StringArrayRank3"].Get();
+  LocalObject<kClass> obj{Fake<jobject>()};
+  LocalArray<jobject, 1, kClass2>{obj["Foo"].Get()};
 }
 
 }  // namespace
