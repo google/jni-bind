@@ -28,9 +28,11 @@ using ::jni::Field;
 using ::jni::LocalArray;
 using ::jni::LocalObject;
 using ::jni::Rank;
+using ::jni::test::AsNewLocalReference;
 using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
+using ::testing::InSequence;
 using ::testing::StrEq;
 
 static constexpr Class kClass2{"kClass2"};
@@ -52,6 +54,41 @@ static constexpr Class kFieldClass{
     Field{"ObjectArrayRank2", Array{kClass2, Rank<2>{}}},
     Field{"ObjectArrayRank3", Array{kClass2, Rank<3>{}}},
 };
+
+TEST_F(JniTest, ArrayField_Object_Iteration_Rank_1) {
+  EXPECT_CALL(*env_, GetObjectField)
+      .WillOnce(::testing::Return(Fake<jobjectArray>()));
+  EXPECT_CALL(*env_, GetArrayLength).WillOnce(::testing::Return(3));
+  EXPECT_CALL(*env_, GetObjectArrayElement)
+      .WillOnce(::testing::Return(Fake<jobject>(100)))
+      .WillOnce(::testing::Return(Fake<jobject>(101)))
+      .WillOnce(::testing::Return(Fake<jobject>(102)));
+
+  int i = 100;
+  LocalObject<kFieldClass> obj{Fake<jobject>()};
+  for (LocalObject<kClass2> a : obj["ObjectArrayRank1"].Get().Pin()) {
+    EXPECT_EQ(static_cast<jobject>(a), Fake<jobject>(i));
+    i++;
+  }
+}
+
+TEST_F(JniTest, ArrayField_Object_Iteration_Rank_2) {
+  EXPECT_CALL(*env_, GetObjectField)
+      .WillOnce(::testing::Return(Fake<jobjectArray>()));
+  EXPECT_CALL(*env_, GetArrayLength).WillOnce(::testing::Return(3));
+  EXPECT_CALL(*env_, GetObjectArrayElement)
+      .WillOnce(::testing::Return(Fake<jobject>(100)))
+      .WillOnce(::testing::Return(Fake<jobject>(101)))
+      .WillOnce(::testing::Return(Fake<jobject>(102)));
+
+  int i = 100;
+  LocalObject<kFieldClass> obj{Fake<jobject>(1)};
+  for (LocalArray<jobject, 1, kClass2> a :
+       obj["ObjectArrayRank2"].Get().Pin()) {
+    EXPECT_EQ(static_cast<jobject>(a), Fake<jobject>(i));
+    i++;
+  }
+}
 
 TEST_F(JniTest, Array_FieldTests) {
   EXPECT_CALL(*env_, GetFieldID(_, StrEq("BooleanArray"), StrEq("[Z")));
@@ -363,7 +400,7 @@ TEST_F(JniTest, Array_Field_Object_Test) {
   obj["ObjectArrayRank1"].Get().Get(2);
 }
 
-TEST_F(JniTest, Array_Field_HandlesLValueLocalObject) {
+TEST_F(JniTest, Array_Field_HandlesLValueLocalObject_Rank_1) {
   static constexpr Class kClass2{"kClass2"};
 
   static constexpr Class kClass{
@@ -375,6 +412,66 @@ TEST_F(JniTest, Array_Field_HandlesLValueLocalObject) {
 
   LocalObject<kClass> obj{Fake<jobject>()};
   LocalArray<jobject, 1, kClass2>{obj["Foo"].Get()};
+}
+
+TEST_F(JniTest, Array_Field_HandlesLValueLocalObject_Rank_2) {
+  static constexpr Class kClass2{"kClass2"};
+
+  static constexpr Class kClass{
+      "kClass",
+      Field{"Foo", Array{kClass2, Rank<2>{}}},
+  };
+
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("Foo"), StrEq("[[LkClass2;")));
+
+  LocalObject<kClass> obj{Fake<jobject>()};
+  LocalArray<jobject, 2, kClass2> arr_from_field{obj["Foo"].Get()};
+}
+
+TEST_F(JniTest, Array_Field_HandlesLValueLocalObject_Rank_2_Iteration) {
+  static constexpr Class kClass2{"kClass2"};
+
+  static constexpr Class kClass{
+      "kClass",
+      Field{"Foo", Array{kClass2, Rank<2>{}}},
+  };
+
+  InSequence seq;
+
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>()));
+
+  EXPECT_CALL(*env_, GetFieldID(_, StrEq("Foo"), StrEq("[[LkClass2;")));
+  EXPECT_CALL(*env_, GetObjectField)
+      .WillRepeatedly(::testing::Return(Fake<jobjectArray>()));
+  EXPECT_CALL(*env_, GetArrayLength).WillOnce(::testing::Return(3));
+
+  // A temporary local array is materialised in the field access.
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobjectArray>()));
+
+  // Internal elements looped over.
+  EXPECT_CALL(*env_, GetObjectArrayElement)
+      .WillOnce(::testing::Return(Fake<jobject>(100)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(100)));
+
+  EXPECT_CALL(*env_, GetObjectArrayElement)
+      .WillOnce(::testing::Return(Fake<jobject>(101)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(101)));
+
+  EXPECT_CALL(*env_, GetObjectArrayElement)
+      .WillOnce(::testing::Return(Fake<jobject>(102)));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(102)));
+
+  EXPECT_CALL(*env_, DeleteLocalRef(AsNewLocalReference(Fake<jobjectArray>())));
+
+  // Object with queried array field.
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>(1)));
+
+  LocalObject<kClass> obj{AdoptLocal{}, Fake<jobject>(1)};
+  int i = 100;
+  for (LocalArray<jobject> obj : obj["Foo"].Get().Pin()) {
+    EXPECT_EQ(static_cast<jobject>(obj), Fake<jobject>(i));
+    i++;
+  }
 }
 
 }  // namespace

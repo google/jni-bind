@@ -67,6 +67,17 @@ cc_test(
 )
 
 cc_test(
+    name = "local_array_field_multidimensional_test",
+    srcs = ["local_array_field_multidimensional_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "local_array_method_test",
     srcs = ["local_array_method_test.cc"],
     deps = [
@@ -124,6 +135,7 @@ cc_library(
         ":array_type_conversion",
         "//:jni_dep",
         "//implementation/jni_helper:jni_array_helper",
+        "//implementation/jni_helper:lifecycle",
     ],
 )
 

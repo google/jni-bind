@@ -32,6 +32,7 @@ using ::jni::LocalObject;
 using ::jni::Method;
 using ::jni::Params;
 using ::jni::Return;
+using ::jni::test::AsNewLocalReference;
 using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
@@ -344,11 +345,14 @@ TEST_F(JniTest, ArrayView_Rank2IntArraysAreIterable) {
 
   EXPECT_CALL(*env_, GetArrayLength(Fake<jobjectArray>()))
       .WillOnce(::testing::Return(3));
-  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 0))
+  EXPECT_CALL(*env_, GetObjectArrayElement(
+                         AsNewLocalReference(Fake<jobjectArray>()), 0))
       .WillOnce(::testing::Return(Fake<jintArray>(1)));
-  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 1))
+  EXPECT_CALL(*env_, GetObjectArrayElement(
+                         AsNewLocalReference(Fake<jobjectArray>()), 1))
       .WillOnce(::testing::Return(Fake<jintArray>(2)));
-  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 2))
+  EXPECT_CALL(*env_, GetObjectArrayElement(
+                         AsNewLocalReference(Fake<jobjectArray>()), 2))
       .WillOnce(::testing::Return(Fake<jintArray>(3)));
 
   LocalArray<jint, 2> int_arr_rank_2{AdoptLocal{}, Fake<jobjectArray>()};
@@ -369,11 +373,14 @@ TEST_F(JniTest, ArrayView_Rank2ObjectkArraysAreIterable) {
 
   EXPECT_CALL(*env_, GetArrayLength(Fake<jobjectArray>()))
       .WillOnce(::testing::Return(3));
-  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 0))
+  EXPECT_CALL(*env_, GetObjectArrayElement(
+                         AsNewLocalReference(Fake<jobjectArray>()), 0))
       .WillOnce(::testing::Return(Fake<jobjectArray>(1)));
-  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 1))
+  EXPECT_CALL(*env_, GetObjectArrayElement(
+                         AsNewLocalReference(Fake<jobjectArray>()), 1))
       .WillOnce(::testing::Return(Fake<jobjectArray>(2)));
-  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 2))
+  EXPECT_CALL(*env_, GetObjectArrayElement(
+                         AsNewLocalReference(Fake<jobjectArray>()), 2))
       .WillOnce(::testing::Return(Fake<jobjectArray>(3)));
 
   LocalArray<jobject, 2> int_arr_rank_2{AdoptLocal{}, Fake<jobjectArray>()};
@@ -397,11 +404,14 @@ TEST_F(JniTest, ArrayView_Rank3IntArraysAreIterable) {
 
   EXPECT_CALL(*env_, GetArrayLength(Fake<jobjectArray>()))
       .WillOnce(::testing::Return(3));
-  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 0))
+  EXPECT_CALL(*env_, GetObjectArrayElement(
+                         AsNewLocalReference(Fake<jobjectArray>()), 0))
       .WillOnce(::testing::Return(Fake<jobjectArray>()));
-  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 1))
+  EXPECT_CALL(*env_, GetObjectArrayElement(
+                         AsNewLocalReference(Fake<jobjectArray>()), 1))
       .WillOnce(::testing::Return(Fake<jobjectArray>()));
-  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(), 2))
+  EXPECT_CALL(*env_, GetObjectArrayElement(
+                         AsNewLocalReference(Fake<jobjectArray>()), 2))
       .WillOnce(::testing::Return(Fake<jobjectArray>()));
 
   LocalArray<jint, 3> int_arr_rank_3{AdoptLocal{}, Fake<jobjectArray>()};
@@ -420,11 +430,14 @@ TEST_F(JniTest, ArrayView_Rank3ObjectkArraysAreIterable) {
 
   EXPECT_CALL(*env_, GetArrayLength(Fake<jobjectArray>(0)))
       .WillOnce(::testing::Return(3));
-  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(0), 0))
+  EXPECT_CALL(*env_, GetObjectArrayElement(
+                         AsNewLocalReference(Fake<jobjectArray>()), 0))
       .WillOnce(::testing::Return(Fake<jobjectArray>(1)));
-  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(0), 1))
+  EXPECT_CALL(*env_, GetObjectArrayElement(
+                         AsNewLocalReference(Fake<jobjectArray>()), 1))
       .WillOnce(::testing::Return(Fake<jobjectArray>(2)));
-  EXPECT_CALL(*env_, GetObjectArrayElement(Fake<jobjectArray>(0), 2))
+  EXPECT_CALL(*env_, GetObjectArrayElement(
+                         AsNewLocalReference(Fake<jobjectArray>()), 2))
       .WillOnce(::testing::Return(Fake<jobjectArray>(3)));
 
   LocalArray<jobject, 3> object_arr_rank_3{AdoptLocal{}, Fake<jobjectArray>(0)};

@@ -26,6 +26,7 @@ using ::jni::ArrayView;
 using ::jni::Class;
 using ::jni::LocalArray;
 using ::jni::LocalObject;
+using ::jni::test::AsNewLocalReference;
 using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
@@ -129,6 +130,7 @@ TEST_F(JniTest, 2D_Iterates) {
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(4)));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jintArray>(5)));
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobjectArray>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(AsNewLocalReference(Fake<jobjectArray>())));
 
   // 5 (outer array length) * 2 (pins per) = 10
   EXPECT_CALL(*env_, GetIntArrayElements).Times(10).WillRepeatedly(Return(a));
@@ -241,6 +243,7 @@ TEST_F(JniTest, 2D_Iterates_Raw_loops_of_Objects) {
   // Note: This is just 0 (default), not 100. 100 is the sample (i.e. template)
   // object, no arg is the default that is created.
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobjectArray>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(AsNewLocalReference(Fake<jobjectArray>())));
 
   LocalArray<jobject, 2, kClass> new_array{5, Fake<jobjectArray>(100)};
   EXPECT_EQ(jobject{new_array}, Fake<jobjectArray>());

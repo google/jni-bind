@@ -52,9 +52,10 @@ static constexpr Class kArrayTestFieldRank1 {
     Method {"stringArray", Return<void>{}, Params{Array{jstring{}}, jboolean{}}},
     Method {"stringEqual", Return<void>{}, Params{jboolean{}, jstring{}, jstring{}}},
 
+    Method {"object", Return<void>{}, Params{int{}, kObjectTestHelperClass}},
     Method {"objectArray", Return<void>{}, Params{int{}, Array{kObjectTestHelperClass}}},
 
-    // Fields under test.
+    // Fields under test: Rank 1 Primitives.
     Field {"booleanArrayField", Array{jboolean{}}},
     Field {"byteArrayField", Array{jbyte{}}},
     Field {"charArrayField", Array{jchar{}}},
@@ -64,6 +65,8 @@ static constexpr Class kArrayTestFieldRank1 {
     Field {"floatArrayField", Array{jfloat{}}},
     Field {"doubleArrayField", Array{jdouble{}}},
     Field {"stringArrayField", Array{jstring{}}},
+
+    // Fields under test: Rank 1 Objects.
     Field {"objectArrayField", Array{kObjectTestHelperClass}},
 };
 // clang-format on
@@ -222,6 +225,17 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeStringTests(
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank1_nativeObjectTests(
-    JNIEnv* env, jclass, jobject test_fixture, jobjectArray object_array) {}
+    JNIEnv* env, jclass, jobject test_fixture, jobjectArray) {
+  LocalObject<kArrayTestFieldRank1> fixture{test_fixture};
+  LocalArray<jobject, 1, kObjectTestHelperClass> arr =
+      fixture["objectArrayField"].Get();
+
+  int i = 0;
+  for (LocalObject<kObjectTestHelperClass> new_obj :
+       fixture["objectArrayField"].Get().Pin()) {
+    fixture("object", i, new_obj);
+    i++;
+  }
+}
 
 }  // extern "C"

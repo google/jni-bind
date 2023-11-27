@@ -51,7 +51,7 @@ public class ArrayTestFieldRank1 {
 
   String[] stringArrayField = {"BAD", "BAD", "BAD"};
   ObjectTestHelper[] objectArrayField = {
-    new ObjectTestHelper(0, 0, 0), new ObjectTestHelper(1, 1, 1)
+    new ObjectTestHelper(0, 0, 0), new ObjectTestHelper(1, 1, 1), new ObjectTestHelper(2, 2, 2)
   };
 
   native void nativeBooleanTests(ArrayTestFieldRank1 arrayTest, boolean[] intArray);
@@ -147,6 +147,10 @@ public class ArrayTestFieldRank1 {
     } else {
       assertNotEquals(lhs, rhs);
     }
+  }
+
+  void object(int objectMemberOffset, ObjectTestHelper obj) {
+    assertEquals(objectMemberOffset, obj.intVal1);
   }
 
   void objectArray(int objectMemberOffset, ObjectTestHelper[] arr) {

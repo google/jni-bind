@@ -20,6 +20,7 @@
 
 #include "implementation/array_type_conversion.h"
 #include "implementation/jni_helper/jni_array_helper.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -184,8 +185,19 @@ class ArrayView<
   ArrayView(ArrayView&&) = delete;
   ArrayView(const ArrayView&) = delete;
 
+  // This constructor creates a copy of the parent `jarray` so that the
+  // lifetime doesn't end before objects. e.g. `obj["field"].Get().Pin()` is a
+  // useful pattern in iterators, but the returned Get() `LocalArray` would
+  // be released immediately.
   ArrayView(jobjectArray array, bool, std::size_t size)
-      : array_(array), size_(size) {}
+      : array_(
+            LifecycleHelper<jobjectArray, LifecycleType::LOCAL>::NewReference(
+                array)),
+        size_(size) {}
+
+  ~ArrayView() {
+    LifecycleHelper<jobjectArray, LifecycleType::LOCAL>::Delete(array_);
+  }
 
   Iterator begin() { return Iterator(array_, size_, 0); }
   Iterator end() { return Iterator(array_, size_, size_); }
