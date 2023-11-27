@@ -1,6 +1,64 @@
 licenses(["notice"])
 
 ################################################################################
+# Array Test: Fields Rank 1.
+################################################################################
+cc_library(
+    name = "array_test_field_rank_1_jni_impl",
+    testonly = True,
+    srcs = ["array_test_field_rank_1_jni.cc"],
+    deps = [
+        ":object_test_helper_jni",
+        "//:jni_bind",
+        "//metaprogramming:lambda_string",
+    ],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libarray_test_field_rank_1_jni.so",
+    testonly = True,
+    linkshared = True,
+    deps = [":array_test_field_rank_1_jni_impl"],
+)
+
+java_test(
+    name = "ArrayTestFieldRank1",
+    testonly = True,
+    srcs = ["ArrayTestFieldRank1.java"],
+    data = [":libarray_test_field_rank_1_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    deps = [
+        ":object_test_helper",
+        "@maven//:com_google_truth_truth_1_1",
+    ],
+)
+
+################################################################################
+# Array Test Helpers.
+################################################################################
+cc_library(
+    name = "array_test_helpers_native",
+    hdrs = ["array_test_helpers_native.h"],
+    deps = [
+        ":object_test_helper_jni",
+        "//:jni_bind",
+        "//implementation:method",
+    ],
+)
+
+java_library(
+    name = "array_test_helpers",
+    testonly = True,
+    srcs = ["ArrayTestHelpers.java"],
+    deps = [
+        ":object_test_helper",
+        "@maven//:com_google_truth_truth_1_1",
+        "@maven//:junit_junit_4_13_1",
+    ],
+)
+
+################################################################################
 # Array Test: Methods Rank 1.
 ################################################################################
 cc_library(
@@ -42,6 +100,7 @@ cc_library(
     testonly = True,
     srcs = ["array_test_method_rank_2_jni.cc"],
     deps = [
+        ":array_test_helpers_native",
         ":modulo",
         ":object_test_helper_jni",
         "//:jni_bind",
@@ -63,40 +122,9 @@ java_test(
     srcs = ["ArrayTestMethodRank2.java"],
     data = [":libarray_test_method_rank_2_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
-    deps = [
-        ":object_test_helper",
-        "@maven//:com_google_truth_truth_1_1",
+    runtime_deps = [
+        ":array_test_helpers",
     ],
-)
-
-################################################################################
-# Array Test: Fields Rank 1.
-################################################################################
-cc_library(
-    name = "array_test_field_rank_1_jni_impl",
-    testonly = True,
-    srcs = ["array_test_field_rank_1_jni.cc"],
-    deps = [
-        ":object_test_helper_jni",
-        "//:jni_bind",
-        "//metaprogramming:lambda_string",
-    ],
-    alwayslink = True,
-)
-
-cc_binary(
-    name = "libarray_test_field_rank_1_jni.so",
-    testonly = True,
-    linkshared = True,
-    deps = [":array_test_field_rank_1_jni_impl"],
-)
-
-java_test(
-    name = "ArrayTestFieldRank1",
-    testonly = True,
-    srcs = ["ArrayTestFieldRank1.java"],
-    data = [":libarray_test_field_rank_1_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth_1_1",

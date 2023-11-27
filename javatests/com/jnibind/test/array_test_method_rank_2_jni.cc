@@ -16,6 +16,7 @@
 #include <limits>
 #include <memory>
 
+#include "array_test_helpers_native.h"
 #include "modulo.h"
 #include "javatests/com/jnibind/test/object_test_helper_jni.h"
 #include "jni_bind.h"
@@ -31,38 +32,22 @@ using ::jni::Params;
 using ::jni::Rank;
 using ::jni::RegularToArrayTypeMap_t;
 using ::jni::Return;
+using ::jni::StaticRef;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
-
-// clang-format off
-static constexpr Class kFixture {
-    "com/jnibind/test/ArrayTestMethodRank2",
-    Method {"boolean2D", Return<void>{}, Params{jboolean{}, Array{jboolean{}, Rank<2>{}}}},
-    Method {"byte2D", Return<void>{}, Params{jbyte{}, Array{jbyte{}, Rank<2>{}}}},
-    Method {"char2D", Return<void>{}, Params{jchar{}, Array{jchar{}, Rank<2>{}}}},
-    Method {"short2D", Return<void>{}, Params{jshort{}, Array{jshort{}, Rank<2>{}}}},
-    Method {"int2D", Return<void>{}, Params{int{}, Array{jint{}, Rank<2>{}}}},
-    Method {"long2D", Return<void>{}, Params{jlong{}, Array{jlong{}, Rank<2>{}}}},
-    Method {"float2D", Return<void>{}, Params{float{}, Array{jfloat{}, Rank<2>{}}}},
-    Method {"double2D", Return<void>{}, Params{jdouble{}, Array{jdouble{}, Rank<2>{}}}},
-    Method {"string2D", Return<void>{}, Params{Array{jstring{}, Rank<2>{}}}},
-    Method {"object1D", Return<void>{}, Params{Array{kObjectTestHelperClass, Rank<1>{}}}},
-    Method {"object2D", Return<void>{}, Params{int{}, Array{kObjectTestHelperClass, Rank<2>{}}}},
-};
-// clang-format on
 
 // Generic method test suitable for simple primitive types.
 // Strings are passed through lambdas as method indexing is compile time.
 template <typename SpanType, typename MethodNameLambda>
 void GenericMethodTest(
-    LocalObject<kFixture> fixture, MethodNameLambda method_name_lambda,
-    LocalArray<SpanType, 2> arr,
+    MethodNameLambda method_name_lambda, LocalArray<SpanType, 2> arr,
     SpanType max_val = std::numeric_limits<SpanType>::max()) {
   // Simple lvalue pass through works as expected.
-  fixture(method_name_lambda(), SpanType{0}, arr);
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), SpanType{0}, arr);
 
   // Simple rvalue pass through works as expected.
-  fixture(method_name_lambda(), SpanType{0}, std::move(arr));
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), SpanType{0},
+                                     std::move(arr));
 
   // Building a new array, and setting all the values by hand works.
   LocalArray<SpanType, 2> new_array{3};
@@ -87,7 +72,8 @@ void GenericMethodTest(
     new_array.Set(1, row2);
     new_array.Set(2, row3);
 
-    fixture(method_name_lambda(), SpanType{0}, new_array);
+    StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), SpanType{0},
+                                       new_array);
   }
 
   // You can pull the view multiple times with iterators (each value ticked 1).
@@ -97,7 +83,8 @@ void GenericMethodTest(
         val = Modulo(1, val, max_val);
       }
     }
-    fixture(method_name_lambda(), SpanType{1}, new_array);
+    StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), SpanType{1},
+                                       new_array);
   }
 
   // You can pull the view multiple times with raw loops.
@@ -114,7 +101,8 @@ void GenericMethodTest(
   }
 
   // Each variant increments base by 1, so 2 is used here.
-  fixture(method_name_lambda(), Modulo(2, {0}, max_val), new_array);
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(),
+                                     Modulo(2, {0}, max_val), new_array);
 }
 
 extern "C" {
@@ -129,82 +117,68 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTestMethodRank2_jniTearDown(
   jvm = nullptr;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// 2D Array Tests.
-////////////////////////////////////////////////////////////////////////////////
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank2_nativeBooleanTests2D(
-    JNIEnv*, jclass, jobject fixture, jobjectArray arr) {
+    JNIEnv*, jclass, jobjectArray arr) {
   // Boolean has a max of "2" which makes the generic moduloing logic work.
-  GenericMethodTest(LocalObject<kFixture>{fixture}, STR("boolean2D"),
-                    LocalArray<jboolean, 2>{arr}, jboolean{2});
+  GenericMethodTest(STR("assertBoolean2D"), LocalArray<jboolean, 2>{arr},
+                    jboolean{2});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank2_nativeByteTests2D(JNIEnv*, jclass,
-                                                             jobject fixture,
+
                                                              jobjectArray arr) {
-  GenericMethodTest(LocalObject<kFixture>{fixture}, STR("byte2D"),
-                    LocalArray<jbyte, 2>{arr});
+  GenericMethodTest(STR("assertByte2D"), LocalArray<jbyte, 2>{arr});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank2_nativeCharTests2D(JNIEnv*, jclass,
-                                                             jobject fixture,
+
                                                              jobjectArray arr) {
-  GenericMethodTest(LocalObject<kFixture>{fixture}, STR("char2D"),
-                    LocalArray<jchar, 2>{arr});
+  GenericMethodTest(STR("assertChar2D"), LocalArray<jchar, 2>{arr});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank2_nativeShortTests2D(
-    JNIEnv*, jclass, jobject fixture, jobjectArray arr) {
-  GenericMethodTest(LocalObject<kFixture>{fixture}, STR("short2D"),
-                    LocalArray<jshort, 2>{arr});
+    JNIEnv*, jclass, jobjectArray arr) {
+  GenericMethodTest(STR("assertShort2D"), LocalArray<jshort, 2>{arr});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank2_nativeIntTests2D(JNIEnv*, jclass,
-                                                            jobject fixture,
+
                                                             jobjectArray arr) {
-  GenericMethodTest(LocalObject<kFixture>{fixture}, STR("int2D"),
-                    LocalArray<jint, 2>{arr});
+  GenericMethodTest(STR("assertInt2D"), LocalArray<jint, 2>{arr});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank2_nativeLongTests2D(JNIEnv*, jclass,
-                                                             jobject fixture,
                                                              jobjectArray arr) {
-  GenericMethodTest(LocalObject<kFixture>{fixture}, STR("long2D"),
-                    LocalArray<jlong, 2>{arr});
+  GenericMethodTest(STR("assertLong2D"), LocalArray<jlong, 2>{arr});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank2_nativeFloatTests2D(
-    JNIEnv*, jclass, jobject fixture, jobjectArray arr) {
-  GenericMethodTest(LocalObject<kFixture>{fixture}, STR("float2D"),
-                    LocalArray<jfloat, 2>{arr});
+    JNIEnv*, jclass, jobjectArray arr) {
+  GenericMethodTest(STR("assertFloat2D"), LocalArray<jfloat, 2>{arr});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank2_nativeDoubleTests2D(
-    JNIEnv*, jclass, jobject fixture, jobjectArray arr) {
-  GenericMethodTest(LocalObject<kFixture>{fixture}, STR("double2D"),
-                    LocalArray<jdouble, 2>{arr});
+    JNIEnv*, jclass, jobjectArray arr) {
+  GenericMethodTest(STR("assertDouble2D"), LocalArray<jdouble, 2>{arr});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank2_nativeObjectTests2D(
-    JNIEnv* env, jclass, jobject fixture_jobject,
-    jobjectArray arr_jobjectArray) {
-  LocalObject<kFixture> fixture{fixture_jobject};
-
+    JNIEnv* env, jclass, jobjectArray arr_jobjectArray) {
   // Simple lvalue pass through works as expected.
   LocalArray<jobject, 2, kObjectTestHelperClass> arr{arr_jobjectArray};
-  fixture("object2D", 0, arr);
+  StaticRef<kArrayTestHelperClass>{}("assertObject2D", 0, arr);
 
   // Simple rvalue pass through works as expected.
-  fixture("object2D", 0, std::move(arr));
+  StaticRef<kArrayTestHelperClass>{}("assertObject2D", 0, std::move(arr));
 
   // Building a new array, and setting all the values by hand works.
   LocalArray<jobject, 2, kObjectTestHelperClass> new_array{3, nullptr};
@@ -228,7 +202,7 @@ Java_com_jnibind_test_ArrayTestMethodRank2_nativeObjectTests2D(
   new_array.Set(1, row2);
   new_array.Set(2, row3);
 
-  fixture("object2D", 0, new_array);
+  StaticRef<kArrayTestHelperClass>{}("assertObject2D", 0, new_array);
 
   // You can pull the view multiple times with iterators (each value ticked 1).
   {
@@ -237,7 +211,7 @@ Java_com_jnibind_test_ArrayTestMethodRank2_nativeObjectTests2D(
         obj("increment", 1);
       }
     }
-    fixture("object2D", 1, new_array);
+    StaticRef<kArrayTestHelperClass>{}("assertObject2D", 1, new_array);
   }
 
   // You can pull the view multiple times with raw loops.
@@ -251,7 +225,7 @@ Java_com_jnibind_test_ArrayTestMethodRank2_nativeObjectTests2D(
   }
 
   // Each variant increments base by 1, so 2 is used here.
-  fixture("object2D", 2, new_array);
+  StaticRef<kArrayTestHelperClass>{}("assertObject2D", 2, new_array);
 }
 
 }  // extern "C"
