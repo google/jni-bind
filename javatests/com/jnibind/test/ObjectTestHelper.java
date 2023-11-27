@@ -25,6 +25,16 @@ public class ObjectTestHelper {
     objectVal = null;
   }
 
+  public void print() {
+    System.out.println(this.intVal1);
+    System.out.println(this.intVal2);
+    System.out.println(this.intVal3);
+
+    if (objectVal != null) {
+      System.out.println(objectVal);
+    }
+  }
+
   public ObjectTestHelper(Object objectVal) {
     this.objectVal = objectVal;
   }

@@ -45,6 +45,7 @@ constexpr jni::Class kObjectTestHelperClass {
 
     ::jni::Method{"foo", ::jni::Return{}, ::jni::Params{}},
     ::jni::Method{"increment", ::jni::Return{}, ::jni::Params<int>{}},
+    ::jni::Method{"print", ::jni::Return{}, ::jni::Params{}},
 
     ::jni::Field{"intVal1", int{}},
     ::jni::Field{"intVal2", int{}},
