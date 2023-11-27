@@ -69,18 +69,42 @@ TEST_F(JniTest, Array_FieldTests) {
   EXPECT_CALL(*env_,
               GetFieldID(_, StrEq("ObjectArrayRank3"), StrEq("[[[LkClass2;")));
 
+  EXPECT_CALL(*env_, GetObjectField(Fake<jobject>(), Fake<jfieldID>()))
+      .WillOnce(::testing::Return(Fake<jbooleanArray>()))
+      .WillOnce(::testing::Return(Fake<jbyteArray>()))
+      .WillOnce(::testing::Return(Fake<jcharArray>()))
+      .WillOnce(::testing::Return(Fake<jshortArray>()))
+      .WillOnce(::testing::Return(Fake<jintArray>()))
+      .WillOnce(::testing::Return(Fake<jfloatArray>()))
+      .WillOnce(::testing::Return(Fake<jdoubleArray>()))
+      .WillOnce(::testing::Return(Fake<jlongArray>()))
+      .WillOnce(::testing::Return(Fake<jobjectArray>(1)))
+      .WillOnce(::testing::Return(Fake<jobjectArray>(2)))
+      .WillOnce(::testing::Return(Fake<jobjectArray>(3)));
+
   LocalObject<kFieldClass> obj{AdoptLocal{}, Fake<jobject>()};
-  obj["BooleanArray"].Get();
-  obj["ByteArray"].Get();
-  obj["CharArray"].Get();
-  obj["ShortArray"].Get();
-  obj["IntArray"].Get();
-  obj["FloatArray"].Get();
-  obj["LongArray"].Get();
-  obj["DoubleArray"].Get();
-  obj["ObjectArrayRank1"].Get();
-  obj["ObjectArrayRank2"].Get();
-  obj["ObjectArrayRank3"].Get();
+
+  EXPECT_EQ(static_cast<jbooleanArray>(obj["BooleanArray"].Get()),
+            Fake<jbooleanArray>());
+  EXPECT_EQ(static_cast<jbyteArray>(obj["ByteArray"].Get()),
+            Fake<jbyteArray>());
+  EXPECT_EQ(static_cast<jcharArray>(obj["CharArray"].Get()),
+            Fake<jcharArray>());
+  EXPECT_EQ(static_cast<jshortArray>(obj["ShortArray"].Get()),
+            Fake<jshortArray>());
+  EXPECT_EQ(static_cast<jintArray>(obj["IntArray"].Get()), Fake<jintArray>());
+  EXPECT_EQ(static_cast<jfloatArray>(obj["FloatArray"].Get()),
+            Fake<jfloatArray>());
+  EXPECT_EQ(static_cast<jdoubleArray>(obj["DoubleArray"].Get()),
+            Fake<jdoubleArray>());
+  EXPECT_EQ(static_cast<jlongArray>(obj["LongArray"].Get()),
+            Fake<jlongArray>());
+  EXPECT_EQ(static_cast<jobjectArray>(obj["ObjectArrayRank1"].Get()),
+            Fake<jobjectArray>(1));
+  EXPECT_EQ(static_cast<jobjectArray>(obj["ObjectArrayRank2"].Get()),
+            Fake<jobjectArray>(2));
+  EXPECT_EQ(static_cast<jobjectArray>(obj["ObjectArrayRank3"].Get()),
+            Fake<jobjectArray>(3));
 }
 
 TEST_F(JniTest, Array_Field_Boolean_Test) {
