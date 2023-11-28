@@ -40,25 +40,25 @@ public class ArrayTestMethodRank1 {
 
   static native void jniTearDown();
 
-  native void nativeBooleanTests(ArrayTestMethodRank1 arrayTest, boolean[] intArray);
+  native void nativeBooleanTests(boolean[] intArray);
 
-  native void nativeByteTests(ArrayTestMethodRank1 arrayTest, byte[] byteArray);
+  native void nativeByteTests(byte[] byteArray);
 
-  native void nativeCharTests(ArrayTestMethodRank1 arrayTest, char[] charArray);
+  native void nativeCharTests(char[] charArray);
 
-  native void nativeShortTests(ArrayTestMethodRank1 arrayTest, short[] shortArray);
+  native void nativeShortTests(short[] shortArray);
 
-  native void nativeIntTests(ArrayTestMethodRank1 arrayTest, int[] intArray);
+  native void nativeIntTests(int[] intArray);
 
-  native void nativeLongTests(ArrayTestMethodRank1 arrayTest, long[] longArray);
+  native void nativeLongTests(long[] longArray);
 
-  native void nativeFloatTests(ArrayTestMethodRank1 arrayTest, float[] floatArray);
+  native void nativeFloatTests(float[] floatArray);
 
-  native void nativeDoubleTests(ArrayTestMethodRank1 arrayTest, double[] doubleArray);
+  native void nativeDoubleTests(double[] doubleArray);
 
-  native void nativeStringTests(ArrayTestMethodRank1 arrayTest, String[] stringArray);
+  native void nativeStringTests(String[] stringArray);
 
-  native void nativeObjectTests(ArrayTestMethodRank1 arrayTest, ObjectTestHelper[] objectArray);
+  native void nativeObjectTests(ObjectTestHelper[] objectArray);
 
   void booleanArray(boolean testForTrue, boolean[] arr) {
     for (int i = 0; i < arr.length; i++) {
@@ -137,55 +137,55 @@ public class ArrayTestMethodRank1 {
   @Test
   public void booleanTests() {
     boolean[] arr = {true, true, true};
-    nativeBooleanTests(this, arr);
+    nativeBooleanTests(arr);
   }
 
   @Test
   public void byteTests() {
     byte[] arr = {0, 1, 2, 3, 4, 5};
-    nativeByteTests(this, arr);
+    nativeByteTests(arr);
   }
 
   @Test
   public void charTests() {
     char[] arr = {0, 1, 2, 3, 4, 5};
-    nativeCharTests(this, arr);
+    nativeCharTests(arr);
   }
 
   @Test
   public void shortTests() {
     short[] arr = {0, 1, 2, 3, 4, 5};
-    nativeShortTests(this, arr);
+    nativeShortTests(arr);
   }
 
   @Test
   public void intTests() {
     int[] arr = {0, 1, 2, 3, 4, 5};
-    nativeIntTests(this, arr);
+    nativeIntTests(arr);
   }
 
   @Test
   public void longTests() {
     long[] arr = {0, 1, 2, 3, 4, 5};
-    nativeLongTests(this, arr);
+    nativeLongTests(arr);
   }
 
   @Test
   public void floatTests() {
     float[] arr = {0, 1, 2, 3, 4, 5};
-    nativeFloatTests(this, arr);
+    nativeFloatTests(arr);
   }
 
   @Test
   public void doubleTests() {
     double[] arr = {0, 1, 2, 3, 4, 5};
-    nativeDoubleTests(this, arr);
+    nativeDoubleTests(arr);
   }
 
   @Test
   public void stringTests() {
     String[] arr = {"Foo", "Baz", "Bar"};
-    nativeStringTests(this, arr);
+    nativeStringTests(arr);
   }
 
   @Test
@@ -194,6 +194,6 @@ public class ArrayTestMethodRank1 {
       new ObjectTestHelper(0, 0, 0), new ObjectTestHelper(1, 1, 1), new ObjectTestHelper(2, 2, 2)
     };
 
-    nativeObjectTests(this, objectTestHelper);
+    nativeObjectTests(objectTestHelper);
   }
 }

@@ -17,11 +17,86 @@ package com.jnibind.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /** Helpers functions to assert array behaviour from native. */
 final class ArrayTestHelpers {
   private ArrayTestHelpers() {}
+
+  static void assertBoolean1D(boolean testForTrue, boolean[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+      if (testForTrue) {
+        assertTrue(arr[i]);
+      } else {
+        assertFalse(arr[i]);
+      }
+    }
+  }
+
+  static void assertByte1D(byte baseOffset, byte[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+      assertEquals(i + baseOffset, arr[i]);
+    }
+  }
+
+  static void assertChar1D(char baseOffset, char[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+      assertEquals(i + baseOffset, arr[i]);
+    }
+  }
+
+  static void assertShort1D(short baseOffset, short[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+      assertEquals(i + baseOffset, arr[i]);
+    }
+  }
+
+  static void assertInt1D(int baseOffset, int[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+      assertEquals(i + baseOffset, arr[i]);
+    }
+  }
+
+  static void assertLong1D(long baseOffset, long[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+      assertEquals(i + baseOffset, arr[i]);
+    }
+  }
+
+  static void assertFloat1D(float baseOffset, float[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+      assertEquals(i + baseOffset, arr[i], 1.f);
+    }
+  }
+
+  static void assertDouble1D(double baseOffset, double[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+      assertEquals((double) i + baseOffset, arr[i], 0);
+    }
+  }
+
+  static void assertString1D(String[] arr) {
+    assertEquals(3, arr.length);
+    assertEquals("Foo", arr[0]);
+    assertEquals("Baz", arr[1]);
+    assertEquals("Bar", arr[2]);
+  }
+
+  static void assertObject1D(int objectMemberOffset, ObjectTestHelper[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+      int idxPlusOffset = i + objectMemberOffset;
+      ObjectTestHelper dummyThatMatchesIdx =
+          new ObjectTestHelper(idxPlusOffset, idxPlusOffset, idxPlusOffset);
+      assertTrue(dummyThatMatchesIdx.isEqualTo(arr[i]));
+    }
+  }
+
+  static void assertObjectArrayOfNulls1D(ObjectTestHelper[] arr) {
+    for (ObjectTestHelper element : arr) {
+      assertNull(element);
+    }
+  }
 
   /** 2D Tests RJNI declarations. * */
   static void assertBoolean2D(boolean testForTrue, boolean[][] arr) {

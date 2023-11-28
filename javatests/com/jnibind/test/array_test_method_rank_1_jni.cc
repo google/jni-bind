@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "array_test_helpers_native.h"
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
 #include "metaprogramming/lambda_string.h"
@@ -30,39 +31,21 @@ using ::jni::Method;
 using ::jni::Params;
 using ::jni::RegularToArrayTypeMap_t;
 using ::jni::Return;
+using ::jni::StaticRef;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
-
-// clang-format off
-static constexpr Class kArrayTestMethodRank1 {
-    "com/jnibind/test/ArrayTestMethodRank1",
-    Method {"booleanArray", Return<void>{}, Params{jboolean{}, Array{jboolean{}}}},
-    Method {"byteArray", Return<void>{}, Params{jbyte{}, Array{jbyte{}}}},
-    Method {"charArray", Return<void>{}, Params{jchar{}, Array{jchar{}}}},
-    Method {"shortArray", Return<void>{}, Params{jshort{}, Array{jshort{}}}},
-    Method {"intArray", Return<void>{}, Params{int{}, Array{jint{}}}},
-    Method {"longArray", Return<void>{}, Params{jlong{}, Array{jlong{}}}},
-    Method {"floatArray", Return<void>{}, Params{float{}, Array{jfloat{}}}},
-    Method {"doubleArray", Return<void>{}, Params{jdouble{}, Array{jdouble{}}}},
-    Method {"stringArray", Return<void>{}, Params{Array{jstring{}}}},
-    Method {"objectArray", Return<void>{}, Params{int{}, Array{kObjectTestHelperClass}}},
-
-    Method {"objectArrayArrayOfNulls",
-      Return<void>{}, Params{Array{kObjectTestHelperClass}}},
-};
-// clang-format on
 
 // Generic method test suitable for simple primitive types.
 // Strings are passed through lambdas as method indexing is compile time.
 template <typename SpanType, typename MethodNameLambda>
-void GenericMethodTest(LocalObject<kArrayTestMethodRank1> fixture,
-                       LocalArray<SpanType> local_arr, SpanType base,
+void GenericMethodTest(LocalArray<SpanType> local_arr, SpanType base,
                        MethodNameLambda method_name_lambda) {
   // Simple lvalue pass through works as expected.
-  fixture(method_name_lambda(), base, local_arr);
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, local_arr);
 
   // Simple rvalue pass through works as expected.
-  fixture(method_name_lambda(), base, std::move(local_arr));
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base,
+                                     std::move(local_arr));
 
   // Building a new array, and setting all the values by hand works.
   LocalArray<SpanType> new_array{8};
@@ -72,7 +55,7 @@ void GenericMethodTest(LocalObject<kArrayTestMethodRank1> fixture,
       array_view.ptr()[i] = base + static_cast<SpanType>(i);
     }
   }
-  fixture(method_name_lambda(), base, new_array);
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, new_array);
 
   // You can pull the view multiple times.
   {
@@ -90,7 +73,7 @@ void GenericMethodTest(LocalObject<kArrayTestMethodRank1> fixture,
     val = base + i;
     i++;
   }
-  fixture(method_name_lambda(), base, new_array);
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, new_array);
 
   // You can build an array of null values and set the values manually.
   LocalArray<SpanType> arr_built_from_null{5};
@@ -101,7 +84,7 @@ void GenericMethodTest(LocalObject<kArrayTestMethodRank1> fixture,
     val = base + j;
     j++;
   }
-  fixture(method_name_lambda(), base, new_array);
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, new_array);
 }
 
 extern "C" {
@@ -118,78 +101,71 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTestMethodRank1_jniTearDown(
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeBooleanTests(
-    JNIEnv* env, jclass, jobject test_fixture, jbooleanArray boolean_array) {
-  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
-                    LocalArray<jboolean>{boolean_array}, jboolean{true},
-                    STR("booleanArray"));
+    JNIEnv* env, jclass, jbooleanArray boolean_array) {
+  GenericMethodTest(LocalArray<jboolean>{boolean_array}, jboolean{true},
+                    STR("assertBoolean1D"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeByteTests(
-    JNIEnv* env, jclass, jobject test_fixture, jbyteArray byte_array) {
-  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
-                    LocalArray<jbyte>{byte_array}, jbyte{0}, STR("byteArray"));
+    JNIEnv* env, jclass, jbyteArray byte_array) {
+  GenericMethodTest(LocalArray<jbyte>{byte_array}, jbyte{0},
+                    STR("assertByte1D"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeCharTests(
-    JNIEnv* env, jclass, jobject test_fixture, jcharArray char_array) {
-  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
-                    LocalArray<jchar>{char_array}, jchar{0}, STR("charArray"));
+    JNIEnv* env, jclass, jcharArray char_array) {
+  GenericMethodTest(LocalArray<jchar>{char_array}, jchar{0},
+                    STR("assertChar1D"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeShortTests(
-    JNIEnv* env, jclass, jobject test_fixture, jshortArray short_array) {
-  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
-                    LocalArray<jshort>{short_array}, jshort{0},
-                    STR("shortArray"));
+    JNIEnv* env, jclass, jshortArray short_array) {
+  GenericMethodTest(LocalArray<jshort>{short_array}, jshort{0},
+                    STR("assertShort1D"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeIntTests(JNIEnv* env, jclass,
-                                                          jobject test_fixture,
+
                                                           jintArray int_array) {
-  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
-                    LocalArray<jint>{int_array}, jint{0}, STR("intArray"));
+  GenericMethodTest(LocalArray<jint>{int_array}, jint{0}, STR("assertInt1D"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeLongTests(
-    JNIEnv* env, jclass, jobject test_fixture, jlongArray long_array) {
-  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
-                    LocalArray<jlong>{long_array}, jlong{0}, STR("longArray"));
+    JNIEnv* env, jclass, jlongArray long_array) {
+  GenericMethodTest(LocalArray<jlong>{long_array}, jlong{0},
+                    STR("assertLong1D"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeFloatTests(
-    JNIEnv* env, jclass, jobject test_fixture, jfloatArray float_array) {
-  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
-                    LocalArray<jfloat>{float_array}, jfloat{0},
-                    STR("floatArray"));
+    JNIEnv* env, jclass, jfloatArray float_array) {
+  GenericMethodTest(LocalArray<jfloat>{float_array}, jfloat{0},
+                    STR("assertFloat1D"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeDoubleTests(
-    JNIEnv* env, jclass, jobject test_fixture, jdoubleArray double_array) {
-  GenericMethodTest(LocalObject<kArrayTestMethodRank1>{test_fixture},
-                    LocalArray<jdouble>{double_array}, jdouble{0},
-                    STR("doubleArray"));
+    JNIEnv* env, jclass, jdoubleArray double_array) {
+  GenericMethodTest(LocalArray<jdouble>{double_array}, jdouble{0},
+                    STR("assertDouble1D"));
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeStringTests(
-    JNIEnv* env, jclass, jobject test_fixture, jobjectArray object_array) {
-  LocalObject<kArrayTestMethodRank1> fixture{test_fixture};
-
+    JNIEnv* env, jclass, jobjectArray object_array) {
   // Simple lvalue pass through works as expected.
   LocalArray<jstring> local_arr{object_array};
-  fixture("stringArray", local_arr);
+  StaticRef<kArrayTestHelperClass>{}("assertString1D", local_arr);
 
   // TODO(b/143908983): Currently not possible to write.
   // Simple rvalue pass through works as expected.
   /*
-  fixture("stringArray",
+  StaticRef<kArrayTestHelperClass>{}("assertString1D",
                    LocalArray<jstring>{
                        { "Foo", std::string{"baz"}, LocalString{"Baz"} }
                    });
@@ -200,7 +176,7 @@ Java_com_jnibind_test_ArrayTestMethodRank1_nativeStringTests(
   new_array.Set(0, LocalString{"Foo"});
   new_array.Set(1, LocalString{"Baz"});
   new_array.Set(2, LocalString{"Bar"});
-  fixture("stringArray", new_array);
+  StaticRef<kArrayTestHelperClass>{}("assertString1D", new_array);
 
   // And it can be iterated over.
   std::size_t i = 0;
@@ -210,26 +186,26 @@ Java_com_jnibind_test_ArrayTestMethodRank1_nativeStringTests(
     i++;
   }
 
-  fixture("stringArray", validator_array);
+  StaticRef<kArrayTestHelperClass>{}("assertString1D", validator_array);
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestMethodRank1_nativeObjectTests(
-    JNIEnv* env, jclass, jobject test_fixture, jobjectArray object_array) {
-  LocalObject<kArrayTestMethodRank1> fixture{test_fixture};
-
+    JNIEnv* env, jclass, jobjectArray object_array) {
   // Creating arrays of nulls with just size works.
   LocalArray<jobject, 1, kObjectTestHelperClass> local_arr_nulls{5};
-  fixture("objectArrayArrayOfNulls", local_arr_nulls);
+  StaticRef<kArrayTestHelperClass>{}("assertObjectArrayOfNulls1D",
+                                     local_arr_nulls);
 
   // Simple lvalue pass through works as expected.
   LocalArray<jobject, 1, kObjectTestHelperClass> local_arr{object_array};
-  fixture("objectArray", 0, local_arr);
+  StaticRef<kArrayTestHelperClass>{}("assertObject1D", 0, local_arr);
 
   // Simple rvalue pass through works as expected.
-  fixture("objectArray", 5,
-          LocalArray<jobject, 1, kObjectTestHelperClass>{
-              1, LocalObject<kObjectTestHelperClass>{5, 5, 5}});
+  StaticRef<kArrayTestHelperClass>{}(
+      "assertObject1D", 5,
+      LocalArray<jobject, 1, kObjectTestHelperClass>{
+          1, LocalObject<kObjectTestHelperClass>{5, 5, 5}});
 
   // Building a new array, and setting all the values by hand works.
   LocalObject<kObjectTestHelperClass> obj{0, 0, 0};
@@ -240,7 +216,7 @@ Java_com_jnibind_test_ArrayTestMethodRank1_nativeObjectTests(
           i, LocalObject<kObjectTestHelperClass>{jint{i}, jint{i}, jint{i}});
     }
   }
-  fixture("objectArray", 0, new_array);
+  StaticRef<kArrayTestHelperClass>{}("assertObject1D", 0, new_array);
 
   // You can pull the view multiple times.
   {
@@ -261,7 +237,7 @@ Java_com_jnibind_test_ArrayTestMethodRank1_nativeObjectTests(
     val["intVal3"].Set(val["intVal3"].Get() + 3);
   }
 
-  fixture("objectArray", 2 + 3, new_array);
+  StaticRef<kArrayTestHelperClass>{}("assertObject1D", 2 + 3, new_array);
 }
 
 }  // extern "C"
