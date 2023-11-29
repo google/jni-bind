@@ -27,32 +27,43 @@ constexpr jni::Class kArrayTestHelperClass{
     "com/jnibind/test/ArrayTestHelpers",
 
     ::jni::Static{
-        // Rank 1 verification.
-        ::jni::Method{"assertBoolean1D", ::jni::Return{},
-                      ::jni::Params{jboolean{}, ::jni::Array<jboolean>{}}},
+
+        // Rank 0 Verification.
+        ::jni::Method{"assertString", ::jni::Return{},
+                      ::jni::Params{jstring{}, jstring{}}},
+        ::jni::Method{"assertObject", ::jni::Return{},
+                      ::jni::Params{jint{}, kObjectTestHelperClass}},
+
+        // Rank 1 Verification.
+        ::jni::Method{
+            "assertBoolean1D", ::jni::Return{},
+            ::jni::Params{jboolean{}, jboolean{}, ::jni::Array<jboolean>{}}},
         ::jni::Method{"assertByte1D", ::jni::Return{},
-                      ::jni::Params{jbyte{}, ::jni::Array<jbyte>{}}},
+                      ::jni::Params{jbyte{}, jbyte{}, ::jni::Array<jbyte>{}}},
         ::jni::Method{"assertChar1D", ::jni::Return{},
-                      ::jni::Params{jchar{}, ::jni::Array<jchar>{}}},
-        ::jni::Method{"assertShort1D", ::jni::Return{},
-                      ::jni::Params{jshort{}, ::jni::Array<jshort>{}}},
+                      ::jni::Params{jchar{}, jchar{}, ::jni::Array<jchar>{}}},
+        ::jni::Method{
+            "assertShort1D", ::jni::Return{},
+            ::jni::Params{jshort{}, jshort{}, ::jni::Array<jshort>{}}},
         ::jni::Method{"assertInt1D", ::jni::Return{},
-                      ::jni::Params{jint{}, ::jni::Array<jint>{}}},
+                      ::jni::Params{jint{}, jint{}, ::jni::Array<jint>{}}},
         ::jni::Method{"assertLong1D", ::jni::Return{},
-                      ::jni::Params{jlong{}, ::jni::Array<jlong>{}}},
-        ::jni::Method{"assertFloat1D", ::jni::Return{},
-                      ::jni::Params{jfloat{}, ::jni::Array<jfloat>{}}},
-        ::jni::Method{"assertDouble1D", ::jni::Return{},
-                      ::jni::Params{jdouble{}, ::jni::Array<jdouble>{}}},
+                      ::jni::Params{jlong{}, jlong{}, ::jni::Array<jlong>{}}},
+        ::jni::Method{
+            "assertFloat1D", ::jni::Return{},
+            ::jni::Params{jfloat{}, jfloat{}, ::jni::Array<jfloat>{}}},
+        ::jni::Method{
+            "assertDouble1D", ::jni::Return{},
+            ::jni::Params{jdouble{}, jdouble{}, ::jni::Array<jdouble>{}}},
         ::jni::Method{"assertString1D", ::jni::Return{},
-                      ::jni::Params{::jni::Array{jstring{}}}},
+                      ::jni::Params{::jni::Array{jstring{}}, jboolean{}}},
         ::jni::Method{
             "assertObject1D", ::jni::Return{},
             ::jni::Params{jint{}, ::jni::Array{kObjectTestHelperClass}}},
         ::jni::Method{"assertObjectArrayOfNulls1D", ::jni::Return{},
                       ::jni::Params{::jni::Array{kObjectTestHelperClass}}},
 
-        // Rank 2 verification.
+        // Rank 2 Verification.
         ::jni::Method{"assertBoolean2D", ::jni::Return{},
                       ::jni::Params{jboolean{}, ::jni::Array<jboolean, 2>{}}},
         ::jni::Method{"assertByte2D", ::jni::Return{},

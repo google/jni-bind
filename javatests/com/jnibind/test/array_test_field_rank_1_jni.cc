@@ -18,6 +18,7 @@
 #include <cstring>
 #include <memory>
 
+#include "array_test_helpers_native.h"
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
 #include "metaprogramming/lambda_string.h"
@@ -32,28 +33,13 @@ using ::jni::LocalString;
 using ::jni::Method;
 using ::jni::Params;
 using ::jni::Return;
+using ::jni::StaticRef;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
 
 // clang-format off
 static constexpr Class kArrayTestFieldRank1 {
     "com/jnibind/test/ArrayTestFieldRank1",
-
-    // Validator functions.
-    Method {"booleanArray", Return<void>{}, Params{jboolean{}, jboolean{}, Array{jboolean{}}}},
-    Method {"byteArray", Return<void>{}, Params{jbyte{},jbyte{}, Array{jbyte{}}}},
-    Method {"charArray", Return<void>{}, Params{jchar{}, jchar{}, Array{jchar{}}}},
-    Method {"shortArray", Return<void>{}, Params{jshort{},jshort{}, Array{jshort{}}}},
-    Method {"intArray", Return<void>{}, Params{int{},int{}, Array{jint{}}}},
-    Method {"longArray", Return<void>{}, Params{jlong{},jlong{}, Array{jlong{}}}},
-    Method {"floatArray", Return<void>{}, Params{float{},float{}, Array{jfloat{}}}},
-    Method {"doubleArray", Return<void>{}, Params{jdouble{},jdouble{}, Array{jdouble{}}}},
-
-    Method {"stringArray", Return<void>{}, Params{Array{jstring{}}, jboolean{}}},
-    Method {"stringEqual", Return<void>{}, Params{jboolean{}, jstring{}, jstring{}}},
-
-    Method {"object", Return<void>{}, Params{int{}, kObjectTestHelperClass}},
-    Method {"objectArray", Return<void>{}, Params{int{}, Array{kObjectTestHelperClass}}},
 
     // Fields under test: Rank 1 Primitives.
     Field {"booleanArrayField", Array{jboolean{}}},
@@ -81,19 +67,21 @@ void GenericFieldTest(LocalObject<kArrayTestFieldRank1> fixture,
                       MethodNameLambda method_name_lambda) {
   // Field starts in default state.
   LocalArray<SpanType> arr{fixture[field_name_lambda()].Get()};
-  fixture(method_name_lambda(), SpanType{0}, SpanType{0},
-          fixture[field_name_lambda()].Get());
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), SpanType{0},
+                                     SpanType{0},
+                                     fixture[field_name_lambda()].Get());
 
   // Updating the field manually works.
   {
     ArrayView<SpanType> pin = arr.Pin();
     for (int i = 0; i < arr.Length(); ++i) {
-      pin.ptr()[i] = static_cast<SpanType>(i * stride);
+      pin.ptr()[i] = static_cast<SpanType>(i * SpanType{1});
     }
   }
 
-  fixture(method_name_lambda(), SpanType{0}, stride,
-          fixture[field_name_lambda()].Get());
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), SpanType{0},
+                                     SpanType{1},
+                                     fixture[field_name_lambda()].Get());
 
   // Updating the field repeatedly works.
   {
@@ -102,13 +90,13 @@ void GenericFieldTest(LocalObject<kArrayTestFieldRank1> fixture,
       pin.ptr()[i] = base + static_cast<SpanType>(stride * i);
     }
   }
-  fixture(method_name_lambda(), base, stride,
-          fixture[field_name_lambda()].Get());
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, stride,
+                                     fixture[field_name_lambda()].Get());
 
   // Not pinning the value has no effect.
   { std::memset(arr.Pin(false).ptr(), 0, arr.Length() * sizeof(SpanType)); }
-  fixture(method_name_lambda(), base, stride,
-          fixture[field_name_lambda()].Get());
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, stride,
+                                     fixture[field_name_lambda()].Get());
 }
 
 extern "C" {
@@ -128,7 +116,7 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeBooleanTests(
     JNIEnv* env, jclass, jobject test_fixture, jbooleanArray boolean_array) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    jboolean{true}, jboolean{0}, jboolean{true},
-                   STR("booleanArrayField"), STR("booleanArray"));
+                   STR("booleanArrayField"), STR("assertBoolean1D"));
 }
 
 JNIEXPORT void JNICALL
@@ -136,7 +124,7 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeByteTests(
     JNIEnv* env, jclass, jobject test_fixture, jbyteArray byte_array) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jbyte>::max(), jbyte{10}, jbyte{1},
-                   STR("byteArrayField"), STR("byteArray"));
+                   STR("byteArrayField"), STR("assertByte1D"));
 }
 
 JNIEXPORT void JNICALL
@@ -144,7 +132,7 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeCharTests(
     JNIEnv* env, jclass, jobject test_fixture, jcharArray char_array) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jchar>::max(), jchar{10}, jchar{1},
-                   STR("charArrayField"), STR("charArray"));
+                   STR("charArrayField"), STR("assertChar1D"));
 }
 
 JNIEXPORT void JNICALL
@@ -152,14 +140,14 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeShortTests(
     JNIEnv* env, jclass, jobject test_fixture, jshortArray short_array) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jshort>::max(), jshort{10}, jshort{1},
-                   STR("shortArrayField"), STR("shortArray"));
+                   STR("shortArrayField"), STR("assertShort1D"));
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTestFieldRank1_nativeIntTests(
     JNIEnv* env, jclass, jobject test_fixture, jintArray int_array) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jint>::max(), jint{10}, jint{1},
-                   STR("intArrayField"), STR("intArray"));
+                   STR("intArrayField"), STR("assertInt1D"));
 }
 
 JNIEXPORT void JNICALL
@@ -167,7 +155,7 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeLongTests(
     JNIEnv* env, jclass, jobject test_fixture, jlongArray long_array) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jlong>::max(), jlong{10}, jlong{1},
-                   STR("longArrayField"), STR("longArray"));
+                   STR("longArrayField"), STR("assertLong1D"));
 }
 
 JNIEXPORT void JNICALL
@@ -175,7 +163,7 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeFloatTests(
     JNIEnv* env, jclass, jobject test_fixture, jfloatArray float_array) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jfloat>::max(), jfloat{10.f},
-                   jfloat{1.f}, STR("floatArrayField"), STR("floatArray"));
+                   jfloat{1.f}, STR("floatArrayField"), STR("assertFloat1D"));
 }
 
 JNIEXPORT void JNICALL
@@ -183,7 +171,7 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeDoubleTests(
     JNIEnv* env, jclass, jobject test_fixture, jdoubleArray double_array) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jdouble>::max(), jdouble{10}, jdouble{1},
-                   STR("doubleArrayField"), STR("doubleArray"));
+                   STR("doubleArrayField"), STR("assertDouble1D"));
 }
 
 JNIEXPORT void JNICALL
@@ -192,33 +180,41 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeStringTests(
   LocalObject<kArrayTestFieldRank1> fixture{test_fixture};
 
   // Field starts in default state.
-  fixture("stringArray", fixture["stringArrayField"].Get(), jboolean{false});
+  StaticRef<kArrayTestHelperClass>{}(
+      "assertString1D", fixture["stringArrayField"].Get(), jboolean{false});
 
   // Updating the field manually works.
   LocalArray<jstring> arr = fixture["stringArrayField"].Get();
   arr.Set(0, LocalString{"Foo"});
   arr.Set(1, LocalString{"Baz"});
   arr.Set(2, LocalString{"Bar"});
-  fixture("stringArray", arr, true);
+  StaticRef<kArrayTestHelperClass>{}("assertString1D", arr, true);
 
   // Updating the field repeatedly works.
   arr.Set(0, LocalString{"FAKE"});
   arr.Set(1, LocalString{"DEAD"});
   arr.Set(2, LocalString{"BEEF"});
-  fixture("stringArray", arr, false);
+  StaticRef<kArrayTestHelperClass>{}("assertString1D", arr, false);
 
   // Updating the field repeatedly works.
   arr.Set(0, "Foo");
   const char* kBaz = "Baz";
   arr.Set(1, kBaz);
   arr.Set(2, std::string{"Bar"});
-  fixture("stringArray", arr, true);
+  StaticRef<kArrayTestHelperClass>{}("assertString1D", arr, true);
 
   // Iterating over values works.
   static constexpr std::array vals{"Foo", "Baz", "Bar"};
   int i = 0;
   for (LocalString local_string : arr.Pin()) {
-    fixture("stringEqual", jboolean{true}, local_string, vals[i]);
+    StaticRef<kArrayTestHelperClass>{}("assertString", local_string, vals[i]);
+    ++i;
+  }
+
+  // Iterating over passed values works.
+  i = 0;
+  for (LocalString local_string : LocalArray<jstring>{object_array}.Pin()) {
+    StaticRef<kArrayTestHelperClass>{}("assertString", local_string, vals[i]);
     ++i;
   }
 }
@@ -233,7 +229,7 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeObjectTests(
   int i = 0;
   for (LocalObject<kObjectTestHelperClass> new_obj :
        fixture["objectArrayField"].Get().Pin()) {
-    fixture("object", i, new_obj);
+    StaticRef<kArrayTestHelperClass>{}("assertObject", i, new_obj);
     i++;
   }
 }

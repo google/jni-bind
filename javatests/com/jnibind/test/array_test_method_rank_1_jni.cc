@@ -41,10 +41,11 @@ template <typename SpanType, typename MethodNameLambda>
 void GenericMethodTest(LocalArray<SpanType> local_arr, SpanType base,
                        MethodNameLambda method_name_lambda) {
   // Simple lvalue pass through works as expected.
-  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, local_arr);
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, SpanType{1},
+                                     local_arr);
 
   // Simple rvalue pass through works as expected.
-  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base,
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, SpanType{1},
                                      std::move(local_arr));
 
   // Building a new array, and setting all the values by hand works.
@@ -55,7 +56,8 @@ void GenericMethodTest(LocalArray<SpanType> local_arr, SpanType base,
       array_view.ptr()[i] = base + static_cast<SpanType>(i);
     }
   }
-  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, new_array);
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, SpanType{1},
+                                     new_array);
 
   // You can pull the view multiple times.
   {
@@ -73,7 +75,8 @@ void GenericMethodTest(LocalArray<SpanType> local_arr, SpanType base,
     val = base + i;
     i++;
   }
-  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, new_array);
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, SpanType{1},
+                                     new_array);
 
   // You can build an array of null values and set the values manually.
   LocalArray<SpanType> arr_built_from_null{5};
@@ -84,7 +87,8 @@ void GenericMethodTest(LocalArray<SpanType> local_arr, SpanType base,
     val = base + j;
     j++;
   }
-  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, new_array);
+  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, SpanType{1},
+                                     new_array);
 }
 
 extern "C" {
@@ -160,7 +164,7 @@ Java_com_jnibind_test_ArrayTestMethodRank1_nativeStringTests(
     JNIEnv* env, jclass, jobjectArray object_array) {
   // Simple lvalue pass through works as expected.
   LocalArray<jstring> local_arr{object_array};
-  StaticRef<kArrayTestHelperClass>{}("assertString1D", local_arr);
+  StaticRef<kArrayTestHelperClass>{}("assertString1D", local_arr, true);
 
   // TODO(b/143908983): Currently not possible to write.
   // Simple rvalue pass through works as expected.
@@ -176,7 +180,7 @@ Java_com_jnibind_test_ArrayTestMethodRank1_nativeStringTests(
   new_array.Set(0, LocalString{"Foo"});
   new_array.Set(1, LocalString{"Baz"});
   new_array.Set(2, LocalString{"Bar"});
-  StaticRef<kArrayTestHelperClass>{}("assertString1D", new_array);
+  StaticRef<kArrayTestHelperClass>{}("assertString1D", new_array, true);
 
   // And it can be iterated over.
   std::size_t i = 0;
@@ -186,7 +190,7 @@ Java_com_jnibind_test_ArrayTestMethodRank1_nativeStringTests(
     i++;
   }
 
-  StaticRef<kArrayTestHelperClass>{}("assertString1D", validator_array);
+  StaticRef<kArrayTestHelperClass>{}("assertString1D", validator_array, true);
 }
 
 JNIEXPORT void JNICALL

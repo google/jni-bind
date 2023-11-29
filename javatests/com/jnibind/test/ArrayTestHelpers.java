@@ -15,8 +15,10 @@
  */
 package com.jnibind.test;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -24,9 +26,23 @@ import static org.junit.Assert.assertTrue;
 final class ArrayTestHelpers {
   private ArrayTestHelpers() {}
 
-  static void assertBoolean1D(boolean testForTrue, boolean[] arr) {
+  /** Rank 0 Verification Methods. */
+  static void assertString(String lhs, String rhs) {
+    assertEquals(lhs, rhs);
+  }
+
+  static void assertObject(int objectMemberOffset, ObjectTestHelper arr) {
+    assertTrue(
+        arr.isEqualTo(
+            new ObjectTestHelper(objectMemberOffset, objectMemberOffset, objectMemberOffset)));
+  }
+
+  /** Rank 1 Verification Methods. */
+  static void assertBoolean1D(boolean baseOffset, boolean stride, boolean[] arr) {
+    // Booleans stride up until true (i.e. once) and then red line.
+    // This isn't intuitive, but allows for generalised testing.
     for (int i = 0; i < arr.length; i++) {
-      if (testForTrue) {
+      if (baseOffset || (i > 0 && stride)) {
         assertTrue(arr[i]);
       } else {
         assertFalse(arr[i]);
@@ -34,53 +50,59 @@ final class ArrayTestHelpers {
     }
   }
 
-  static void assertByte1D(byte baseOffset, byte[] arr) {
+  static void assertByte1D(byte baseOffset, byte stride, byte[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals(i + baseOffset, arr[i]);
+      assertEquals(i * stride + baseOffset, arr[i]);
     }
   }
 
-  static void assertChar1D(char baseOffset, char[] arr) {
+  static void assertChar1D(char baseOffset, char stride, char[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals(i + baseOffset, arr[i]);
+      assertEquals(i * stride + baseOffset, arr[i]);
     }
   }
 
-  static void assertShort1D(short baseOffset, short[] arr) {
+  static void assertShort1D(short baseOffset, short stride, short[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals(i + baseOffset, arr[i]);
+      assertEquals(i * stride + baseOffset, arr[i]);
     }
   }
 
-  static void assertInt1D(int baseOffset, int[] arr) {
+  static void assertInt1D(int baseOffset, int stride, int[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals(i + baseOffset, arr[i]);
+      assertEquals(i * stride + baseOffset, arr[i]);
     }
   }
 
-  static void assertLong1D(long baseOffset, long[] arr) {
+  static void assertLong1D(long baseOffset, long stride, long[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals(i + baseOffset, arr[i]);
+      assertEquals(i * stride + baseOffset, arr[i]);
     }
   }
 
-  static void assertFloat1D(float baseOffset, float[] arr) {
+  static void assertFloat1D(float baseOffset, float stride, float[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals(i + baseOffset, arr[i], 1.f);
+      assertEquals(i * stride + baseOffset, arr[i], 1.f);
     }
   }
 
-  static void assertDouble1D(double baseOffset, double[] arr) {
+  static void assertDouble1D(double baseOffset, double stride, double[] arr) {
     for (int i = 0; i < arr.length; i++) {
-      assertEquals((double) i + baseOffset, arr[i], 0);
+      assertEquals((double) i * stride + baseOffset, arr[i], 0);
     }
   }
 
-  static void assertString1D(String[] arr) {
-    assertEquals(3, arr.length);
-    assertEquals("Foo", arr[0]);
-    assertEquals("Baz", arr[1]);
-    assertEquals("Bar", arr[2]);
+  static void assertString1D(String[] arr, boolean isFooBazBar) {
+    if (isFooBazBar) {
+      assertThat(arr).hasLength(3);
+      assertEquals("Foo", arr[0]);
+      assertEquals("Baz", arr[1]);
+      assertEquals("Bar", arr[2]);
+    } else {
+      assertNotEquals("Foo", arr[0]);
+      assertNotEquals("Baz", arr[1]);
+      assertNotEquals("Bar", arr[2]);
+    }
   }
 
   static void assertObject1D(int objectMemberOffset, ObjectTestHelper[] arr) {
@@ -98,7 +120,7 @@ final class ArrayTestHelpers {
     }
   }
 
-  /** 2D Tests RJNI declarations. * */
+  /** Rank 2 Verification Methods. */
   static void assertBoolean2D(boolean testForTrue, boolean[][] arr) {
     // All even are true (unless testForTrue when they're flipped).
     for (int i = 0; i < arr.length; i++) {

@@ -16,10 +16,6 @@
 
 package com.jnibind.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -73,94 +69,6 @@ public class ArrayTestFieldRank1 {
   native void nativeStringTests(ArrayTestFieldRank1 arrayTest, String[] stringArray);
 
   native void nativeObjectTests(ArrayTestFieldRank1 arrayTest, ObjectTestHelper[] objectArray);
-
-  void booleanArray(boolean baseOffset, boolean stride, boolean[] arr) {
-    // Booleans stride up until true (i.e. once) and then red line.
-    // This isn't intuitive, but allows for generalised testing.
-    for (int i = 0; i < arr.length; i++) {
-      if (baseOffset || (i > 0 && stride)) {
-        assertTrue(arr[i]);
-      } else {
-        assertFalse(arr[i]);
-      }
-    }
-  }
-
-  void byteArray(byte baseOffset, byte stride, byte[] arr) {
-    for (int i = 0; i < arr.length; i++) {
-      assertEquals(i * stride + baseOffset, arr[i]);
-    }
-  }
-
-  void charArray(char baseOffset, char stride, char[] arr) {
-    for (int i = 0; i < arr.length; i++) {
-      assertEquals(i * stride + baseOffset, arr[i]);
-    }
-  }
-
-  void shortArray(short baseOffset, short stride, short[] arr) {
-    for (int i = 0; i < arr.length; i++) {
-      assertEquals(i * stride + baseOffset, arr[i]);
-    }
-  }
-
-  void intArray(int baseOffset, int stride, int[] arr) {
-    for (int i = 0; i < arr.length; i++) {
-      assertEquals(i * stride + baseOffset, arr[i]);
-    }
-  }
-
-  void longArray(long baseOffset, long stride, long[] arr) {
-    for (int i = 0; i < arr.length; i++) {
-      assertEquals(i * stride + baseOffset, arr[i]);
-    }
-  }
-
-  void floatArray(float baseOffset, float stride, float[] arr) {
-    for (int i = 0; i < arr.length; i++) {
-      assertEquals(i * stride + baseOffset, arr[i], 1.f);
-    }
-  }
-
-  void doubleArray(double baseOffset, double stride, double[] arr) {
-    for (int i = 0; i < arr.length; i++) {
-      assertEquals((double) i * stride + baseOffset, arr[i], 0);
-    }
-  }
-
-  void stringArray(String[] arr, boolean isFooBazBar) {
-    if (isFooBazBar) {
-      assertEquals(3, arr.length);
-      assertEquals("Foo", arr[0]);
-      assertEquals("Baz", arr[1]);
-      assertEquals("Bar", arr[2]);
-    } else {
-      assertNotEquals("Foo", arr[0]);
-      assertNotEquals("Baz", arr[1]);
-      assertNotEquals("Bar", arr[2]);
-    }
-  }
-
-  void stringEqual(boolean expectEqual, String lhs, String rhs) {
-    if (expectEqual) {
-      assertEquals(lhs, rhs);
-    } else {
-      assertNotEquals(lhs, rhs);
-    }
-  }
-
-  void object(int objectMemberOffset, ObjectTestHelper obj) {
-    assertEquals(objectMemberOffset, obj.intVal1);
-  }
-
-  void objectArray(int objectMemberOffset, ObjectTestHelper[] arr) {
-    for (int i = 0; i < arr.length; i++) {
-      int idxPlusOffset = i + objectMemberOffset;
-      ObjectTestHelper dummyThatMatchesIdx =
-          new ObjectTestHelper(idxPlusOffset, idxPlusOffset, idxPlusOffset);
-      assertTrue(dummyThatMatchesIdx.isEqualTo(arr[i]));
-    }
-  }
 
   @Test
   public void booleanTests() {
