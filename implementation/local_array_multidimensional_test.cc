@@ -21,14 +21,11 @@
 namespace {
 
 using ::jni::AdoptLocal;
-using ::jni::ArrayView;
 using ::jni::Class;
 using ::jni::LocalArray;
-using ::jni::LocalObject;
 using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
-using ::testing::Return;
 using ::testing::StrEq;
 
 static constexpr Class kClass{"kClass"};

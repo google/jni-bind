@@ -21,19 +21,11 @@
 
 namespace {
 
-using ::jni::AdoptGlobal;
 using ::jni::AdoptLocal;
-using ::jni::Array;
 using ::jni::CDecl_t;
 using ::jni::Class;
-using ::jni::Field;
-using ::jni::GlobalObject;
-using ::jni::kJavaLangString;
 using ::jni::LocalArray;
 using ::jni::LocalObject;
-using ::jni::LocalString;
-using ::jni::Method;
-using ::jni::Params;
 using ::jni::test::AsNewLocalReference;
 using ::jni::test::Fake;
 using ::jni::test::JniTest;

@@ -27,17 +27,9 @@ using ::jni::ArrayStrip_t;
 using ::jni::CDecl_t;
 using ::jni::Class;
 using ::jni::FullArrayStripV;
-using ::jni::LocalArray;
-using ::jni::LocalObject;
-using ::jni::Method;
-using ::jni::Params;
 using ::jni::Rank;
 using ::jni::Rankifier;
 using ::jni::RegularToArrayTypeMap_t;
-using ::jni::test::Fake;
-using ::jni::test::JniTest;
-using ::testing::_;
-using ::testing::StrEq;
 
 static constexpr Class kClass{"kClass"};
 static constexpr Class kClass2{"kClass2"};

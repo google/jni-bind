@@ -22,7 +22,6 @@ namespace {
 using ::jni::Array;
 using ::jni::Class;
 using ::jni::Constructor;
-using ::jni::Field;
 using ::jni::Id;
 using ::jni::IdType;
 using ::jni::JniT;

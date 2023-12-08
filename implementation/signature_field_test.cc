@@ -21,20 +21,14 @@ namespace {
 
 using ::jni::Array;
 using ::jni::Class;
-using ::jni::Constructor;
 using ::jni::Field;
 using ::jni::Id;
 using ::jni::IdType;
 using ::jni::JniT;
 using ::jni::JniTSelector;
 using ::jni::kNoIdx;
-using ::jni::Method;
-using ::jni::Overload;
-using ::jni::Params;
 using ::jni::Rank;
-using ::jni::Return;
 using ::jni::SelectorStaticInfo;
-using ::jni::Self;
 using ::jni::Signature_v;
 
 // clang-format off
