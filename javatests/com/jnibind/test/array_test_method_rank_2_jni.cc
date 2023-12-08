@@ -22,16 +22,10 @@
 #include "jni_bind.h"
 #include "metaprogramming/lambda_string.h"
 
-using ::jni::Array;
-using ::jni::Class;
 using ::jni::LocalArray;
 using ::jni::LocalObject;
-using ::jni::Method;
 using ::jni::Modulo;
-using ::jni::Params;
-using ::jni::Rank;
 using ::jni::RegularToArrayTypeMap_t;
-using ::jni::Return;
 using ::jni::StaticRef;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;

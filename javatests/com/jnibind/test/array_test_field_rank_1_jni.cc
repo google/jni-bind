@@ -30,9 +30,6 @@ using ::jni::Field;
 using ::jni::LocalArray;
 using ::jni::LocalObject;
 using ::jni::LocalString;
-using ::jni::Method;
-using ::jni::Params;
-using ::jni::Return;
 using ::jni::StaticRef;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
