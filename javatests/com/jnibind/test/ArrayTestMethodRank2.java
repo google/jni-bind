@@ -139,9 +139,17 @@ public class ArrayTestMethodRank2 {
   @Test
   public void objectTests2D() {
     ObjectTestHelper[][] arr = {
-      {new ObjectTestHelper(0, 0, 0), new ObjectTestHelper(1, 1, 1), new ObjectTestHelper(2, 2, 2)},
-      {new ObjectTestHelper(3, 3, 3), new ObjectTestHelper(4, 4, 4), new ObjectTestHelper(5, 5, 5)},
-      {new ObjectTestHelper(6, 6, 6), new ObjectTestHelper(7, 7, 7), new ObjectTestHelper(8, 8, 8)},
+      {new ObjectTestHelper(0, 1, 2), new ObjectTestHelper(3, 4, 5), new ObjectTestHelper(6, 7, 8)},
+      {
+        new ObjectTestHelper(9, 10, 11),
+        new ObjectTestHelper(12, 13, 14),
+        new ObjectTestHelper(15, 16, 17)
+      },
+      {
+        new ObjectTestHelper(18, 19, 20),
+        new ObjectTestHelper(21, 22, 23),
+        new ObjectTestHelper(24, 25, 26)
+      },
     };
 
     nativeObjectTests2D(arr);

@@ -39,6 +39,45 @@ java_test(
 )
 
 ################################################################################
+# Array Test: Fields Rank 2.
+################################################################################
+cc_library(
+    name = "array_test_field_rank_2_jni_impl",
+    testonly = True,
+    srcs = ["array_test_field_rank_2_jni.cc"],
+    deps = [
+        ":array_test_helpers_native",
+        ":modulo",
+        ":object_test_helper_jni",
+        "//:jni_bind",
+        "//metaprogramming:lambda_string",
+    ],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libarray_test_field_rank_2_jni.so",
+    testonly = True,
+    linkshared = True,
+    deps = [":array_test_field_rank_2_jni_impl"],
+)
+
+java_test(
+    name = "ArrayTestFieldRank2",
+    testonly = True,
+    srcs = ["ArrayTestFieldRank2.java"],
+    data = [":libarray_test_field_rank_2_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    runtime_deps = [
+        ":array_test_helpers",
+    ],
+    deps = [
+        ":object_test_helper",
+        "@maven//:com_google_truth_truth_1_1",
+    ],
+)
+
+################################################################################
 # Array Test Helpers.
 ################################################################################
 java_library(

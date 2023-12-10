@@ -121,7 +121,7 @@ final class ArrayTestHelpers {
   }
 
   /** Rank 2 Verification Methods. */
-  static void assertBoolean2D(boolean testForTrue, boolean[][] arr) {
+  static void assertBoolean2D(boolean testForTrue, boolean unusedStride, boolean[][] arr) {
     // All even are true (unless testForTrue when they're flipped).
     for (int i = 0; i < arr.length; i++) {
       for (int j = 0; j < arr[i].length; j++) {
@@ -137,82 +137,88 @@ final class ArrayTestHelpers {
     }
   }
 
-  static void assertByte2D(byte baseOffset, byte[][] arr) {
+  static void assertByte2D(byte baseOffset, byte stride, byte[][] arr) {
     byte curVal = baseOffset;
     for (byte[] element : arr) {
       for (int j = 0; j < element.length; j++) {
         assertEquals(curVal, element[j]);
-        curVal++;
+        curVal += stride;
       }
     }
   }
 
-  static void assertChar2D(char baseOffset, char[][] arr) {
+  static void assertChar2D(char baseOffset, char stride, char[][] arr) {
     char curVal = baseOffset;
     for (char[] element : arr) {
       for (int j = 0; j < element.length; j++) {
         assertEquals(curVal, element[j]);
-        curVal++;
+        curVal += stride;
       }
     }
   }
 
-  static void assertShort2D(short baseOffset, short[][] arr) {
+  static void assertShort2D(short baseOffset, short stride, short[][] arr) {
     short curVal = baseOffset;
     for (short[] element : arr) {
       for (int j = 0; j < element.length; j++) {
         assertEquals(curVal, element[j]);
-        curVal++;
+        curVal += stride;
       }
     }
   }
 
-  static void assertInt2D(int baseOffset, int[][] arr) {
+  static void assertInt2D(int baseOffset, int stride, int[][] arr) {
     int curVal = baseOffset;
     for (int[] element : arr) {
       for (int j = 0; j < element.length; j++) {
         assertEquals(curVal, element[j]);
-        curVal++;
+        curVal += stride;
       }
     }
   }
 
-  static void assertLong2D(long baseOffset, long[][] arr) {
+  static void assertLong2D(long baseOffset, long stride, long[][] arr) {
     long curVal = baseOffset;
     for (long[] element : arr) {
       for (int j = 0; j < element.length; j++) {
         assertEquals(curVal, element[j]);
-        curVal++;
+        curVal += stride;
       }
     }
   }
 
-  static void assertFloat2D(float baseOffset, float[][] arr) {
+  static void assertFloat2D(float baseOffset, float stride, float[][] arr) {
     float curVal = baseOffset;
     for (float[] element : arr) {
       for (int j = 0; j < element.length; j++) {
         assertEquals(curVal, element[j], 0.0f);
-        curVal++;
+        curVal += stride;
       }
     }
   }
 
-  static void assertDouble2D(double baseOffset, double[][] arr) {
+  static void assertDouble2D(double baseOffset, double stride, double[][] arr) {
     double curVal = baseOffset;
     for (double[] element : arr) {
       for (int j = 0; j < element.length; j++) {
         assertEquals(curVal, element[j], 0.0);
-        curVal++;
+        curVal += stride;
       }
     }
   }
 
-  static void assertObject2D(int objectMemberOffset, ObjectTestHelper[][] arr) {
+  static void assertObject2D(int objectMemberOffset, int stride, ObjectTestHelper[][] arr) {
     int curVal = objectMemberOffset;
     for (ObjectTestHelper[] objectList : arr) {
       for (ObjectTestHelper element : objectList) {
-        assertTrue(element.isEqualTo(new ObjectTestHelper(curVal, curVal, curVal)));
-        curVal++;
+        int curVal1 = curVal;
+        curVal += stride;
+        int curVal2 = curVal;
+        curVal += stride;
+        int curVal3 = curVal;
+        curVal += stride;
+
+        assertTrue(element.isEqualTo(new ObjectTestHelper(curVal1, curVal2, curVal3)));
       }
     }
   }
