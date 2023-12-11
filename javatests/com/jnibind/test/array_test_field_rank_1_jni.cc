@@ -110,7 +110,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTestFieldRank1_jniTearDown(
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank1_nativeBooleanTests(
-    JNIEnv* env, jclass, jobject test_fixture, jbooleanArray boolean_array) {
+    JNIEnv* env, jclass, jobject test_fixture) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    jboolean{true}, jboolean{0}, jboolean{true},
                    STR("booleanArrayField"), STR("assertBoolean1D"));
@@ -118,7 +118,7 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeBooleanTests(
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank1_nativeByteTests(
-    JNIEnv* env, jclass, jobject test_fixture, jbyteArray byte_array) {
+    JNIEnv* env, jclass, jobject test_fixture) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jbyte>::max(), jbyte{10}, jbyte{1},
                    STR("byteArrayField"), STR("assertByte1D"));
@@ -126,7 +126,7 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeByteTests(
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank1_nativeCharTests(
-    JNIEnv* env, jclass, jobject test_fixture, jcharArray char_array) {
+    JNIEnv* env, jclass, jobject test_fixture) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jchar>::max(), jchar{10}, jchar{1},
                    STR("charArrayField"), STR("assertChar1D"));
@@ -134,14 +134,14 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeCharTests(
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank1_nativeShortTests(
-    JNIEnv* env, jclass, jobject test_fixture, jshortArray short_array) {
+    JNIEnv* env, jclass, jobject test_fixture) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jshort>::max(), jshort{10}, jshort{1},
                    STR("shortArrayField"), STR("assertShort1D"));
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTestFieldRank1_nativeIntTests(
-    JNIEnv* env, jclass, jobject test_fixture, jintArray int_array) {
+    JNIEnv* env, jclass, jobject test_fixture) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jint>::max(), jint{10}, jint{1},
                    STR("intArrayField"), STR("assertInt1D"));
@@ -149,7 +149,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTestFieldRank1_nativeIntTests(
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank1_nativeLongTests(
-    JNIEnv* env, jclass, jobject test_fixture, jlongArray long_array) {
+    JNIEnv* env, jclass, jobject test_fixture) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jlong>::max(), jlong{10}, jlong{1},
                    STR("longArrayField"), STR("assertLong1D"));
@@ -157,7 +157,7 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeLongTests(
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank1_nativeFloatTests(
-    JNIEnv* env, jclass, jobject test_fixture, jfloatArray float_array) {
+    JNIEnv* env, jclass, jobject test_fixture) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jfloat>::max(), jfloat{10.f},
                    jfloat{1.f}, STR("floatArrayField"), STR("assertFloat1D"));
@@ -165,7 +165,7 @@ Java_com_jnibind_test_ArrayTestFieldRank1_nativeFloatTests(
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank1_nativeDoubleTests(
-    JNIEnv* env, jclass, jobject test_fixture, jdoubleArray double_array) {
+    JNIEnv* env, jclass, jobject test_fixture) {
   GenericFieldTest(LocalObject<kArrayTestFieldRank1>{test_fixture},
                    std::numeric_limits<jdouble>::max(), jdouble{10}, jdouble{1},
                    STR("doubleArrayField"), STR("assertDouble1D"));
