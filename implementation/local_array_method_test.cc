@@ -36,7 +36,6 @@ using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::StrEq;
 
-static constexpr Class kClass{"kClass"};
 static constexpr Class kClass2{"kClass2"};
 
 ////////////////////////////////////////////////////////////////////////////////

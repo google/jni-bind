@@ -32,7 +32,6 @@ using ::jni::Rankifier;
 using ::jni::RegularToArrayTypeMap_t;
 
 static constexpr Class kClass{"kClass"};
-static constexpr Class kClass2{"kClass2"};
 static constexpr Array arr1{jint{}};
 static constexpr Array arr2{jfloat{}};
 static constexpr Array arr3{jdouble{}};

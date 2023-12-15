@@ -117,8 +117,8 @@ class ArrayRefBase : public ScopedArrayImpl<JniT> {
   void Set(
       std::size_t idx,
       LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v>&& val) {
-    AdoptLocal{}, JniArrayHelper<jobject, JniT::kRank>::SetArrayElement(
-                      Base::object_ref_, idx, val.Release());
+    JniArrayHelper<jobject, JniT::kRank>::SetArrayElement(Base::object_ref_,
+                                                          idx, val.Release());
   }
 };
 
