@@ -6,7 +6,8 @@ package(
 
 filegroup(
     name = "headers_for_export",
-    srcs = glob(["**/*.h"]),
+    srcs = glob(["*.h"]),
+    visibility = ["//visibility:public"],
 )
 
 cc_library(

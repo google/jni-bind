@@ -422,6 +422,7 @@ cc_test(
 filegroup(
     name = "headers_for_export",
     srcs = glob(["**/*.h"]),
+    visibility = ["//visibility:public"],
 )
 
 cc_library(

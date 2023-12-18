@@ -3,13 +3,14 @@ package(licenses = ["notice"])
 filegroup(
     name = "headers_for_export",
     srcs = glob(
-        ["**/*.h"],
+        ["*.h"],
         exclude = [
             "jni_bind_release.h",
             "jni_bind_release_for_testing.h",
             ":jni_bind_release_target",
         ],
     ),
+    visibility = ["//visibility:public"],
 )
 
 exports_files(["LICENSE"])
@@ -126,6 +127,47 @@ cc_library(
 # Release targets.
 ################################################################################
 
+# for_testing release header for easy adoption to 3P Customers.
+# Strictly used for building a copy for the public, do not depend on this.
+genrule(
+    name = "gen_jni_bind_release",
+    outs = ["jni_bind_release.h"],
+    cmd = "./$(location build_jni_bind_release.sh) $(location jni_bind_release_input) jni_wrapper $(locations :jni_bind_decorative_text)>$@",
+    tools = [
+        ":build_jni_bind_release.sh",
+        ":headers_for_export",
+        ":jni_bind_decorative_text",
+        ":jni_bind_release_input",
+        "//class_defs:headers_for_export",
+        "//implementation:headers_for_export",
+        "//implementation/jni_helper:headers_for_export",
+        "//metaprogramming:headers_for_export",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+# Copy of the release header (above) that uses a different filename.
+# Strangely, if a file is present with the same name as what's in outs blaze
+# will ignore the genrule and depend on the real header, but it will fail
+# because there is no cc_library providing the header.  jni_bind_release.h is
+# checked in, so the above *will* fail.
+genrule(
+    name = "gen_jni_bind_release_for_testing",
+    outs = ["jni_bind_release_for_testing.h"],
+    cmd = "./$(location build_jni_bind_release.sh) $(location jni_bind_release_input) jni_wrapper $(locations :jni_bind_decorative_text)>$@",
+    tools = [
+        ":build_jni_bind_release.sh",
+        ":headers_for_export",
+        ":jni_bind_decorative_text",
+        ":jni_bind_release_input",
+        "//class_defs:headers_for_export",
+        "//implementation:headers_for_export",
+        "//implementation/jni_helper:headers_for_export",
+        "//metaprogramming:headers_for_export",
+    ],
+    visibility = ["//visibility:private"],
+)
+
 filegroup(
     name = "jni_bind_decorative_text",
     srcs = [
@@ -135,5 +177,15 @@ filegroup(
     data = [
         "jni_bind_release_leader.inc",
         "jni_bind_release_trailer.inc",
+    ],
+)
+
+genquery(
+    name = "jni_bind_release_input",
+    expression = "deps(//:jni_bind) except //:jni_dep except //:jni_bind.h",
+    opts = ["--output=maxrank"],
+    scope = [
+        "//:jni_bind",
+        "//:jni_dep",
     ],
 )
