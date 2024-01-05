@@ -68,6 +68,9 @@
 #include "implementation/promotion_mechanics_tags.h"
 #include "implementation/ref_base.h"
 
+// These headers require Jni Bind is fully bootstrapped.
+#include "implementation/find_class_fallback.h"
+
 // IWYU pragma: end_exports
 
 #endif  // JNI_BIND_JNI_BIND_H_

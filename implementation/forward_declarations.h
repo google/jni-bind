@@ -65,6 +65,10 @@ template <LifecycleType lifecycleType, const auto& jvm_v_,
           const auto& class_loader_v_>
 class ClassLoaderRef;
 
+// Jvm.
+template <const auto& jvm_v_>
+class JvmRef;
+
 // Thread Guards.
 class ThreadGuard;
 class ThreadLocalGuardDestructor;

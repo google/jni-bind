@@ -20,6 +20,7 @@
 #include "class_defs/java_lang_classes.h"
 #include "implementation/class_loader.h"
 #include "implementation/class_loader_ref.h"
+#include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jvm.h"
 #include "implementation/promotion_mechanics.h"
@@ -27,7 +28,8 @@
 
 namespace jni {
 
-template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
+template <const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
 class GlobalClassLoader
     : public ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_> {
  public:

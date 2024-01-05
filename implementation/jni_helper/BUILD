@@ -18,6 +18,7 @@ cc_library(
     hdrs = ["field_value.h"],
     deps = [
         ":jni_env",
+        ":trace",
         "//:jni_dep",
     ],
 )
@@ -27,6 +28,7 @@ cc_library(
     hdrs = ["jni_array_helper.h"],
     deps = [
         ":jni_env",
+        ":trace",
         "//:jni_dep",
     ],
 )
@@ -55,6 +57,7 @@ cc_library(
     hdrs = ["jni_helper.h"],
     deps = [
         ":jni_env",
+        ":trace",
         "//:jni_dep",
     ],
 )
@@ -95,6 +98,7 @@ cc_library(
     hdrs = ["invoke.h"],
     deps = [
         ":jni_env",
+        ":trace",
         "//:jni_dep",
     ],
 )
@@ -118,6 +122,7 @@ cc_library(
     deps = [
         ":invoke",
         ":jni_env",
+        ":trace",
         "//:jni_dep",
     ],
 )
@@ -127,6 +132,7 @@ cc_library(
     hdrs = ["lifecycle.h"],
     deps = [
         ":jni_env",
+        ":trace",
         "//:jni_dep",
     ],
 )
@@ -135,9 +141,8 @@ cc_library(
     name = "lifecycle_object",
     hdrs = ["lifecycle_object.h"],
     deps = [
-        ":jni_env",
         ":lifecycle",
-        "//:jni_dep",
+        ":trace",
     ],
 )
 
@@ -158,6 +163,7 @@ cc_library(
     deps = [
         ":lifecycle",
         ":lifecycle_object",
+        ":trace",
     ],
 )
 
@@ -178,6 +184,12 @@ cc_library(
     deps = [
         ":field_value_getter",
         ":jni_env",
+        ":trace",
         "//:jni_dep",
     ],
+)
+
+cc_library(
+    name = "trace",
+    hdrs = ["trace.h"],
 )

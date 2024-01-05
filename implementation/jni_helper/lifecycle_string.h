@@ -18,6 +18,7 @@
 
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_object.h"
+#include "trace.h"
 
 namespace jni {
 
@@ -25,6 +26,8 @@ template <>
 struct LifecycleHelper<jstring, LifecycleType::LOCAL>
     : public LifecycleLocalBase<jstring> {
   static inline jstring Construct(const char* chars) {
+    Trace("NewStringUTF", chars);
+
     return jni::JniEnv::GetEnv()->NewStringUTF(chars);
   }
 };

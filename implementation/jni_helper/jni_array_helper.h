@@ -18,8 +18,9 @@
 
 #include <type_traits>
 
-#include "implementation//jni_helper/jni_env.h"
+#include "implementation/jni_helper/jni_env.h"
 #include "jni_dep.h"
+#include "trace.h"
 
 namespace jni {
 
@@ -32,6 +33,8 @@ struct GetArrayElementsResult {
 
 struct JniArrayHelperBase {
   static inline std::size_t GetLength(jarray array) {
+    Trace("GetArrayLength", array);
+
     return jni::JniEnv::GetEnv()->GetArrayLength(array);
   }
 };
@@ -44,18 +47,24 @@ struct JniArrayHelper : public JniArrayHelperBase {
   static inline jobjectArray NewArray(std::size_t size,
                                       jclass class_id = nullptr,
                                       jobject initial_element = nullptr) {
+    Trace("NewObjectArray", size, class_id, initial_element);
+
     return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
                                                  initial_element);
   }
 
   // The API of fetching objects only permits accessing one object at a time.
   static inline jobject GetArrayElement(jobjectArray array, std::size_t idx) {
+    Trace("GetObjectArrayElement", array, idx);
+
     return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
   };
 
   // The API of fetching objects only permits accessing one object at a time.
   static inline void SetArrayElement(jobjectArray array, std::size_t idx,
                                      SpannedType obj) {
+    Trace("SetObjectArrayElement", array, idx, obj);
+
     jni::JniEnv::GetEnv()->SetObjectArrayElement(array, idx, obj);
   };
 };
@@ -65,11 +74,15 @@ struct JniArrayHelper<jboolean, 1> : public JniArrayHelperBase {
   using AsArrayType = jbooleanArray;
 
   static inline jbooleanArray NewArray(std::size_t size) {
+    Trace("NewBooleanArray, Rank 1", size);
+
     return jni::JniEnv::GetEnv()->NewBooleanArray(size);
   }
 
   static inline GetArrayElementsResult<jboolean> GetArrayElements(
       jarray array) {
+    Trace("GetArrayElements, jboolean, Rank 1", array);
+
     GetArrayElementsResult<jboolean> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetBooleanArrayElements(
         static_cast<jbooleanArray>(array), &return_value.is_copy);
@@ -78,6 +91,9 @@ struct JniArrayHelper<jboolean, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jboolean* native_ptr,
                                           bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jboolean, Rank 1", array, native_ptr,
+          copy_on_completion);
+
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseBooleanArrayElements(
         static_cast<jbooleanArray>(array), native_ptr, copy_back_mode);
@@ -89,10 +105,14 @@ struct JniArrayHelper<jbyte, 1> : public JniArrayHelperBase {
   using AsArrayType = jbyteArray;
 
   static inline jbyteArray NewArray(std::size_t size) {
+    Trace("NewByteArray, Rank 1", size);
+
     return jni::JniEnv::GetEnv()->NewByteArray(size);
   }
 
   static inline GetArrayElementsResult<jbyte> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jbyte, Rank 1", array);
+
     GetArrayElementsResult<jbyte> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetByteArrayElements(
         static_cast<jbyteArray>(array), &return_value.is_copy);
@@ -101,6 +121,9 @@ struct JniArrayHelper<jbyte, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jbyte* native_ptr,
                                           bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jbyte, Rank 1", array, native_ptr,
+          copy_on_completion);
+
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseByteArrayElements(
         static_cast<jbyteArray>(array), native_ptr, copy_back_mode);
@@ -112,10 +135,14 @@ struct JniArrayHelper<jchar, 1> : public JniArrayHelperBase {
   using AsArrayType = jcharArray;
 
   static inline jcharArray NewArray(std::size_t size) {
+    Trace("NewCharArray, Rank 1", size);
+
     return jni::JniEnv::GetEnv()->NewCharArray(size);
   }
 
   static inline GetArrayElementsResult<jchar> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jchar, Rank 1", array);
+
     GetArrayElementsResult<jchar> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetCharArrayElements(
         static_cast<jcharArray>(array), &return_value.is_copy);
@@ -124,6 +151,9 @@ struct JniArrayHelper<jchar, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jchar* native_ptr,
                                           bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jchar, Rank 1", array, native_ptr,
+          copy_on_completion);
+
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseCharArrayElements(
         static_cast<jcharArray>(array), native_ptr, copy_back_mode);
@@ -135,10 +165,14 @@ struct JniArrayHelper<jshort, 1> : public JniArrayHelperBase {
   using AsArrayType = jshortArray;
 
   static inline jshortArray NewArray(std::size_t size) {
+    Trace("NewShortArray, Rank 1", size);
+
     return jni::JniEnv::GetEnv()->NewShortArray(size);
   }
 
   static inline GetArrayElementsResult<jshort> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jshort, Rank 1", array);
+
     GetArrayElementsResult<jshort> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetShortArrayElements(
         static_cast<jshortArray>(array), &return_value.is_copy);
@@ -147,6 +181,9 @@ struct JniArrayHelper<jshort, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jshort* native_ptr,
                                           bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jshort, Rank 1", array, native_ptr,
+          copy_on_completion);
+
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseShortArrayElements(
         static_cast<jshortArray>(array), native_ptr, copy_back_mode);
@@ -158,10 +195,14 @@ struct JniArrayHelper<jint, 1> : public JniArrayHelperBase {
   using AsArrayType = jintArray;
 
   static inline jintArray NewArray(std::size_t size) {
+    Trace("NewIntArray, Rank 1", size);
+
     return jni::JniEnv::GetEnv()->NewIntArray(size);
   }
 
   static inline GetArrayElementsResult<jint> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jint, Rank 1", array);
+
     GetArrayElementsResult<jint> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetIntArrayElements(
         static_cast<jintArray>(array), &return_value.is_copy);
@@ -170,6 +211,9 @@ struct JniArrayHelper<jint, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, int* native_ptr,
                                           bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jint, Rank 1", array, native_ptr,
+          copy_on_completion);
+
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseIntArrayElements(
         static_cast<jintArray>(array), native_ptr, copy_back_mode);
@@ -181,10 +225,14 @@ struct JniArrayHelper<jlong, 1> : public JniArrayHelperBase {
   using AsArrayType = jlongArray;
 
   static inline jlongArray NewArray(std::size_t size) {
+    Trace("NewLongArray, Rank 1", size);
+
     return jni::JniEnv::GetEnv()->NewLongArray(size);
   }
 
   static inline GetArrayElementsResult<jlong> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jlong, Rank 1", array);
+
     GetArrayElementsResult<jlong> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetLongArrayElements(
         static_cast<jlongArray>(array), &return_value.is_copy);
@@ -193,6 +241,9 @@ struct JniArrayHelper<jlong, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jlong* native_ptr,
                                           bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jlong, Rank 1", array, native_ptr,
+          copy_on_completion);
+
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseLongArrayElements(
         static_cast<jlongArray>(array), native_ptr, copy_back_mode);
@@ -204,10 +255,14 @@ struct JniArrayHelper<jfloat, 1> : public JniArrayHelperBase {
   using AsArrayType = jfloatArray;
 
   static inline jfloatArray NewArray(std::size_t size) {
+    Trace("NewFloatArray, Rank 1", size);
+
     return jni::JniEnv::GetEnv()->NewFloatArray(size);
   }
 
   static inline GetArrayElementsResult<jfloat> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jfloat, Rank 1", array);
+
     GetArrayElementsResult<jfloat> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetFloatArrayElements(
         static_cast<jfloatArray>(array), &return_value.is_copy);
@@ -216,6 +271,9 @@ struct JniArrayHelper<jfloat, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jfloat* native_ptr,
                                           bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jfloat, Rank 1", array, native_ptr,
+          copy_on_completion);
+
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseFloatArrayElements(
         static_cast<jfloatArray>(array), native_ptr, copy_back_mode);
@@ -227,10 +285,14 @@ struct JniArrayHelper<jdouble, 1> : public JniArrayHelperBase {
   using AsArrayType = jdoubleArray;
 
   static inline jdoubleArray NewArray(std::size_t size) {
+    Trace("NewDoubleArray, Rank 1", size);
+
     return jni::JniEnv::GetEnv()->NewDoubleArray(size);
   }
 
   static inline GetArrayElementsResult<jdouble> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jdouble, Rank 1", array);
+
     GetArrayElementsResult<jdouble> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetDoubleArrayElements(
         static_cast<jdoubleArray>(array), &return_value.is_copy);
@@ -239,6 +301,9 @@ struct JniArrayHelper<jdouble, 1> : public JniArrayHelperBase {
 
   static inline void ReleaseArrayElements(jarray array, jdouble* native_ptr,
                                           bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jdouble, Rank 1", array, native_ptr,
+          copy_on_completion);
+
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseDoubleArrayElements(
         static_cast<jdoubleArray>(array), native_ptr, copy_back_mode);
@@ -253,18 +318,24 @@ struct JniArrayHelper<jobject, kRank> : public JniArrayHelperBase {
 
   static inline jobjectArray NewArray(std::size_t size, jclass class_id,
                                       jobject initial_element) {
+    Trace("NewArray, Rank >1", kRank);
+
     return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
                                                  initial_element);
   }
 
   // The API of fetching objects only permits accessing one object at a time.
   static inline jobject GetArrayElement(jobjectArray array, std::size_t idx) {
+    Trace("GetArrayElement, Rank >1", kRank);
+
     return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
   };
 
   // The API of fetching objects only permits accessing one object at a time.
   static inline void SetArrayElement(jobjectArray array, std::size_t idx,
                                      jobject obj) {
+    Trace("SetArrayElement, Rank >1", kRank);
+
     jni::JniEnv::GetEnv()->SetObjectArrayElement(array, idx, obj);
   };
 };

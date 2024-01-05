@@ -19,6 +19,7 @@ cc_library(
         "//:jni_dep",
         "//implementation:array",
         "//implementation:class",
+        "//implementation:constructor",
         "//implementation:method",
         "//implementation:params",
         "//implementation:return",

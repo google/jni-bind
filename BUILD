@@ -39,6 +39,7 @@ cc_library(
         "//implementation:corpus_tag",
         "//implementation:default_class_loader",
         "//implementation:field",
+        "//implementation:find_class_fallback",
         "//implementation:forward_declarations",
         "//implementation:global_class_loader",
         "//implementation:global_object",

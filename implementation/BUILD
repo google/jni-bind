@@ -233,7 +233,6 @@ cc_library(
         ":global_object",
         ":id",
         ":jni_type",
-        ":jvm_ref",
         ":local_object",
         ":local_string",
         ":method",
@@ -391,6 +390,19 @@ cc_library(
 )
 
 cc_library(
+    name = "find_class_fallback",
+    hdrs = ["find_class_fallback.h"],
+    deps = [
+        ":default_class_loader",
+        ":global_class_loader",
+        ":local_object",
+        ":promotion_mechanics_tags",
+        "//:jni_dep",
+        "//implementation/jni_helper",
+    ],
+)
+
+cc_library(
     name = "forward_declarations",
     hdrs = ["forward_declarations.h"],
     deps = [
@@ -407,6 +419,7 @@ cc_library(
     deps = [
         ":class_loader",
         ":class_loader_ref",
+        ":default_class_loader",
         ":jvm",
         ":promotion_mechanics",
         "//:jni_dep",
@@ -533,6 +546,18 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "jvm_test",
+    srcs = ["jvm_test.cc"],
+    deps = [
+        "//:jni_bind",
+        "//:jni_test",
+        "//implementation/jni_helper",
+        "//implementation/jni_helper:jni_env",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "jvm_ref",
     hdrs = ["jvm_ref.h"],
@@ -543,25 +568,38 @@ cc_library(
         ":default_class_loader",
         ":field_ref",
         ":forward_declarations",
+        ":global_class_loader",
         ":jni_type",
         ":jvm",
-        ":method_ref",
+        ":jvm_ref_base",
+        ":promotion_mechanics_tags",
         ":ref_storage",
+        ":thread_guard",
         "//:jni_dep",
+        "//class_defs:java_lang_classes",
+        "//implementation/jni_helper",
         "//implementation/jni_helper:lifecycle_object",
         "//metaprogramming:double_locked_value",
         "//metaprogramming:function_traits",
     ],
 )
 
-cc_test(
-    name = "jvm_test",
-    srcs = ["jvm_test.cc"],
+cc_library(
+    name = "jvm_ref_base",
+    hdrs = ["jvm_ref_base.h"],
     deps = [
+        ":forward_declarations",
+        "//:jni_dep",
+    ],
+)
+
+cc_test(
+    name = "jvm_ref_test",
+    srcs = ["jvm_ref_test.cc"],
+    deps = [
+        ":jvm_ref",
         "//:jni_bind",
         "//:jni_test",
-        "//implementation/jni_helper",
-        "//implementation/jni_helper:jni_env",
         "@googletest//:gtest_main",
     ],
 )
@@ -658,6 +696,7 @@ cc_library(
         ":class",
         ":class_loader",
         ":class_loader_ref",
+        ":default_class_loader",
         ":forward_declarations",
         ":jvm",
         ":jvm_ref",
@@ -679,7 +718,6 @@ cc_library(
         ":forward_declarations",
         ":jni_type",
         ":jvm",
-        ":jvm_ref",
         ":object_ref",
         ":promotion_mechanics",
         ":promotion_mechanics_tags",
@@ -851,7 +889,6 @@ cc_library(
         ":default_class_loader",
         ":field_ref",
         ":jni_type",
-        ":jvm_ref",
         ":method_ref",
         ":method_selection",
         ":proxy",
@@ -1169,6 +1206,28 @@ cc_test(
     name = "self_test",
     srcs = ["self_test.cc"],
     deps = [
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "thread_guard",
+    hdrs = ["thread_guard.h"],
+    deps = [
+        ":forward_declarations",
+        ":jvm_ref_base",
+        "//:jni_dep",
+        "//metaprogramming:function_traits",
+    ],
+)
+
+cc_test(
+    name = "thread_guard_test",
+    srcs = ["thread_guard_test.cc"],
+    deps = [
+        ":thread_guard",
         "//:jni_bind",
         "//:jni_test",
         "@googletest//:gtest_main",

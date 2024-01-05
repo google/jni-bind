@@ -20,6 +20,7 @@
 
 #include "jni_env.h"
 #include "jni_dep.h"
+#include "trace.h"
 
 namespace jni {
 
@@ -36,10 +37,14 @@ struct LifecycleHelper;
 template <typename Span>
 struct LifecycleLocalBase {
   static inline void Delete(Span object) {
+    Trace("DeleteLocalRef", object);
+
     JniEnv::GetEnv()->DeleteLocalRef(object);
   }
 
   static inline Span NewReference(Span object) {
+    Trace("NewLocalRef", object);
+
     return static_cast<Span>(JniEnv::GetEnv()->NewLocalRef(object));
   }
 };
@@ -55,6 +60,8 @@ struct LifecycleHelper<Span, LifecycleType::LOCAL>
 template <typename Span>
 struct LifecycleGlobalBase {
   static inline Span Promote(Span object) {
+    Trace("DeleteLocalRef", object);
+
     jobject ret = JniEnv::GetEnv()->NewGlobalRef(object);
     JniEnv::GetEnv()->DeleteLocalRef(object);
 
@@ -62,10 +69,14 @@ struct LifecycleGlobalBase {
   }
 
   static inline void Delete(Span object) {
+    Trace("DeleteGlobalRef", object);
+
     JniEnv::GetEnv()->DeleteGlobalRef(object);
   }
 
   static inline Span NewReference(Span object) {
+    Trace("NewGlobalRef", object);
+
     return static_cast<Span>(JniEnv::GetEnv()->NewGlobalRef(object));
   }
 };
