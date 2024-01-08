@@ -17,6 +17,7 @@
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_OBJECT_H_
 
 #include "implementation/jni_helper/lifecycle.h"
+#include "trace.h"
 
 namespace jni {
 
@@ -27,6 +28,8 @@ struct LifecycleHelper<jobject, LifecycleType::LOCAL>
   template <typename... CtorArgs>
   static inline jobject Construct(jclass clazz, jmethodID ctor_method,
                                   CtorArgs&&... ctor_args) {
+    Trace("NewObject", clazz, ctor_method, ctor_args...);
+
     return JniEnv::GetEnv()->NewObject(clazz, ctor_method, ctor_args...);
   }
 };
