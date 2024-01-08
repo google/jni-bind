@@ -18,17 +18,22 @@
 #define JNI_BIND_JVM_REF_H_
 
 #include <atomic>
+#include <memory>
 #include <utility>
 
+#include "class_defs/java_lang_classes.h"
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_ref.h"
 #include "implementation/forward_declarations.h"
+#include "implementation/global_class_loader.h"
+#include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
+#include "implementation/promotion_mechanics_tags.h"
 #include "implementation/ref_storage.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
@@ -240,9 +245,31 @@ class JvmRef : public JvmRefBase {
   // If a JNIEnv does not exist, this will DetachCurrentThread when done.
   [[nodiscard]] ThreadGuard BuildThreadGuard() const { return {}; }
 
+  // Sets a "fallback" loader for use when default Jvm classes fail to load.
+  // This is useful for first use of classes on secondary threads where the
+  // jclass is not yet cached and the classloader isn't available directly.
+  void SetFallbackClassLoader(
+      jni::GlobalClassLoader<kDefaultClassLoader, kDefaultJvm>&& loader) {
+    fallback_loader_.reset(
+        new jni::GlobalClassLoader<kDefaultClassLoader, kDefaultJvm>(
+            AdoptGlobal{}, loader.Release()));
+
+    FallbackLoader() = static_cast<jobject>(*fallback_loader_);
+  }
+
+  // Sets a "fallback" loader for use when default Jvm classes fail to load.
+  // `host_object *must* be local and will *not* be released.
+  void SetFallbackClassLoaderFromJObject(jobject host_object) {
+    SetFallbackClassLoader(LocalObject<kJavaLangObject>{host_object}(
+        "getClass")("getClassLoader"));
+  }
+
  private:
   // Main thread has a JNIEnv just like every other thread.
   const ThreadGuard thread_guard_ = {};
+
+  std::unique_ptr<jni::GlobalClassLoader<kDefaultClassLoader, kDefaultJvm>>
+      fallback_loader_;
 };
 
 JvmRef(JNIEnv*) -> JvmRef<kDefaultJvm>;

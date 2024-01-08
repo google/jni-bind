@@ -19,6 +19,7 @@
 
 #include "implementation/array.h"
 #include "implementation/class.h"
+#include "implementation/constructor.h"
 #include "implementation/method.h"
 #include "implementation/params.h"
 #include "implementation/return.h"
@@ -27,23 +28,30 @@
 namespace jni {
 
 // clang-format off
-inline constexpr Class kJavaLangClass{"java/lang/Class"};
 
-inline constexpr Class kJavaLangObject{"java/lang/Object"};
+inline constexpr Class kJavaLangClass{
+  "java/lang/Class",
+  Method{"getClassLoader", Return{ Class { "java/lang/ClassLoader" } }, Params{}},
+};
+
+inline constexpr Class kJavaLangObject{
+  "java/lang/Object",
+  Method{"getClass", Return{kJavaLangClass}, Params{}},
+};
 
 inline constexpr Class kJavaLangClassLoader{
-    "java/lang/ClassLoader",
-    Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}},
-    Method{"toString", Return{jstring{}}, Params<>{}},
+  "java/lang/ClassLoader",
+  Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}},
+  Method{"toString", Return{jstring{}}, Params<>{}},
 };
 
 static constexpr Class kJavaLangString{
-    "java/lang/String",
+  "java/lang/String",
 
-    Constructor{jstring{}},
-    Constructor{Array{jbyte{}}},
+  Constructor{jstring{}},
+  Constructor{Array{jbyte{}}},
 
-    Method{"toString", Return{jstring{}}, Params<>{}},
+  Method{"toString", Return{jstring{}}, Params<>{}},
 };
 // clang-format on
 

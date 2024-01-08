@@ -26,7 +26,6 @@
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
-#include "implementation/jvm_ref.h"
 #include "implementation/local_object.h"
 #include "implementation/local_string.h"
 #include "implementation/method.h"
@@ -63,10 +62,6 @@ class ClassLoaderRef : public ClassLoaderImpl<lifecycleType> {
  public:
   using Base = ClassLoaderImpl<lifecycleType>;
   using Base::Base;
-
-  static_assert(class_loader_v_ != kDefaultClassLoader,
-                "Custom class loaders should not use the default class loader,"
-                "objects will automatically use the default.");
 
   template <const auto& class_v, typename... Params>
   [[nodiscard]] auto BuildLocalObject(Params&&... params) {

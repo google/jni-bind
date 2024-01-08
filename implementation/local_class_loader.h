@@ -21,6 +21,7 @@
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/class_loader_ref.h"
+#include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jvm.h"
@@ -32,7 +33,8 @@
 
 namespace jni {
 
-template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
+template <const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
 class LocalClassLoader
     : public ClassLoaderRef<LifecycleType::LOCAL, class_loader_v_, jvm_v_> {
  public:

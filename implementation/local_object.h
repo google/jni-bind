@@ -24,7 +24,6 @@
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
-#include "implementation/jvm_ref.h"
 #include "implementation/object_ref.h"
 #include "implementation/promotion_mechanics.h"
 #include "implementation/promotion_mechanics_tags.h"

@@ -233,7 +233,6 @@ cc_library(
         ":global_object",
         ":id",
         ":jni_type",
-        ":jvm_ref",
         ":local_object",
         ":local_string",
         ":method",
@@ -391,6 +390,19 @@ cc_library(
 )
 
 cc_library(
+    name = "find_class_fallback",
+    hdrs = ["find_class_fallback.h"],
+    deps = [
+        ":default_class_loader",
+        ":global_class_loader",
+        ":local_object",
+        ":promotion_mechanics_tags",
+        "//:jni_dep",
+        "//implementation/jni_helper",
+    ],
+)
+
+cc_library(
     name = "forward_declarations",
     hdrs = ["forward_declarations.h"],
     deps = [
@@ -407,6 +419,7 @@ cc_library(
     deps = [
         ":class_loader",
         ":class_loader_ref",
+        ":default_class_loader",
         ":jvm",
         ":promotion_mechanics",
         "//:jni_dep",
@@ -543,11 +556,14 @@ cc_library(
         ":default_class_loader",
         ":field_ref",
         ":forward_declarations",
+        ":global_class_loader",
         ":jni_type",
         ":jvm",
-        ":method_ref",
+        ":promotion_mechanics_tags",
         ":ref_storage",
         "//:jni_dep",
+        "//class_defs:java_lang_classes",
+        "//implementation/jni_helper",
         "//implementation/jni_helper:lifecycle_object",
         "//metaprogramming:double_locked_value",
         "//metaprogramming:function_traits",
@@ -658,6 +674,7 @@ cc_library(
         ":class",
         ":class_loader",
         ":class_loader_ref",
+        ":default_class_loader",
         ":forward_declarations",
         ":jvm",
         ":jvm_ref",
@@ -679,7 +696,6 @@ cc_library(
         ":forward_declarations",
         ":jni_type",
         ":jvm",
-        ":jvm_ref",
         ":object_ref",
         ":promotion_mechanics",
         ":promotion_mechanics_tags",
@@ -851,7 +867,6 @@ cc_library(
         ":default_class_loader",
         ":field_ref",
         ":jni_type",
-        ":jvm_ref",
         ":method_ref",
         ":method_selection",
         ":proxy",

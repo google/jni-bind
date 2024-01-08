@@ -25,6 +25,9 @@
 
 namespace jni {
 
+// Implemented in "find_class_fallback.h".
+extern jclass FindClassFallback(const char* class_name);
+
 // Helper JNI shim for object, method, class, etc. lookup.
 class JniHelper {
  public:
@@ -62,10 +65,25 @@ class JniHelper {
 
 //==============================================================================
 
+// This object shall be `null` or a global of a classloader (set by `JvmRef`).
+// This is a hack for idiosyncracies with Android.
+inline jobject& FallbackLoader() {
+  static jobject loader{};
+
+  return loader;
+}
+
 inline jclass JniHelper::FindClass(const char* name) {
   Trace("FindClass", name);
 
-  return jni::JniEnv::GetEnv()->FindClass(name);
+  jclass jclass_from_thread_loader = jni::JniEnv::GetEnv()->FindClass(name);
+  if (!jclass_from_thread_loader && FallbackLoader() != nullptr) {
+    jni::JniEnv::GetEnv()->ExceptionClear();
+
+    return FindClassFallback(name);
+  }
+
+  return jclass_from_thread_loader;
 }
 
 inline jclass JniHelper::GetObjectClass(jobject object) {
