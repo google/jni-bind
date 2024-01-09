@@ -1,0 +1,483 @@
+load("//mobile/build:build_defs.bzl", "android_jni_library")
+load("//tools/build_defs/android:rules.bzl", "android_binary", "android_instrumentation_test", "android_library")
+
+licenses(["notice"])
+
+################################################################################
+# Shared Object used as a return value for testing.
+################################################################################
+android_library(
+    name = "object_test_helper",
+    testonly = 1,
+    srcs = ["ObjectTestHelper.java"],
+)
+
+cc_library(
+    name = "object_test_helper_jni",
+    hdrs = ["object_test_helper_jni.h"],
+    deps = ["//third_party/jni_wrapper:jni_bind"],
+)
+
+################################################################################
+# Context Test
+################################################################################
+android_jni_library(
+    name = "context_test_jni",
+    testonly = 1,
+    srcs = ["context_test_jni.cc"],
+    force_android = True,
+    deps = [
+        ":object_test_helper_jni",
+        "//third_party/jni_wrapper:jni_bind",
+    ],
+)
+
+android_library(
+    name = "context_test_java_lib",
+    testonly = 1,
+    srcs = ["ContextTest.java"],
+    deps = [
+        ":object_test_helper",
+        "//third_party/android/androidx_test/runner/android_junit_runner",
+        "//third_party/java/junit:junit-android",
+        "//third_party/java/truth:truth-android",
+    ],
+)
+
+android_binary(
+    name = "context_test_app",
+    testonly = 1,
+    manifest = "AndroidDefaultManifest.xml",
+    multidex = "native",
+    deps = [
+        ":context_test_java_lib",
+        ":context_test_jni",
+        "//java/com/google/android/apps/common/testing/testrunner",
+    ],
+)
+
+android_instrumentation_test(
+    name = "context_instrumentation_test",
+    # Emulators don't support sanitizer tests because of performance reasons.
+    tags = ["nosan"],
+    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    test_app = ":context_test_app",
+    test_class = ".ContextTest",
+)
+
+################################################################################
+# RJni Local Object Tests
+################################################################################
+android_jni_library(
+    name = "local_object_test_jni",
+    testonly = 1,
+    srcs = ["local_object_test_jni.cc"],
+    force_android = True,
+    deps = [
+        ":object_test_helper_jni",
+        "//third_party/jni_wrapper:jni_bind",
+    ],
+)
+
+android_library(
+    name = "object_test_local_java_lib",
+    testonly = 1,
+    srcs = [
+        "LocalObjectTest.java",
+        "ObjectTestHelper.java",
+    ],
+    deps = [
+        "//java/com/google/android/apps/common/proguard:annotations",
+        "//third_party/android/androidx_test/runner/android_junit_runner",
+        "//third_party/java/junit:junit-android",
+        "//third_party/java/truth:truth-android",
+    ],
+)
+
+android_binary(
+    name = "object_test_local_app",
+    testonly = 1,
+    manifest = "AndroidDefaultManifest.xml",
+    multidex = "native",
+    deps = [
+        ":local_object_test_jni",
+        ":object_test_local_java_lib",
+        "//java/com/google/android/apps/common/testing/testrunner",
+    ],
+)
+
+android_instrumentation_test(
+    name = "object_local_instrumentation_test",
+    # Emulators don't support sanitizer tests because of performance reasons.
+    tags = ["nosan"],
+    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    test_app = ":object_test_local_app",
+    test_class = ".LocalObjectTest",
+)
+
+################################################################################
+# RJni Global Object Tests
+################################################################################
+android_jni_library(
+    name = "global_object_test_jni",
+    testonly = 1,
+    srcs = ["global_object_test_jni.cc"],
+    force_android = True,
+    deps = [
+        ":object_test_helper_jni",
+        "//third_party/jni_wrapper:jni_bind",
+    ],
+)
+
+android_library(
+    name = "object_test_global_java_lib",
+    testonly = 1,
+    srcs = [
+        "GlobalObjectTest.java",
+        "ObjectTestHelper.java",
+    ],
+    deps = [
+        "//java/com/google/android/apps/common/proguard:annotations",
+        "//third_party/android/androidx_test/runner/android_junit_runner",
+        "//third_party/java/junit:junit-android",
+        "//third_party/java/truth:truth-android",
+    ],
+)
+
+android_binary(
+    name = "object_test_global_app",
+    testonly = 1,
+    manifest = "AndroidDefaultManifest.xml",
+    multidex = "native",
+    deps = [
+        ":global_object_test_jni",
+        ":object_test_global_java_lib",
+        "//java/com/google/android/apps/common/testing/testrunner",
+    ],
+)
+
+android_instrumentation_test(
+    name = "object_global_instrumentation_test",
+    # Emulators don't support sanitizer tests because of performance reasons.
+    tags = ["nosan"],
+    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    test_app = ":object_test_global_app",
+    test_class = ".GlobalObjectTest",
+)
+
+################################################################################
+# RJni Array Test
+################################################################################
+android_jni_library(
+    name = "array_test_jni",
+    testonly = 1,
+    srcs = ["array_test_jni.cc"],
+    force_android = True,
+    deps = [
+        ":object_test_helper_jni",
+        "//third_party/jni_wrapper:jni_bind",
+    ],
+)
+
+android_library(
+    name = "array_test_java_lib",
+    testonly = 1,
+    srcs = [
+        "ArrayTest.java",
+        "ObjectTestHelper.java",
+    ],
+    deps = [
+        "//third_party/android/androidx_test/runner/android_junit_runner",
+        "//third_party/java/junit:junit-android",
+    ],
+)
+
+android_binary(
+    name = "array_test_app",
+    testonly = 1,
+    manifest = "AndroidDefaultManifest.xml",
+    multidex = "native",
+    deps = [
+        ":array_test_java_lib",
+        ":array_test_jni",
+        "//java/com/google/android/apps/common/testing/testrunner",
+    ],
+)
+
+android_instrumentation_test(
+    name = "array_instrumentation_test",
+    # Emulators don't support sanitizer tests because of performance reasons.
+    tags = ["nosan"],
+    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    test_app = ":array_test_app",
+    test_class = ".ArrayTest",
+)
+
+################################################################################
+# RJni Field Test
+################################################################################
+android_jni_library(
+    name = "field_test_jni",
+    testonly = 1,
+    srcs = ["field_test_jni.cc"],
+    force_android = True,
+    deps = [
+        ":object_test_helper_jni",
+        "//third_party/jni_wrapper:jni_bind",
+    ],
+)
+
+android_library(
+    name = "field_test_java_lib",
+    testonly = 1,
+    srcs = [
+        "FieldTest.java",
+        "FieldTestHelper.java",
+    ],
+    deps = [
+        "//java/com/google/android/apps/common/proguard:annotations",
+        "//third_party/android/androidx_test/runner/android_junit_runner",
+        "//third_party/java/junit:junit-android",
+        "//third_party/java/truth:truth-android",
+    ],
+)
+
+android_binary(
+    name = "field_test_app",
+    testonly = 1,
+    manifest = "AndroidDefaultManifest.xml",
+    multidex = "native",
+    deps = [
+        ":field_test_java_lib",
+        ":field_test_jni",
+        "//java/com/google/android/apps/common/testing/testrunner",
+    ],
+)
+
+android_instrumentation_test(
+    name = "field_instrumentation_test",
+    # Emulators don't support sanitizer tests because of performance reasons.
+    tags = ["nosan"],
+    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    test_app = ":field_test_app",
+    test_class = ".FieldTest",
+)
+
+################################################################################
+# RJni Method Test
+################################################################################
+android_jni_library(
+    name = "method_test_jni",
+    testonly = 1,
+    srcs = ["method_test_jni.cc"],
+    force_android = True,
+    deps = [
+        ":object_test_helper_jni",
+        "//third_party/jni_wrapper:jni_bind",
+    ],
+)
+
+android_library(
+    name = "method_test_java_lib",
+    testonly = 1,
+    srcs = [
+        "MethodTest.java",
+        "MethodTestHelper.java",
+    ],
+    deps = [
+        "//java/com/google/android/apps/common/proguard:annotations",
+        "//third_party/android/androidx_test/runner/android_junit_runner",
+        "//third_party/java/junit:junit-android",
+        "//third_party/java/mockito:mockito-android",
+        "//third_party/java/truth:truth-android",
+    ],
+)
+
+android_binary(
+    name = "method_test_app",
+    testonly = 1,
+    manifest = "AndroidDefaultManifest.xml",
+    multidex = "native",
+    deps = [
+        ":method_test_java_lib",
+        ":method_test_jni",
+        "//java/com/google/android/apps/common/testing/testrunner",
+    ],
+)
+
+android_instrumentation_test(
+    name = "method_instrumentation_test",
+    # Emulators don't support sanitizer tests because of performance reasons.
+    tags = ["nosan"],
+    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    test_app = ":method_test_app",
+    test_class = ".MethodTest",
+)
+
+################################################################################
+# RJni String Test
+################################################################################
+android_jni_library(
+    name = "string_test_jni",
+    testonly = 1,
+    srcs = ["string_test_jni.cc"],
+    force_android = True,
+    deps = [
+        ":object_test_helper_jni",
+        "//third_party/jni_wrapper:jni_bind",
+    ],
+)
+
+android_library(
+    name = "string_test_java_lib",
+    testonly = 1,
+    srcs = [
+        "StringTest.java",
+        "StringTestHelper.java",
+    ],
+    deps = [
+        "//java/com/google/android/apps/common/proguard:annotations",
+        "//third_party/android/androidx_test/runner/android_junit_runner",
+        "//third_party/java/junit:junit-android",
+        "//third_party/java/mockito:mockito-android",
+        "//third_party/java/truth:truth-android",
+    ],
+)
+
+android_binary(
+    name = "string_test_app",
+    testonly = 1,
+    manifest = "AndroidDefaultManifest.xml",
+    multidex = "native",
+    deps = [
+        ":string_test_java_lib",
+        ":string_test_jni",
+        "//java/com/google/android/apps/common/testing/testrunner",
+    ],
+)
+
+android_instrumentation_test(
+    name = "string_instrumentation_test",
+    # Emulators don't support sanitizer tests because of performance reasons.
+    tags = ["nosan"],
+    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    test_app = ":string_test_app",
+    test_class = ".StringTest",
+)
+
+################################################################################
+# RJni ClassLoader Tests
+################################################################################
+android_jni_library(
+    name = "class_loader_test_jni",
+    testonly = 1,
+    srcs = ["class_loader_test_jni.cc"],
+    force_android = True,
+    deps = [
+        ":object_test_helper_jni",
+        "//third_party/jni_wrapper:jni_bind",
+    ],
+)
+
+android_library(
+    name = "class_loader_test_local_java_lib",
+    testonly = 1,
+    srcs = [
+        "ClassLoaderTest.java",
+        "ObjectTestHelper.java",
+    ],
+    deps = [
+        "//java/com/google/android/apps/common/proguard:annotations",
+        "//third_party/android/androidx_test/core",
+        "//third_party/android/androidx_test/runner/android_junit_runner",
+        "//third_party/android/androidx_test/services/storage",
+        "//third_party/java/junit:junit-android",
+        "//third_party/java/truth:truth-android",
+    ],
+)
+
+android_binary(
+    name = "class_loader_helpers",
+    testonly = 1,
+    srcs = [
+        "ClassLoaderHelperClass.java",
+        "ClassLoaderHelperSubclass.java",
+    ],
+    manifest = "AndroidDefaultManifest.xml",
+    multidex = "native",
+)
+
+android_binary(
+    name = "class_loader_test_local_app",
+    testonly = 1,
+    manifest = "AndroidDefaultManifest.xml",
+    multidex = "native",
+    deps = [
+        ":class_loader_test_jni",
+        ":class_loader_test_local_java_lib",
+        "//java/com/google/android/apps/common/testing/testrunner",
+    ],
+)
+
+android_instrumentation_test(
+    name = "class_loader_local_instrumentation_test",
+    args = [
+        "--push_apks_to_sdcard",
+        "--test_args=remote_class_path=%s" % "$(location :class_loader_helpers.apk)",
+    ],
+    data = [":class_loader_helpers.apk"],
+    # Emulators don't support sanitizer tests because of performance reasons.
+    tags = ["nosan"],
+    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    test_app = ":class_loader_test_local_app",
+    test_class = ".ClassLoaderTest",
+)
+
+################################################################################
+# RJni Thread Test
+################################################################################
+android_jni_library(
+    name = "thread_test_jni",
+    testonly = 1,
+    srcs = ["thread_test_jni.cc"],
+    force_android = True,
+    deps = [
+        ":object_test_helper_jni",
+        "//third_party/jni_wrapper:jni_bind",
+        "//third_party/jni_wrapper/implementation:find_class_fallback",
+    ],
+)
+
+android_library(
+    name = "thread_test_java_lib",
+    testonly = 1,
+    srcs = [
+        "ObjectTestHelper.java",
+        "ThreadTest.java",
+    ],
+    deps = [
+        "//third_party/android/androidx_test/runner/android_junit_runner",
+        "//third_party/java/junit:junit-android",
+        "//third_party/java/mockito:mockito-android",
+    ],
+)
+
+android_binary(
+    name = "thread_test_app",
+    testonly = 1,
+    manifest = "AndroidDefaultManifest.xml",
+    multidex = "native",
+    deps = [
+        ":thread_test_java_lib",
+        ":thread_test_jni",
+        "//java/com/google/android/apps/common/testing/testrunner",
+    ],
+)
+
+android_instrumentation_test(
+    name = "thread_instrumentation_test",
+    tags = ["nosan"],
+    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    test_app = ":thread_test_app",
+    test_class = ".ThreadTest",
+)
