@@ -15,7 +15,7 @@
  */
 
 /*******************************************************************************
- * JNI Bind Version 0.9.8.
+ * JNI Bind Version 0.9.9.
  * Alpha Public Release.
  ********************************************************************************
  * This header is the single header version which you can use to quickly test or
@@ -597,6 +597,20 @@ using Odd_t = typename Odd::template type<Ts...>;
 
 namespace jni {
 
+template <typename Arg>
+inline void TraceImpl(const Arg& arg) {
+  // Currently, this does nothing, but this will eventually support lambdas.
+}
+
+template <typename... Args>
+inline void Trace(const char* name, const Args&... args) {
+  (TraceImpl(args), ...);
+}
+
+}  // namespace jni
+
+namespace jni {
+
 template <const auto& jvm_v_>
 class JvmRef;
 class ThreadGuard;
@@ -843,6 +857,9 @@ using BaseFilterWithDefault_t =
 
 namespace jni {
 
+// Implemented in "find_class_fallback.h".
+extern jclass FindClassFallback(const char* class_name);
+
 // Helper JNI shim for object, method, class, etc. lookup.
 class JniHelper {
  public:
@@ -880,37 +897,66 @@ class JniHelper {
 
 //==============================================================================
 
+// This object shall be `null` or a global of a classloader (set by `JvmRef`).
+// This is a hack for idiosyncracies with Android.
+inline jobject& FallbackLoader() {
+  static jobject loader{};
+
+  return loader;
+}
+
 inline jclass JniHelper::FindClass(const char* name) {
-  return jni::JniEnv::GetEnv()->FindClass(name);
+  Trace("FindClass", name);
+
+  jclass jclass_from_thread_loader = jni::JniEnv::GetEnv()->FindClass(name);
+  if (!jclass_from_thread_loader && FallbackLoader() != nullptr) {
+    jni::JniEnv::GetEnv()->ExceptionClear();
+
+    return FindClassFallback(name);
+  }
+
+  return jclass_from_thread_loader;
 }
 
 inline jclass JniHelper::GetObjectClass(jobject object) {
+  Trace("GetObjectClass", object);
+
   return jni::JniEnv::GetEnv()->GetObjectClass(object);
 }
 
 jmethodID JniHelper::GetMethodID(jclass clazz, const char* method_name,
                                  const char* method_signature) {
+  Trace("GetMethodID", clazz, method_name, method_signature);
+
   return jni::JniEnv::GetEnv()->GetMethodID(clazz, method_name,
                                             method_signature);
 }
 
 jmethodID JniHelper::GetStaticMethodID(jclass clazz, const char* method_name,
                                        const char* method_signature) {
+  Trace("GetStaticMethodID", clazz, method_name, method_signature);
+
   return jni::JniEnv::GetEnv()->GetStaticMethodID(clazz, method_name,
                                                   method_signature);
 }
 
 jfieldID JniHelper::GetFieldID(jclass clazz, const char* name,
                                const char* signature) {
+  Trace("GetFieldID", clazz, name, signature);
+
   return jni::JniEnv::GetEnv()->GetFieldID(clazz, name, signature);
 }
 
 jfieldID JniHelper::GetStaticFieldID(jclass clazz, const char* name,
                                      const char* signature) {
+  Trace("GetStaticFieldID", clazz, name, signature);
+
   return jni::JniEnv::GetEnv()->GetStaticFieldID(clazz, name, signature);
 }
 
 inline const char* JniHelper::GetStringUTFChars(jstring str) {
+  Trace("GetStringUTFChars", str);
+
   // If is_copy is an address of bool it will be set to true or false if a copy
   // is made.  That said, this seems to be of no consequence, as the API still
   // requires you to release the string at the end. There's no discernible
@@ -920,6 +966,8 @@ inline const char* JniHelper::GetStringUTFChars(jstring str) {
 }
 
 inline void JniHelper::ReleaseStringUTFChars(jstring str, const char* chars) {
+  Trace("ReleaseStringUTFChars", str, chars);
+
   jni::JniEnv::GetEnv()->ReleaseStringUTFChars(str, chars);
 }
 
@@ -1659,23 +1707,30 @@ static constexpr auto kShadowDefaultClassLoader = kDefaultClassLoader;
 namespace jni {
 
 // clang-format off
-inline constexpr Class kJavaLangClass{"java/lang/Class"};
 
-inline constexpr Class kJavaLangObject{"java/lang/Object"};
+inline constexpr Class kJavaLangClass{
+  "java/lang/Class",
+  Method{"getClassLoader", Return{ Class { "java/lang/ClassLoader" } }, Params{}},
+};
+
+inline constexpr Class kJavaLangObject{
+  "java/lang/Object",
+  Method{"getClass", Return{kJavaLangClass}, Params{}},
+};
 
 inline constexpr Class kJavaLangClassLoader{
-    "java/lang/ClassLoader",
-    Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}},
-    Method{"toString", Return{jstring{}}, Params<>{}},
+  "java/lang/ClassLoader",
+  Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}},
+  Method{"toString", Return{jstring{}}, Params<>{}},
 };
 
 static constexpr Class kJavaLangString{
-    "java/lang/String",
+  "java/lang/String",
 
-    Constructor{jstring{}},
-    Constructor{Array{jbyte{}}},
+  Constructor{jstring{}},
+  Constructor{Array{jbyte{}}},
 
-    Method{"toString", Return{jstring{}}, Params<>{}},
+  Method{"toString", Return{jstring{}}, Params<>{}},
 };
 // clang-format on
 
@@ -1732,10 +1787,14 @@ struct LifecycleHelper;
 template <typename Span>
 struct LifecycleLocalBase {
   static inline void Delete(Span object) {
+    Trace("DeleteLocalRef", object);
+
     JniEnv::GetEnv()->DeleteLocalRef(object);
   }
 
   static inline Span NewReference(Span object) {
+    Trace("NewLocalRef", object);
+
     return static_cast<Span>(JniEnv::GetEnv()->NewLocalRef(object));
   }
 };
@@ -1751,6 +1810,8 @@ struct LifecycleHelper<Span, LifecycleType::LOCAL>
 template <typename Span>
 struct LifecycleGlobalBase {
   static inline Span Promote(Span object) {
+    Trace("DeleteLocalRef", object);
+
     jobject ret = JniEnv::GetEnv()->NewGlobalRef(object);
     JniEnv::GetEnv()->DeleteLocalRef(object);
 
@@ -1758,10 +1819,14 @@ struct LifecycleGlobalBase {
   }
 
   static inline void Delete(Span object) {
+    Trace("DeleteGlobalRef", object);
+
     JniEnv::GetEnv()->DeleteGlobalRef(object);
   }
 
   static inline Span NewReference(Span object) {
+    Trace("NewGlobalRef", object);
+
     return static_cast<Span>(JniEnv::GetEnv()->NewGlobalRef(object));
   }
 };
@@ -2032,6 +2097,8 @@ struct LifecycleHelper<jobject, LifecycleType::LOCAL>
   template <typename... CtorArgs>
   static inline jobject Construct(jclass clazz, jmethodID ctor_method,
                                   CtorArgs&&... ctor_args) {
+    Trace("NewObject", clazz, ctor_method, ctor_args...);
+
     return JniEnv::GetEnv()->NewObject(clazz, ctor_method, ctor_args...);
   }
 };
@@ -2619,6 +2686,10 @@ class LocalArray;
 template <LifecycleType lifecycleType, const auto& jvm_v_,
           const auto& class_loader_v_>
 class ClassLoaderRef;
+
+// Jvm.
+template <const auto& jvm_v_>
+class JvmRef;
 
 // Thread Guards.
 class ThreadGuard;
@@ -3614,6 +3685,8 @@ template <>
 struct LifecycleHelper<jstring, LifecycleType::LOCAL>
     : public LifecycleLocalBase<jstring> {
   static inline jstring Construct(const char* chars) {
+    Trace("NewStringUTF", chars);
+
     return jni::JniEnv::GetEnv()->NewStringUTF(chars);
   }
 };
@@ -3649,7 +3722,10 @@ class InvokeHelper {};
 template <>
 struct InvokeHelper<void, 0, false> {
   template <typename... Ts>
-  static void Invoke(jobject object, jclass, jmethodID method_id, Ts&&... ts) {
+  static void Invoke(jobject object, jclass clazz, jmethodID method_id,
+                     Ts&&... ts) {
+    Trace("CallVoidMethod", object, clazz, method_id, ts...);
+
     jni::JniEnv::GetEnv()->CallVoidMethod(object, method_id,
                                           std::forward<Ts>(ts)...);
   }
@@ -3661,8 +3737,10 @@ struct InvokeHelper<void, 0, false> {
 template <>
 struct InvokeHelper<jboolean, 0, false> {
   template <typename... Ts>
-  static jboolean Invoke(jobject object, jclass, jmethodID method_id,
+  static jboolean Invoke(jobject object, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
+    Trace("CallBooleanMethod", object, clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallBooleanMethod(object, method_id,
                                                     std::forward<Ts>(ts)...);
   }
@@ -3671,7 +3749,10 @@ struct InvokeHelper<jboolean, 0, false> {
 template <>
 struct InvokeHelper<jint, 0, false> {
   template <typename... Ts>
-  static jint Invoke(jobject object, jclass, jmethodID method_id, Ts&&... ts) {
+  static jint Invoke(jobject object, jclass clazz, jmethodID method_id,
+                     Ts&&... ts) {
+    Trace("CallIntMethod", object, clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallIntMethod(object, method_id,
                                                 std::forward<Ts>(ts)...);
   }
@@ -3680,7 +3761,10 @@ struct InvokeHelper<jint, 0, false> {
 template <>
 struct InvokeHelper<jlong, 0, false> {
   template <typename... Ts>
-  static jlong Invoke(jobject object, jclass, jmethodID method_id, Ts&&... ts) {
+  static jlong Invoke(jobject object, jclass clazz, jmethodID method_id,
+                      Ts&&... ts) {
+    Trace("CallLongMethod", object, clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallLongMethod(object, method_id,
                                                  std::forward<Ts>(ts)...);
   }
@@ -3689,8 +3773,10 @@ struct InvokeHelper<jlong, 0, false> {
 template <>
 struct InvokeHelper<jfloat, 0, false> {
   template <typename... Ts>
-  static jfloat Invoke(jobject object, jclass, jmethodID method_id,
+  static jfloat Invoke(jobject object, jclass clazz, jmethodID method_id,
                        Ts&&... ts) {
+    Trace("CallFloatMethod", object, clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallFloatMethod(object, method_id,
                                                   std::forward<Ts>(ts)...);
   }
@@ -3699,8 +3785,10 @@ struct InvokeHelper<jfloat, 0, false> {
 template <>
 struct InvokeHelper<jdouble, 0, false> {
   template <typename... Ts>
-  static jdouble Invoke(jobject object, jclass, jmethodID method_id,
+  static jdouble Invoke(jobject object, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
+    Trace("CallDoubleMethod", object, clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallDoubleMethod(object, method_id,
                                                    std::forward<Ts>(ts)...);
   }
@@ -3711,8 +3799,10 @@ struct InvokeHelper<jobject, 0, false> {
   // This always returns a local reference which should be embedded in type
   // information wherever this is used.
   template <typename... Ts>
-  static jobject Invoke(jobject object, jclass, jmethodID method_id,
+  static jobject Invoke(jobject object, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
+    Trace("CallObjectMethod", object, clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallObjectMethod(object, method_id,
                                                    std::forward<Ts>(ts)...);
   }
@@ -3721,8 +3811,10 @@ struct InvokeHelper<jobject, 0, false> {
 template <>
 struct InvokeHelper<jstring, 0, false> {
   template <typename... Ts>
-  static jobject Invoke(jobject object, jclass, jmethodID method_id,
+  static jobject Invoke(jobject object, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
+    Trace("CallObjectMethod", object, clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallObjectMethod(object, method_id,
                                                    std::forward<Ts>(ts)...);
   }
@@ -3734,8 +3826,11 @@ struct InvokeHelper<jstring, 0, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, false> {
   template <typename... Ts>
-  static jbooleanArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jbooleanArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                               Ts&&... ts) {
+    Trace("CallObjectMethod (jbooleanArray), Rank 1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jbooleanArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3744,8 +3839,11 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, false> {
   template <typename... Ts>
-  static jbyteArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jbyteArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
+    Trace("CallObjectMethod (jbyteArray), Rank 1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jbyteArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3754,8 +3852,11 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, false> {
   template <typename... Ts>
-  static jcharArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jcharArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
+    Trace("CallObjectMethod (jcharArray), Rank 1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jcharArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3764,8 +3865,11 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, false> {
   template <typename... Ts>
-  static jshortArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jshortArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                             Ts&&... ts) {
+    Trace("CallObjectMethod (jshortArray), Rank 1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jshortArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3774,8 +3878,11 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank == 1), jint>, kRank, false> {
   template <typename... Ts>
-  static jintArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jintArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                           Ts&&... ts) {
+    Trace("CallObjectMethod (jintArray), Rank 1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jintArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3784,8 +3891,11 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jint>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, false> {
   template <typename... Ts>
-  static jlongArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jlongArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
+    Trace("CallObjectMethod (jlongArray), Rank 1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jlongArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3794,8 +3904,11 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, false> {
   template <typename... Ts>
-  static jfloatArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jfloatArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                             Ts&&... ts) {
+    Trace("CallObjectMethod (jfloatArray), Rank 1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jfloatArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3804,8 +3917,11 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, false> {
   template <typename... Ts>
-  static jdoubleArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jdoubleArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jdoubleArray), Rank 1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jdoubleArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3816,8 +3932,11 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jarray>, kRank, false> {
   // Arrays of arrays (which this invoke represents) return object arrays
   // (arrays themselves are objects, ergo object arrays).
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jobjectArray), Rank 1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3826,8 +3945,11 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jarray>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank == 1), jobject>, kRank, false> {
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jobjectArray), Rank 1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3839,8 +3961,11 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jobject>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank > 1), jboolean>, kRank, false> {
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3849,8 +3974,11 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jboolean>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank > 1), jbyte>, kRank, false> {
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3859,8 +3987,11 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jbyte>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank > 1), jchar>, kRank, false> {
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3869,8 +4000,11 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jchar>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank > 1), jshort>, kRank, false> {
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3879,8 +4013,11 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jshort>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank > 1), jint>, kRank, false> {
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3889,8 +4026,11 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jint>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank > 1), jfloat>, kRank, false> {
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3899,8 +4039,11 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jfloat>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank > 1), jdouble>, kRank, false> {
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3909,8 +4052,11 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jdouble>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank > 1), jlong>, kRank, false> {
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3921,8 +4067,11 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jarray>, kRank, false> {
   // Arrays of arrays (which this invoke represents) return object arrays
   // (arrays themselves are objects, ergo object arrays).
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3931,8 +4080,11 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jarray>, kRank, false> {
 template <std::size_t kRank>
 struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, false> {
   template <typename... Ts>
-  static jobjectArray Invoke(jobject object, jclass, jmethodID method_id,
+  static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
   }
@@ -3940,224 +4092,6 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, false> {
 
 }  // namespace jni
 
-
-#include <utility>
-
-namespace jni {
-
-template <typename Raw, std::size_t kRank = 0, bool kStatic = false,
-          typename Enable = void>
-struct FieldHelper {
-  static Raw GetValue(jobject object_ref, jfieldID field_ref_);
-
-  static void SetValue(jobject object_ref, jfieldID field_ref_, Raw&& value);
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank 0: Primitive types (e.g. int).
-////////////////////////////////////////////////////////////////////////////////
-template <>
-struct FieldHelper<jboolean, 0, false, void> {
-  static inline jboolean GetValue(const jobject object_ref,
-                                  const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetBooleanField(object_ref, field_ref_);
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jboolean&& value) {
-    jni::JniEnv::GetEnv()->SetBooleanField(object_ref, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jbyte, 0, false, void> {
-  static inline jbyte GetValue(const jobject object_ref,
-                               const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetByteField(object_ref, field_ref_);
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jbyte&& value) {
-    jni::JniEnv::GetEnv()->SetByteField(object_ref, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jchar, 0, false, void> {
-  static inline jchar GetValue(const jobject object_ref,
-                               const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetCharField(object_ref, field_ref_);
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jchar&& value) {
-    jni::JniEnv::GetEnv()->SetCharField(object_ref, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jshort, 0, false, void> {
-  static inline jshort GetValue(const jobject object_ref,
-                                const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetShortField(object_ref, field_ref_);
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jshort&& value) {
-    jni::JniEnv::GetEnv()->SetShortField(object_ref, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jint, 0, false, void> {
-  static inline jint GetValue(const jobject object_ref,
-                              const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetIntField(object_ref, field_ref_);
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jint&& value) {
-    jni::JniEnv::GetEnv()->SetIntField(object_ref, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jlong, 0, false, void> {
-  static inline jlong GetValue(const jobject object_ref,
-                               const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetLongField(object_ref, field_ref_);
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jlong&& value) {
-    jni::JniEnv::GetEnv()->SetLongField(object_ref, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jfloat, 0, false, void> {
-  static inline jfloat GetValue(const jobject object_ref,
-                                const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetFloatField(object_ref, field_ref_);
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jfloat&& value) {
-    jni::JniEnv::GetEnv()->SetFloatField(object_ref, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jdouble, 0, false, void> {
-  static inline jdouble GetValue(const jobject object_ref,
-                                 const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetDoubleField(object_ref, field_ref_);
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jdouble&& value) {
-    jni::JniEnv::GetEnv()->SetDoubleField(object_ref, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jobject, 0, false, void> {
-  static inline jobject GetValue(const jobject object_ref,
-                                 const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_);
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jobject&& new_value) {
-    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
-  }
-};
-
-template <>
-struct FieldHelper<jstring, 0, false, void> {
-  static inline jstring GetValue(const jobject object_ref,
-                                 const jfieldID field_ref_) {
-    return reinterpret_cast<jstring>(
-        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jstring&& new_value) {
-    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
-  }
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank 1: Single dimension arrays (e.g. int[]).
-////////////////////////////////////////////////////////////////////////////////
-template <typename ArrayType>
-struct BaseFieldArrayHelper {
-  static inline ArrayType GetValue(const jobject object_ref,
-                                   const jfieldID field_ref_) {
-    return static_cast<ArrayType>(
-        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, ArrayType&& value) {
-    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
-  }
-};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, false, void>
-    : BaseFieldArrayHelper<jbooleanArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, false, void>
-    : BaseFieldArrayHelper<jbyteArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, false, void>
-    : BaseFieldArrayHelper<jcharArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, false, void>
-    : BaseFieldArrayHelper<jshortArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jint>, kRank, false, void>
-    : BaseFieldArrayHelper<jintArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, false, void>
-    : BaseFieldArrayHelper<jlongArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, false, void>
-    : BaseFieldArrayHelper<jfloatArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, false, void>
-    : BaseFieldArrayHelper<jdoubleArray> {};
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank 1: jobjects & jstrings.
-// Rank 2+: Multi-dimension arrays (e.g. int[][], int[][][]).
-////////////////////////////////////////////////////////////////////////////////
-template <typename T, std::size_t kRank>
-struct FieldHelper<
-    T, kRank, false,
-    std::enable_if_t<(std::is_same_v<jobject, T> ||
-                      std::is_same_v<jstring, T> || (kRank > 1))>> {
-  static inline jobjectArray GetValue(const jobject object_ref,
-                                      const jfieldID field_ref_) {
-    return static_cast<jobjectArray>(
-        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jobjectArray&& value) {
-    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
-  }
-};
-
-}  // namespace jni
 
 #include <string>
 #include <string_view>
@@ -4451,113 +4385,6 @@ struct Id {
 
 }  // namespace jni
 
-#include <string_view>
-#include <tuple>
-#include <utility>
-
-namespace jni::metaprogramming {
-
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
-          typename IndexSequenceType>
-class QueryableMapBase {};
-
-// This is an interface that can be inherited from to expose an
-// operator["name"]. It provides compile time string index lookup with no macros
-// although it is dependent on a clang extension.
-//
-// To use this API, inherit from this class using template types as follows:
-//
-// |CrtpBase|: The name of the class inheriting from the map.  This class
-//   will inherit an operator[].  It must implement this exact signature:
-//
-//    template <std::size_t I>
-//    auto QueryableMapCall(const char* key);
-//
-// |tup_container_v| is a static instance of an object whose |nameable_member|
-//   contains a public field called name_.  It might seem strange not to
-//   directly pass a const auto&, however, this prevents accessing subobjects.
-//
-// The motivation for using inheritance as opposed to a simple member is that
-// the the const char cannot be propagated without losing its constexpr-ness,
-// and so the clang extension can no longer restrict function candidates.
-template <typename CrtpBase, const auto& tup_container_v,
-          std::size_t container_size, typename TupContainerT,
-          const auto TupContainerT::*nameable_member>
-class QueryableMap
-    : public QueryableMapBase<CrtpBase, tup_container_v, TupContainerT,
-                              nameable_member,
-                              std::make_index_sequence<container_size>> {};
-
-template <typename CrtpBase, const auto& tup_container_v,
-          const auto std::decay_t<decltype(tup_container_v)>::*nameable_member>
-using QueryableMap_t =
-    QueryableMap<CrtpBase, tup_container_v,
-                 std::tuple_size_v<std::decay_t<decltype((tup_container_v.*
-                                                          nameable_member))>>,
-                 std::decay_t<decltype(tup_container_v)>, nameable_member>;
-
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
-          std::size_t I>
-class QueryableMapEntry;
-
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
-          std::size_t... idxs>
-class QueryableMapBase<CrtpBase, tup_container_v, TupContainerT,
-                       nameable_member, std::index_sequence<idxs...>>
-    : public QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                               nameable_member, idxs>... {
- public:
-  using QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                          nameable_member, idxs>::operator[]...;
-
-  using QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                          nameable_member, idxs>::Contains...;
-
-  // Will select subclass specialisations if present.
-  constexpr bool Contains(const char* key) { return false; }
-};
-
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
-          std::size_t I>
-class QueryableMapEntry {
- public:
-#if __clang__
-  // This function blurs the distinction between type and value space.  The
-  // clang extension allows the key to be wrapped in a constexpr way.  This
-  // allows for string to string comparison based on the static value the class
-  // is templated by.
-  //
-  // The reason the TypeMap interface requires inheritance as opposed to simply
-  // holding an instance of this map (like you would with a regular hash map) is
-  // the constexpr-ness of the string can't be propagated.  This essentially
-  // means you get one shot at defining the function.
-  constexpr auto operator[](const char* key) __attribute__((
-      enable_if(std::string_view(key) ==
-                    std::get<I>(tup_container_v.*nameable_member).name_,
-                ""))) {
-    static_assert(std::is_base_of_v<QueryableMapEntry, CrtpBase>,
-                  "You must derive from the invocable map.");
-
-    return (*static_cast<CrtpBase*>(this)).template QueryableMapCall<I>(key);
-  }
-
-  constexpr bool Contains(const char* key) __attribute__((
-      enable_if(std::string_view(key) ==
-                    std::get<I>(tup_container_v.*nameable_member).name_,
-                ""))) {
-    return true;
-  }
-#else
-  static_assert(false,
-                "This container requires clang for compile time strings.");
-#endif
-};
-
-}  // namespace jni::metaprogramming
 
 #include <optional>
 #include <tuple>
@@ -4685,208 +4512,6 @@ class InvocableMap
 
 }  // namespace jni::metaprogramming
 
-#include <utility>
-
-namespace jni {
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank 0: Static primitive types (e.g. int).
-////////////////////////////////////////////////////////////////////////////////
-template <>
-struct FieldHelper<jboolean, 0, true, void> {
-  static inline jboolean GetValue(const jclass clazz,
-                                  const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetStaticBooleanField(clazz, field_ref_);
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jboolean&& value) {
-    jni::JniEnv::GetEnv()->SetStaticBooleanField(clazz, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jbyte, 0, true, void> {
-  static inline jbyte GetValue(const jclass clazz, const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetStaticByteField(clazz, field_ref_);
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jbyte&& value) {
-    return jni::JniEnv::GetEnv()->SetStaticByteField(clazz, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jchar, 0, true, void> {
-  static inline jchar GetValue(const jclass clazz, const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetStaticCharField(clazz, field_ref_);
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jchar&& value) {
-    jni::JniEnv::GetEnv()->SetStaticCharField(clazz, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jshort, 0, true, void> {
-  static inline jshort GetValue(const jclass clazz, const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetStaticShortField(clazz, field_ref_);
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jshort&& value) {
-    jni::JniEnv::GetEnv()->SetStaticShortField(clazz, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jint, 0, true, void> {
-  static inline jint GetValue(const jclass clazz, const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetStaticIntField(clazz, field_ref_);
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jint&& value) {
-    jni::JniEnv::GetEnv()->SetStaticIntField(clazz, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jlong, 0, true, void> {
-  static inline jlong GetValue(const jclass clazz, const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetStaticLongField(clazz, field_ref_);
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jlong&& value) {
-    jni::JniEnv::GetEnv()->SetStaticLongField(clazz, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jfloat, 0, true, void> {
-  static inline jfloat GetValue(const jclass clazz, const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetStaticFloatField(clazz, field_ref_);
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jfloat&& value) {
-    jni::JniEnv::GetEnv()->SetStaticFloatField(clazz, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jdouble, 0, true, void> {
-  static inline jdouble GetValue(const jclass clazz,
-                                 const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetStaticDoubleField(clazz, field_ref_);
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jdouble&& value) {
-    jni::JniEnv::GetEnv()->SetStaticDoubleField(clazz, field_ref_, value);
-  }
-};
-
-template <>
-struct FieldHelper<jobject, 0, true, void> {
-  static inline jobject GetValue(const jclass clazz,
-                                 const jfieldID field_ref_) {
-    return jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_);
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jobject&& new_value) {
-    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
-  }
-};
-
-template <>
-struct FieldHelper<jstring, 0, true, void> {
-  static inline jstring GetValue(const jclass clazz,
-                                 const jfieldID field_ref_) {
-    return reinterpret_cast<jstring>(
-        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jstring&& new_value) {
-    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
-  }
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank 1: Static single dimension arrays (e.g. int[]).
-////////////////////////////////////////////////////////////////////////////////
-template <typename ArrayType>
-struct StaticBaseFieldArrayHelper {
-  static inline ArrayType GetValue(const jobject object_ref,
-                                   const jfieldID field_ref_) {
-    return static_cast<ArrayType>(
-        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, ArrayType&& value) {
-    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
-  }
-};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jbooleanArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jbyteArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jcharArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jshortArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jint>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jintArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jlongArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jfloatArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jdoubleArray> {};
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank 1: Static jobjects.
-// Rank 2+: Static multi-dimension arrays (e.g. int[][], int[][][]).
-////////////////////////////////////////////////////////////////////////////////
-template <typename T, std::size_t kRank>
-struct FieldHelper<
-    T, kRank, true,
-    std::enable_if_t<(std::is_same_v<jobject, T> || (kRank > 1))>> {
-  static inline jobjectArray GetValue(const jclass clazz,
-                                      const jfieldID field_ref_) {
-    return static_cast<jobjectArray>(
-        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jobjectArray&& value) {
-    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, value);
-  }
-};
-
-}  // namespace jni
 
 #include <cstddef>
 #include <utility>
@@ -4900,6 +4525,8 @@ template <>
 struct InvokeHelper<void, 0, true> {
   template <typename... Ts>
   static void Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
+    Trace("CallStaticVoidMethod", clazz, method_id, ts...);
+
     jni::JniEnv::GetEnv()->CallStaticVoidMethod(clazz, method_id,
                                                 std::forward<Ts>(ts)...);
   }
@@ -4913,6 +4540,8 @@ struct InvokeHelper<jboolean, 0, true> {
   template <typename... Ts>
   static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
+    Trace("CallStaticBooleanMethod", clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallStaticBooleanMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
   }
@@ -4923,6 +4552,8 @@ struct InvokeHelper<jbyte, 0, true> {
   template <typename... Ts>
   static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
+    Trace("CallStaticByteMethod", clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallStaticByteMethod(clazz, method_id,
                                                        std::forward<Ts>(ts)...);
   }
@@ -4933,6 +4564,8 @@ struct InvokeHelper<jchar, 0, true> {
   template <typename... Ts>
   static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
+    Trace("CallStaticCharMethod", clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallStaticCharMethod(clazz, method_id,
                                                        std::forward<Ts>(ts)...);
   }
@@ -4943,6 +4576,8 @@ struct InvokeHelper<jshort, 0, true> {
   template <typename... Ts>
   static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
+    Trace("CallStaticShortMethod", clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallStaticShortMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
   }
@@ -4952,6 +4587,8 @@ template <>
 struct InvokeHelper<jint, 0, true> {
   template <typename... Ts>
   static jint Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
+    Trace("CallStaticIntMethod", clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallStaticIntMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...);
   }
@@ -4961,6 +4598,8 @@ template <>
 struct InvokeHelper<jlong, 0, true> {
   template <typename... Ts>
   static jlong Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
+    Trace("CallStaticLongMethod", clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallStaticLongMethod(clazz, method_id,
                                                        std::forward<Ts>(ts)...);
   }
@@ -4970,6 +4609,8 @@ template <>
 struct InvokeHelper<jfloat, 0, true> {
   template <typename... Ts>
   static jfloat Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
+    Trace("CallStaticFloatMethod", clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallStaticFloatMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
   }
@@ -4980,6 +4621,8 @@ struct InvokeHelper<jdouble, 0, true> {
   template <typename... Ts>
   static jdouble Invoke(jobject, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
+    Trace("CallStaticDoubleMethod", clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallStaticDoubleMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
   }
@@ -4992,6 +4635,8 @@ struct InvokeHelper<jobject, 0, true> {
   template <typename... Ts>
   static jobject Invoke(jobject, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
+    Trace("CallStaticObjectMethod", clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallStaticObjectMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
   }
@@ -5002,6 +4647,8 @@ struct InvokeHelper<jstring, 0, true> {
   template <typename... Ts>
   static jobject Invoke(jobject, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
+    Trace("CallStaticObjectMethod", clazz, method_id, ts...);
+
     return jni::JniEnv::GetEnv()->CallStaticObjectMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
   }
@@ -5015,6 +4662,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, true> {
   template <typename... Ts>
   static jbooleanArray Invoke(jobject, jclass clazz, jmethodID method_id,
                               Ts&&... ts) {
+    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+
     return static_cast<jbooleanArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5026,6 +4675,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, true> {
   template <typename... Ts>
   static jbyteArray Invoke(jobject, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
+    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+
     return static_cast<jbyteArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5037,6 +4688,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, true> {
   template <typename... Ts>
   static jcharArray Invoke(jobject, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
+    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+
     return static_cast<jcharArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5048,6 +4701,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, true> {
   template <typename... Ts>
   static jshortArray Invoke(jobject, jclass clazz, jmethodID method_id,
                             Ts&&... ts) {
+    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+
     return static_cast<jshortArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5059,6 +4714,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jint>, kRank, true> {
   template <typename... Ts>
   static jintArray Invoke(jobject, jclass clazz, jmethodID method_id,
                           Ts&&... ts) {
+    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+
     return static_cast<jintArray>(jni::JniEnv::GetEnv()->CallStaticObjectMethod(
         clazz, method_id, std::forward<Ts>(ts)...));
   }
@@ -5069,6 +4726,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, true> {
   template <typename... Ts>
   static jfloatArray Invoke(jobject, jclass clazz, jmethodID method_id,
                             Ts&&... ts) {
+    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+
     return static_cast<jfloatArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5080,6 +4739,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, true> {
   template <typename... Ts>
   static jdoubleArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+
     return static_cast<jdoubleArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5091,6 +4752,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, true> {
   template <typename... Ts>
   static jlongArray Invoke(jobject, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
+    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+
     return static_cast<jlongArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5104,6 +4767,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jarray>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5115,6 +4780,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jobject>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5129,6 +4796,9 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jboolean>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod (jboolean), Rank >1", clazz, method_id,
+          ts...);
+
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5140,6 +4810,8 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jbyte>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod (jbyte), Rank >1", clazz, method_id, ts...);
+
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5151,6 +4823,8 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jchar>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod (jchar), Rank >1", clazz, method_id, ts...);
+
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5162,6 +4836,8 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jshort>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod (jshort), Rank >1", clazz, method_id, ts...);
+
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5173,6 +4849,8 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jint>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod (jint), Rank >1", clazz, method_id, ts...);
+
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5184,6 +4862,8 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jfloat>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod (jfloat), Rank >1", clazz, method_id, ts...);
+
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5195,6 +4875,8 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jdouble>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod (jdouble), Rank >1", clazz, method_id, ts...);
+
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5206,6 +4888,8 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jlong>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod (jlong), Rank >1", clazz, method_id, ts...);
+
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5219,6 +4903,8 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jarray>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod (jarray), Rank >1", clazz, method_id, ts...);
+
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
@@ -5230,9 +4916,274 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
+    Trace("CallStaticObjectMethod (jobject), Rank >1", clazz, method_id, ts...);
+
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+  }
+};
+
+}  // namespace jni
+
+#include <utility>
+
+namespace jni {
+
+template <typename Raw, std::size_t kRank = 0, bool kStatic = false,
+          typename Enable = void>
+struct FieldHelper {
+  static Raw GetValue(jobject object_ref, jfieldID field_ref_);
+
+  static void SetValue(jobject object_ref, jfieldID field_ref_, Raw&& value);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 0: Primitive types (e.g. int).
+////////////////////////////////////////////////////////////////////////////////
+template <>
+struct FieldHelper<jboolean, 0, false, void> {
+  static inline jboolean GetValue(const jobject object_ref,
+                                  const jfieldID field_ref_) {
+    Trace("GetBooleanValue", object_ref, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetBooleanField(object_ref, field_ref_);
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jboolean&& value) {
+    Trace("GetBooleanValue", object_ref, field_ref_);
+
+    jni::JniEnv::GetEnv()->SetBooleanField(object_ref, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jbyte, 0, false, void> {
+  static inline jbyte GetValue(const jobject object_ref,
+                               const jfieldID field_ref_) {
+    Trace("GetByteValue", object_ref, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetByteField(object_ref, field_ref_);
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jbyte&& value) {
+    Trace("SetByteValue", object_ref, field_ref_);
+
+    jni::JniEnv::GetEnv()->SetByteField(object_ref, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jchar, 0, false, void> {
+  static inline jchar GetValue(const jobject object_ref,
+                               const jfieldID field_ref_) {
+    Trace("GetCharValue", object_ref, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetCharField(object_ref, field_ref_);
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jchar&& value) {
+    Trace("SetCharValue", object_ref, field_ref_);
+
+    jni::JniEnv::GetEnv()->SetCharField(object_ref, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jshort, 0, false, void> {
+  static inline jshort GetValue(const jobject object_ref,
+                                const jfieldID field_ref_) {
+    Trace("GetShortValue", object_ref, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetShortField(object_ref, field_ref_);
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jshort&& value) {
+    Trace("SetShortValue", object_ref, field_ref_);
+
+    jni::JniEnv::GetEnv()->SetShortField(object_ref, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jint, 0, false, void> {
+  static inline jint GetValue(const jobject object_ref,
+                              const jfieldID field_ref_) {
+    Trace("GetIntValue", object_ref, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetIntField(object_ref, field_ref_);
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jint&& value) {
+    Trace("SetIntValue", object_ref, field_ref_);
+
+    jni::JniEnv::GetEnv()->SetIntField(object_ref, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jlong, 0, false, void> {
+  static inline jlong GetValue(const jobject object_ref,
+                               const jfieldID field_ref_) {
+    Trace("GetLongField", object_ref, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetLongField(object_ref, field_ref_);
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jlong&& value) {
+    Trace("SetLongField", object_ref, field_ref_);
+
+    jni::JniEnv::GetEnv()->SetLongField(object_ref, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jfloat, 0, false, void> {
+  static inline jfloat GetValue(const jobject object_ref,
+                                const jfieldID field_ref_) {
+    Trace("GetFloatField", object_ref, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetFloatField(object_ref, field_ref_);
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jfloat&& value) {
+    Trace("SetFloatField", object_ref, field_ref_);
+
+    jni::JniEnv::GetEnv()->SetFloatField(object_ref, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jdouble, 0, false, void> {
+  static inline jdouble GetValue(const jobject object_ref,
+                                 const jfieldID field_ref_) {
+    Trace("GetDoubleField", object_ref, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetDoubleField(object_ref, field_ref_);
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jdouble&& value) {
+    Trace("SetDoubleField", object_ref, field_ref_);
+
+    jni::JniEnv::GetEnv()->SetDoubleField(object_ref, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jobject, 0, false, void> {
+  static inline jobject GetValue(const jobject object_ref,
+                                 const jfieldID field_ref_) {
+    Trace("GetObjectField", object_ref, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_);
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jobject&& new_value) {
+    Trace("SetObjectField", object_ref, field_ref_);
+
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
+  }
+};
+
+template <>
+struct FieldHelper<jstring, 0, false, void> {
+  static inline jstring GetValue(const jobject object_ref,
+                                 const jfieldID field_ref_) {
+    Trace("GetObjectField", object_ref, field_ref_);
+    return reinterpret_cast<jstring>(
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jstring&& new_value) {
+    Trace("SetObjectField", object_ref, field_ref_);
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1: Single dimension arrays (e.g. int[]).
+////////////////////////////////////////////////////////////////////////////////
+template <typename ArrayType>
+struct BaseFieldArrayHelper {
+  static inline ArrayType GetValue(const jobject object_ref,
+                                   const jfieldID field_ref_) {
+    Trace("GetObjectField, Rank 1", object_ref, field_ref_);
+
+    return static_cast<ArrayType>(
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, ArrayType&& value) {
+    Trace("SetObjectField", object_ref, field_ref_);
+
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
+  }
+};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, false, void>
+    : BaseFieldArrayHelper<jbooleanArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, false, void>
+    : BaseFieldArrayHelper<jbyteArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, false, void>
+    : BaseFieldArrayHelper<jcharArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, false, void>
+    : BaseFieldArrayHelper<jshortArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jint>, kRank, false, void>
+    : BaseFieldArrayHelper<jintArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, false, void>
+    : BaseFieldArrayHelper<jlongArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, false, void>
+    : BaseFieldArrayHelper<jfloatArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, false, void>
+    : BaseFieldArrayHelper<jdoubleArray> {};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1: jobjects & jstrings.
+// Rank 2+: Multi-dimension arrays (e.g. int[][], int[][][]).
+////////////////////////////////////////////////////////////////////////////////
+template <typename T, std::size_t kRank>
+struct FieldHelper<
+    T, kRank, false,
+    std::enable_if_t<(std::is_same_v<jobject, T> ||
+                      std::is_same_v<jstring, T> || (kRank > 1))>> {
+  static inline jobjectArray GetValue(const jobject object_ref,
+                                      const jfieldID field_ref_) {
+    Trace("GetObjectField, Rank >1", object_ref, field_ref_);
+
+    return static_cast<jobjectArray>(
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jobjectArray&& value) {
+    Trace("SetObjectField, Rank >1", object_ref, field_ref_);
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
   }
 };
 
@@ -5623,15 +5574,6 @@ struct AdoptGlobal {};
 
 }  // namespace jni
 
-namespace jni {
-
-template <typename JniT, size_t field_idx_>
-struct FieldSelection {
-  using IdT = Id<JniT, IdType::FIELD, field_idx_>;
-  static constexpr IdType kRetTypeId = IdType::FIELD;
-};
-
-}  // namespace jni
 
 #include <type_traits>
 #include <vector>
@@ -5830,6 +5772,114 @@ static constexpr bool UnfurlDisjunction_v =
 
 }  // namespace jni::metaprogramming
 
+#include <string_view>
+#include <tuple>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::*nameable_member,
+          typename IndexSequenceType>
+class QueryableMapBase {};
+
+// This is an interface that can be inherited from to expose an
+// operator["name"]. It provides compile time string index lookup with no macros
+// although it is dependent on a clang extension.
+//
+// To use this API, inherit from this class using template types as follows:
+//
+// |CrtpBase|: The name of the class inheriting from the map.  This class
+//   will inherit an operator[].  It must implement this exact signature:
+//
+//    template <std::size_t I>
+//    auto QueryableMapCall(const char* key);
+//
+// |tup_container_v| is a static instance of an object whose |nameable_member|
+//   contains a public field called name_.  It might seem strange not to
+//   directly pass a const auto&, however, this prevents accessing subobjects.
+//
+// The motivation for using inheritance as opposed to a simple member is that
+// the the const char cannot be propagated without losing its constexpr-ness,
+// and so the clang extension can no longer restrict function candidates.
+template <typename CrtpBase, const auto& tup_container_v,
+          std::size_t container_size, typename TupContainerT,
+          const auto TupContainerT::*nameable_member>
+class QueryableMap
+    : public QueryableMapBase<CrtpBase, tup_container_v, TupContainerT,
+                              nameable_member,
+                              std::make_index_sequence<container_size>> {};
+
+template <typename CrtpBase, const auto& tup_container_v,
+          const auto std::decay_t<decltype(tup_container_v)>::*nameable_member>
+using QueryableMap_t =
+    QueryableMap<CrtpBase, tup_container_v,
+                 std::tuple_size_v<std::decay_t<decltype((tup_container_v.*
+                                                          nameable_member))>>,
+                 std::decay_t<decltype(tup_container_v)>, nameable_member>;
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::*nameable_member,
+          std::size_t I>
+class QueryableMapEntry;
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::*nameable_member,
+          std::size_t... idxs>
+class QueryableMapBase<CrtpBase, tup_container_v, TupContainerT,
+                       nameable_member, std::index_sequence<idxs...>>
+    : public QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
+                               nameable_member, idxs>... {
+ public:
+  using QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
+                          nameable_member, idxs>::operator[]...;
+
+  using QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
+                          nameable_member, idxs>::Contains...;
+
+  // Will select subclass specialisations if present.
+  constexpr bool Contains(const char* key) { return false; }
+};
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::*nameable_member,
+          std::size_t I>
+class QueryableMapEntry {
+ public:
+#if __clang__
+  // This function blurs the distinction between type and value space.  The
+  // clang extension allows the key to be wrapped in a constexpr way.  This
+  // allows for string to string comparison based on the static value the class
+  // is templated by.
+  //
+  // The reason the TypeMap interface requires inheritance as opposed to simply
+  // holding an instance of this map (like you would with a regular hash map) is
+  // the constexpr-ness of the string can't be propagated.  This essentially
+  // means you get one shot at defining the function.
+  constexpr auto operator[](const char* key) __attribute__((
+      enable_if(std::string_view(key) ==
+                    std::get<I>(tup_container_v.*nameable_member).name_,
+                ""))) {
+    static_assert(std::is_base_of_v<QueryableMapEntry, CrtpBase>,
+                  "You must derive from the invocable map.");
+
+    return (*static_cast<CrtpBase*>(this)).template QueryableMapCall<I>(key);
+  }
+
+  constexpr bool Contains(const char* key) __attribute__((
+      enable_if(std::string_view(key) ==
+                    std::get<I>(tup_container_v.*nameable_member).name_,
+                ""))) {
+    return true;
+  }
+#else
+  static_assert(false,
+                "This container requires clang for compile time strings.");
+#endif
+};
+
+}  // namespace jni::metaprogramming
+
 namespace jni::metaprogramming {
 
 struct Max {
@@ -5873,57 +5923,6 @@ static constexpr auto Min_v = Min_t<T1, T2>::val;
 }  // namespace jni::metaprogramming
 
 #include <tuple>
-#include <type_traits>
-
-namespace jni::metaprogramming {
-
-// Metafunction for querying traits return and argument types of a function.
-template <typename>
-struct FunctionTraits;
-
-// Partial specialisation for functions.
-template <typename Return_, typename... Args>
-struct FunctionTraits<Return_(Args...)> {
-  using Return = Return_;
-  using ArgsTup = std::tuple<Args...>;
-
-  static constexpr std::size_t arity = sizeof...(Args);
-
-  template <std::size_t N>
-  struct Argument {
-    static_assert(N < arity, "Parameter index exceeds argument count.");
-    using type = typename std::tuple_element<N, std::tuple<Args...>>::type;
-  };
-};
-
-// Partial specialisation for function pointer.
-template <typename R, typename... Args>
-struct FunctionTraits<R (*)(Args...)> : public FunctionTraits<R(Args...)> {};
-
-// Member function pointer
-template <class C, class R, class... Args>
-struct FunctionTraits<R (C::*)(Args...)>
-    : public FunctionTraits<R(C&, Args...)> {};
-
-// const member function pointer
-template <class C, class R, class... Args>
-struct FunctionTraits<R (C::*)(Args...) const>
-    : public FunctionTraits<R(C&, Args...)> {};
-
-// Member object pointer
-template <class C, class R>
-struct FunctionTraits<R(C::*)> : public FunctionTraits<R(C&)> {};
-
-template <typename T>
-using FunctionTraitsReturn_t = typename FunctionTraits<T>::Return;
-
-template <typename T, std::size_t argument_idx>
-using FunctionTraitsArg_t =
-    typename FunctionTraits<T>::template Argument<argument_idx>::type;
-
-}  // namespace jni::metaprogramming
-
-#include <tuple>
 
 namespace jni::metaprogramming {
 
@@ -5947,6 +5946,257 @@ template <typename T>
 using Call_t = typename Call::type<T>;
 
 }  // namespace jni::metaprogramming
+
+#include <utility>
+
+namespace jni {
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 0: Static primitive types (e.g. int).
+////////////////////////////////////////////////////////////////////////////////
+template <>
+struct FieldHelper<jboolean, 0, true, void> {
+  static inline jboolean GetValue(const jclass clazz,
+                                  const jfieldID field_ref_) {
+    Trace("GetStaticBooleanField", clazz, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetStaticBooleanField(clazz, field_ref_);
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jboolean&& value) {
+    Trace("SetStaticBooleanField", clazz, field_ref_, value);
+
+    jni::JniEnv::GetEnv()->SetStaticBooleanField(clazz, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jbyte, 0, true, void> {
+  static inline jbyte GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace("GetStaticByteField", clazz, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetStaticByteField(clazz, field_ref_);
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jbyte&& value) {
+    Trace("SetStaticByteField", clazz, field_ref_, value);
+
+    return jni::JniEnv::GetEnv()->SetStaticByteField(clazz, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jchar, 0, true, void> {
+  static inline jchar GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace("GetStaticCharField", clazz, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetStaticCharField(clazz, field_ref_);
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jchar&& value) {
+    Trace("SetStaticCharField", clazz, field_ref_, value);
+
+    jni::JniEnv::GetEnv()->SetStaticCharField(clazz, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jshort, 0, true, void> {
+  static inline jshort GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace("GetStaticShortField", clazz, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetStaticShortField(clazz, field_ref_);
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jshort&& value) {
+    Trace("SetStaticShortField", clazz, field_ref_, value);
+
+    jni::JniEnv::GetEnv()->SetStaticShortField(clazz, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jint, 0, true, void> {
+  static inline jint GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace("GetStaticIntField", clazz, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetStaticIntField(clazz, field_ref_);
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jint&& value) {
+    Trace("SetStaticIntField", clazz, field_ref_, value);
+
+    jni::JniEnv::GetEnv()->SetStaticIntField(clazz, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jlong, 0, true, void> {
+  static inline jlong GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace("GetStaticLongField", clazz, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetStaticLongField(clazz, field_ref_);
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jlong&& value) {
+    Trace("SetStaticLongField", clazz, field_ref_, value);
+
+    jni::JniEnv::GetEnv()->SetStaticLongField(clazz, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jfloat, 0, true, void> {
+  static inline jfloat GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace("GetStaticFloatField", clazz, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetStaticFloatField(clazz, field_ref_);
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jfloat&& value) {
+    Trace("SetStaticFloatField", clazz, field_ref_, value);
+
+    jni::JniEnv::GetEnv()->SetStaticFloatField(clazz, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jdouble, 0, true, void> {
+  static inline jdouble GetValue(const jclass clazz,
+                                 const jfieldID field_ref_) {
+    Trace("GetStaticDoubleField", clazz, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetStaticDoubleField(clazz, field_ref_);
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jdouble&& value) {
+    Trace("SetStaticDoubleField", clazz, field_ref_, value);
+
+    jni::JniEnv::GetEnv()->SetStaticDoubleField(clazz, field_ref_, value);
+  }
+};
+
+template <>
+struct FieldHelper<jobject, 0, true, void> {
+  static inline jobject GetValue(const jclass clazz,
+                                 const jfieldID field_ref_) {
+    Trace("GetStaticObjectField", clazz, field_ref_);
+
+    return jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_);
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jobject&& new_value) {
+    Trace("SetStaticObjectField", clazz, field_ref_, new_value);
+
+    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+  }
+};
+
+template <>
+struct FieldHelper<jstring, 0, true, void> {
+  static inline jstring GetValue(const jclass clazz,
+                                 const jfieldID field_ref_) {
+    Trace("GetStaticObjectField", clazz, field_ref_);
+
+    return reinterpret_cast<jstring>(
+        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jstring&& new_value) {
+    Trace("SetStaticObjectField", clazz, field_ref_, new_value);
+
+    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1: Static single dimension arrays (e.g. int[]).
+////////////////////////////////////////////////////////////////////////////////
+template <typename ArrayType>
+struct StaticBaseFieldArrayHelper {
+  static inline ArrayType GetValue(const jobject object_ref,
+                                   const jfieldID field_ref_) {
+    Trace("GetObjectField", object_ref, field_ref_);
+
+    return static_cast<ArrayType>(
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, ArrayType&& value) {
+    Trace("SetObjectField", object_ref, field_ref_, value);
+
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
+  }
+};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jbooleanArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jbyteArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jcharArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jshortArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jint>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jintArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jlongArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jfloatArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jdoubleArray> {};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1: Static jobjects.
+// Rank 2+: Static multi-dimension arrays (e.g. int[][], int[][][]).
+////////////////////////////////////////////////////////////////////////////////
+template <typename T, std::size_t kRank>
+struct FieldHelper<
+    T, kRank, true,
+    std::enable_if_t<(std::is_same_v<jobject, T> || (kRank > 1))>> {
+  static inline jobjectArray GetValue(const jclass clazz,
+                                      const jfieldID field_ref_) {
+    Trace("GetStaticObjectField, Rank 1+", clazz, field_ref_);
+
+    return static_cast<jobjectArray>(
+        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jobjectArray&& value) {
+    Trace("SetStaticObjectField, Rank 1+", clazz, field_ref_, value);
+
+    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, value);
+  }
+};
+
+}  // namespace jni
 
 #include <string_view>
 #include <type_traits>
@@ -6037,90 +6287,12 @@ struct OverloadRef {
 }  // namespace jni
 
 
-#include <mutex>
-#include <string_view>
-#include <tuple>
-#include <utility>
-
 namespace jni {
 
-// See JvmRef::~JvmRef.
-static inline auto& GetDefaultLoadedFieldList() {
-  static auto* ret_val =
-      new std::vector<metaprogramming::DoubleLockedValue<jfieldID>*>{};
-  return *ret_val;
-}
-
-// Represents a live instance of Field I's definition.
-//
-// Note, this class performs no cleanup on destruction.  jFieldIDs are static
-// throughout the duration of a JVM's life, see JvmRef for teardown.
-template <typename JniT, IdType field_type, std::size_t I>
-class FieldRef {
- public:
-  using IdT = Id<JniT, field_type, I>;
-  using FieldSelectionT = FieldSelection<JniT, I>;
-
-  explicit FieldRef(jclass class_ref, jobject object_ref)
-      : class_ref_(class_ref), object_ref_(object_ref) {}
-
-  FieldRef(const FieldRef&) = delete;
-  FieldRef(const FieldRef&&) = delete;
-  void operator=(const FieldRef&) = delete;
-
-  // This method is thread safe.
-  static jfieldID GetFieldID(jclass clazz) {
-    static jni::metaprogramming::DoubleLockedValue<jfieldID> return_value;
-
-    return return_value.LoadAndMaybeInit([=]() {
-      if constexpr (JniT::class_loader_v == kDefaultClassLoader) {
-        GetDefaultLoadedFieldList().push_back(&return_value);
-      }
-
-      if constexpr (IdT::kIsStatic) {
-        return jni::JniHelper::GetStaticFieldID(clazz, IdT::Name(),
-                                                Signature_v<IdT>.data());
-      } else {
-        return jni::JniHelper::GetFieldID(clazz, IdT::Name(),
-                                          Signature_v<IdT>.data());
-      }
-    });
-  }
-
-  using ReturnProxied = Return_t<typename IdT::MaterializeCDeclT, IdT>;
-
-  const auto& SelfVal() {
-    if constexpr (IdT::kIsStatic) {
-      return class_ref_;
-    } else {
-      return object_ref_;
-    }
-  }
-
-  ReturnProxied Get() {
-    if constexpr (std::is_base_of_v<RefBaseBase, ReturnProxied>) {
-      return {AdoptLocal{},
-              FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
-                          IdT::kIsStatic>::GetValue(SelfVal(),
-                                                    GetFieldID(class_ref_))};
-    } else {
-      return {FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
-                          IdT::kIsStatic>::GetValue(SelfVal(),
-                                                    GetFieldID(class_ref_))};
-    }
-  }
-
-  template <typename T>
-  void Set(T&& value) {
-    FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
-                IdT::kIsStatic>::SetValue(SelfVal(), GetFieldID(class_ref_),
-                                          Proxy_t<T>::ProxyAsArg(
-                                              std::forward<T>(value)));
-  }
-
- private:
-  const jclass class_ref_;
-  const jobject object_ref_;
+template <typename JniT, size_t field_idx_>
+struct FieldSelection {
+  using IdT = Id<JniT, IdType::FIELD, field_idx_>;
+  static constexpr IdType kRetTypeId = IdType::FIELD;
 };
 
 }  // namespace jni
@@ -6327,223 +6499,91 @@ struct OverloadSelector {
 
 }  // namespace jni
 
-
-#include <atomic>
+#include <mutex>
+#include <string_view>
+#include <tuple>
 #include <utility>
 
 namespace jni {
 
-template <const auto& jvm_v_ = kDefaultJvm>
-class JvmRef;
+// See JvmRef::~JvmRef.
+static inline auto& GetDefaultLoadedFieldList() {
+  static auto* ret_val =
+      new std::vector<metaprogramming::DoubleLockedValue<jfieldID>*>{};
+  return *ret_val;
+}
 
-// Helper for JvmRef to enforce correct sequencing of getting and setting
-// process level static fo JavaVM*.
-class JvmRefBase {
- protected:
-  friend class ThreadGuard;
-  friend class ThreadLocalGuardDestructor;
-
-  JvmRefBase(JavaVM* vm) { process_level_jvm_.store(vm); }
-  ~JvmRefBase() { process_level_jvm_.store(nullptr); }
-
-  static JavaVM* GetJavaVm() { return process_level_jvm_.load(); }
-  static void SetJavaVm(JavaVM* jvm) { process_level_jvm_.store(jvm); }
-
-  static inline std::atomic<JavaVM*> process_level_jvm_ = nullptr;
-};
-
-// Designed to be the very last JniBind object to execute on the thread.
-// Objects passed by move for lambdas will be destructed after any contents
-// statements within their lambda, and `ThreadGuard` can't be moved into the
-// lambda because its construction will be on the host thread. This static
-// teardown guarantees a delayed destruction beyond any GlobalObject.
-class ThreadLocalGuardDestructor {
+// Represents a live instance of Field I's definition.
+//
+// Note, this class performs no cleanup on destruction.  jFieldIDs are static
+// throughout the duration of a JVM's life, see JvmRef for teardown.
+template <typename JniT, IdType field_type, std::size_t I>
+class FieldRef {
  public:
-  bool detach_thread_when_all_guards_released_ = false;
+  using IdT = Id<JniT, field_type, I>;
+  using FieldSelectionT = FieldSelection<JniT, I>;
 
-  // By calling this the compiler is obligated to perform initalisation.
-  void ForceDestructionOnThreadClose() {}
+  explicit FieldRef(jclass class_ref, jobject object_ref)
+      : class_ref_(class_ref), object_ref_(object_ref) {}
 
-  ~ThreadLocalGuardDestructor() {
-    if (detach_thread_when_all_guards_released_) {
-      JavaVM* jvm = JvmRefBase::GetJavaVm();
-      if (jvm) {
-        jvm->DetachCurrentThread();
+  FieldRef(const FieldRef&) = delete;
+  FieldRef(const FieldRef&&) = delete;
+  void operator=(const FieldRef&) = delete;
+
+  // This method is thread safe.
+  static jfieldID GetFieldID(jclass clazz) {
+    static jni::metaprogramming::DoubleLockedValue<jfieldID> return_value;
+
+    return return_value.LoadAndMaybeInit([=]() {
+      if constexpr (JniT::class_loader_v == kDefaultClassLoader) {
+        GetDefaultLoadedFieldList().push_back(&return_value);
       }
-    }
-  }
-};
 
-// ThreadGuard attaches and detaches JNIEnv* objects on the creation of new
-// threads.  All new threads which want to use JNI Wrapper must hold a
-// ThreadGuard beyond the scope of all created objects.  If the ThreadGuard
-// needs to create an Env, it will also detach itself.
-class ThreadGuard {
- public:
-  ~ThreadGuard() {
-    thread_guard_count_--;
+      if constexpr (IdT::kIsStatic) {
+        return jni::JniHelper::GetStaticFieldID(clazz, IdT::Name(),
+                                                Signature_v<IdT>.data());
+      } else {
+        return jni::JniHelper::GetFieldID(clazz, IdT::Name(),
+                                          Signature_v<IdT>.data());
+      }
+    });
   }
 
-  ThreadGuard(ThreadGuard&) = delete;
-  ThreadGuard(ThreadGuard&&) = delete;
+  using ReturnProxied = Return_t<typename IdT::MaterializeCDeclT, IdT>;
 
-  template <const auto& jvm_v_>
-  friend class JvmRef;
-
-  // This constructor must *never* be called before a |JvmRef| has been
-  // constructed. It depends on static setup from |JvmRef|.
-  [[nodiscard]] ThreadGuard() {
-    thread_local_guard_destructor.ForceDestructionOnThreadClose();
-
-    // Nested ThreadGuards should be permitted in the same way mutex locks are.
-    thread_guard_count_++;
-    if (thread_guard_count_ != 1) {
-      // SetEnv has been called prior, GetEnv is currently valid.
-      return;
-    }
-
-    // Declarations for AttachCurrentThread are inconsistent across different
-    // JNI headers.  This forces a cast to whatever the expected type is.
-    JavaVM* const vm = JvmRefBase::GetJavaVm();
-    JNIEnv* jni_env = 0;
-
-    using TypeForGetEnv =
-        metaprogramming::FunctionTraitsArg_t<decltype(&JavaVM::GetEnv), 1>;
-    const int code =
-        vm->GetEnv(reinterpret_cast<TypeForGetEnv>(&jni_env), JNI_VERSION_1_6);
-
-    if (code != JNI_OK) {
-      using TypeForAttachment = metaprogramming::FunctionTraitsArg_t<
-          decltype(&JavaVM::AttachCurrentThread), 1>;
-      vm->AttachCurrentThread(reinterpret_cast<TypeForAttachment>(&jni_env),
-                              nullptr);
-      thread_local_guard_destructor.detach_thread_when_all_guards_released_ =
-          true;
-    }
-    // Why not store this locally to ThreadGuard?
-    //
-    // JNIEnv is thread local static, and the context an object is built from
-    // may not have easy access to a JNIEnv* (or this ThreadGuard).  For most
-    // constructions of new objects, the env is likely trivial (it's passed as
-    // part of the JNI call), however, if an object reference is moved from one
-    // thread to another, the JNIEnv* is certainly not available.
-    JniEnv::SetEnv(jni_env);
-  }
-
- private:
-  static inline thread_local int thread_guard_count_ = 0;
-  static inline thread_local ThreadLocalGuardDestructor
-      thread_local_guard_destructor{};
-};
-
-// Represents a runtime instance of a Java Virtual Machine.
-// The caller is responsible for dropping this object from scope when
-// JNI_OnUnload is called.
-//
-// For any new thread spawned, a ThreadGuard must be held.  The caller is
-// responsible for ensuring all ThreadGuards fall from scope before JvmRef falls
-// from scope.
-//
-// The caller is also responsible for thread safety of all objects that have
-// been built during the lifetime of the JVM.  i.e If any objects have been
-// built, they must fall from scope prior to JvmRef falling from scope.
-//
-// There should only be one instance of JvmRef created at a time. If the
-// lifetimes of multiple JvmRef overlap, then one instance may get an invalid
-// JavaVM after the first instance is destroyed.
-template <const auto& jvm_v_>
-class JvmRef : public JvmRefBase {
- public:
-  template <size_t ClassLoaderIdx>
-  struct TeardownClassesHelper {
-    template <size_t... Is>
-    static constexpr void TeardownClass(
-        std::index_sequence<Is...> index_sequence) {
-      (ClassRef_t<JniT<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_,
-                       0, Is, ClassLoaderIdx>
-
-                  >::MaybeReleaseClassRef(),
-       ...);
-    }
-  };
-
-  template <size_t... Is>
-  constexpr void TeardownClassloadersHelper(
-      std::index_sequence<Is...> index_sequence) {
-    (TeardownClassesHelper<Is>::TeardownClass(
-         std::make_index_sequence<
-             std::tuple_size_v<decltype(std::get<Is>(jvm_v_.class_loaders_)
-                                            .supported_classes_)>>()),
-     ...);
-  }
-
-  JavaVM* BuildJavaVMFromEnv(JNIEnv* env) {
-    JavaVM* vm = nullptr;
-    // 0 Is success.
-    if (env->GetJavaVM(&vm) == 0) {
-      return vm;
+  const auto& SelfVal() {
+    if constexpr (IdT::kIsStatic) {
+      return class_ref_;
     } else {
-      return nullptr;
+      return object_ref_;
     }
   }
 
-  explicit JvmRef(JNIEnv* env) : JvmRefBase(BuildJavaVMFromEnv(env)) {}
-  explicit JvmRef(JavaVM* vm) : JvmRefBase(vm) {}
-
-  ~JvmRef() {
-    TeardownClassloadersHelper(
-        std::make_index_sequence<
-            std::tuple_size_v<decltype(jvm_v_.class_loaders_)>>());
-
-    // This object has two lifecycle phases in relation to data races
-    // 1)  Value is null, when it is guarded by the ClassRef mutex
-    //     (implicitly part of ClassRef's behaviour).
-    // 2)  JVM is tearing down.  At this point, the caller is responsible for
-    //     releasing all native resources.
-    //     ReleaseAllClassRefsForDefaultClassLoader will only ever be torn down
-    //     by JvmRef::~JvmRef, and JvmRef cannot be moved, therefore it is
-    //     guaranteed to be in a single threaded context.
-    auto& default_loaded_class_list = DefaultRefs<jclass>();
-    for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
-         default_loaded_class_list) {
-      maybe_loaded_class_id->Reset([](jclass clazz) {
-        LifecycleHelper<jobject, LifecycleType::GLOBAL>::Delete(clazz);
-      });
+  ReturnProxied Get() {
+    if constexpr (std::is_base_of_v<RefBaseBase, ReturnProxied>) {
+      return {AdoptLocal{},
+              FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
+                          IdT::kIsStatic>::GetValue(SelfVal(),
+                                                    GetFieldID(class_ref_))};
+    } else {
+      return {FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
+                          IdT::kIsStatic>::GetValue(SelfVal(),
+                                                    GetFieldID(class_ref_))};
     }
-    default_loaded_class_list.clear();
-
-    // Methods do not need to be released, just forgotten.
-    auto& default_loaded_method_ref_list = DefaultRefs<jmethodID>();
-    for (metaprogramming::DoubleLockedValue<jmethodID>* cached_method_id :
-         default_loaded_method_ref_list) {
-      cached_method_id->Reset();
-    }
-    default_loaded_method_ref_list.clear();
-
-    // Fields do not need to be released, just forgotten.
-    auto& default_loaded_field_ref_list = GetDefaultLoadedFieldList();
-    for (metaprogramming::DoubleLockedValue<jfieldID>* cached_field_id :
-         default_loaded_field_ref_list) {
-      cached_field_id->Reset();
-    }
-    default_loaded_field_ref_list.clear();
   }
 
-  // Deleted in order to make various threading guarantees (see class_ref.h).
-  JvmRef(const JvmRef&) = delete;
-  JvmRef(JvmRef&&) = delete;
-
-  // All new threads MUST create a guard by calling |BuildThreadGuard|.
-  // If a JNIEnv does not exist, this will DetachCurrentThread when done.
-  [[nodiscard]] ThreadGuard BuildThreadGuard() const { return {}; }
+  template <typename T>
+  void Set(T&& value) {
+    FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
+                IdT::kIsStatic>::SetValue(SelfVal(), GetFieldID(class_ref_),
+                                          Proxy_t<T>::ProxyAsArg(
+                                              std::forward<T>(value)));
+  }
 
  private:
-  // Main thread has a JNIEnv just like every other thread.
-  const ThreadGuard thread_guard_ = {};
+  const jclass class_ref_;
+  const jobject object_ref_;
 };
-
-JvmRef(JNIEnv*) -> JvmRef<kDefaultJvm>;
-JvmRef(JavaVM*) -> JvmRef<kDefaultJvm>;
 
 }  // namespace jni
 
@@ -6767,258 +6807,6 @@ struct ValidatorProxy : public ConstructorValidator<JniT> {
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 using ObjectRefBuilder_t =
     ValidatorProxy<JniT<jobject, class_v_, class_loader_v_, jvm_v_>>;
-
-}  // namespace jni
-
-#include <type_traits>
-
-namespace jni {
-
-// Convenience struct for returning results from pinning array.
-template <typename SpanType>
-struct GetArrayElementsResult {
-  SpanType* ptr_;
-  jboolean is_copy;
-};
-
-struct JniArrayHelperBase {
-  static inline std::size_t GetLength(jarray array) {
-    return jni::JniEnv::GetEnv()->GetArrayLength(array);
-  }
-};
-
-// Rank 2+ arrays all behave like object arrays.
-template <typename SpannedType, std::size_t kRank>
-struct JniArrayHelper : public JniArrayHelperBase {
-  using AsArrayType = jobjectArray;
-
-  static inline jobjectArray NewArray(std::size_t size,
-                                      jclass class_id = nullptr,
-                                      jobject initial_element = nullptr) {
-    return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
-                                                 initial_element);
-  }
-
-  // The API of fetching objects only permits accessing one object at a time.
-  static inline jobject GetArrayElement(jobjectArray array, std::size_t idx) {
-    return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
-  };
-
-  // The API of fetching objects only permits accessing one object at a time.
-  static inline void SetArrayElement(jobjectArray array, std::size_t idx,
-                                     SpannedType obj) {
-    jni::JniEnv::GetEnv()->SetObjectArrayElement(array, idx, obj);
-  };
-};
-
-template <>
-struct JniArrayHelper<jboolean, 1> : public JniArrayHelperBase {
-  using AsArrayType = jbooleanArray;
-
-  static inline jbooleanArray NewArray(std::size_t size) {
-    return jni::JniEnv::GetEnv()->NewBooleanArray(size);
-  }
-
-  static inline GetArrayElementsResult<jboolean> GetArrayElements(
-      jarray array) {
-    GetArrayElementsResult<jboolean> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetBooleanArrayElements(
-        static_cast<jbooleanArray>(array), &return_value.is_copy);
-    return return_value;
-  }
-
-  static inline void ReleaseArrayElements(jarray array, jboolean* native_ptr,
-                                          bool copy_on_completion) {
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseBooleanArrayElements(
-        static_cast<jbooleanArray>(array), native_ptr, copy_back_mode);
-  }
-};
-
-template <>
-struct JniArrayHelper<jbyte, 1> : public JniArrayHelperBase {
-  using AsArrayType = jbyteArray;
-
-  static inline jbyteArray NewArray(std::size_t size) {
-    return jni::JniEnv::GetEnv()->NewByteArray(size);
-  }
-
-  static inline GetArrayElementsResult<jbyte> GetArrayElements(jarray array) {
-    GetArrayElementsResult<jbyte> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetByteArrayElements(
-        static_cast<jbyteArray>(array), &return_value.is_copy);
-    return return_value;
-  }
-
-  static inline void ReleaseArrayElements(jarray array, jbyte* native_ptr,
-                                          bool copy_on_completion) {
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseByteArrayElements(
-        static_cast<jbyteArray>(array), native_ptr, copy_back_mode);
-  }
-};
-
-template <>
-struct JniArrayHelper<jchar, 1> : public JniArrayHelperBase {
-  using AsArrayType = jcharArray;
-
-  static inline jcharArray NewArray(std::size_t size) {
-    return jni::JniEnv::GetEnv()->NewCharArray(size);
-  }
-
-  static inline GetArrayElementsResult<jchar> GetArrayElements(jarray array) {
-    GetArrayElementsResult<jchar> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetCharArrayElements(
-        static_cast<jcharArray>(array), &return_value.is_copy);
-    return return_value;
-  }
-
-  static inline void ReleaseArrayElements(jarray array, jchar* native_ptr,
-                                          bool copy_on_completion) {
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseCharArrayElements(
-        static_cast<jcharArray>(array), native_ptr, copy_back_mode);
-  }
-};
-
-template <>
-struct JniArrayHelper<jshort, 1> : public JniArrayHelperBase {
-  using AsArrayType = jshortArray;
-
-  static inline jshortArray NewArray(std::size_t size) {
-    return jni::JniEnv::GetEnv()->NewShortArray(size);
-  }
-
-  static inline GetArrayElementsResult<jshort> GetArrayElements(jarray array) {
-    GetArrayElementsResult<jshort> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetShortArrayElements(
-        static_cast<jshortArray>(array), &return_value.is_copy);
-    return return_value;
-  }
-
-  static inline void ReleaseArrayElements(jarray array, jshort* native_ptr,
-                                          bool copy_on_completion) {
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseShortArrayElements(
-        static_cast<jshortArray>(array), native_ptr, copy_back_mode);
-  }
-};
-
-template <>
-struct JniArrayHelper<jint, 1> : public JniArrayHelperBase {
-  using AsArrayType = jintArray;
-
-  static inline jintArray NewArray(std::size_t size) {
-    return jni::JniEnv::GetEnv()->NewIntArray(size);
-  }
-
-  static inline GetArrayElementsResult<jint> GetArrayElements(jarray array) {
-    GetArrayElementsResult<jint> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetIntArrayElements(
-        static_cast<jintArray>(array), &return_value.is_copy);
-    return return_value;
-  }
-
-  static inline void ReleaseArrayElements(jarray array, int* native_ptr,
-                                          bool copy_on_completion) {
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseIntArrayElements(
-        static_cast<jintArray>(array), native_ptr, copy_back_mode);
-  }
-};
-
-template <>
-struct JniArrayHelper<jlong, 1> : public JniArrayHelperBase {
-  using AsArrayType = jlongArray;
-
-  static inline jlongArray NewArray(std::size_t size) {
-    return jni::JniEnv::GetEnv()->NewLongArray(size);
-  }
-
-  static inline GetArrayElementsResult<jlong> GetArrayElements(jarray array) {
-    GetArrayElementsResult<jlong> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetLongArrayElements(
-        static_cast<jlongArray>(array), &return_value.is_copy);
-    return return_value;
-  }
-
-  static inline void ReleaseArrayElements(jarray array, jlong* native_ptr,
-                                          bool copy_on_completion) {
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseLongArrayElements(
-        static_cast<jlongArray>(array), native_ptr, copy_back_mode);
-  }
-};
-
-template <>
-struct JniArrayHelper<jfloat, 1> : public JniArrayHelperBase {
-  using AsArrayType = jfloatArray;
-
-  static inline jfloatArray NewArray(std::size_t size) {
-    return jni::JniEnv::GetEnv()->NewFloatArray(size);
-  }
-
-  static inline GetArrayElementsResult<jfloat> GetArrayElements(jarray array) {
-    GetArrayElementsResult<jfloat> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetFloatArrayElements(
-        static_cast<jfloatArray>(array), &return_value.is_copy);
-    return return_value;
-  }
-
-  static inline void ReleaseArrayElements(jarray array, jfloat* native_ptr,
-                                          bool copy_on_completion) {
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseFloatArrayElements(
-        static_cast<jfloatArray>(array), native_ptr, copy_back_mode);
-  }
-};
-
-template <>
-struct JniArrayHelper<jdouble, 1> : public JniArrayHelperBase {
-  using AsArrayType = jdoubleArray;
-
-  static inline jdoubleArray NewArray(std::size_t size) {
-    return jni::JniEnv::GetEnv()->NewDoubleArray(size);
-  }
-
-  static inline GetArrayElementsResult<jdouble> GetArrayElements(jarray array) {
-    GetArrayElementsResult<jdouble> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetDoubleArrayElements(
-        static_cast<jdoubleArray>(array), &return_value.is_copy);
-    return return_value;
-  }
-
-  static inline void ReleaseArrayElements(jarray array, jdouble* native_ptr,
-                                          bool copy_on_completion) {
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseDoubleArrayElements(
-        static_cast<jdoubleArray>(array), native_ptr, copy_back_mode);
-  }
-};
-
-// Note, this requires both a jclass and a sample jobject to build from which
-// is unlike any other new array construction.
-template <std::size_t kRank>
-struct JniArrayHelper<jobject, kRank> : public JniArrayHelperBase {
-  using AsArrayType = jobjectArray;
-
-  static inline jobjectArray NewArray(std::size_t size, jclass class_id,
-                                      jobject initial_element) {
-    return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
-                                                 initial_element);
-  }
-
-  // The API of fetching objects only permits accessing one object at a time.
-  static inline jobject GetArrayElement(jobjectArray array, std::size_t idx) {
-    return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
-  };
-
-  // The API of fetching objects only permits accessing one object at a time.
-  static inline void SetArrayElement(jobjectArray array, std::size_t idx,
-                                     jobject obj) {
-    jni::JniEnv::GetEnv()->SetObjectArrayElement(array, idx, obj);
-  };
-};
 
 }  // namespace jni
 
@@ -7290,13 +7078,565 @@ bool operator!=(const jobject& lhs,
 
 }  // namespace jni
 
+#include <type_traits>
+
+namespace jni {
+
+// Convenience struct for returning results from pinning array.
+template <typename SpanType>
+struct GetArrayElementsResult {
+  SpanType* ptr_;
+  jboolean is_copy;
+};
+
+struct JniArrayHelperBase {
+  static inline std::size_t GetLength(jarray array) {
+    Trace("GetArrayLength", array);
+
+    return jni::JniEnv::GetEnv()->GetArrayLength(array);
+  }
+};
+
+// Rank 2+ arrays all behave like object arrays.
+template <typename SpannedType, std::size_t kRank>
+struct JniArrayHelper : public JniArrayHelperBase {
+  using AsArrayType = jobjectArray;
+
+  static inline jobjectArray NewArray(std::size_t size,
+                                      jclass class_id = nullptr,
+                                      jobject initial_element = nullptr) {
+    Trace("NewObjectArray", size, class_id, initial_element);
+
+    return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
+                                                 initial_element);
+  }
+
+  // The API of fetching objects only permits accessing one object at a time.
+  static inline jobject GetArrayElement(jobjectArray array, std::size_t idx) {
+    Trace("GetObjectArrayElement", array, idx);
+
+    return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
+  };
+
+  // The API of fetching objects only permits accessing one object at a time.
+  static inline void SetArrayElement(jobjectArray array, std::size_t idx,
+                                     SpannedType obj) {
+    Trace("SetObjectArrayElement", array, idx, obj);
+
+    jni::JniEnv::GetEnv()->SetObjectArrayElement(array, idx, obj);
+  };
+};
+
+template <>
+struct JniArrayHelper<jboolean, 1> : public JniArrayHelperBase {
+  using AsArrayType = jbooleanArray;
+
+  static inline jbooleanArray NewArray(std::size_t size) {
+    Trace("NewBooleanArray, Rank 1", size);
+
+    return jni::JniEnv::GetEnv()->NewBooleanArray(size);
+  }
+
+  static inline GetArrayElementsResult<jboolean> GetArrayElements(
+      jarray array) {
+    Trace("GetArrayElements, jboolean, Rank 1", array);
+
+    GetArrayElementsResult<jboolean> return_value;
+    return_value.ptr_ = jni::JniEnv::GetEnv()->GetBooleanArrayElements(
+        static_cast<jbooleanArray>(array), &return_value.is_copy);
+    return return_value;
+  }
+
+  static inline void ReleaseArrayElements(jarray array, jboolean* native_ptr,
+                                          bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jboolean, Rank 1", array, native_ptr,
+          copy_on_completion);
+
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    jni::JniEnv::GetEnv()->ReleaseBooleanArrayElements(
+        static_cast<jbooleanArray>(array), native_ptr, copy_back_mode);
+  }
+};
+
+template <>
+struct JniArrayHelper<jbyte, 1> : public JniArrayHelperBase {
+  using AsArrayType = jbyteArray;
+
+  static inline jbyteArray NewArray(std::size_t size) {
+    Trace("NewByteArray, Rank 1", size);
+
+    return jni::JniEnv::GetEnv()->NewByteArray(size);
+  }
+
+  static inline GetArrayElementsResult<jbyte> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jbyte, Rank 1", array);
+
+    GetArrayElementsResult<jbyte> return_value;
+    return_value.ptr_ = jni::JniEnv::GetEnv()->GetByteArrayElements(
+        static_cast<jbyteArray>(array), &return_value.is_copy);
+    return return_value;
+  }
+
+  static inline void ReleaseArrayElements(jarray array, jbyte* native_ptr,
+                                          bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jbyte, Rank 1", array, native_ptr,
+          copy_on_completion);
+
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    jni::JniEnv::GetEnv()->ReleaseByteArrayElements(
+        static_cast<jbyteArray>(array), native_ptr, copy_back_mode);
+  }
+};
+
+template <>
+struct JniArrayHelper<jchar, 1> : public JniArrayHelperBase {
+  using AsArrayType = jcharArray;
+
+  static inline jcharArray NewArray(std::size_t size) {
+    Trace("NewCharArray, Rank 1", size);
+
+    return jni::JniEnv::GetEnv()->NewCharArray(size);
+  }
+
+  static inline GetArrayElementsResult<jchar> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jchar, Rank 1", array);
+
+    GetArrayElementsResult<jchar> return_value;
+    return_value.ptr_ = jni::JniEnv::GetEnv()->GetCharArrayElements(
+        static_cast<jcharArray>(array), &return_value.is_copy);
+    return return_value;
+  }
+
+  static inline void ReleaseArrayElements(jarray array, jchar* native_ptr,
+                                          bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jchar, Rank 1", array, native_ptr,
+          copy_on_completion);
+
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    jni::JniEnv::GetEnv()->ReleaseCharArrayElements(
+        static_cast<jcharArray>(array), native_ptr, copy_back_mode);
+  }
+};
+
+template <>
+struct JniArrayHelper<jshort, 1> : public JniArrayHelperBase {
+  using AsArrayType = jshortArray;
+
+  static inline jshortArray NewArray(std::size_t size) {
+    Trace("NewShortArray, Rank 1", size);
+
+    return jni::JniEnv::GetEnv()->NewShortArray(size);
+  }
+
+  static inline GetArrayElementsResult<jshort> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jshort, Rank 1", array);
+
+    GetArrayElementsResult<jshort> return_value;
+    return_value.ptr_ = jni::JniEnv::GetEnv()->GetShortArrayElements(
+        static_cast<jshortArray>(array), &return_value.is_copy);
+    return return_value;
+  }
+
+  static inline void ReleaseArrayElements(jarray array, jshort* native_ptr,
+                                          bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jshort, Rank 1", array, native_ptr,
+          copy_on_completion);
+
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    jni::JniEnv::GetEnv()->ReleaseShortArrayElements(
+        static_cast<jshortArray>(array), native_ptr, copy_back_mode);
+  }
+};
+
+template <>
+struct JniArrayHelper<jint, 1> : public JniArrayHelperBase {
+  using AsArrayType = jintArray;
+
+  static inline jintArray NewArray(std::size_t size) {
+    Trace("NewIntArray, Rank 1", size);
+
+    return jni::JniEnv::GetEnv()->NewIntArray(size);
+  }
+
+  static inline GetArrayElementsResult<jint> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jint, Rank 1", array);
+
+    GetArrayElementsResult<jint> return_value;
+    return_value.ptr_ = jni::JniEnv::GetEnv()->GetIntArrayElements(
+        static_cast<jintArray>(array), &return_value.is_copy);
+    return return_value;
+  }
+
+  static inline void ReleaseArrayElements(jarray array, int* native_ptr,
+                                          bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jint, Rank 1", array, native_ptr,
+          copy_on_completion);
+
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    jni::JniEnv::GetEnv()->ReleaseIntArrayElements(
+        static_cast<jintArray>(array), native_ptr, copy_back_mode);
+  }
+};
+
+template <>
+struct JniArrayHelper<jlong, 1> : public JniArrayHelperBase {
+  using AsArrayType = jlongArray;
+
+  static inline jlongArray NewArray(std::size_t size) {
+    Trace("NewLongArray, Rank 1", size);
+
+    return jni::JniEnv::GetEnv()->NewLongArray(size);
+  }
+
+  static inline GetArrayElementsResult<jlong> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jlong, Rank 1", array);
+
+    GetArrayElementsResult<jlong> return_value;
+    return_value.ptr_ = jni::JniEnv::GetEnv()->GetLongArrayElements(
+        static_cast<jlongArray>(array), &return_value.is_copy);
+    return return_value;
+  }
+
+  static inline void ReleaseArrayElements(jarray array, jlong* native_ptr,
+                                          bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jlong, Rank 1", array, native_ptr,
+          copy_on_completion);
+
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    jni::JniEnv::GetEnv()->ReleaseLongArrayElements(
+        static_cast<jlongArray>(array), native_ptr, copy_back_mode);
+  }
+};
+
+template <>
+struct JniArrayHelper<jfloat, 1> : public JniArrayHelperBase {
+  using AsArrayType = jfloatArray;
+
+  static inline jfloatArray NewArray(std::size_t size) {
+    Trace("NewFloatArray, Rank 1", size);
+
+    return jni::JniEnv::GetEnv()->NewFloatArray(size);
+  }
+
+  static inline GetArrayElementsResult<jfloat> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jfloat, Rank 1", array);
+
+    GetArrayElementsResult<jfloat> return_value;
+    return_value.ptr_ = jni::JniEnv::GetEnv()->GetFloatArrayElements(
+        static_cast<jfloatArray>(array), &return_value.is_copy);
+    return return_value;
+  }
+
+  static inline void ReleaseArrayElements(jarray array, jfloat* native_ptr,
+                                          bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jfloat, Rank 1", array, native_ptr,
+          copy_on_completion);
+
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    jni::JniEnv::GetEnv()->ReleaseFloatArrayElements(
+        static_cast<jfloatArray>(array), native_ptr, copy_back_mode);
+  }
+};
+
+template <>
+struct JniArrayHelper<jdouble, 1> : public JniArrayHelperBase {
+  using AsArrayType = jdoubleArray;
+
+  static inline jdoubleArray NewArray(std::size_t size) {
+    Trace("NewDoubleArray, Rank 1", size);
+
+    return jni::JniEnv::GetEnv()->NewDoubleArray(size);
+  }
+
+  static inline GetArrayElementsResult<jdouble> GetArrayElements(jarray array) {
+    Trace("GetArrayElements, jdouble, Rank 1", array);
+
+    GetArrayElementsResult<jdouble> return_value;
+    return_value.ptr_ = jni::JniEnv::GetEnv()->GetDoubleArrayElements(
+        static_cast<jdoubleArray>(array), &return_value.is_copy);
+    return return_value;
+  }
+
+  static inline void ReleaseArrayElements(jarray array, jdouble* native_ptr,
+                                          bool copy_on_completion) {
+    Trace("ReleaseArrayElements, jdouble, Rank 1", array, native_ptr,
+          copy_on_completion);
+
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+    jni::JniEnv::GetEnv()->ReleaseDoubleArrayElements(
+        static_cast<jdoubleArray>(array), native_ptr, copy_back_mode);
+  }
+};
+
+// Note, this requires both a jclass and a sample jobject to build from which
+// is unlike any other new array construction.
+template <std::size_t kRank>
+struct JniArrayHelper<jobject, kRank> : public JniArrayHelperBase {
+  using AsArrayType = jobjectArray;
+
+  static inline jobjectArray NewArray(std::size_t size, jclass class_id,
+                                      jobject initial_element) {
+    Trace("NewArray, Rank >1", kRank);
+
+    return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
+                                                 initial_element);
+  }
+
+  // The API of fetching objects only permits accessing one object at a time.
+  static inline jobject GetArrayElement(jobjectArray array, std::size_t idx) {
+    Trace("GetArrayElement, Rank >1", kRank);
+
+    return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
+  };
+
+  // The API of fetching objects only permits accessing one object at a time.
+  static inline void SetArrayElement(jobjectArray array, std::size_t idx,
+                                     jobject obj) {
+    Trace("SetArrayElement, Rank >1", kRank);
+
+    jni::JniEnv::GetEnv()->SetObjectArrayElement(array, idx, obj);
+  };
+};
+
+}  // namespace jni
+
+namespace jni {
+
+using LocalStringImpl =
+    Scoped<LifecycleType::LOCAL, JniT<jstring, kJavaLangString>, jobject,
+           jstring>;
+
+// Represents and possibly builds a runtime Java String object.
+//
+// In order to use a string in memory (as opposed to only using it for function
+// arguments), "Pin" the string.
+//
+// Like |jobjects|, |jstring|s can be either local or global with the same
+// ownership semantics.
+class LocalString : public LocalStringImpl {
+ public:
+  using Base = LocalStringImpl;
+  using Base::Base;
+
+  LocalString(std::nullptr_t) : Base(jstring{nullptr}) {}
+  LocalString(LocalObject<kJavaLangString>&& obj)
+      : Base(AdoptLocal{}, static_cast<jstring>(obj.Release())) {}
+
+  template <typename T>
+  LocalString(ArrayViewHelper<T> array_view_helper)
+      : LocalString(AdoptLocal{}, array_view_helper.val_) {}
+
+  // Returns a StringView which possibly performs an expensive pinning
+  // operation.  String objects can be pinned multiple times.
+  UtfStringView Pin() { return {RefBaseTag<jstring>::object_ref_}; }
+};
+
+}  // namespace jni
+
+namespace jni {
+
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+using GlobalObjectImpl =
+    Scoped<LifecycleType::GLOBAL,
+           JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
+
+template <const auto& class_v_,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+class GlobalObject
+    : public GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
+ public:
+  using Base = GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
+  using Base::Base;
+  using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
+
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  GlobalObject(GlobalObject<class_v, class_loader_v, jvm_v>&& obj)
+      : Base(obj.Release()) {}
+
+  template <typename... Ts>
+  GlobalObject(Ts&&... vals) : Base(std::forward<Ts&&>(vals)...) {
+    RefBaseTag<jobject>::object_ref_ =
+        LifecycleT::Promote(RefBaseTag<jobject>::object_ref_);
+  }
+
+  GlobalObject() {
+    RefBaseTag<jobject>::object_ref_ =
+        LifecycleT::Promote(RefBaseTag<jobject>::object_ref_);
+  }
+
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  GlobalObject& operator=(LocalObject<class_v, class_loader_v, jvm_v>&& rhs) {
+    static_assert(::jni::metaprogramming::DeepEqualDiminished_v<
+                  LocalObject<class_v_, class_loader_v_, jvm_v_>,
+                  LocalObject<class_v, class_loader_v, jvm_v>>);
+    Base::MaybeReleaseUnderlyingObject();
+    Base::object_ref_ = rhs.Release();
+
+    return *this;
+  }
+};
+
+template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&&)
+    -> GlobalObject<class_v, class_loader_v, jvm_v>;
+
+}  // namespace jni
+
+#include <tuple>
+#include <type_traits>
+
+namespace jni::metaprogramming {
+
+// Metafunction for querying traits return and argument types of a function.
+template <typename>
+struct FunctionTraits;
+
+// Partial specialisation for functions.
+template <typename Return_, typename... Args>
+struct FunctionTraits<Return_(Args...)> {
+  using Return = Return_;
+  using ArgsTup = std::tuple<Args...>;
+
+  static constexpr std::size_t arity = sizeof...(Args);
+
+  template <std::size_t N>
+  struct Argument {
+    static_assert(N < arity, "Parameter index exceeds argument count.");
+    using type = typename std::tuple_element<N, std::tuple<Args...>>::type;
+  };
+};
+
+// Partial specialisation for function pointer.
+template <typename R, typename... Args>
+struct FunctionTraits<R (*)(Args...)> : public FunctionTraits<R(Args...)> {};
+
+// Member function pointer
+template <class C, class R, class... Args>
+struct FunctionTraits<R (C::*)(Args...)>
+    : public FunctionTraits<R(C&, Args...)> {};
+
+// const member function pointer
+template <class C, class R, class... Args>
+struct FunctionTraits<R (C::*)(Args...) const>
+    : public FunctionTraits<R(C&, Args...)> {};
+
+// Member object pointer
+template <class C, class R>
+struct FunctionTraits<R(C::*)> : public FunctionTraits<R(C&)> {};
+
+template <typename T>
+using FunctionTraitsReturn_t = typename FunctionTraits<T>::Return;
+
+template <typename T, std::size_t argument_idx>
+using FunctionTraitsArg_t =
+    typename FunctionTraits<T>::template Argument<argument_idx>::type;
+
+}  // namespace jni::metaprogramming
+
+#include <atomic>
+
+namespace jni {
+
+// Helper for JvmRef to enforce correct sequencing of getting and setting
+// process level static fo JavaVM*.
+class JvmRefBase {
+ protected:
+  friend class ThreadGuard;
+  friend class ThreadLocalGuardDestructor;
+
+  JvmRefBase(JavaVM* vm) { process_level_jvm_.store(vm); }
+  ~JvmRefBase() { process_level_jvm_.store(nullptr); }
+
+  static JavaVM* GetJavaVm() { return process_level_jvm_.load(); }
+  static void SetJavaVm(JavaVM* jvm) { process_level_jvm_.store(jvm); }
+
+  static inline std::atomic<JavaVM*> process_level_jvm_ = nullptr;
+};
+
+}  // namespace jni
+
+#include <type_traits>
+
+namespace jni {
+
+template <LifecycleType lifecycleType>
+using ClassLoaderImpl =
+    Scoped<lifecycleType, JniT<jobject, kJavaLangClassLoader>, jobject>;
+
+template <LifecycleType lifecycleType, const auto& class_loader_v_,
+          const auto& jvm_v_>
+class ClassLoaderRef : public ClassLoaderImpl<lifecycleType> {
+ private:
+  // Returns kDefaultJvm for default class loaded objects, otherwise returns the
+  // jvm associated with this loader.  Default loaders do not use indexing,
+  // whereas non-standard loaders do (to allow for programmatic Jvm teardown).
+  template <const auto& class_v>
+  static constexpr auto& JvmForLoader() {
+    if constexpr (ParentLoaderForClass<class_loader_v_, class_v>() !=
+                  kDefaultClassLoader) {
+      return jvm_v_;
+    } else {
+      return kDefaultJvm;
+    }
+  }
+
+ public:
+  using Base = ClassLoaderImpl<lifecycleType>;
+  using Base::Base;
+
+  template <const auto& class_v, typename... Params>
+  [[nodiscard]] auto BuildLocalObject(Params&&... params) {
+    using JniClassT = JniT<jobject, class_v>;
+    using IdClassT = Id<JniClassT, IdType::CLASS>;
+    static_assert(
+        !(ParentLoaderForClass<class_loader_v_, class_v>() == kNullClassLoader),
+        "Cannot build this class with this loader.");
+
+    if constexpr (ParentLoaderForClass<class_loader_v_, class_v>() !=
+                  kDefaultClassLoader) {
+      ClassRef_t<JniT<jobject, class_v, class_loader_v_, jvm_v_,
+                      0>>::PrimeJClassFromClassLoader([=]() {
+        // Prevent the object (which is a runtime instance of a class) from
+        // falling out of scope so it is not released.
+        LocalObject loaded_class =
+            (*this)("loadClass", IdClassT::kNameUsingDots);
+
+        // We only want to create global references if we are actually going
+        // to use them so that they do not leak.
+        jclass test_class{
+            static_cast<jclass>(static_cast<jobject>(loaded_class))};
+        return static_cast<jclass>(JniEnv::GetEnv()->NewGlobalRef(test_class));
+      });
+    }
+    return LocalObject<class_v,
+                       ParentLoaderForClass<class_loader_v_, class_v>(),
+                       JvmForLoader<class_v>()>{
+        std::forward<Params>(params)...};
+  }
+
+  template <const auto& class_v, typename... Params>
+  [[nodiscard]] auto BuildGlobalObject(Params&&... params) {
+    LocalObject obj =
+        BuildLocalObject<class_v>(std::forward<Params>(params)...);
+    jobject promoted_local =
+        LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(obj.Release());
+
+    return GlobalObject<class_v,
+                        ParentLoaderForClass<class_loader_v_, class_v>(),
+                        JvmForLoader<class_v>()>{AdoptGlobal{}, promoted_local};
+  }
+};
+
+}  // namespace jni
+
 #include <iterator>
 
 namespace jni {
 
 template <typename T>
 struct ArrayViewHelper {
-  const T& val_;
+  const T val_;
   operator T() const { return val_; }
 
   ArrayViewHelper(const T& val) : val_(val) {}
@@ -7454,8 +7794,19 @@ class ArrayView<
   ArrayView(ArrayView&&) = delete;
   ArrayView(const ArrayView&) = delete;
 
+  // This constructor creates a copy of the parent `jarray` so that the
+  // lifetime doesn't end before objects. e.g. `obj["field"].Get().Pin()` is a
+  // useful pattern in iterators, but the returned Get() `LocalArray` would
+  // be released immediately.
   ArrayView(jobjectArray array, bool, std::size_t size)
-      : array_(array), size_(size) {}
+      : array_(
+            LifecycleHelper<jobjectArray, LifecycleType::LOCAL>::NewReference(
+                array)),
+        size_(size) {}
+
+  ~ArrayView() {
+    LifecycleHelper<jobjectArray, LifecycleType::LOCAL>::Delete(array_);
+  }
 
   Iterator begin() { return Iterator(array_, size_, 0); }
   Iterator end() { return Iterator(array_, size_, size_); }
@@ -7474,84 +7825,104 @@ ArrayView(ArrayView<SpanType, kRank>&&) -> ArrayView<SpanType, kRank>;
 
 namespace jni {
 
-using LocalStringImpl =
-    Scoped<LifecycleType::LOCAL, JniT<jstring, kJavaLangString>, jobject,
-           jstring>;
-
-// Represents and possibly builds a runtime Java String object.
-//
-// In order to use a string in memory (as opposed to only using it for function
-// arguments), "Pin" the string.
-//
-// Like |jobjects|, |jstring|s can be either local or global with the same
-// ownership semantics.
-class LocalString : public LocalStringImpl {
+// Designed to be the very last JniBind object to execute on the thread.
+// Objects passed by move for lambdas will be destructed after any contents
+// statements within their lambda, and `ThreadGuard` can't be moved into the
+// lambda because its construction will be on the host thread. This static
+// teardown guarantees a delayed destruction beyond any GlobalObject.
+class ThreadLocalGuardDestructor {
  public:
-  using Base = LocalStringImpl;
-  using Base::Base;
+  bool detach_thread_when_all_guards_released_ = false;
 
-  LocalString(std::nullptr_t) : Base(jstring{nullptr}) {}
-  LocalString(LocalObject<kJavaLangString>&& obj)
-      : Base(AdoptLocal{}, static_cast<jstring>(obj.Release())) {}
+  // By calling this the compiler is obligated to perform initalisation.
+  void ForceDestructionOnThreadClose() {}
 
-  template <typename T>
-  LocalString(ArrayViewHelper<T> array_view_helper)
-      : LocalString(AdoptLocal{}, array_view_helper.val_) {}
+  ~ThreadLocalGuardDestructor() {
+    if (detach_thread_when_all_guards_released_) {
+      JavaVM* jvm = JvmRefBase::GetJavaVm();
+      if (jvm) {
+        jvm->DetachCurrentThread();
+      }
+    }
+  }
+};
 
-  // Returns a StringView which possibly performs an expensive pinning
-  // operation.  String objects can be pinned multiple times.
-  UtfStringView Pin() { return {RefBaseTag<jstring>::object_ref_}; }
+// ThreadGuard attaches and detaches JNIEnv* objects on the creation of new
+// threads.  All new threads which want to use JNI Wrapper must hold a
+// ThreadGuard beyond the scope of all created objects.  If the ThreadGuard
+// needs to create an Env, it will also detach itself.
+class ThreadGuard {
+ public:
+  ~ThreadGuard() { thread_guard_count_--; }
+
+  ThreadGuard(ThreadGuard&) = delete;
+  ThreadGuard(ThreadGuard&&) = delete;
+
+  template <const auto& jvm_v_>
+  friend class JvmRef;
+
+  // This constructor must *never* be called before a |JvmRef| has been
+  // constructed. It depends on static setup from |JvmRef|.
+  [[nodiscard]] ThreadGuard() {
+    thread_local_guard_destructor.ForceDestructionOnThreadClose();
+
+    // Nested ThreadGuards should be permitted in the same way mutex locks are.
+    thread_guard_count_++;
+    if (thread_guard_count_ != 1) {
+      // SetEnv has been called prior, GetEnv is currently valid.
+      return;
+    }
+
+    // Declarations for AttachCurrentThread are inconsistent across different
+    // JNI headers.  This forces a cast to whatever the expected type is.
+    JavaVM* const vm = JvmRefBase::GetJavaVm();
+    JNIEnv* jni_env = 0;
+
+    using TypeForGetEnv =
+        metaprogramming::FunctionTraitsArg_t<decltype(&JavaVM::GetEnv), 1>;
+    const int code =
+        vm->GetEnv(reinterpret_cast<TypeForGetEnv>(&jni_env), JNI_VERSION_1_6);
+
+    if (code != JNI_OK) {
+      using TypeForAttachment = metaprogramming::FunctionTraitsArg_t<
+          decltype(&JavaVM::AttachCurrentThread), 1>;
+      vm->AttachCurrentThread(reinterpret_cast<TypeForAttachment>(&jni_env),
+                              nullptr);
+      thread_local_guard_destructor.detach_thread_when_all_guards_released_ =
+          true;
+    }
+    // Why not store this locally to ThreadGuard?
+    //
+    // JNIEnv is thread local static, and the context an object is built from
+    // may not have easy access to a JNIEnv* (or this ThreadGuard).  For most
+    // constructions of new objects, the env is likely trivial (it's passed as
+    // part of the JNI call), however, if an object reference is moved from one
+    // thread to another, the JNIEnv* is certainly not available.
+    JniEnv::SetEnv(jni_env);
+  }
+
+ private:
+  static inline thread_local int thread_guard_count_ = 0;
+  static inline thread_local ThreadLocalGuardDestructor
+      thread_local_guard_destructor{};
 };
 
 }  // namespace jni
 
 namespace jni {
 
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-using GlobalObjectImpl =
-    Scoped<LifecycleType::GLOBAL,
-           JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>;
-
-template <const auto& class_v_,
-          const auto& class_loader_v_ = kDefaultClassLoader,
+template <const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
-class GlobalObject
-    : public GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
+class GlobalClassLoader
+    : public ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_> {
  public:
-  using Base = GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
+  using Base = ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_>;
   using Base::Base;
-  using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
 
-  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  GlobalObject(GlobalObject<class_v, class_loader_v, jvm_v>&& obj)
-      : Base(obj.Release()) {}
-
-  template <typename... Ts>
-  GlobalObject(Ts&&... vals) : Base(std::forward<Ts&&>(vals)...) {
-    RefBaseTag<jobject>::object_ref_ =
-        LifecycleT::Promote(RefBaseTag<jobject>::object_ref_);
-  }
-
-  GlobalObject() {
-    RefBaseTag<jobject>::object_ref_ =
-        LifecycleT::Promote(RefBaseTag<jobject>::object_ref_);
-  }
-
-  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  GlobalObject& operator=(LocalObject<class_v, class_loader_v, jvm_v>&& rhs) {
-    static_assert(::jni::metaprogramming::DeepEqualDiminished_v<
-                  LocalObject<class_v_, class_loader_v_, jvm_v_>,
-                  LocalObject<class_v, class_loader_v, jvm_v>>);
-    Base::MaybeReleaseUnderlyingObject();
-    Base::object_ref_ = rhs.Release();
-
-    return *this;
-  }
+  template <const auto& class_loader_v, const auto& jvm_v>
+  GlobalClassLoader(GlobalClassLoader<class_loader_v, jvm_v>&& rhs)
+      : Base(rhs.Release()) {}
 };
-
-template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&&)
-    -> GlobalObject<class_v, class_loader_v, jvm_v>;
 
 }  // namespace jni
 
@@ -7640,8 +8011,8 @@ class ArrayRefBase : public ScopedArrayImpl<JniT> {
   void Set(
       std::size_t idx,
       LocalObject<JniT::class_v, JniT::class_loader_v, JniT::jvm_v>&& val) {
-    AdoptLocal{}, JniArrayHelper<jobject, JniT::kRank>::SetArrayElement(
-                      Base::object_ref_, idx, val.Release());
+    JniArrayHelper<jobject, JniT::kRank>::SetArrayElement(Base::object_ref_,
+                                                          idx, val.Release());
   }
 };
 
@@ -7825,81 +8196,142 @@ struct ProxyHelper;
 
 }  // namespace jni
 
-#include <type_traits>
+#include <atomic>
+#include <memory>
+#include <utility>
 
 namespace jni {
 
-template <LifecycleType lifecycleType>
-using ClassLoaderImpl =
-    Scoped<lifecycleType, JniT<jobject, kJavaLangClassLoader>, jobject>;
+// Represents a runtime instance of a Java Virtual Machine.
+// The caller is responsible for dropping this object from scope when
+// JNI_OnUnload is called.
+//
+// For any new thread spawned, a ThreadGuard must be held.  The caller is
+// responsible for ensuring all ThreadGuards fall from scope before JvmRef falls
+// from scope.
+//
+// The caller is also responsible for thread safety of all objects that have
+// been built during the lifetime of the JVM.  i.e If any objects have been
+// built, they must fall from scope prior to JvmRef falling from scope.
+//
+// There should only be one instance of JvmRef created at a time. If the
+// lifetimes of multiple JvmRef overlap, then one instance may get an invalid
+// JavaVM after the first instance is destroyed.
+template <const auto& jvm_v_>
+class JvmRef : public JvmRefBase {
+ public:
+  template <size_t ClassLoaderIdx>
+  struct TeardownClassesHelper {
+    template <size_t... Is>
+    static constexpr void TeardownClass(
+        std::index_sequence<Is...> index_sequence) {
+      (ClassRef_t<JniT<jobject, kNoClassSpecified, kDefaultClassLoader, jvm_v_,
+                       0, Is, ClassLoaderIdx>
 
-template <LifecycleType lifecycleType, const auto& class_loader_v_,
-          const auto& jvm_v_>
-class ClassLoaderRef : public ClassLoaderImpl<lifecycleType> {
- private:
-  // Returns kDefaultJvm for default class loaded objects, otherwise returns the
-  // jvm associated with this loader.  Default loaders do not use indexing,
-  // whereas non-standard loaders do (to allow for programmatic Jvm teardown).
-  template <const auto& class_v>
-  static constexpr auto& JvmForLoader() {
-    if constexpr (ParentLoaderForClass<class_loader_v_, class_v>() !=
-                  kDefaultClassLoader) {
-      return jvm_v_;
+                  >::MaybeReleaseClassRef(),
+       ...);
+    }
+  };
+
+  template <size_t... Is>
+  constexpr void TeardownClassloadersHelper(
+      std::index_sequence<Is...> index_sequence) {
+    (TeardownClassesHelper<Is>::TeardownClass(
+         std::make_index_sequence<
+             std::tuple_size_v<decltype(std::get<Is>(jvm_v_.class_loaders_)
+                                            .supported_classes_)>>()),
+     ...);
+  }
+
+  JavaVM* BuildJavaVMFromEnv(JNIEnv* env) {
+    JavaVM* vm = nullptr;
+    // 0 Is success.
+    if (env->GetJavaVM(&vm) == 0) {
+      return vm;
     } else {
-      return kDefaultJvm;
+      return nullptr;
     }
   }
 
- public:
-  using Base = ClassLoaderImpl<lifecycleType>;
-  using Base::Base;
+  explicit JvmRef(JNIEnv* env) : JvmRefBase(BuildJavaVMFromEnv(env)) {}
+  explicit JvmRef(JavaVM* vm) : JvmRefBase(vm) {}
 
-  static_assert(class_loader_v_ != kDefaultClassLoader,
-                "Custom class loaders should not use the default class loader,"
-                "objects will automatically use the default.");
+  ~JvmRef() {
+    TeardownClassloadersHelper(
+        std::make_index_sequence<
+            std::tuple_size_v<decltype(jvm_v_.class_loaders_)>>());
 
-  template <const auto& class_v, typename... Params>
-  [[nodiscard]] auto BuildLocalObject(Params&&... params) {
-    using JniClassT = JniT<jobject, class_v>;
-    using IdClassT = Id<JniClassT, IdType::CLASS>;
-    static_assert(
-        !(ParentLoaderForClass<class_loader_v_, class_v>() == kNullClassLoader),
-        "Cannot build this class with this loader.");
-
-    if constexpr (ParentLoaderForClass<class_loader_v_, class_v>() !=
-                  kDefaultClassLoader) {
-      ClassRef_t<JniT<jobject, class_v, class_loader_v_, jvm_v_,
-                      0>>::PrimeJClassFromClassLoader([=]() {
-        // Prevent the object (which is a runtime instance of a class) from
-        // falling out of scope so it is not released.
-        LocalObject loaded_class =
-            (*this)("loadClass", IdClassT::kNameUsingDots);
-
-        // We only want to create global references if we are actually going
-        // to use them so that they do not leak.
-        jclass test_class{
-            static_cast<jclass>(static_cast<jobject>(loaded_class))};
-        return static_cast<jclass>(JniEnv::GetEnv()->NewGlobalRef(test_class));
+    // This object has two lifecycle phases in relation to data races
+    // 1)  Value is null, when it is guarded by the ClassRef mutex
+    //     (implicitly part of ClassRef's behaviour).
+    // 2)  JVM is tearing down.  At this point, the caller is responsible for
+    //     releasing all native resources.
+    //     ReleaseAllClassRefsForDefaultClassLoader will only ever be torn down
+    //     by JvmRef::~JvmRef, and JvmRef cannot be moved, therefore it is
+    //     guaranteed to be in a single threaded context.
+    auto& default_loaded_class_list = DefaultRefs<jclass>();
+    for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
+         default_loaded_class_list) {
+      maybe_loaded_class_id->Reset([](jclass clazz) {
+        LifecycleHelper<jobject, LifecycleType::GLOBAL>::Delete(clazz);
       });
     }
-    return LocalObject<class_v,
-                       ParentLoaderForClass<class_loader_v_, class_v>(),
-                       JvmForLoader<class_v>()>{
-        std::forward<Params>(params)...};
+    default_loaded_class_list.clear();
+
+    // Methods do not need to be released, just forgotten.
+    auto& default_loaded_method_ref_list = DefaultRefs<jmethodID>();
+    for (metaprogramming::DoubleLockedValue<jmethodID>* cached_method_id :
+         default_loaded_method_ref_list) {
+      cached_method_id->Reset();
+    }
+    default_loaded_method_ref_list.clear();
+
+    // Fields do not need to be released, just forgotten.
+    auto& default_loaded_field_ref_list = GetDefaultLoadedFieldList();
+    for (metaprogramming::DoubleLockedValue<jfieldID>* cached_field_id :
+         default_loaded_field_ref_list) {
+      cached_field_id->Reset();
+    }
+    default_loaded_field_ref_list.clear();
   }
 
-  template <const auto& class_v, typename... Params>
-  [[nodiscard]] auto BuildGlobalObject(Params&&... params) {
-    LocalObject obj =
-        BuildLocalObject<class_v>(std::forward<Params>(params)...);
-    jobject promoted_local =
-        LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(obj.Release());
+  // Deleted in order to make various threading guarantees (see class_ref.h).
+  JvmRef(const JvmRef&) = delete;
+  JvmRef(JvmRef&&) = delete;
 
-    return GlobalObject<class_v,
-                        ParentLoaderForClass<class_loader_v_, class_v>(),
-                        JvmForLoader<class_v>()>{AdoptGlobal{}, promoted_local};
+  // All new threads MUST create a guard by calling |BuildThreadGuard|.
+  // If a JNIEnv does not exist, this will DetachCurrentThread when done.
+  [[nodiscard]] ThreadGuard BuildThreadGuard() const { return {}; }
+
+  // Sets a "fallback" loader for use when default Jvm classes fail to load.
+  // This is useful for first use of classes on secondary threads where the
+  // jclass is not yet cached and the classloader isn't available directly.
+  void SetFallbackClassLoader(
+      jni::GlobalClassLoader<kDefaultClassLoader, kDefaultJvm>&& loader) {
+    fallback_loader_.reset(
+        new jni::GlobalClassLoader<kDefaultClassLoader, kDefaultJvm>(
+            AdoptGlobal{}, loader.Release()));
+
+    FallbackLoader() = static_cast<jobject>(*fallback_loader_);
   }
+
+  // Sets a "fallback" loader for use when default Jvm classes fail to load.
+  // `host_object *must* be local and will *not* be released.
+  void SetFallbackClassLoaderFromJObject(jobject host_object) {
+    SetFallbackClassLoader(LocalObject<kJavaLangObject>{host_object}(
+        "getClass")("getClassLoader"));
+  }
+
+ private:
+  // Main thread has a JNIEnv just like every other thread.
+  const ThreadGuard thread_guard_ = {};
+
+  std::unique_ptr<jni::GlobalClassLoader<kDefaultClassLoader, kDefaultJvm>>
+      fallback_loader_;
 };
+
+JvmRef(JNIEnv*) -> JvmRef<kDefaultJvm>;
+JvmRef(JavaVM*) -> JvmRef<kDefaultJvm>;
 
 }  // namespace jni
 
@@ -7968,7 +8400,8 @@ struct StaticRef
 
 namespace jni {
 
-template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
+template <const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
 class LocalClassLoader
     : public ClassLoaderRef<LifecycleType::LOCAL, class_loader_v_, jvm_v_> {
  public:
@@ -8065,17 +8498,24 @@ class GlobalString : public GlobalStringImpl {
 
 namespace jni {
 
-template <const auto& class_loader_v_, const auto& jvm_v_ = kDefaultJvm>
-class GlobalClassLoader
-    : public ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_> {
- public:
-  using Base = ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_>;
-  using Base::Base;
+// This is currently using JNI Bind itself and so cannot be directly included.
+// By delaying linkage for this we can use a bootstrapped JNI Bind. This could
+// be rewritten in porcelain JNI, but this flow ought to be only on
+// secondary threads with previously unused `jclass`'s (which is mostly rare),
+// and this is simpler to reason about than porcelain JNI.
+inline jclass FindClassFallback(const char* class_name) {
+  // The loader will be primed by the JVM, however, it needs to be accessible
+  // from the jni_helper layer. See `JvmRef` for how this is primed.
+  GlobalClassLoader<kDefaultClassLoader> loader{AdoptGlobal{},
+                                                FallbackLoader()};
 
-  template <const auto& class_loader_v, const auto& jvm_v>
-  GlobalClassLoader(GlobalClassLoader<class_loader_v, jvm_v>&& rhs)
-      : Base(rhs.Release()) {}
-};
+  jni::LocalObject loaded_class = loader("loadClass", class_name);
+  jclass ret{static_cast<jclass>(static_cast<jobject>(loaded_class.Release()))};
+
+  loader.Release();
+
+  return ret;
+}
 
 }  // namespace jni
 

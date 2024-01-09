@@ -15,7 +15,7 @@
  */
 
 /*******************************************************************************
- * JNI Bind Version 0.9.8.
+ * JNI Bind Version 0.9.9.
  * Alpha Public Release.
  ********************************************************************************
  * This header is the single header version which you can use to quickly test or
