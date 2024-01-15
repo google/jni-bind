@@ -25,12 +25,7 @@ namespace {
 using ::jni::Class;
 using ::jni::Field;
 using ::jni::GlobalObject;
-using ::jni::kJavaLangClass;
-using ::jni::LocalObject;
-using ::jni::Method;
-using ::jni::Params;
 using ::jni::PromoteToGlobal;
-using ::jni::Return;
 using ::jni::ThreadGuard;
 
 std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
