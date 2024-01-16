@@ -22,8 +22,8 @@
 #include "jni_dep.h"
 
 // JNI Corpus.
-#include "implementation/corpus.h"
-#include "implementation/corpus_tag.h"
+#include "metaprogramming/corpus.h"
+#include "metaprogramming/corpus_tag.h"
 
 // Headers for static definitions.
 #include "implementation/array.h"

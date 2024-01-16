@@ -18,22 +18,20 @@
 
 #include <tuple>
 
-#include "implementation/corpus_tag.h"
-#include "metaprogramming/concatenate.h"
-#include "metaprogramming/detect.h"
+#include "concatenate.h"
+#include "corpus_tag.h"
+#include "detect.h"
 
-namespace jni {
+namespace jni::metaprogramming {
 
 // Provides the universe of keys, including user defined types if any.
 // Users define custom types by partially specialising UserDefined (see test).
 template <typename... Defaults>
 struct Corpus {
-  template <typename T, bool = ::jni::metaprogramming::Detect_v<
-                            UserDefined, JniUserDefinedCorpusTag> >
+  template <typename T, bool = Detect_v<UserDefined, T> >
   struct Helper {
-    using type = ::jni::metaprogramming::ConcatenateTup_t<
-        ::jni::metaprogramming::Detect_t<UserDefined, JniUserDefinedCorpusTag>,
-        std::tuple<Defaults...> >;
+    using type =
+        ConcatenateTup_t<Detect_t<UserDefined, T>, std::tuple<Defaults...> >;
   };
 
   template <typename T>
@@ -48,6 +46,6 @@ struct Corpus {
 template <typename T, typename... Defaults>
 using Corpus_t = typename Corpus<Defaults...>::template type<T>;
 
-}  // namespace jni
+}  // namespace jni::metaprogramming
 
 #endif  // JNI_BIND_IMPLEMENTATION_CORPUS_H_

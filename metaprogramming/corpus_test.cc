@@ -14,38 +14,39 @@
  * limitations under the License.
  */
 #include <tuple>
+#include <type_traits>
 
-#include "implementation/corpus_tag.h"
+#include "corpus_tag.h"
+
+struct CorpusTag {};
 
 struct A {};
 struct B {};
 struct C {};
 
 // Note: This ordering is intentional (see `::jni::Corpus`).
-namespace jni {
+namespace jni::metaprogramming {
 
 template <>
-struct UserDefined<JniUserDefinedCorpusTag> {
+struct UserDefined<CorpusTag> {
   using type = std::tuple<A, B, C>;
 };
 
-}  // namespace jni
+}  // namespace jni::metaprogramming
 
-#include "implementation/corpus.h"
+#include "metaprogramming/corpus.h"
 #include "metaprogramming/detect.h"
 
-using ::jni::Corpus_t;
-using ::jni::JniUserDefinedCorpusTag;
-using ::jni::UserDefined;
+using ::jni::metaprogramming::Corpus_t;
 using ::jni::metaprogramming::Detect_t;
+using ::jni::metaprogramming::UserDefined;
 
 namespace {
 
 static_assert(
-    std::is_same_v<Detect_t<jni::UserDefined, JniUserDefinedCorpusTag>,
-                   std::tuple<A, B, C>>);
+    std::is_same_v<Detect_t<UserDefined, CorpusTag>, std::tuple<A, B, C>>);
 
-static_assert(std::is_same_v<Corpus_t<JniUserDefinedCorpusTag, int, float>,
+static_assert(std::is_same_v<Corpus_t<CorpusTag, int, float>,
                              std::tuple<A, B, C, int, float>>);
 
 }  // namespace

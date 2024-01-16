@@ -16,15 +16,12 @@
 #ifndef JNI_BIND_IMPLEMENTATION_CORPUS_TAG_H_
 #define JNI_BIND_IMPLEMENTATION_CORPUS_TAG_H_
 
-namespace jni {
-
-// Provide this base tag to UserDefined to enable custom types.
-struct JniUserDefinedCorpusTag {};
+namespace jni::metaprogramming {
 
 // Provide a partial specialization to this class to provide custom types.
 template <typename T>
 struct UserDefined;
 
-}  // namespace jni
+}  // namespace jni::metaprogramming
 
 #endif  // JNI_BIND_IMPLEMENTATION_CORPUS_TAG_H_

@@ -268,6 +268,32 @@ cc_test(
 )
 
 cc_library(
+    name = "corpus",
+    hdrs = ["corpus.h"],
+    deps = [
+        ":concatenate",
+        ":corpus_tag",
+        ":detect",
+    ],
+)
+
+cc_library(
+    name = "corpus_tag",
+    hdrs = ["corpus_tag.h"],
+)
+
+cc_test(
+    name = "corpus_test",
+    srcs = ["corpus_test.cc"],
+    deps = [
+        ":corpus",
+        ":corpus_tag",
+        ":detect",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "deep_equal",
     hdrs = ["deep_equal.h"],
     deps = [

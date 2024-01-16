@@ -31,6 +31,9 @@ namespace jni {
 #define JNI_BIND_C_ENTRYPOINT(class_name, return_type, method_name, ...) \
   return_type class_name_##method_name(JNIEnv*, jclass, ##__VA_ARGS__)
 
+// Provide this base tag to UserDefined to enable custom types.
+struct JniUserDefinedCorpusTag {};
+
 // ArrayView Helper.
 template <typename T>
 struct ArrayViewHelper;

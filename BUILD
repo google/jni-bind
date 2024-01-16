@@ -35,8 +35,6 @@ cc_library(
         "//implementation:class",
         "//implementation:class_loader",
         "//implementation:constructor",
-        "//implementation:corpus",
-        "//implementation:corpus_tag",
         "//implementation:default_class_loader",
         "//implementation:field",
         "//implementation:find_class_fallback",
@@ -67,6 +65,8 @@ cc_library(
         "//implementation:static_ref",
         "//implementation:string_ref",
         "//implementation:supported_class_set",
+        "//metaprogramming:corpus",
+        "//metaprogramming:corpus_tag",
     ],
 )
 

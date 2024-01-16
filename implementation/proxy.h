@@ -24,8 +24,7 @@
 
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
-#include "implementation/corpus.h"
-#include "implementation/corpus_tag.h"
+#include "implementation/forward_declarations.h"
 #include "implementation/object.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/ref_base.h"
@@ -34,6 +33,7 @@
 #include "metaprogramming/cartesian_product.h"
 #include "metaprogramming/combine.h"
 #include "metaprogramming/concatenate.h"
+#include "metaprogramming/corpus.h"
 #include "metaprogramming/flatten.h"
 #include "metaprogramming/invoke.h"
 #include "metaprogramming/per_element.h"
@@ -50,11 +50,11 @@ template <typename t1, typename t2 = void>
 struct Proxy;
 
 // CDecls for all declarable types (these index into proxy definitions).
-using AllKeys =
-    Corpus_t<JniUserDefinedCorpusTag, void, jboolean, jbyte, jshort, jint,
-             jfloat, jlong, jchar, jdouble, jstring, jobject, Self, jarray,
-             jobjectArray, jintArray, jbooleanArray, jbyteArray, jcharArray,
-             jshortArray, jdoubleArray, jfloatArray, jlongArray>;
+using AllKeys = metaprogramming::Corpus_t<
+    JniUserDefinedCorpusTag, void, jboolean, jbyte, jshort, jint, jfloat, jlong,
+    jchar, jdouble, jstring, jobject, Self, jarray, jobjectArray, jintArray,
+    jbooleanArray, jbyteArray, jcharArray, jshortArray, jdoubleArray,
+    jfloatArray, jlongArray>;
 
 template <typename TUndecayed>
 struct ProxyHelper {
