@@ -24,22 +24,14 @@
 #include "jni_test.h"
 
 using ::jni::Class;
-using ::jni::ClassLoader;
 using ::jni::GlobalObject;
-using ::jni::Jvm;
 using ::jni::JvmRef;
-using ::jni::kNullClassLoader;
-using ::jni::LocalObject;
 using ::jni::PromoteToGlobal;
-using ::jni::SupportedClassSet;
 using ::jni::ThreadGuard;
-using ::jni::test::AsGlobal;
 using ::jni::test::Fake;
 using ::jni::test::JniTest;
-using ::jni::test::JniTestWithNoDefaultJvmRef;
 using ::jni::test::MockJvm;
 using ::testing::_;
-using ::testing::AnyNumber;
 using ::testing::Return;
 
 namespace {
