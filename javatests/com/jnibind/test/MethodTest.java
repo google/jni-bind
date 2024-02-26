@@ -47,7 +47,9 @@ import org.mockito.junit.MockitoRule;
 @RunWith(JUnit4.class)
 public class MethodTest {
   static {
-    System.loadLibrary("method_test_jni");
+    System.load(
+        System.getenv("JAVA_RUNFILES")
+            + "/__main__/javatests/com/jnibind/test/libmethod_test_jni.so");
   }
 
   static native void jniTearDown();

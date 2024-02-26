@@ -35,7 +35,9 @@ public final class ThreadTest {
   @Rule public final MockitoRule mockito = MockitoJUnit.rule();
 
   static {
-    System.loadLibrary("thread_test_jni");
+    System.load(
+        System.getenv("JAVA_RUNFILES")
+            + "/__main__/javatests/com/jnibind/test/libthread_test_jni.so");
   }
 
   public ThreadTest() {

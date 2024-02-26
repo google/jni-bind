@@ -35,7 +35,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class GlobalObjectTest {
   static {
-    System.loadLibrary("global_object_test_jni");
+    System.load(
+        System.getenv("JAVA_RUNFILES")
+            + "/__main__/javatests/com/jnibind/test/libglobal_object_test_jni.so");
   }
 
   static native void jniTearDown();

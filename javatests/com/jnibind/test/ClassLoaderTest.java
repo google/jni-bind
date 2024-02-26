@@ -40,14 +40,17 @@ import org.junit.runners.JUnit4;
 public final class ClassLoaderTest {
   private static final String REMOTE_CLASS_PATH_KEY = "remote_class_path";
   private static final String JAR_CONTAINING_CLASSES =
-      System.getProperty("java.library.path") + "/ClassLoaderHelperClass_deploy.jar";
+      System.getenv("JAVA_RUNFILES")
+          + "/__main__/javatests/com/jnibind/test/ClassLoaderHelperClass_deploy.jar";
 
   private static JarFile jarFile;
   private static URL[] urlArray;
   private static URLClassLoader urlClassLoader;
 
   static {
-    System.loadLibrary("class_loader_test_jni");
+    System.load(
+        System.getenv("JAVA_RUNFILES")
+            + "/__main__/javatests/com/jnibind/test/libclass_loader_test_jni.so");
   }
 
   @BeforeClass

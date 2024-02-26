@@ -27,7 +27,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class StaticTest {
   static {
-    System.loadLibrary("static_test_jni");
+    System.load(
+        System.getenv("JAVA_RUNFILES")
+            + "/__main__/javatests/com/jnibind/test/libstatic_test_jni.so");
   }
 
   static native void jniTearDown();

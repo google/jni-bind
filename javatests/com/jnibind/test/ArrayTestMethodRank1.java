@@ -30,7 +30,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ArrayTestMethodRank1 {
   static {
-    System.loadLibrary("array_test_method_rank_1_jni");
+    System.load(
+        System.getenv("JAVA_RUNFILES")
+            + "/__main__/javatests/com/jnibind/test/libarray_test_method_rank_1_jni.so");
   }
 
   @AfterClass

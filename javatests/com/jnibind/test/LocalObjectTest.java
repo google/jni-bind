@@ -35,7 +35,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class LocalObjectTest {
   static {
-    System.loadLibrary("local_object_test_jni");
+    System.load(
+        System.getenv("JAVA_RUNFILES")
+            + "/__main__/javatests/com/jnibind/test/liblocal_object_test_jni.so");
   }
 
   static native ObjectTestHelper jniCreateNewObject();

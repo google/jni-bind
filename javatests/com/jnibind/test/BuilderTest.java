@@ -32,7 +32,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class BuilderTest {
   static {
-    System.loadLibrary("builder_jni");
+    System.load(
+        System.getenv("JAVA_RUNFILES")
+            + "/__main__/javatests/com/jnibind/test/libbuilder_jni.so");
   }
 
   static native void nativeJniTeardown();
