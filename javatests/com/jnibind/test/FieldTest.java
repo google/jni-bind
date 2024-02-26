@@ -33,7 +33,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class FieldTest {
   static {
-    System.loadLibrary("field_test_jni");
+    System.load(
+        System.getenv("JAVA_RUNFILES")
+            + "/__main__/javatests/com/jnibind/test/libfield_test_jni.so");
   }
 
   public FieldTestHelper rJniTestHelper = new FieldTestHelper();

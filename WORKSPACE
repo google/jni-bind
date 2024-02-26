@@ -7,6 +7,16 @@ http_archive(
   strip_prefix = "rules_cc-40548a2974f1aea06215272d9c2b47a14a24e556",
 )
 
+# Bazel platform rules (2024-01-08).
+http_archive(
+    name = "platforms",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.7/platforms-0.0.7.tar.gz",
+        "https://github.com/bazelbuild/platforms/releases/download/0.0.7/platforms-0.0.7.tar.gz",
+    ],
+    sha256 = "3a561c99e7bdbe9173aa653fd579fe849f1d8d67395780ab4770b1f381431d51",
+)
+
 # GUnit.
 http_archive(
   name = "googletest",

@@ -25,7 +25,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ArrayTestFieldRank2 {
   static {
-    System.loadLibrary("array_test_field_rank_2_jni");
+    System.load(
+        System.getenv("JAVA_RUNFILES")
+            + "/__main__/javatests/com/jnibind/test/libarray_test_field_rank_2_jni.so");
   }
 
   @AfterClass

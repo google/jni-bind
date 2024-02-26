@@ -71,17 +71,20 @@ cc_library(
 )
 
 # Intentionally placed at root because of issues in Bazel.
+# Note: This target is mangled for 3rd party usage on export.
+# In the future, hopefully Google add Android support, although, unlikely.
 cc_library(
     name = "jni_dep",
-    srcs = [
-        "@local_jdk//:jni_header",
-        "@local_jdk//:jni_md_header-linux",
-    ],
+    srcs = ["@bazel_tools//tools/jdk:current_java_runtime"],
     hdrs = ["jni_dep.h"],
-    includes = [
-        "external/local_jdk/include",
-        "external/local_jdk/include/linux",
-    ],
+    includes =
+        select({
+            "@platforms//os:linux": ["external/local_jdk/include/linux"],
+            "@platforms//os:macos": ["external/local_jdk/include/darwin"],
+            "//conditions:default": [],
+        }) + [
+            "external/local_jdk/include",
+        ],
     visibility = [":__subpackages__"],
 )
 

@@ -35,7 +35,9 @@ public final class StringTest {
   @Mock public StringTestHelper rJniStringTestHelper;
 
   static {
-    System.loadLibrary("string_test_jni");
+    System.load(
+        System.getenv("JAVA_RUNFILES")
+            + "/__main__/javatests/com/jnibind/test/libstring_test_jni.so");
   }
 
   static native void jniTearDown();
