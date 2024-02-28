@@ -28,7 +28,10 @@ java_test(
     testonly = True,
     srcs = ["ArrayTestFieldRank1.java"],
     data = [":libarray_test_field_rank_1_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     runtime_deps = [
         ":array_test_helpers",
     ],
@@ -67,7 +70,10 @@ java_test(
     testonly = True,
     srcs = ["ArrayTestFieldRank2.java"],
     data = [":libarray_test_field_rank_2_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     runtime_deps = [
         ":array_test_helpers",
     ],
@@ -129,7 +135,10 @@ java_test(
     testonly = True,
     srcs = ["ArrayTestMethodRank1.java"],
     data = [":libarray_test_method_rank_1_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     runtime_deps = [
         ":array_test_helpers",
     ],
@@ -168,7 +177,10 @@ java_test(
     testonly = True,
     srcs = ["ArrayTestMethodRank2.java"],
     data = [":libarray_test_method_rank_2_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     runtime_deps = [
         ":array_test_helpers",
     ],
@@ -205,7 +217,10 @@ java_test(
     testonly = True,
     srcs = ["BuilderTest.java"],
     data = [":libbuilder_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth_1_1",
@@ -255,7 +270,10 @@ java_test(
         "ClassLoaderHelperClass_deploy.jar",
         ":libclass_loader_test_jni.so",
     ],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     deps = ["@maven//:com_google_truth_truth_1_1"],
 )
 
@@ -283,7 +301,10 @@ java_test(
     testonly = True,
     srcs = ["ContextTest.java"],
     data = [":libcontext_test_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth_1_1",
@@ -320,7 +341,10 @@ java_test(
         "FieldTestHelper.java",
     ],
     data = [":libfield_test_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     deps = [
         "@maven//:com_google_truth_truth_1_1",
         "@maven//:junit_junit_4_13_1",
@@ -353,7 +377,10 @@ java_test(
     testonly = True,
     srcs = ["GlobalObjectTest.java"],
     data = [":libglobal_object_test_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth_1_1",
@@ -387,7 +414,10 @@ java_test(
     testonly = True,
     srcs = ["LocalObjectTest.java"],
     data = [":liblocal_object_test_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth_1_1",
@@ -424,7 +454,10 @@ java_test(
         "MethodTestHelper.java",
     ],
     data = [":libmethod_test_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     deps = [
         "@maven//:com_google_truth_truth_1_1",
         "@maven//:junit_junit_4_13_1",
@@ -493,7 +526,10 @@ java_test(
         "StaticTestHelper.java",
     ],
     data = [":libstatic_test_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth_1_1",
@@ -530,7 +566,10 @@ java_test(
         "StringTestHelper.java",
     ],
     data = [":libstring_test_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     deps = [
         "@maven//:com_google_truth_truth_1_1",
         "@maven//:junit_junit_4_13_1",
@@ -562,7 +601,10 @@ java_test(
     testonly = True,
     srcs = ["ThreadTest.java"],
     data = [":libthread_test_jni.so"],
-    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    jvm_flags = [
+        "-Djava.library.path=./javatests/com/jnibind/test",
+        "-Djava.security.manager=allow",
+    ],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth_1_1",
