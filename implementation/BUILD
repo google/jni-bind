@@ -10,6 +10,8 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+exports_files(["LICENSE"])
+
 cc_library(
     name = "array",
     hdrs = ["array.h"],
