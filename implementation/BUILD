@@ -10,6 +10,9 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+################################################################################
+# Array.
+################################################################################
 cc_library(
     name = "array",
     hdrs = ["array.h"],
@@ -56,61 +59,6 @@ cc_library(
     ],
 )
 
-cc_test(
-    name = "local_array_iteration_test",
-    srcs = ["local_array_iteration_test.cc"],
-    deps = [
-        ":fake_test_constants",
-        "//:jni_bind",
-        "//:jni_test",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "local_array_field_multidimensional_test",
-    srcs = ["local_array_field_multidimensional_test.cc"],
-    deps = [
-        ":fake_test_constants",
-        "//:jni_bind",
-        "//:jni_test",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "local_array_method_test",
-    srcs = ["local_array_method_test.cc"],
-    deps = [
-        ":fake_test_constants",
-        "//:jni_bind",
-        "//:jni_test",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "local_array_method_multidimensional_test",
-    srcs = ["local_array_method_multidimensional_test.cc"],
-    deps = [
-        ":fake_test_constants",
-        "//:jni_bind",
-        "//:jni_test",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "local_array_string_test",
-    srcs = ["local_array_string_test.cc"],
-    deps = [
-        ":fake_test_constants",
-        "//:jni_bind",
-        "//:jni_test",
-        "@googletest//:gtest_main",
-    ],
-)
-
 cc_library(
     name = "array_type_conversion",
     hdrs = ["array_type_conversion.h"],
@@ -151,6 +99,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# Class.
+################################################################################
 cc_library(
     name = "class",
     hdrs = ["class.h"],
@@ -197,6 +148,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# ClassLoader.
+################################################################################
 cc_library(
     name = "class_loader",
     hdrs = ["class_loader.h"],
@@ -271,6 +225,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# Constructor.
+################################################################################
 cc_library(
     name = "constructor",
     hdrs = ["constructor.h"],
@@ -293,6 +250,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# DefaultClassLoader.
+################################################################################
 cc_library(
     name = "default_class_loader",
     hdrs = ["default_class_loader.h"],
@@ -302,6 +262,9 @@ cc_library(
     ],
 )
 
+################################################################################
+# Fake Test Constants.
+################################################################################
 cc_library(
     name = "fake_test_constants",
     testonly = True,
@@ -309,6 +272,9 @@ cc_library(
     deps = ["//:jni_dep"],
 )
 
+################################################################################
+# Field.
+################################################################################
 cc_library(
     name = "field",
     hdrs = ["field.h"],
@@ -361,6 +327,9 @@ cc_library(
     ],
 )
 
+################################################################################
+# Find Class Fallback.
+################################################################################
 cc_library(
     name = "find_class_fallback",
     hdrs = ["find_class_fallback.h"],
@@ -374,6 +343,9 @@ cc_library(
     ],
 )
 
+################################################################################
+# Forward Declarations.
+################################################################################
 cc_library(
     name = "forward_declarations",
     hdrs = ["forward_declarations.h"],
@@ -385,6 +357,9 @@ cc_library(
     ],
 )
 
+################################################################################
+# GlobalClassLoader.
+################################################################################
 cc_library(
     name = "global_class_loader",
     hdrs = ["global_class_loader.h"],
@@ -400,6 +375,9 @@ cc_library(
     ],
 )
 
+################################################################################
+# GlobalObject.
+################################################################################
 cc_library(
     name = "global_object",
     hdrs = ["global_object.h"],
@@ -427,6 +405,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# GlobalString.
+################################################################################
 cc_library(
     name = "global_string",
     hdrs = ["global_string.h"],
@@ -442,6 +423,143 @@ cc_library(
     ],
 )
 
+################################################################################
+# LocalArray.
+################################################################################
+cc_library(
+    name = "local_array",
+    hdrs = ["local_array.h"],
+    deps = [
+        ":array",
+        ":array_ref",
+        ":class",
+        ":class_ref",
+        ":default_class_loader",
+        ":forward_declarations",
+        ":jni_type",
+        ":jvm",
+        ":no_idx",
+        ":object",
+        ":promotion_mechanics_tags",
+        "//:jni_dep",
+        "//implementation/jni_helper:jni_array_helper",
+        "//implementation/jni_helper:lifecycle_object",
+    ],
+)
+
+cc_test(
+    name = "local_array_field_multidimensional_test",
+    srcs = ["local_array_field_multidimensional_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "local_array_field_test",
+    srcs = ["local_array_field_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "local_array_iteration_test",
+    srcs = ["local_array_iteration_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "local_array_multidimensional_test",
+    srcs = ["local_array_multidimensional_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "local_array_method_test",
+    srcs = ["local_array_method_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "local_array_method_multidimensional_test",
+    srcs = ["local_array_method_multidimensional_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "local_array_string",
+    hdrs = ["local_array_string.h"],
+    deps = [
+        ":array",
+        ":array_ref",
+        ":class",
+        ":class_ref",
+        ":default_class_loader",
+        ":forward_declarations",
+        ":jni_type",
+        ":jvm",
+        ":local_array",
+        ":local_object",
+        ":local_string",
+        ":object",
+        "//:jni_dep",
+        "//implementation/jni_helper",
+        "//implementation/jni_helper:jni_array_helper",
+    ],
+)
+
+cc_test(
+    name = "local_array_string_test",
+    srcs = ["local_array_string_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "local_array_test",
+    srcs = ["local_array_test.cc"],
+    deps = [
+        ":fake_test_constants",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+################################################################################
+# ID.
+################################################################################
 cc_library(
     name = "id",
     hdrs = ["id.h"],
@@ -479,6 +597,9 @@ cc_library(
     hdrs = ["id_type.h"],
 )
 
+################################################################################
+# JniType.
+################################################################################
 cc_library(
     name = "jni_type",
     hdrs = ["jni_type.h"],
@@ -507,6 +628,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# Jvm.
+################################################################################
 cc_library(
     name = "jvm",
     hdrs = ["jvm.h"],
@@ -576,6 +700,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# LoadedBy.
+################################################################################
 cc_library(
     name = "loaded_by",
     hdrs = ["loaded_by.h"],
@@ -585,82 +712,9 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "local_array",
-    hdrs = ["local_array.h"],
-    deps = [
-        ":array",
-        ":array_ref",
-        ":class",
-        ":class_ref",
-        ":default_class_loader",
-        ":forward_declarations",
-        ":jni_type",
-        ":jvm",
-        ":no_idx",
-        ":object",
-        ":promotion_mechanics_tags",
-        "//:jni_dep",
-        "//implementation/jni_helper:jni_array_helper",
-        "//implementation/jni_helper:lifecycle_object",
-    ],
-)
-
-cc_library(
-    name = "local_array_string",
-    hdrs = ["local_array_string.h"],
-    deps = [
-        ":array",
-        ":array_ref",
-        ":class",
-        ":class_ref",
-        ":default_class_loader",
-        ":forward_declarations",
-        ":jni_type",
-        ":jvm",
-        ":local_array",
-        ":local_object",
-        ":local_string",
-        ":object",
-        "//:jni_dep",
-        "//implementation/jni_helper",
-        "//implementation/jni_helper:jni_array_helper",
-    ],
-)
-
-cc_test(
-    name = "local_array_test",
-    srcs = ["local_array_test.cc"],
-    deps = [
-        ":fake_test_constants",
-        "//:jni_bind",
-        "//:jni_test",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "local_array_field_test",
-    srcs = ["local_array_field_test.cc"],
-    deps = [
-        ":fake_test_constants",
-        "//:jni_bind",
-        "//:jni_test",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "local_array_multidimensional_test",
-    srcs = ["local_array_multidimensional_test.cc"],
-    deps = [
-        ":fake_test_constants",
-        "//:jni_bind",
-        "//:jni_test",
-        "@googletest//:gtest_main",
-    ],
-)
-
+################################################################################
+# LocalClassLoader.
+################################################################################
 cc_library(
     name = "local_class_loader",
     hdrs = ["local_class_loader.h"],
@@ -681,6 +735,9 @@ cc_library(
     ],
 )
 
+################################################################################
+# LocalObject.
+################################################################################
 cc_library(
     name = "local_object",
     hdrs = ["local_object.h"],
@@ -709,6 +766,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# LocalString.
+################################################################################
 cc_library(
     name = "local_string",
     hdrs = ["local_string.h"],
@@ -726,6 +786,9 @@ cc_library(
     ],
 )
 
+################################################################################
+# Method.
+################################################################################
 cc_library(
     name = "method",
     hdrs = ["method.h"],
@@ -814,6 +877,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# Multi type test.
+################################################################################
 cc_test(
     name = "multi_type_test",
     srcs = ["multi_type_test.cc"],
@@ -825,6 +891,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# NameConstants.
+################################################################################
 cc_library(
     name = "name_constants",
     hdrs = ["name_constants.h"],
@@ -839,11 +908,17 @@ cc_test(
     ],
 )
 
+################################################################################
+# NoIdx.
+################################################################################
 cc_library(
     name = "no_idx",
     hdrs = ["no_idx.h"],
 )
 
+################################################################################
+# Object.
+################################################################################
 cc_library(
     name = "object",
     hdrs = ["object.h"],
@@ -886,12 +961,18 @@ cc_test(
     ],
 )
 
+################################################################################
+# Params.
+################################################################################
 cc_library(
     name = "params",
     hdrs = ["params.h"],
     deps = [":object"],
 )
 
+################################################################################
+# PromotionMechanics.
+################################################################################
 cc_library(
     name = "promotion_mechanics",
     hdrs = ["promotion_mechanics.h"],
@@ -915,6 +996,9 @@ cc_library(
     hdrs = ["promotion_mechanics_tags.h"],
 )
 
+################################################################################
+# Proxy.
+################################################################################
 cc_library(
     name = "proxy",
     hdrs = ["proxy.h"],
@@ -942,6 +1026,12 @@ cc_library(
         "//metaprogramming:unique_set",
         "//metaprogramming:unwrap",
     ],
+)
+
+cc_library(
+    name = "proxy_convenience_aliases",
+    hdrs = ["proxy_convenience_aliases.h"],
+    deps = [":id_type"],
 )
 
 cc_library(
@@ -992,12 +1082,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "proxy_convenience_aliases",
-    hdrs = ["proxy_convenience_aliases.h"],
-    deps = [":id_type"],
-)
-
 cc_test(
     name = "proxy_test",
     srcs = ["proxy_test.cc"],
@@ -1009,6 +1093,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# RefBase.
+################################################################################
 cc_library(
     name = "ref_base",
     hdrs = ["ref_base.h"],
@@ -1030,12 +1117,18 @@ cc_library(
     ],
 )
 
+################################################################################
+# Return.
+################################################################################
 cc_library(
     name = "return",
     hdrs = ["return.h"],
     deps = [":void"],
 )
 
+################################################################################
+# Signature.
+################################################################################
 cc_library(
     name = "signature",
     hdrs = ["signature.h"],
@@ -1073,6 +1166,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# StringRef.
+################################################################################
 cc_library(
     name = "string_ref",
     hdrs = ["string_ref.h"],
@@ -1093,6 +1189,9 @@ cc_library(
     ],
 )
 
+################################################################################
+# SelectorStaticInfo.
+################################################################################
 cc_library(
     name = "selector_static_info",
     hdrs = ["selector_static_info.h"],
@@ -1111,6 +1210,9 @@ cc_library(
     ],
 )
 
+################################################################################
+# Static.
+################################################################################
 cc_library(
     name = "static",
     hdrs = ["static.h"],
@@ -1160,6 +1262,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# SupportClassSet.
+################################################################################
 cc_library(
     name = "supported_class_set",
     hdrs = ["supported_class_set.h"],
@@ -1169,6 +1274,9 @@ cc_library(
     ],
 )
 
+################################################################################
+# Self.
+################################################################################
 cc_library(
     name = "self",
     hdrs = ["self.h"],
@@ -1185,6 +1293,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# ThreadGuard.
+################################################################################
 cc_library(
     name = "thread_guard",
     hdrs = ["thread_guard.h"],
@@ -1207,6 +1318,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# Void.
+################################################################################
 cc_library(
     name = "void",
     hdrs = ["void.h"],
