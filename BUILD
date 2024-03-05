@@ -147,7 +147,7 @@ genrule(
         "//implementation/jni_helper:headers_for_export",
         "//metaprogramming:headers_for_export",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//third_party/jni_wrapper/godbolt:__pkg__"],
 )
 
 # Copy of the release header (above) that uses a different filename.
