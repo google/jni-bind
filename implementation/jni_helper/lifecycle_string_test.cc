@@ -42,7 +42,7 @@ TEST_F(JniTest, Lifecycle_jstring_Local_CallsDeleteLocalstring) {
 }
 
 TEST_F(JniTest, Lifecycle_jstring_Local_CallsNewstringV) {
-  const char* fake_str{reinterpret_cast<const char*>(0xAAAAA)};
+  const char* fake_str = "foo";
   EXPECT_CALL(*env_, NewStringUTF(fake_str));
   LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(fake_str);
 }
@@ -62,7 +62,7 @@ TEST_F(JniTest, Lifecycle_jstring_Global_CallsDeleteGlobalstring) {
 }
 
 TEST_F(JniTest, Lifecycle_jstring_Global_CallsNewstringV) {
-  const char* fake_str{reinterpret_cast<const char*>(0xAAAAA)};
+  const char* fake_str = "foo";
   EXPECT_CALL(*env_, NewStringUTF(fake_str));
   EXPECT_CALL(*env_, NewGlobalRef);
 

@@ -7,6 +7,7 @@ cc_library(
     name = "array_test_field_rank_1_jni_impl",
     testonly = True,
     srcs = ["array_test_field_rank_1_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":array_test_helpers_native",
         ":object_test_helper_jni",
@@ -29,9 +30,7 @@ java_test(
     srcs = ["ArrayTestFieldRank1.java"],
     data = [":libarray_test_field_rank_1_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
-    runtime_deps = [
-        ":array_test_helpers",
-    ],
+    runtime_deps = [":array_test_helpers"],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth_1_1",
@@ -94,6 +93,7 @@ java_library(
 cc_library(
     name = "array_test_helpers_native",
     hdrs = ["array_test_helpers_native.h"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",
@@ -108,6 +108,7 @@ cc_library(
     name = "array_test_method_rank_1_jni_impl",
     testonly = True,
     srcs = ["array_test_method_rank_1_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":array_test_helpers_native",
         ":object_test_helper_jni",
@@ -146,6 +147,7 @@ cc_library(
     name = "array_test_method_rank_2_jni_impl",
     testonly = True,
     srcs = ["array_test_method_rank_2_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":array_test_helpers_native",
         ":modulo",
@@ -218,6 +220,7 @@ java_test(
 cc_library(
     name = "class_loader_test_jni_impl",
     srcs = ["class_loader_test_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",
@@ -265,6 +268,7 @@ java_test(
 cc_library(
     name = "context_test_jni_impl",
     srcs = ["context_test_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",
@@ -298,6 +302,7 @@ cc_library(
     name = "field_test_jni_impl",
     testonly = True,
     srcs = ["field_test_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",
@@ -334,6 +339,7 @@ cc_library(
     name = "global_object_test_jni_impl",
     testonly = True,
     srcs = ["global_object_test_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",
@@ -368,6 +374,7 @@ cc_library(
     name = "local_object_test_jni_impl",
     testonly = True,
     srcs = ["local_object_test_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",
@@ -402,6 +409,7 @@ cc_library(
     name = "method_test_jni_impl",
     testonly = True,
     srcs = ["method_test_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",
@@ -471,6 +479,7 @@ cc_library(
     name = "static_test_jni_impl",
     testonly = True,
     srcs = ["static_test_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",
@@ -508,6 +517,7 @@ cc_library(
     name = "string_test_jni_impl",
     testonly = True,
     srcs = ["string_test_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",
@@ -544,6 +554,7 @@ java_test(
 cc_library(
     name = "thread_test_jni_impl",
     srcs = ["thread_test_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",

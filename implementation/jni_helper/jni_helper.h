@@ -21,6 +21,7 @@
 
 #include "jni_env.h"
 #include "jni_dep.h"
+#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {
@@ -74,7 +75,7 @@ inline jobject& FallbackLoader() {
 }
 
 inline jclass JniHelper::FindClass(const char* name) {
-  Trace("FindClass", name);
+  Trace(metaprogramming::LambdaToStr(STR("FindClass")), name);
 
   jclass jclass_from_thread_loader = jni::JniEnv::GetEnv()->FindClass(name);
   if (!jclass_from_thread_loader && FallbackLoader() != nullptr) {
@@ -87,14 +88,15 @@ inline jclass JniHelper::FindClass(const char* name) {
 }
 
 inline jclass JniHelper::GetObjectClass(jobject object) {
-  Trace("GetObjectClass", object);
+  Trace(metaprogramming::LambdaToStr(STR("GetObjectClass")), object);
 
   return jni::JniEnv::GetEnv()->GetObjectClass(object);
 }
 
 jmethodID JniHelper::GetMethodID(jclass clazz, const char* method_name,
                                  const char* method_signature) {
-  Trace("GetMethodID", clazz, method_name, method_signature);
+  Trace(metaprogramming::LambdaToStr(STR("GetMethodID")), clazz, method_name,
+        method_signature);
 
   return jni::JniEnv::GetEnv()->GetMethodID(clazz, method_name,
                                             method_signature);
@@ -102,7 +104,8 @@ jmethodID JniHelper::GetMethodID(jclass clazz, const char* method_name,
 
 jmethodID JniHelper::GetStaticMethodID(jclass clazz, const char* method_name,
                                        const char* method_signature) {
-  Trace("GetStaticMethodID", clazz, method_name, method_signature);
+  Trace(metaprogramming::LambdaToStr(STR("GetStaticMethodID")), clazz,
+        method_name, method_signature);
 
   return jni::JniEnv::GetEnv()->GetStaticMethodID(clazz, method_name,
                                                   method_signature);
@@ -110,20 +113,22 @@ jmethodID JniHelper::GetStaticMethodID(jclass clazz, const char* method_name,
 
 jfieldID JniHelper::GetFieldID(jclass clazz, const char* name,
                                const char* signature) {
-  Trace("GetFieldID", clazz, name, signature);
+  Trace(metaprogramming::LambdaToStr(STR("GetFieldID")), clazz, name,
+        signature);
 
   return jni::JniEnv::GetEnv()->GetFieldID(clazz, name, signature);
 }
 
 jfieldID JniHelper::GetStaticFieldID(jclass clazz, const char* name,
                                      const char* signature) {
-  Trace("GetStaticFieldID", clazz, name, signature);
+  Trace(metaprogramming::LambdaToStr(STR("GetStaticFieldID")), clazz, name,
+        signature);
 
   return jni::JniEnv::GetEnv()->GetStaticFieldID(clazz, name, signature);
 }
 
 inline const char* JniHelper::GetStringUTFChars(jstring str) {
-  Trace("GetStringUTFChars", str);
+  Trace(metaprogramming::LambdaToStr(STR("GetStringUTFChars")), str);
 
   // If is_copy is an address of bool it will be set to true or false if a copy
   // is made.  That said, this seems to be of no consequence, as the API still
@@ -134,7 +139,7 @@ inline const char* JniHelper::GetStringUTFChars(jstring str) {
 }
 
 inline void JniHelper::ReleaseStringUTFChars(jstring str, const char* chars) {
-  Trace("ReleaseStringUTFChars", str, chars);
+  Trace(metaprogramming::LambdaToStr(STR("ReleaseStringUTFChars")), str, chars);
 
   jni::JniEnv::GetEnv()->ReleaseStringUTFChars(str, chars);
 }

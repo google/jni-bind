@@ -20,6 +20,7 @@
 
 #include "jni_env.h"
 #include "jni_dep.h"
+#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {
@@ -37,13 +38,13 @@ struct LifecycleHelper;
 template <typename Span>
 struct LifecycleLocalBase {
   static inline void Delete(Span object) {
-    Trace("DeleteLocalRef", object);
+    Trace(metaprogramming::LambdaToStr(STR("DeleteLocalRef")), object);
 
     JniEnv::GetEnv()->DeleteLocalRef(object);
   }
 
   static inline Span NewReference(Span object) {
-    Trace("NewLocalRef", object);
+    Trace(metaprogramming::LambdaToStr(STR("NewLocalRef")), object);
 
     return static_cast<Span>(JniEnv::GetEnv()->NewLocalRef(object));
   }
@@ -60,22 +61,23 @@ struct LifecycleHelper<Span, LifecycleType::LOCAL>
 template <typename Span>
 struct LifecycleGlobalBase {
   static inline Span Promote(Span object) {
-    Trace("DeleteLocalRef", object);
-
+    Trace(metaprogramming::LambdaToStr(STR("NewGlobalRef")), object);
     jobject ret = JniEnv::GetEnv()->NewGlobalRef(object);
+
+    Trace(metaprogramming::LambdaToStr(STR("DeleteLocalRef")), object);
     JniEnv::GetEnv()->DeleteLocalRef(object);
 
     return static_cast<Span>(ret);
   }
 
   static inline void Delete(Span object) {
-    Trace("DeleteGlobalRef", object);
+    Trace(metaprogramming::LambdaToStr(STR("DeleteGlobalRef")), object);
 
     JniEnv::GetEnv()->DeleteGlobalRef(object);
   }
 
   static inline Span NewReference(Span object) {
-    Trace("NewGlobalRef", object);
+    Trace(metaprogramming::LambdaToStr(STR("NewGlobalRef")), object);
 
     return static_cast<Span>(JniEnv::GetEnv()->NewGlobalRef(object));
   }

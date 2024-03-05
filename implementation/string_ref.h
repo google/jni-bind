@@ -67,10 +67,8 @@ class UtfStringView {
  public:
   UtfStringView(jstring java_string)
       : java_string_(java_string),
-        chars_(java_string_
-                   ? JniEnv::GetEnv()->GetStringUTFChars(java_string,
-                                                         /*isCopy=*/nullptr)
-                   : nullptr) {}
+        chars_(java_string_ ? JniHelper::GetStringUTFChars(java_string)
+                            : nullptr) {}
 
   ~UtfStringView() {
     if (chars_) {

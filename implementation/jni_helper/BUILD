@@ -36,6 +36,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
+        "//metaprogramming:lambda_string",
     ],
 )
 
@@ -58,12 +59,16 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
+        "//metaprogramming:lambda_string",
     ],
 )
 
 cc_test(
     name = "invoke_test",
     srcs = ["invoke_test.cc"],
+    defines = [
+        "ENABLE_DEBUG_OUTPUT",
+    ],
     deps = [
         ":invoke",
         "//:jni_dep",
@@ -82,6 +87,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
+        "//metaprogramming:lambda_string",
     ],
 )
 
@@ -95,6 +101,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
+        "//metaprogramming:lambda_string",
     ],
 )
 
@@ -130,6 +137,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
+        "//metaprogramming:lambda_string",
     ],
 )
 
@@ -177,6 +185,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
+        "//metaprogramming:lambda_string",
     ],
 )
 
@@ -186,6 +195,7 @@ cc_library(
     deps = [
         ":lifecycle",
         ":trace",
+        "//metaprogramming:lambda_string",
     ],
 )
 
@@ -207,6 +217,7 @@ cc_library(
         ":lifecycle",
         ":lifecycle_object",
         ":trace",
+        "//metaprogramming:lambda_string",
     ],
 )
 
@@ -232,6 +243,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
+        "//metaprogramming:lambda_string",
     ],
 )
 
@@ -241,4 +253,9 @@ cc_library(
 cc_library(
     name = "trace",
     hdrs = ["trace.h"],
+    deps = [
+        ":arg_string",
+        "//metaprogramming:color",
+        "//metaprogramming:lambda_string",
+    ],
 )

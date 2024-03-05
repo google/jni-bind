@@ -21,6 +21,7 @@
 
 #include "jni_env.h"
 #include "jni_dep.h"
+#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {
@@ -40,14 +41,16 @@ template <>
 struct FieldHelper<jboolean, 0, false, void> {
   static inline jboolean GetValue(const jobject object_ref,
                                   const jfieldID field_ref_) {
-    Trace("GetBooleanValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
+          field_ref_);
 
     return jni::JniEnv::GetEnv()->GetBooleanField(object_ref, field_ref_);
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jboolean&& value) {
-    Trace("GetBooleanValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
+          field_ref_);
 
     jni::JniEnv::GetEnv()->SetBooleanField(object_ref, field_ref_, value);
   }
@@ -57,14 +60,16 @@ template <>
 struct FieldHelper<jbyte, 0, false, void> {
   static inline jbyte GetValue(const jobject object_ref,
                                const jfieldID field_ref_) {
-    Trace("GetByteValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetByteValue")), object_ref,
+          field_ref_);
 
     return jni::JniEnv::GetEnv()->GetByteField(object_ref, field_ref_);
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jbyte&& value) {
-    Trace("SetByteValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetByteValue")), object_ref,
+          field_ref_);
 
     jni::JniEnv::GetEnv()->SetByteField(object_ref, field_ref_, value);
   }
@@ -74,14 +79,16 @@ template <>
 struct FieldHelper<jchar, 0, false, void> {
   static inline jchar GetValue(const jobject object_ref,
                                const jfieldID field_ref_) {
-    Trace("GetCharValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetCharValue")), object_ref,
+          field_ref_);
 
     return jni::JniEnv::GetEnv()->GetCharField(object_ref, field_ref_);
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jchar&& value) {
-    Trace("SetCharValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetCharValue")), object_ref,
+          field_ref_);
 
     jni::JniEnv::GetEnv()->SetCharField(object_ref, field_ref_, value);
   }
@@ -91,14 +98,16 @@ template <>
 struct FieldHelper<jshort, 0, false, void> {
   static inline jshort GetValue(const jobject object_ref,
                                 const jfieldID field_ref_) {
-    Trace("GetShortValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetShortValue")), object_ref,
+          field_ref_);
 
     return jni::JniEnv::GetEnv()->GetShortField(object_ref, field_ref_);
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jshort&& value) {
-    Trace("SetShortValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetShortValue")), object_ref,
+          field_ref_);
 
     jni::JniEnv::GetEnv()->SetShortField(object_ref, field_ref_, value);
   }
@@ -108,14 +117,16 @@ template <>
 struct FieldHelper<jint, 0, false, void> {
   static inline jint GetValue(const jobject object_ref,
                               const jfieldID field_ref_) {
-    Trace("GetIntValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetIntValue")), object_ref,
+          field_ref_);
 
     return jni::JniEnv::GetEnv()->GetIntField(object_ref, field_ref_);
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jint&& value) {
-    Trace("SetIntValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetIntValue")), object_ref,
+          field_ref_);
 
     jni::JniEnv::GetEnv()->SetIntField(object_ref, field_ref_, value);
   }
@@ -125,14 +136,16 @@ template <>
 struct FieldHelper<jlong, 0, false, void> {
   static inline jlong GetValue(const jobject object_ref,
                                const jfieldID field_ref_) {
-    Trace("GetLongField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetLongField")), object_ref,
+          field_ref_);
 
     return jni::JniEnv::GetEnv()->GetLongField(object_ref, field_ref_);
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jlong&& value) {
-    Trace("SetLongField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetLongField")), object_ref,
+          field_ref_);
 
     jni::JniEnv::GetEnv()->SetLongField(object_ref, field_ref_, value);
   }
@@ -142,14 +155,16 @@ template <>
 struct FieldHelper<jfloat, 0, false, void> {
   static inline jfloat GetValue(const jobject object_ref,
                                 const jfieldID field_ref_) {
-    Trace("GetFloatField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetFloatField")), object_ref,
+          field_ref_);
 
     return jni::JniEnv::GetEnv()->GetFloatField(object_ref, field_ref_);
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jfloat&& value) {
-    Trace("SetFloatField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetFloatField")), object_ref,
+          field_ref_);
 
     jni::JniEnv::GetEnv()->SetFloatField(object_ref, field_ref_, value);
   }
@@ -159,14 +174,16 @@ template <>
 struct FieldHelper<jdouble, 0, false, void> {
   static inline jdouble GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
-    Trace("GetDoubleField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetDoubleField")), object_ref,
+          field_ref_);
 
     return jni::JniEnv::GetEnv()->GetDoubleField(object_ref, field_ref_);
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jdouble&& value) {
-    Trace("SetDoubleField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetDoubleField")), object_ref,
+          field_ref_);
 
     jni::JniEnv::GetEnv()->SetDoubleField(object_ref, field_ref_, value);
   }
@@ -176,14 +193,16 @@ template <>
 struct FieldHelper<jobject, 0, false, void> {
   static inline jobject GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
-    Trace("GetObjectField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
+          field_ref_);
 
     return jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_);
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jobject&& new_value) {
-    Trace("SetObjectField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
+          field_ref_);
 
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
   }
@@ -193,14 +212,16 @@ template <>
 struct FieldHelper<jstring, 0, false, void> {
   static inline jstring GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
-    Trace("GetObjectField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
+          field_ref_);
     return reinterpret_cast<jstring>(
         jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jstring&& new_value) {
-    Trace("SetObjectField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
+          field_ref_);
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
   }
 };
@@ -212,7 +233,8 @@ template <typename ArrayType>
 struct BaseFieldArrayHelper {
   static inline ArrayType GetValue(const jobject object_ref,
                                    const jfieldID field_ref_) {
-    Trace("GetObjectField, Rank 1", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField, Rank 1")),
+          object_ref, field_ref_);
 
     return static_cast<ArrayType>(
         jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
@@ -220,7 +242,8 @@ struct BaseFieldArrayHelper {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, ArrayType&& value) {
-    Trace("SetObjectField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
+          field_ref_);
 
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
   }
@@ -269,7 +292,8 @@ struct FieldHelper<
                       std::is_same_v<jstring, T> || (kRank > 1))> > {
   static inline jobjectArray GetValue(const jobject object_ref,
                                       const jfieldID field_ref_) {
-    Trace("GetObjectField, Rank >1", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField, Rank >1")),
+          object_ref, field_ref_);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
@@ -277,7 +301,8 @@ struct FieldHelper<
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jobjectArray&& value) {
-    Trace("SetObjectField, Rank >1", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField, Rank >1")),
+          object_ref, field_ref_);
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
   }
 };

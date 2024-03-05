@@ -23,6 +23,7 @@
 #include "invoke.h"
 #include "jni_env.h"
 #include "jni_dep.h"
+#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {
@@ -34,7 +35,8 @@ template <>
 struct InvokeHelper<void, 0, true> {
   template <typename... Ts>
   static void Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
-    Trace("CallStaticVoidMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticVoidMethod")), clazz,
+          method_id, ts...);
 
     jni::JniEnv::GetEnv()->CallStaticVoidMethod(clazz, method_id,
                                                 std::forward<Ts>(ts)...);
@@ -49,7 +51,8 @@ struct InvokeHelper<jboolean, 0, true> {
   template <typename... Ts>
   static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
-    Trace("CallStaticBooleanMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticBooleanMethod")), clazz,
+          method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallStaticBooleanMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
@@ -61,7 +64,8 @@ struct InvokeHelper<jbyte, 0, true> {
   template <typename... Ts>
   static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
-    Trace("CallStaticByteMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticByteMethod")), clazz,
+          method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallStaticByteMethod(clazz, method_id,
                                                        std::forward<Ts>(ts)...);
@@ -73,7 +77,8 @@ struct InvokeHelper<jchar, 0, true> {
   template <typename... Ts>
   static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
-    Trace("CallStaticCharMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticCharMethod")), clazz,
+          method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallStaticCharMethod(clazz, method_id,
                                                        std::forward<Ts>(ts)...);
@@ -85,7 +90,8 @@ struct InvokeHelper<jshort, 0, true> {
   template <typename... Ts>
   static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
-    Trace("CallStaticShortMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticShortMethod")), clazz,
+          method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallStaticShortMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
@@ -96,7 +102,8 @@ template <>
 struct InvokeHelper<jint, 0, true> {
   template <typename... Ts>
   static jint Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
-    Trace("CallStaticIntMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticIntMethod")), clazz,
+          method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallStaticIntMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...);
@@ -107,7 +114,8 @@ template <>
 struct InvokeHelper<jlong, 0, true> {
   template <typename... Ts>
   static jlong Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
-    Trace("CallStaticLongMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticLongMethod")), clazz,
+          method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallStaticLongMethod(clazz, method_id,
                                                        std::forward<Ts>(ts)...);
@@ -118,7 +126,8 @@ template <>
 struct InvokeHelper<jfloat, 0, true> {
   template <typename... Ts>
   static jfloat Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
-    Trace("CallStaticFloatMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticFloatMethod")), clazz,
+          method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallStaticFloatMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
@@ -130,7 +139,8 @@ struct InvokeHelper<jdouble, 0, true> {
   template <typename... Ts>
   static jdouble Invoke(jobject, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
-    Trace("CallStaticDoubleMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticDoubleMethod")), clazz,
+          method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallStaticDoubleMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
@@ -144,7 +154,8 @@ struct InvokeHelper<jobject, 0, true> {
   template <typename... Ts>
   static jobject Invoke(jobject, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
-    Trace("CallStaticObjectMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod")), clazz,
+          method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallStaticObjectMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
@@ -156,7 +167,8 @@ struct InvokeHelper<jstring, 0, true> {
   template <typename... Ts>
   static jobject Invoke(jobject, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
-    Trace("CallStaticObjectMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod")), clazz,
+          method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallStaticObjectMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
@@ -171,7 +183,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, true> {
   template <typename... Ts>
   static jbooleanArray Invoke(jobject, jclass clazz, jmethodID method_id,
                               Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
     return static_cast<jbooleanArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -184,7 +197,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, true> {
   template <typename... Ts>
   static jbyteArray Invoke(jobject, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
     return static_cast<jbyteArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -197,7 +211,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, true> {
   template <typename... Ts>
   static jcharArray Invoke(jobject, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
     return static_cast<jcharArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -210,7 +225,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, true> {
   template <typename... Ts>
   static jshortArray Invoke(jobject, jclass clazz, jmethodID method_id,
                             Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
     return static_cast<jshortArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -223,7 +239,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jint>, kRank, true> {
   template <typename... Ts>
   static jintArray Invoke(jobject, jclass clazz, jmethodID method_id,
                           Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
     return static_cast<jintArray>(jni::JniEnv::GetEnv()->CallStaticObjectMethod(
         clazz, method_id, std::forward<Ts>(ts)...));
@@ -235,7 +252,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, true> {
   template <typename... Ts>
   static jfloatArray Invoke(jobject, jclass clazz, jmethodID method_id,
                             Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
     return static_cast<jfloatArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -248,7 +266,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, true> {
   template <typename... Ts>
   static jdoubleArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
     return static_cast<jdoubleArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -261,7 +280,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, true> {
   template <typename... Ts>
   static jlongArray Invoke(jobject, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
     return static_cast<jlongArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -276,7 +296,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jarray>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -289,7 +310,8 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jobject>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -305,8 +327,9 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jboolean>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jboolean), Rank >1", clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jboolean), Rank >1")),
+          clazz, method_id, ts...);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -319,7 +342,9 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jbyte>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jbyte), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jbyte), Rank >1")),
+          clazz, method_id, ts...);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -332,7 +357,9 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jchar>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jchar), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jchar), Rank >1")),
+          clazz, method_id, ts...);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -345,7 +372,9 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jshort>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jshort), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jshort), Rank >1")),
+          clazz, method_id, ts...);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -358,7 +387,9 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jint>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jint), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jint), Rank >1")),
+          clazz, method_id, ts...);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -371,7 +402,9 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jfloat>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jfloat), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jfloat), Rank >1")),
+          clazz, method_id, ts...);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -384,7 +417,9 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jdouble>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jdouble), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jdouble), Rank >1")),
+          clazz, method_id, ts...);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -397,7 +432,9 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jlong>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jlong), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jlong), Rank >1")),
+          clazz, method_id, ts...);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -412,7 +449,9 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jarray>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jarray), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jarray), Rank >1")),
+          clazz, method_id, ts...);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
@@ -425,7 +464,9 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jobject), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jobject), Rank >1")),
+          clazz, method_id, ts...);
 
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,

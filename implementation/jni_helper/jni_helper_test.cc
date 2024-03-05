@@ -50,7 +50,7 @@ TEST_F(JniTest, JniHelper_CallsNewStringUTF) {
 }
 
 TEST_F(JniTest, JniHelper_CallsReleaseStringUTFChars) {
-  const char* fake_pinned_chars{reinterpret_cast<const char*>(0xBBBBB)};
+  const char* fake_pinned_chars = "foo";
   EXPECT_CALL(*env_, ReleaseStringUTFChars(Fake<jstring>(), fake_pinned_chars));
   JniHelper::ReleaseStringUTFChars(Fake<jstring>(), fake_pinned_chars);
 }

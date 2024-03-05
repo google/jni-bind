@@ -18,6 +18,7 @@
 
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_object.h"
+#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {
@@ -26,7 +27,7 @@ template <>
 struct LifecycleHelper<jstring, LifecycleType::LOCAL>
     : public LifecycleLocalBase<jstring> {
   static inline jstring Construct(const char* chars) {
-    Trace("NewStringUTF", chars);
+    Trace(metaprogramming::LambdaToStr(STR("NewStringUTF")), chars);
 
     return jni::JniEnv::GetEnv()->NewStringUTF(chars);
   }
