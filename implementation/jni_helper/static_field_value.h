@@ -36,7 +36,11 @@ struct FieldHelper<jboolean, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetStaticBooleanField")), clazz,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jboolean>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticBooleanField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
@@ -44,7 +48,10 @@ struct FieldHelper<jboolean, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetStaticBooleanField")), clazz,
           field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticBooleanField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -54,7 +61,11 @@ struct FieldHelper<jbyte, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetStaticByteField")), clazz,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jbyte>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticByteField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
@@ -62,7 +73,10 @@ struct FieldHelper<jbyte, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetStaticByteField")), clazz,
           field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     return jni::JniEnv::GetEnv()->SetStaticByteField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -72,7 +86,11 @@ struct FieldHelper<jchar, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetStaticCharField")), clazz,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jchar>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticCharField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
@@ -80,7 +98,10 @@ struct FieldHelper<jchar, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetStaticCharField")), clazz,
           field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticCharField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -90,7 +111,11 @@ struct FieldHelper<jshort, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetStaticShortField")), clazz,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jshort>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticShortField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
@@ -98,7 +123,10 @@ struct FieldHelper<jshort, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetStaticShortField")), clazz,
           field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticShortField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -108,7 +136,11 @@ struct FieldHelper<jint, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetStaticIntField")), clazz,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jint>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticIntField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
@@ -116,7 +148,10 @@ struct FieldHelper<jint, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetStaticIntField")), clazz,
           field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticIntField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -126,7 +161,11 @@ struct FieldHelper<jlong, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetStaticLongField")), clazz,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jlong>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticLongField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
@@ -134,7 +173,10 @@ struct FieldHelper<jlong, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetStaticLongField")), clazz,
           field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticLongField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -144,7 +186,11 @@ struct FieldHelper<jfloat, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetStaticFloatField")), clazz,
           field_ref_);
 
+#ifdef DRY_RUN
+    return 123.f;
+#else
     return jni::JniEnv::GetEnv()->GetStaticFloatField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
@@ -152,7 +198,10 @@ struct FieldHelper<jfloat, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetStaticFloatField")), clazz,
           field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticFloatField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -163,7 +212,11 @@ struct FieldHelper<jdouble, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetStaticDoubleField")), clazz,
           field_ref_);
 
+#ifdef DRY_RUN
+    return 123.;
+#else
     return jni::JniEnv::GetEnv()->GetStaticDoubleField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
@@ -171,7 +224,10 @@ struct FieldHelper<jdouble, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetStaticDoubleField")), clazz,
           field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticDoubleField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -182,7 +238,11 @@ struct FieldHelper<jobject, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
@@ -190,7 +250,10 @@ struct FieldHelper<jobject, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
           field_ref_, new_value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+#endif  // DRY_RUN
   }
 };
 
@@ -201,8 +264,12 @@ struct FieldHelper<jstring, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jstring>();
+#else
     return reinterpret_cast<jstring>(
         jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
@@ -210,7 +277,10 @@ struct FieldHelper<jstring, 0, true, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
           field_ref_, new_value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+#endif  // DRY_RUN
   }
 };
 
@@ -224,8 +294,12 @@ struct StaticBaseFieldArrayHelper {
     Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<ArrayType>();
+#else
     return static_cast<ArrayType>(
         jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
@@ -233,7 +307,10 @@ struct StaticBaseFieldArrayHelper {
     Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
           field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -282,8 +359,12 @@ struct FieldHelper<
     Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField, Rank 1+")),
           clazz, field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
@@ -291,7 +372,10 @@ struct FieldHelper<
     Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField, Rank 1+")),
           clazz, field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 

@@ -18,6 +18,7 @@
 
 #include <type_traits>
 
+#include "get_array_element_result.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "jni_dep.h"
 #include "metaprogramming/lambda_string.h"
@@ -25,18 +26,15 @@
 
 namespace jni {
 
-// Convenience struct for returning results from pinning array.
-template <typename SpanType>
-struct GetArrayElementsResult {
-  SpanType* ptr_;
-  jboolean is_copy;
-};
-
 struct JniArrayHelperBase {
   static inline std::size_t GetLength(jarray array) {
     Trace(metaprogramming::LambdaToStr(STR("GetArrayLength")), array);
 
+#ifdef DRY_RUN
+    return Fake<std::size_t>();
+#else
     return jni::JniEnv::GetEnv()->GetArrayLength(array);
+#endif  // DRY_RUN
   }
 };
 
@@ -51,8 +49,12 @@ struct JniArrayHelper : public JniArrayHelperBase {
     Trace(metaprogramming::LambdaToStr(STR("NewObjectArray")), size, class_id,
           initial_element);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
                                                  initial_element);
+#endif  // DRY_RUN
   }
 
   // The API of fetching objects only permits accessing one object at a time.
@@ -60,7 +62,11 @@ struct JniArrayHelper : public JniArrayHelperBase {
     Trace(metaprogramming::LambdaToStr(STR("GetObjectArrayElement")), array,
           idx);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
+#endif  // DRY_RUN
   };
 
   // The API of fetching objects only permits accessing one object at a time.
@@ -69,7 +75,10 @@ struct JniArrayHelper : public JniArrayHelperBase {
     Trace(metaprogramming::LambdaToStr(STR("SetObjectArrayElement")), array,
           idx, obj);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectArrayElement(array, idx, obj);
+#endif  // DRY_RUN
   };
 };
 
@@ -80,7 +89,11 @@ struct JniArrayHelper<jboolean, 1> : public JniArrayHelperBase {
   static inline jbooleanArray NewArray(std::size_t size) {
     Trace(metaprogramming::LambdaToStr(STR("NewBooleanArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jbooleanArray>();
+#else
     return jni::JniEnv::GetEnv()->NewBooleanArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jboolean> GetArrayElements(
@@ -89,10 +102,15 @@ struct JniArrayHelper<jboolean, 1> : public JniArrayHelperBase {
         metaprogramming::LambdaToStr(STR("GetArrayElements, jboolean, Rank 1")),
         array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jboolean>{};
+#else
     GetArrayElementsResult<jboolean> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetBooleanArrayElements(
         static_cast<jbooleanArray>(array), &return_value.is_copy);
+
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jboolean* native_ptr,
@@ -101,9 +119,12 @@ struct JniArrayHelper<jboolean, 1> : public JniArrayHelperBase {
               STR("ReleaseArrayElements, jboolean, Rank 1")),
           array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseBooleanArrayElements(
         static_cast<jbooleanArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -114,17 +135,26 @@ struct JniArrayHelper<jbyte, 1> : public JniArrayHelperBase {
   static inline jbyteArray NewArray(std::size_t size) {
     Trace(metaprogramming::LambdaToStr(STR("NewByteArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jbyteArray>();
+#else
     return jni::JniEnv::GetEnv()->NewByteArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jbyte> GetArrayElements(jarray array) {
     Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jbyte, Rank 1")),
           array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jbyte>{};
+#else
     GetArrayElementsResult<jbyte> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetByteArrayElements(
         static_cast<jbyteArray>(array), &return_value.is_copy);
+
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jbyte* native_ptr,
@@ -133,9 +163,12 @@ struct JniArrayHelper<jbyte, 1> : public JniArrayHelperBase {
               STR("ReleaseArrayElements, jbyte, Rank 1")),
           array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseByteArrayElements(
         static_cast<jbyteArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -146,17 +179,26 @@ struct JniArrayHelper<jchar, 1> : public JniArrayHelperBase {
   static inline jcharArray NewArray(std::size_t size) {
     Trace(metaprogramming::LambdaToStr(STR("NewCharArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jcharArray>();
+#else
     return jni::JniEnv::GetEnv()->NewCharArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jchar> GetArrayElements(jarray array) {
     Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jchar, Rank 1")),
           array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jchar>{};
+#else
     GetArrayElementsResult<jchar> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetCharArrayElements(
         static_cast<jcharArray>(array), &return_value.is_copy);
+
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jchar* native_ptr,
@@ -165,9 +207,12 @@ struct JniArrayHelper<jchar, 1> : public JniArrayHelperBase {
               STR("ReleaseArrayElements, jchar, Rank 1")),
           array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseCharArrayElements(
         static_cast<jcharArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -178,17 +223,26 @@ struct JniArrayHelper<jshort, 1> : public JniArrayHelperBase {
   static inline jshortArray NewArray(std::size_t size) {
     Trace(metaprogramming::LambdaToStr(STR("NewShortArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jshortArray>();
+#else
     return jni::JniEnv::GetEnv()->NewShortArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jshort> GetArrayElements(jarray array) {
     Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jshort, Rank 1")),
           array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jshort>{};
+#else
     GetArrayElementsResult<jshort> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetShortArrayElements(
         static_cast<jshortArray>(array), &return_value.is_copy);
+
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jshort* native_ptr,
@@ -197,9 +251,12 @@ struct JniArrayHelper<jshort, 1> : public JniArrayHelperBase {
               STR("ReleaseArrayElements, jshort, Rank 1")),
           array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseShortArrayElements(
         static_cast<jshortArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -210,17 +267,26 @@ struct JniArrayHelper<jint, 1> : public JniArrayHelperBase {
   static inline jintArray NewArray(std::size_t size) {
     Trace(metaprogramming::LambdaToStr(STR("NewIntArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jintArray>();
+#else
     return jni::JniEnv::GetEnv()->NewIntArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jint> GetArrayElements(jarray array) {
     Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jint, Rank 1")),
           array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jint>{};
+#else
     GetArrayElementsResult<jint> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetIntArrayElements(
         static_cast<jintArray>(array), &return_value.is_copy);
+
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, int* native_ptr,
@@ -229,9 +295,12 @@ struct JniArrayHelper<jint, 1> : public JniArrayHelperBase {
         metaprogramming::LambdaToStr(STR("ReleaseArrayElements, jint, Rank 1")),
         array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseIntArrayElements(
         static_cast<jintArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -242,17 +311,25 @@ struct JniArrayHelper<jlong, 1> : public JniArrayHelperBase {
   static inline jlongArray NewArray(std::size_t size) {
     Trace(metaprogramming::LambdaToStr(STR("NewLongArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jlongArray>();
+#else
     return jni::JniEnv::GetEnv()->NewLongArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jlong> GetArrayElements(jarray array) {
     Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jlong, Rank 1")),
           array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jlong>{};
+#else
     GetArrayElementsResult<jlong> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetLongArrayElements(
         static_cast<jlongArray>(array), &return_value.is_copy);
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jlong* native_ptr,
@@ -261,9 +338,12 @@ struct JniArrayHelper<jlong, 1> : public JniArrayHelperBase {
               STR("ReleaseArrayElements, jlong, Rank 1")),
           array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseLongArrayElements(
         static_cast<jlongArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -274,17 +354,25 @@ struct JniArrayHelper<jfloat, 1> : public JniArrayHelperBase {
   static inline jfloatArray NewArray(std::size_t size) {
     Trace(metaprogramming::LambdaToStr(STR("NewFloatArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jfloatArray>();
+#else
     return jni::JniEnv::GetEnv()->NewFloatArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jfloat> GetArrayElements(jarray array) {
     Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jfloat, Rank 1")),
           array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jfloat>{};
+#else
     GetArrayElementsResult<jfloat> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetFloatArrayElements(
         static_cast<jfloatArray>(array), &return_value.is_copy);
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jfloat* native_ptr,
@@ -306,7 +394,11 @@ struct JniArrayHelper<jdouble, 1> : public JniArrayHelperBase {
   static inline jdoubleArray NewArray(std::size_t size) {
     Trace(metaprogramming::LambdaToStr(STR("NewDoubleArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jdoubleArray>();
+#else
     return jni::JniEnv::GetEnv()->NewDoubleArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jdouble> GetArrayElements(jarray array) {
@@ -314,10 +406,14 @@ struct JniArrayHelper<jdouble, 1> : public JniArrayHelperBase {
         metaprogramming::LambdaToStr(STR("GetArrayElements, jdouble, Rank 1")),
         array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jdouble>();
+#else
     GetArrayElementsResult<jdouble> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetDoubleArrayElements(
         static_cast<jdoubleArray>(array), &return_value.is_copy);
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jdouble* native_ptr,
@@ -326,9 +422,12 @@ struct JniArrayHelper<jdouble, 1> : public JniArrayHelperBase {
               STR("ReleaseArrayElements, jdouble, Rank 1")),
           array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseDoubleArrayElements(
         static_cast<jdoubleArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -342,15 +441,23 @@ struct JniArrayHelper<jobject, kRank> : public JniArrayHelperBase {
                                       jobject initial_element) {
     Trace(metaprogramming::LambdaToStr(STR("NewArray, Rank >1")), kRank);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
                                                  initial_element);
+#endif  // DRY_RUN
   }
 
   // The API of fetching objects only permits accessing one object at a time.
   static inline jobject GetArrayElement(jobjectArray array, std::size_t idx) {
     Trace(metaprogramming::LambdaToStr(STR("GetArrayElement, Rank >1")), kRank);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
+#endif  // DRY_RUN
   };
 
   // The API of fetching objects only permits accessing one object at a time.
@@ -358,7 +465,10 @@ struct JniArrayHelper<jobject, kRank> : public JniArrayHelperBase {
                                      jobject obj) {
     Trace(metaprogramming::LambdaToStr(STR("SetArrayElement, Rank >1")), kRank);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectArrayElement(array, idx, obj);
+#endif  // DRY_RUN
   };
 };
 

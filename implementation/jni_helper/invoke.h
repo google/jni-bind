@@ -38,11 +38,14 @@ struct InvokeHelper<void, 0, false> {
   template <typename... Ts>
   static void Invoke(jobject object, jclass clazz, jmethodID method_id,
                      Ts&&... ts) {
+#ifdef DRY_RUN
+#else
     Trace(metaprogramming::LambdaToStr(STR("CallVoidMethod")), object, clazz,
           method_id, ts...);
 
     jni::JniEnv::GetEnv()->CallVoidMethod(object, method_id,
                                           std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -54,11 +57,15 @@ struct InvokeHelper<jboolean, 0, false> {
   template <typename... Ts>
   static jboolean Invoke(jobject object, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
+#ifdef DRY_RUN
+    return Fake<jboolean>();
+#else
     Trace(metaprogramming::LambdaToStr(STR("CallBooleanMethod")), object, clazz,
           method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallBooleanMethod(object, method_id,
                                                     std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -70,8 +77,12 @@ struct InvokeHelper<jint, 0, false> {
     Trace(metaprogramming::LambdaToStr(STR("CallIntMethod")), object, clazz,
           method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jint>();
+#else
     return jni::JniEnv::GetEnv()->CallIntMethod(object, method_id,
                                                 std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -83,8 +94,12 @@ struct InvokeHelper<jlong, 0, false> {
     Trace(metaprogramming::LambdaToStr(STR("CallLongMethod")), object, clazz,
           method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jlong>();
+#else
     return jni::JniEnv::GetEnv()->CallLongMethod(object, method_id,
                                                  std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -96,8 +111,13 @@ struct InvokeHelper<jfloat, 0, false> {
     Trace(metaprogramming::LambdaToStr(STR("CallFloatMethod")), object, clazz,
           method_id, ts...);
 
+#ifdef DRY_RUN
+    //    return Fake<jfloat>();
+    return 123.f;
+#else
     return jni::JniEnv::GetEnv()->CallFloatMethod(object, method_id,
                                                   std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -109,8 +129,13 @@ struct InvokeHelper<jdouble, 0, false> {
     Trace(metaprogramming::LambdaToStr(STR("CallDoubleMethod")), object, clazz,
           method_id, ts...);
 
+#ifdef DRY_RUN
+    // return Fake<jdouble>();
+    return 123.f;
+#else
     return jni::JniEnv::GetEnv()->CallDoubleMethod(object, method_id,
                                                    std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -124,8 +149,12 @@ struct InvokeHelper<jobject, 0, false> {
     Trace(metaprogramming::LambdaToStr(STR("CallObjectMethod")), object, clazz,
           method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return jni::JniEnv::GetEnv()->CallObjectMethod(object, method_id,
                                                    std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -137,8 +166,12 @@ struct InvokeHelper<jstring, 0, false> {
     Trace(metaprogramming::LambdaToStr(STR("CallObjectMethod")), object, clazz,
           method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jstring>();
+#else
     return jni::JniEnv::GetEnv()->CallObjectMethod(object, method_id,
                                                    std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -154,8 +187,12 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, false> {
               STR("CallObjectMethod (jbooleanArray), Rank 1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jbooleanArray>();
+#else
     return static_cast<jbooleanArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -168,8 +205,12 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, false> {
               STR("CallObjectMethod (jbyteArray), Rank 1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jbyteArray>();
+#else
     return static_cast<jbyteArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -182,8 +223,12 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, false> {
               STR("CallObjectMethod (jcharArray), Rank 1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jcharArray>();
+#else
     return static_cast<jcharArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -196,8 +241,12 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, false> {
               STR("CallObjectMethod (jshortArray), Rank 1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jshortArray>();
+#else
     return static_cast<jshortArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -210,8 +259,12 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jint>, kRank, false> {
               STR("CallObjectMethod (jintArray), Rank 1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jintArray>();
+#else
     return static_cast<jintArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -224,8 +277,12 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, false> {
               STR("CallObjectMethod (jlongArray), Rank 1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jlongArray>();
+#else
     return static_cast<jlongArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -238,8 +295,12 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, false> {
               STR("CallObjectMethod (jfloatArray), Rank 1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jfloatArray>();
+#else
     return static_cast<jfloatArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -252,8 +313,12 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, false> {
               STR("CallObjectMethod (jdoubleArray), Rank 1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jdoubleArray>();
+#else
     return static_cast<jdoubleArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -268,8 +333,12 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jarray>, kRank, false> {
               STR("CallObjectMethod (jobjectArray), Rank 1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -282,8 +351,12 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jobject>, kRank, false> {
               STR("CallObjectMethod (jobjectArray), Rank 1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -299,8 +372,12 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jboolean>, kRank, false> {
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -313,8 +390,12 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jbyte>, kRank, false> {
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -327,8 +408,12 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jchar>, kRank, false> {
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -341,8 +426,12 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jshort>, kRank, false> {
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -355,8 +444,12 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jint>, kRank, false> {
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -368,9 +461,12 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jfloat>, kRank, false> {
     Trace(metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
-
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -383,8 +479,12 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jdouble>, kRank, false> {
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -397,8 +497,12 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jlong>, kRank, false> {
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -413,8 +517,12 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jarray>, kRank, false> {
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -427,8 +535,12 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, false> {
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 

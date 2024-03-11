@@ -32,7 +32,11 @@ struct LifecycleHelper<jobject, LifecycleType::LOCAL>
     Trace(metaprogramming::LambdaToStr(STR("NewObject")), clazz, ctor_method,
           ctor_args...);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return JniEnv::GetEnv()->NewObject(clazz, ctor_method, ctor_args...);
+#endif  // DRY_RUN
   }
 };
 

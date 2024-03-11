@@ -27,12 +27,31 @@ cc_test(
 )
 
 ################################################################################
+# DryRun.
+################################################################################
+cc_test(
+    name = "dry_run_test",
+    srcs = ["dry_run_test.cc"],
+    defines = [
+        "DRY_RUN",
+        "ENABLE_DEBUG_OUTPUT",
+    ],
+    deps = [
+        "//:jni_bind",
+        "@googletest//:gtest_main",
+    ],
+)
+
+################################################################################
 # Fake Test Constants.
 ################################################################################
 cc_library(
     name = "fake_test_constants",
     hdrs = ["fake_test_constants.h"],
-    deps = ["//:jni_dep"],
+    deps = [
+        ":get_array_element_result",
+        "//:jni_dep",
+    ],
 )
 
 ################################################################################
@@ -47,6 +66,15 @@ cc_library(
         "//:jni_dep",
         "//metaprogramming:lambda_string",
     ],
+)
+
+################################################################################
+# GetArrayResult.
+################################################################################
+cc_library(
+    name = "get_array_element_result",
+    hdrs = ["get_array_element_result.h"],
+    deps = ["//:jni_dep"],
 )
 
 ################################################################################
@@ -107,6 +135,7 @@ cc_library(
     name = "jni_array_helper",
     hdrs = ["jni_array_helper.h"],
     deps = [
+        ":get_array_element_result",
         ":jni_env",
         ":trace",
         "//:jni_dep",
@@ -192,6 +221,7 @@ cc_library(
     name = "lifecycle",
     hdrs = ["lifecycle.h"],
     deps = [
+        ":fake_test_constants",
         ":jni_env",
         ":trace",
         "//:jni_dep",

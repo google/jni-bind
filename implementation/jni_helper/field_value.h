@@ -44,7 +44,11 @@ struct FieldHelper<jboolean, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jboolean>();
+#else
     return jni::JniEnv::GetEnv()->GetBooleanField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
@@ -52,7 +56,10 @@ struct FieldHelper<jboolean, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetBooleanField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -63,7 +70,11 @@ struct FieldHelper<jbyte, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetByteValue")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jbyte>();
+#else
     return jni::JniEnv::GetEnv()->GetByteField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
@@ -71,7 +82,10 @@ struct FieldHelper<jbyte, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetByteValue")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetByteField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -82,7 +96,11 @@ struct FieldHelper<jchar, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetCharValue")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jchar>();
+#else
     return jni::JniEnv::GetEnv()->GetCharField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
@@ -90,7 +108,10 @@ struct FieldHelper<jchar, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetCharValue")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetCharField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -101,7 +122,11 @@ struct FieldHelper<jshort, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetShortValue")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jshort>();
+#else
     return jni::JniEnv::GetEnv()->GetShortField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
@@ -109,7 +134,10 @@ struct FieldHelper<jshort, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetShortValue")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetShortField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -120,7 +148,11 @@ struct FieldHelper<jint, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetIntValue")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jint>();
+#else
     return jni::JniEnv::GetEnv()->GetIntField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
@@ -128,7 +160,10 @@ struct FieldHelper<jint, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetIntValue")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetIntField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -139,7 +174,11 @@ struct FieldHelper<jlong, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetLongField")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jlong>();
+#else
     return jni::JniEnv::GetEnv()->GetLongField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
@@ -147,7 +186,10 @@ struct FieldHelper<jlong, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetLongField")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetLongField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -158,7 +200,11 @@ struct FieldHelper<jfloat, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetFloatField")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+    return 123.f;
+#else
     return jni::JniEnv::GetEnv()->GetFloatField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
@@ -166,7 +212,10 @@ struct FieldHelper<jfloat, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetFloatField")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetFloatField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -177,7 +226,11 @@ struct FieldHelper<jdouble, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetDoubleField")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+    return 123.;
+#else
     return jni::JniEnv::GetEnv()->GetDoubleField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
@@ -185,7 +238,10 @@ struct FieldHelper<jdouble, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetDoubleField")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetDoubleField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -196,7 +252,11 @@ struct FieldHelper<jobject, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
@@ -204,7 +264,10 @@ struct FieldHelper<jobject, 0, false, void> {
     Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
+#endif  // DRY_RUN
   }
 };
 
@@ -214,15 +277,24 @@ struct FieldHelper<jstring, 0, false, void> {
                                  const jfieldID field_ref_) {
     Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
           field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jstring>();
+#else
     return reinterpret_cast<jstring>(
         jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jstring&& new_value) {
     Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
           field_ref_);
+
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
+#endif  // DRY_RUN
   }
 };
 
@@ -236,8 +308,12 @@ struct BaseFieldArrayHelper {
     Trace(metaprogramming::LambdaToStr(STR("GetObjectField, Rank 1")),
           object_ref, field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<ArrayType>();
+#else
     return static_cast<ArrayType>(
         jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
@@ -245,7 +321,10 @@ struct BaseFieldArrayHelper {
     Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
           field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -295,15 +374,23 @@ struct FieldHelper<
     Trace(metaprogramming::LambdaToStr(STR("GetObjectField, Rank >1")),
           object_ref, field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jobjectArray&& value) {
     Trace(metaprogramming::LambdaToStr(STR("SetObjectField, Rank >1")),
           object_ref, field_ref_);
+
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 

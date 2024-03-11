@@ -77,6 +77,9 @@ inline jobject& FallbackLoader() {
 inline jclass JniHelper::FindClass(const char* name) {
   Trace(metaprogramming::LambdaToStr(STR("FindClass")), name);
 
+#ifdef DRY_RUN
+  return Fake<jclass>();
+#else
   jclass jclass_from_thread_loader = jni::JniEnv::GetEnv()->FindClass(name);
   if (!jclass_from_thread_loader && FallbackLoader() != nullptr) {
     jni::JniEnv::GetEnv()->ExceptionClear();
@@ -85,12 +88,17 @@ inline jclass JniHelper::FindClass(const char* name) {
   }
 
   return jclass_from_thread_loader;
+#endif  // DRY_RUN
 }
 
 inline jclass JniHelper::GetObjectClass(jobject object) {
   Trace(metaprogramming::LambdaToStr(STR("GetObjectClass")), object);
 
+#ifdef DRY_RUN
+  return Fake<jclass>();
+#else
   return jni::JniEnv::GetEnv()->GetObjectClass(object);
+#endif  // DRY_RUN
 }
 
 jmethodID JniHelper::GetMethodID(jclass clazz, const char* method_name,
@@ -98,8 +106,12 @@ jmethodID JniHelper::GetMethodID(jclass clazz, const char* method_name,
   Trace(metaprogramming::LambdaToStr(STR("GetMethodID")), clazz, method_name,
         method_signature);
 
+#ifdef DRY_RUN
+  return Fake<jmethodID>();
+#else
   return jni::JniEnv::GetEnv()->GetMethodID(clazz, method_name,
                                             method_signature);
+#endif  // DRY_RUN
 }
 
 jmethodID JniHelper::GetStaticMethodID(jclass clazz, const char* method_name,
@@ -107,8 +119,12 @@ jmethodID JniHelper::GetStaticMethodID(jclass clazz, const char* method_name,
   Trace(metaprogramming::LambdaToStr(STR("GetStaticMethodID")), clazz,
         method_name, method_signature);
 
+#ifdef DRY_RUN
+  return Fake<jmethodID>();
+#else
   return jni::JniEnv::GetEnv()->GetStaticMethodID(clazz, method_name,
                                                   method_signature);
+#endif  // DRY_RUN
 }
 
 jfieldID JniHelper::GetFieldID(jclass clazz, const char* name,
@@ -116,7 +132,11 @@ jfieldID JniHelper::GetFieldID(jclass clazz, const char* name,
   Trace(metaprogramming::LambdaToStr(STR("GetFieldID")), clazz, name,
         signature);
 
+#ifdef DRY_RUN
+  return Fake<jfieldID>();
+#else
   return jni::JniEnv::GetEnv()->GetFieldID(clazz, name, signature);
+#endif  // DRY_RUN
 }
 
 jfieldID JniHelper::GetStaticFieldID(jclass clazz, const char* name,
@@ -124,24 +144,35 @@ jfieldID JniHelper::GetStaticFieldID(jclass clazz, const char* name,
   Trace(metaprogramming::LambdaToStr(STR("GetStaticFieldID")), clazz, name,
         signature);
 
+#ifdef DRY_RUN
+  return Fake<jfieldID>();
+#else
   return jni::JniEnv::GetEnv()->GetStaticFieldID(clazz, name, signature);
+#endif  // DRY_RUN
 }
 
 inline const char* JniHelper::GetStringUTFChars(jstring str) {
   Trace(metaprogramming::LambdaToStr(STR("GetStringUTFChars")), str);
 
+#ifdef DRY_RUN
+  return "DEAD_BEEF";
+#else
   // If is_copy is an address of bool it will be set to true or false if a copy
   // is made.  That said, this seems to be of no consequence, as the API still
   // requires you to release the string at the end. There's no discernible
   // reason you would ever be able to meaningfully act differently based on
   // this parameter of the API (except to do the wrong thing).
   return jni::JniEnv::GetEnv()->GetStringUTFChars(str, /*isCopy=*/nullptr);
+#endif  // DRY_RUN
 }
 
 inline void JniHelper::ReleaseStringUTFChars(jstring str, const char* chars) {
   Trace(metaprogramming::LambdaToStr(STR("ReleaseStringUTFChars")), str, chars);
 
+#ifdef DRY_RUN
+#else
   jni::JniEnv::GetEnv()->ReleaseStringUTFChars(str, chars);
+#endif  // DRY_RUN
 }
 
 }  // namespace jni

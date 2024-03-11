@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_JNI_HELPER_FAKE_TEST_CONSTANTS_H_
 #define JNI_BIND_JNI_HELPER_FAKE_TEST_CONSTANTS_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <type_traits>
 
@@ -48,9 +49,16 @@ struct FakeImpl<T*> {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// Non-JNI types.
+////////////////////////////////////////////////////////////////////////////////
+template <>
+struct FakeImpl<std::size_t> {
+  static std::size_t Val(std::size_t offset) { return std::size_t{123}; }
+};
+
+////////////////////////////////////////////////////////////////////////////////
 // JNI C API constants.
 ////////////////////////////////////////////////////////////////////////////////
-
 template <>
 struct FakeImpl<JNIEnv*> {
   static JNIEnv* Val(int offset) {
@@ -121,7 +129,7 @@ struct FakeImpl<jlong> {
 
 template <>
 struct FakeImpl<jfloat> {
-  static jfloat Val(jfloat offset) { return jfloat{66666666.f} + offset; }
+  static jfloat Val(jfloat offset) { return jfloat{123.f} + offset; }
 };
 
 template <>

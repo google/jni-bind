@@ -29,7 +29,11 @@ struct LifecycleHelper<jstring, LifecycleType::LOCAL>
   static inline jstring Construct(const char* chars) {
     Trace(metaprogramming::LambdaToStr(STR("NewStringUTF")), chars);
 
+#ifdef DRY_RUN
+    return Fake<jstring>();
+#else
     return jni::JniEnv::GetEnv()->NewStringUTF(chars);
+#endif  // DRY_RUN
   }
 };
 
