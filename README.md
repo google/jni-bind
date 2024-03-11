@@ -18,6 +18,10 @@ It requires clang enabled at C++17 or later, is compatible with Android, and is 
 - **Arrays** *inline object construction for method arguments, efficient pinning of existing spans.*
 - And *much* more!
 
+Curious to try it? Check out the [Godbolt sample](https://godbolt.org/z/6dfs43MK5)!
+
+If you're enjoying JNI Bind, or just want to support it, please consider adding a GitHub ⭐️!
+
 ## Table of Contents
 - [Quick Intro](#quick-intro)
 - [Installation](#installation-without-bazel)
