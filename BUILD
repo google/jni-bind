@@ -158,8 +158,9 @@ genrule(
 genrule(
     name = "gen_jni_bind_release_for_testing",
     outs = ["jni_bind_release_for_testing.h"],
-    cmd = "./$(location build_jni_bind_release.sh) $(location jni_bind_release_input) jni_wrapper $(locations :jni_bind_decorative_text)>$@",
+    cmd = './$(location build_jni_bind_release.sh) $(location jni_bind_release_input) jni_wrapper $(locations :jni_bind_decorative_text) | sed "s/__JNI_BIND_VERSION__/`cat $(locations JNI_BIND_VERSION.inc)`/" >$@',
     tools = [
+        ":JNI_BIND_VERSION.inc",
         ":build_jni_bind_release.sh",
         ":headers_for_export",
         ":jni_bind_decorative_text",

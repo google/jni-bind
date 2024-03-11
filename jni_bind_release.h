@@ -15,8 +15,8 @@
  */
 
 /*******************************************************************************
- * JNI Bind Version 0.9.9.
- * Alpha Public Release.
+ * JNI Bind Version __JNI_BIND_VERSION__.
+ * Beta Public Release.
  ********************************************************************************
  * This header is the single header version which you can use to quickly test or
  * deploy in your own project without using Bazel. It is self contained.
@@ -28,6 +28,10 @@
  *
  * See GitHub for sample API usage.
  * https://github.com/google/jni-bind
+ *
+ * 🚨 Are you enjoying JNI Bind? Please consider adding a ⭐️ on GitHub! 🚨
+ * JNI Bind is the culmination of a lot of hard work and your support is greatly
+ * appreciated.
  *
  * CODE BELOW IS AUTO GENERATED.
  *******************************************************************************/
@@ -396,6 +400,48 @@ constexpr bool ContainsValue(const SoughtType& sought_value, Ts&&... ts) {
 
 }  // namespace jni::metaprogramming
 
+#include <string_view>
+#include <type_traits>
+#include <utility>
+
+#define STR(x) []() { return x; }
+
+namespace jni::metaprogramming {
+
+template <typename Identifier>
+using identifier_type = decltype(std::declval<Identifier>()());
+
+constexpr std::size_t ConstexprStrlen(const char* str) {
+  return str[0] == 0 ? 0 : ConstexprStrlen(str + 1) + 1;
+}
+
+struct StringAsTypeBase {};
+
+// Represents a string by embedding a sequence of characters in a type.
+template <char... chars>
+struct StringAsType : StringAsTypeBase {
+  static constexpr char static_chars[] = {chars..., 0};
+  static constexpr std::string_view chars_as_sv = {static_chars,
+                                                   sizeof...(chars)};
+};
+
+template <typename Identifier, std::size_t... I>
+constexpr auto LambdaToStr(Identifier id, std::index_sequence<I...>) {
+  return StringAsType<id()[I]...>{};
+}
+
+template <
+    typename Identifier,
+    std::enable_if_t<std::is_same_v<identifier_type<Identifier>, const char*>,
+                     int> = 0>
+constexpr auto LambdaToStr(Identifier id) {
+  return LambdaToStr(id, std::make_index_sequence<ConstexprStrlen(id())>{});
+}
+
+template <typename NameLambda>
+using LambdaStringToType = decltype(LambdaToStr(std::declval<NameLambda>()));
+
+}  // namespace jni::metaprogramming
 
 #include <tuple>
 
@@ -426,6 +472,61 @@ using ConcatenateTup_t = Reduce_t<Combine, Tups...>;
 
 }  // namespace jni::metaprogramming
 
+#include <string>
+#include <string_view>
+
+namespace jni::metaprogramming {
+
+struct Color {
+  static constexpr std::string_view kNone{"\033[0m"};
+
+  // --- Text Colors ---
+  static constexpr std::string_view kBlack = "\033[0;30m";
+  static constexpr std::string_view kBlackBold = "\033[1;30m";
+  static constexpr std::string_view kRed = "\033[0;31m";
+  static constexpr std::string_view kRedBold = "\033[1;31m";
+  static constexpr std::string_view kGreen = "\033[0;32m";
+  static constexpr std::string_view kGreenBold = "\033[1;32m";
+  static constexpr std::string_view kYellow = "\033[0;33m";
+  static constexpr std::string_view kYellowBold = "\033[1;33m";
+  static constexpr std::string_view kBlue = "\033[0;34m";
+  static constexpr std::string_view kBlueBold = "\033[1;34m";
+  static constexpr std::string_view kPurple = "\033[0;35m";
+  static constexpr std::string_view kPurpleBold = "\033[1;35m";
+  static constexpr std::string_view kCyan = "\033[0;36m";
+  static constexpr std::string_view kCyanBold = "\033[1;36m";
+  static constexpr std::string_view kWhite = "\033[0;37m";
+  static constexpr std::string_view kWhiteBold = "\033[1;37m";
+
+  // --- Background Colors ---
+  static constexpr std::string_view kBgBlack = "\033[40m";
+  static constexpr std::string_view kBgBlackBold = "\033[100m";
+  static constexpr std::string_view kBgRed = "\033[41m";
+  static constexpr std::string_view kBgRedBold = "\033[101m";
+  static constexpr std::string_view kBgGreen = "\033[42m";
+  static constexpr std::string_view kBgGreenBold = "\033[102m";
+  static constexpr std::string_view kBgYellow = "\033[43m";
+  static constexpr std::string_view kBgYellowBold = "\033[103m";
+  static constexpr std::string_view kBgBlue = "\033[44m";
+  static constexpr std::string_view kBgBlueBold = "\033[104m";
+  static constexpr std::string_view kBgPurple = "\033[45m";
+  static constexpr std::string_view kBgPurpleBold = "\033[105m";
+  static constexpr std::string_view kBgCyan = "\033[46m";
+  static constexpr std::string_view kBgCyanBold = "\033[106m";
+  static constexpr std::string_view kBgWhite = "\033[47m";
+  static constexpr std::string_view kBgWhiteBold = "\033[107m";
+};
+
+// Colorize function for runtime manipulation of text. This is suitable when
+// the string is unknowable until runtime.
+inline std::string Colorize(std::string_view colour, std::string_view str,
+                            bool colourize = true) {
+  return !colourize ? std::string{str}
+                    : std::string{colour} + std::string{str} +
+                          std::string{Color::kNone};
+}
+
+}  // namespace jni::metaprogramming
 
 #include <type_traits>
 
@@ -460,6 +561,73 @@ constexpr bool AllUniqueValues(const T1&& t1, const Ts&&... ts) {
 
 namespace jni {
 
+// Convenience struct for returning results from pinning array.
+template <typename SpanType>
+struct GetArrayElementsResult {
+  SpanType* ptr_;
+  jboolean is_copy;
+};
+
+}  // namespace jni
+
+#include <sstream>
+#include <string>
+
+namespace jni {
+
+// Converts a single argument into a std::string (useful for debugging).
+template <typename T>
+struct ArgStringify {
+  static std::string Str(const T& val) {
+    std::stringstream ss;
+    ss << val;
+
+    return ss.str();
+  }
+};
+
+template <typename T>
+struct ArgStringify<T*> {
+  static std::string Str(const T* val) {
+    if (val == nullptr) {
+      return "nullptr";
+    }
+
+    std::stringstream ss;
+    ss << val;
+
+    return ss.str();
+  }
+};
+
+// Helper function to select correct ArgString partial specialization.
+template <typename T>
+std::string ArgString(const T& val) {
+  return ArgStringify<T>::Str(val);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Void.
+////////////////////////////////////////////////////////////////////////////////
+template <>
+struct ArgStringify<void> {
+  static std::string Str() { return ""; }
+};
+
+inline std::string ArgString() { return ArgStringify<void>::Str(); }
+
+////////////////////////////////////////////////////////////////////////////////
+// Bool.
+////////////////////////////////////////////////////////////////////////////////
+template <>
+struct ArgStringify<bool> {
+  static std::string Str(const bool val) { return val ? "TRUE" : "FALSE"; }
+};
+
+}  // namespace jni
+
+namespace jni {
+
 struct Object {
   const char* name_;
   constexpr explicit Object(const char* name) : name_(name) {}
@@ -467,6 +635,29 @@ struct Object {
 
 }  // namespace jni
 
+using jclass = jclass;
+using jthrowable = jthrowable;
+using jstring = jstring;
+using jarray = jarray;
+using jbooleanArray = jbooleanArray;
+using jbyteArray = jbyteArray;
+using jcharArray = jcharArray;
+using jshortArray = jshortArray;
+using jintArray = jintArray;
+using jlongArray = jlongArray;
+using jfloatArray = jfloatArray;
+using jdoubleArray = jdoubleArray;
+using jobjectArray = jobjectArray;
+
+using jweak = jweak;
+using jvalue = jvalue;
+using jfieldID = jfieldID;
+using jmethodID = jmethodID;
+
+using JavaVM = JavaVM;
+using JNIEnv = JNIEnv;
+
+// IWYU pragma: end_exports
 
 #include <tuple>
 #include <type_traits>
@@ -595,16 +786,71 @@ using Odd_t = typename Odd::template type<Ts...>;
 
 }  // namespace jni::metaprogramming
 
+#include <cstddef>
+#include <utility>
+
 namespace jni {
 
-template <typename Arg>
-inline void TraceImpl(const Arg& arg) {
-  // Currently, this does nothing, but this will eventually support lambdas.
+// Called once, before any arguments are printed.
+template <char... chars>
+inline void PreTrace(metaprogramming::StringAsType<chars...> tag) {
+  printf(
+      "%s%s",
+      metaprogramming::Colorize(metaprogramming::Color::kBlueBold,
+                                tag.static_chars)
+          .data(),
+      metaprogramming::Colorize(metaprogramming::Color::kPurple, "(").data());
 }
 
-template <typename... Args>
-inline void Trace(const char* name, const Args&... args) {
-  (TraceImpl(args), ...);
+template <typename T1, typename T2>
+struct ArgTrace {};
+
+// Called per argument.
+template <std::size_t... Is, char... chars>
+struct ArgTrace<std::index_sequence<Is...>,
+                metaprogramming::StringAsType<chars...>> {
+  template <std::size_t I>
+  struct Helper {
+    static constexpr bool IsLastArgument() { return I == sizeof...(Is) - 1; }
+
+    template <typename Arg>
+    static inline void Do(const Arg& arg) {
+      printf("%s", metaprogramming::Colorize(metaprogramming::Color::kCyan,
+                                             ArgString(arg))
+                       .c_str());
+      if constexpr (!IsLastArgument()) {
+        printf("%s",
+               metaprogramming::Colorize(metaprogramming::Color::kYellow, ",")
+                   .data());
+      }
+    }
+  };
+
+  template <typename... Args>
+  static inline void Do(const Args&... args) {
+    (Helper<Is>::Do(args), ...);
+  }
+};
+
+// Called once, after all arguments.
+template <char... chars>
+inline void PostTrace(metaprogramming::StringAsType<chars...> tag) {
+  printf(
+      "%s\n",
+      metaprogramming::Colorize(metaprogramming::Color::kPurple, ");").data());
+}
+
+template <char... chars, typename... Args>
+inline void Trace(metaprogramming::StringAsType<chars...> tag,
+                  const Args&... args) {
+// WARNING: This define is temporary and will be replaced. This unblocks
+// 1.0 release but will eventually be configurable at compile time.
+#ifdef ENABLE_DEBUG_OUTPUT
+  PreTrace(tag);
+  ArgTrace<std::make_index_sequence<sizeof...(Args)>, decltype(tag)>::Do(
+      args...);
+  PostTrace(tag);
+#endif
 }
 
 }  // namespace jni
@@ -646,6 +892,213 @@ class JniEnv {
 
   // This will always be set when a new object is created (see above).
   static inline thread_local JNIEnv* env_;
+};
+
+}  // namespace jni
+
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
+
+namespace jni {
+
+template <typename T>
+struct FakeImpl;
+
+// Produces a fake value of type T with non-trivial default value.
+// If modifier is not NONE, will add a modifier.
+// Offset can be used to nudge off base value so fake values don't match.
+template <typename T, typename OffsetT = int>
+auto Fake(OffsetT offset = 0) {
+  return reinterpret_cast<T>(FakeImpl<std::decay_t<T>>::Val(offset));
+}
+
+template <typename T>
+struct FakeImpl<T*> {
+  static T* Val(int offset) {
+    if constexpr (std::is_pointer_v<T>) {
+      return reinterpret_cast<T*>(FakeImpl<std::decay_t<T>>::Val(offset));
+    } else {
+      return reinterpret_cast<T*>(
+          static_cast<intptr_t>(FakeImpl<std::decay_t<T>>::Val(offset)));
+    }
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Non-JNI types.
+////////////////////////////////////////////////////////////////////////////////
+template <>
+struct FakeImpl<std::size_t> {
+  static std::size_t Val(std::size_t offset) { return std::size_t{123}; }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// JNI C API constants.
+////////////////////////////////////////////////////////////////////////////////
+template <>
+struct FakeImpl<JNIEnv*> {
+  static JNIEnv* Val(int offset) {
+    return reinterpret_cast<JNIEnv*>(0xFABCFABCFAB) + offset;
+  }
+};
+
+template <>
+struct FakeImpl<JNIEnv**> {
+  static JNIEnv** Val(int offset) {
+    return reinterpret_cast<JNIEnv**>(0xDABDABDABDA) + offset;
+  }
+};
+
+template <>
+struct FakeImpl<jclass> {
+  static jclass Val(int offset) {
+    return reinterpret_cast<jclass>(0xABCDEF12345 + offset);
+  }
+};
+
+template <>
+struct FakeImpl<jmethodID> {
+  static jmethodID Val(int offset) {
+    return reinterpret_cast<jmethodID>(0xBEBEBEBEBEBEBE + offset);
+  }
+};
+
+template <>
+struct FakeImpl<jfieldID> {
+  static jfieldID Val(int offset) {
+    return reinterpret_cast<jfieldID>(0xDEDEDEDEDEDEDE + offset);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Primitive constants.
+////////////////////////////////////////////////////////////////////////////////
+template <>
+struct FakeImpl<jboolean> {
+  static jboolean Val(int) { return false; }
+};
+
+template <>
+struct FakeImpl<jbyte> {
+  static jbyte Val(jbyte offset) { return jbyte{111} + offset; }
+};
+
+template <>
+struct FakeImpl<jchar> {
+  static jchar Val(jchar offset) { return jchar{222} + offset; }
+};
+
+template <>
+struct FakeImpl<jshort> {
+  static jshort Val(jshort offset) { return jshort{333} + offset; }
+};
+
+template <>
+struct FakeImpl<jint> {
+  static jint Val(jint offset) { return jint{444444444} + offset; }
+};
+
+template <>
+struct FakeImpl<jlong> {
+  static jlong Val(jlong offset) { return jlong{0x123456789ABCDE} + offset; }
+};
+
+template <>
+struct FakeImpl<jfloat> {
+  static jfloat Val(jfloat offset) { return jfloat{123.f} + offset; }
+};
+
+template <>
+struct FakeImpl<jdouble> {
+  static jdouble Val(jdouble offset) { return jdouble{77777777} + offset; }
+};
+
+template <>
+struct FakeImpl<jobject> {
+  static jobject Val(int offset) {
+    return reinterpret_cast<jobject>(0xAAAAABBBBBB + offset);
+  }
+};
+
+template <>
+struct FakeImpl<jstring> {
+  static jstring Val(int offset) {
+    return reinterpret_cast<jstring>(0xEEEEFFFFF + offset);
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Array constants.
+////////////////////////////////////////////////////////////////////////////////
+template <>
+struct FakeImpl<jarray> {
+  static jarray Val(int offset) {
+    return reinterpret_cast<jarray>(0xCCCCCDDDDDD + offset);
+  }
+};
+
+template <>
+struct FakeImpl<jbooleanArray> {
+  static jbooleanArray Val(int offset) {
+    return reinterpret_cast<jbooleanArray>(0xEEEEEFFFFFFF + offset);
+  }
+};
+
+template <>
+struct FakeImpl<jbyteArray> {
+  static jbyteArray Val(int offset) {
+    return reinterpret_cast<jbyteArray>(0xAEAEAFBFBFBF + offset);
+  }
+};
+
+template <>
+struct FakeImpl<jcharArray> {
+  static jcharArray Val(int offset) {
+    return reinterpret_cast<jcharArray>(0xEFEFEF0A0A0A + offset);
+  }
+};
+
+template <>
+struct FakeImpl<jshortArray> {
+  static jshortArray Val(int offset) {
+    return reinterpret_cast<jshortArray>(0xBEEEEBFFFFFB + offset);
+  }
+};
+
+template <>
+struct FakeImpl<jintArray> {
+  static jintArray Val(int offset) {
+    return reinterpret_cast<jintArray>(0xEAABAAFAABAAF + offset);
+  }
+};
+
+template <>
+struct FakeImpl<jfloatArray> {
+  static jfloatArray Val(int offset) {
+    return reinterpret_cast<jfloatArray>(0xDAAAEDAAAAF + offset);
+  }
+};
+
+template <>
+struct FakeImpl<jlongArray> {
+  static jlongArray Val(int offset) {
+    return reinterpret_cast<jlongArray>(0xFAAFFBAAABFF + offset);
+  }
+};
+
+template <>
+struct FakeImpl<jdoubleArray> {
+  static jdoubleArray Val(int offset) {
+    return reinterpret_cast<jdoubleArray>(0xBEEEEEEEEEEB + offset);
+  }
+};
+
+template <>
+struct FakeImpl<jobjectArray> {
+  static jobjectArray Val(int offset) {
+    return reinterpret_cast<jobjectArray>(0xFECEEABCCCCF + offset);
+  }
 };
 
 }  // namespace jni
@@ -727,29 +1180,6 @@ using ParamsRawTup_t = typename T::ParamsRawTup;
 
 }  // namespace jni
 
-using jclass = jclass;
-using jthrowable = jthrowable;
-using jstring = jstring;
-using jarray = jarray;
-using jbooleanArray = jbooleanArray;
-using jbyteArray = jbyteArray;
-using jcharArray = jcharArray;
-using jshortArray = jshortArray;
-using jintArray = jintArray;
-using jlongArray = jlongArray;
-using jfloatArray = jfloatArray;
-using jdoubleArray = jdoubleArray;
-using jobjectArray = jobjectArray;
-
-using jweak = jweak;
-using jvalue = jvalue;
-using jfieldID = jfieldID;
-using jmethodID = jmethodID;
-
-using JavaVM = JavaVM;
-using JNIEnv = JNIEnv;
-
-// IWYU pragma: end_exports
 
 #include <tuple>
 
@@ -906,8 +1336,11 @@ inline jobject& FallbackLoader() {
 }
 
 inline jclass JniHelper::FindClass(const char* name) {
-  Trace("FindClass", name);
+  Trace(metaprogramming::LambdaToStr(STR("FindClass")), name);
 
+#ifdef DRY_RUN
+  return Fake<jclass>();
+#else
   jclass jclass_from_thread_loader = jni::JniEnv::GetEnv()->FindClass(name);
   if (!jclass_from_thread_loader && FallbackLoader() != nullptr) {
     jni::JniEnv::GetEnv()->ExceptionClear();
@@ -916,59 +1349,91 @@ inline jclass JniHelper::FindClass(const char* name) {
   }
 
   return jclass_from_thread_loader;
+#endif  // DRY_RUN
 }
 
 inline jclass JniHelper::GetObjectClass(jobject object) {
-  Trace("GetObjectClass", object);
+  Trace(metaprogramming::LambdaToStr(STR("GetObjectClass")), object);
 
+#ifdef DRY_RUN
+  return Fake<jclass>();
+#else
   return jni::JniEnv::GetEnv()->GetObjectClass(object);
+#endif  // DRY_RUN
 }
 
 jmethodID JniHelper::GetMethodID(jclass clazz, const char* method_name,
                                  const char* method_signature) {
-  Trace("GetMethodID", clazz, method_name, method_signature);
+  Trace(metaprogramming::LambdaToStr(STR("GetMethodID")), clazz, method_name,
+        method_signature);
 
+#ifdef DRY_RUN
+  return Fake<jmethodID>();
+#else
   return jni::JniEnv::GetEnv()->GetMethodID(clazz, method_name,
                                             method_signature);
+#endif  // DRY_RUN
 }
 
 jmethodID JniHelper::GetStaticMethodID(jclass clazz, const char* method_name,
                                        const char* method_signature) {
-  Trace("GetStaticMethodID", clazz, method_name, method_signature);
+  Trace(metaprogramming::LambdaToStr(STR("GetStaticMethodID")), clazz,
+        method_name, method_signature);
 
+#ifdef DRY_RUN
+  return Fake<jmethodID>();
+#else
   return jni::JniEnv::GetEnv()->GetStaticMethodID(clazz, method_name,
                                                   method_signature);
+#endif  // DRY_RUN
 }
 
 jfieldID JniHelper::GetFieldID(jclass clazz, const char* name,
                                const char* signature) {
-  Trace("GetFieldID", clazz, name, signature);
+  Trace(metaprogramming::LambdaToStr(STR("GetFieldID")), clazz, name,
+        signature);
 
+#ifdef DRY_RUN
+  return Fake<jfieldID>();
+#else
   return jni::JniEnv::GetEnv()->GetFieldID(clazz, name, signature);
+#endif  // DRY_RUN
 }
 
 jfieldID JniHelper::GetStaticFieldID(jclass clazz, const char* name,
                                      const char* signature) {
-  Trace("GetStaticFieldID", clazz, name, signature);
+  Trace(metaprogramming::LambdaToStr(STR("GetStaticFieldID")), clazz, name,
+        signature);
 
+#ifdef DRY_RUN
+  return Fake<jfieldID>();
+#else
   return jni::JniEnv::GetEnv()->GetStaticFieldID(clazz, name, signature);
+#endif  // DRY_RUN
 }
 
 inline const char* JniHelper::GetStringUTFChars(jstring str) {
-  Trace("GetStringUTFChars", str);
+  Trace(metaprogramming::LambdaToStr(STR("GetStringUTFChars")), str);
 
+#ifdef DRY_RUN
+  return "DEAD_BEEF";
+#else
   // If is_copy is an address of bool it will be set to true or false if a copy
   // is made.  That said, this seems to be of no consequence, as the API still
   // requires you to release the string at the end. There's no discernible
   // reason you would ever be able to meaningfully act differently based on
   // this parameter of the API (except to do the wrong thing).
   return jni::JniEnv::GetEnv()->GetStringUTFChars(str, /*isCopy=*/nullptr);
+#endif  // DRY_RUN
 }
 
 inline void JniHelper::ReleaseStringUTFChars(jstring str, const char* chars) {
-  Trace("ReleaseStringUTFChars", str, chars);
+  Trace(metaprogramming::LambdaToStr(STR("ReleaseStringUTFChars")), str, chars);
 
+#ifdef DRY_RUN
+#else
   jni::JniEnv::GetEnv()->ReleaseStringUTFChars(str, chars);
+#endif  // DRY_RUN
 }
 
 }  // namespace jni
@@ -1787,15 +2252,22 @@ struct LifecycleHelper;
 template <typename Span>
 struct LifecycleLocalBase {
   static inline void Delete(Span object) {
-    Trace("DeleteLocalRef", object);
+    Trace(metaprogramming::LambdaToStr(STR("DeleteLocalRef")), object);
 
+#ifdef DRY_RUN
+#else
     JniEnv::GetEnv()->DeleteLocalRef(object);
+#endif  // DRY_RUN
   }
 
   static inline Span NewReference(Span object) {
-    Trace("NewLocalRef", object);
+    Trace(metaprogramming::LambdaToStr(STR("NewLocalRef")), object);
 
+#ifdef DRY_RUN
+    return Fake<Span>();
+#else
     return static_cast<Span>(JniEnv::GetEnv()->NewLocalRef(object));
+#endif  // DRY_RUN
   }
 };
 
@@ -1810,24 +2282,41 @@ struct LifecycleHelper<Span, LifecycleType::LOCAL>
 template <typename Span>
 struct LifecycleGlobalBase {
   static inline Span Promote(Span object) {
-    Trace("DeleteLocalRef", object);
+    Trace(metaprogramming::LambdaToStr(STR("NewGlobalRef")), object);
 
+#ifdef DRY_RUN
+    jobject ret = Fake<jobject>();
+#else
     jobject ret = JniEnv::GetEnv()->NewGlobalRef(object);
+#endif  // DRY_RUN
+
+    Trace(metaprogramming::LambdaToStr(STR("DeleteLocalRef")), object);
+
+#ifdef DRY_RUN
+#else
     JniEnv::GetEnv()->DeleteLocalRef(object);
+#endif  // DRY_RUN
 
     return static_cast<Span>(ret);
   }
 
   static inline void Delete(Span object) {
-    Trace("DeleteGlobalRef", object);
+    Trace(metaprogramming::LambdaToStr(STR("DeleteGlobalRef")), object);
 
+#ifdef DRY_RUN
+#else
     JniEnv::GetEnv()->DeleteGlobalRef(object);
+#endif  // DRY_RUN
   }
 
   static inline Span NewReference(Span object) {
-    Trace("NewGlobalRef", object);
+    Trace(metaprogramming::LambdaToStr(STR("NewGlobalRef")), object);
 
+#ifdef DRY_RUN
+    return Fake<Span>();
+#else
     return static_cast<Span>(JniEnv::GetEnv()->NewGlobalRef(object));
+#endif  // DRY_RUN
   }
 };
 
@@ -2097,9 +2586,14 @@ struct LifecycleHelper<jobject, LifecycleType::LOCAL>
   template <typename... CtorArgs>
   static inline jobject Construct(jclass clazz, jmethodID ctor_method,
                                   CtorArgs&&... ctor_args) {
-    Trace("NewObject", clazz, ctor_method, ctor_args...);
+    Trace(metaprogramming::LambdaToStr(STR("NewObject")), clazz, ctor_method,
+          ctor_args...);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return JniEnv::GetEnv()->NewObject(clazz, ctor_method, ctor_args...);
+#endif  // DRY_RUN
   }
 };
 
@@ -2421,48 +2915,6 @@ struct NBit {
 
 }  // namespace jni::metaprogramming
 
-#include <string_view>
-#include <type_traits>
-#include <utility>
-
-#define STR(x) []() { return x; }
-
-namespace jni::metaprogramming {
-
-template <typename Identifier>
-using identifier_type = decltype(std::declval<Identifier>()());
-
-constexpr std::size_t ConstexprStrlen(const char* str) {
-  return str[0] == 0 ? 0 : ConstexprStrlen(str + 1) + 1;
-}
-
-struct StringAsTypeBase {};
-
-// Represents a string by embedding a sequence of characters in a type.
-template <char... chars>
-struct StringAsType : StringAsTypeBase {
-  static constexpr char static_chars[] = {chars..., 0};
-  static constexpr std::string_view chars_as_sv = {static_chars,
-                                                   sizeof...(chars)};
-};
-
-template <typename Identifier, std::size_t... I>
-constexpr auto LambdaToStr(Identifier id, std::index_sequence<I...>) {
-  return StringAsType<id()[I]...>{};
-}
-
-template <
-    typename Identifier,
-    std::enable_if_t<std::is_same_v<identifier_type<Identifier>, const char*>,
-                     int> = 0>
-constexpr auto LambdaToStr(Identifier id) {
-  return LambdaToStr(id, std::make_index_sequence<ConstexprStrlen(id())>{});
-}
-
-template <typename NameLambda>
-using LambdaStringToType = decltype(LambdaToStr(std::declval<NameLambda>()));
-
-}  // namespace jni::metaprogramming
 
 #include <type_traits>
 #include <utility>
@@ -2652,6 +3104,9 @@ namespace jni {
 // Helper macro for defining native JNI entrypoints.
 #define JNI_BIND_C_ENTRYPOINT(class_name, return_type, method_name, ...) \
   return_type class_name_##method_name(JNIEnv*, jclass, ##__VA_ARGS__)
+
+// Provide this base tag to UserDefined to enable custom types.
+struct JniUserDefinedCorpusTag {};
 
 // ArrayView Helper.
 template <typename T>
@@ -2976,6 +3431,14 @@ static constexpr bool Detect_v = Detect<Container>::template val<T>;
 
 }  // namespace jni::metaprogramming
 
+namespace jni::metaprogramming {
+
+// Provide a partial specialization to this class to provide custom types.
+template <typename T>
+struct UserDefined;
+
+}  // namespace jni::metaprogramming
+
 #include <type_traits>
 
 namespace jni {
@@ -3107,17 +3570,6 @@ constexpr auto StripClassLoaderFromLoadedBy(T val) {
 
 }  // namespace jni
 
-namespace jni {
-
-// Provide this base tag to UserDefined to enable custom types.
-struct JniUserDefinedCorpusTag {};
-
-// Provide a partial specialization to this class to provide custom types.
-template <typename T>
-struct UserDefined;
-
-}  // namespace jni
-
 
 namespace jni::metaprogramming {
 
@@ -3197,6 +3649,34 @@ struct Flatten {
 
 template <typename... Ts>
 using Flatten_t = typename Flatten::template type<Ts...>;
+
+}  // namespace jni::metaprogramming
+
+#include <tuple>
+
+namespace jni::metaprogramming {
+
+// Provides the universe of keys, including user defined types if any.
+// Users define custom types by partially specialising UserDefined (see test).
+template <typename... Defaults>
+struct Corpus {
+  template <typename T, bool = Detect_v<UserDefined, T>>
+  struct Helper {
+    using type =
+        ConcatenateTup_t<Detect_t<UserDefined, T>, std::tuple<Defaults...>>;
+  };
+
+  template <typename T>
+  struct Helper<T, false> {
+    using type = std::tuple<Defaults...>;
+  };
+
+  template <typename T>
+  using type = typename Helper<T>::type;
+};
+
+template <typename T, typename... Defaults>
+using Corpus_t = typename Corpus<Defaults...>::template type<T>;
 
 }  // namespace jni::metaprogramming
 
@@ -3588,35 +4068,6 @@ struct JniTSelector {
 
 }  // namespace jni
 
-#include <tuple>
-
-namespace jni {
-
-// Provides the universe of keys, including user defined types if any.
-// Users define custom types by partially specialising UserDefined (see test).
-template <typename... Defaults>
-struct Corpus {
-  template <typename T, bool = ::jni::metaprogramming::Detect_v<
-                            UserDefined, JniUserDefinedCorpusTag>>
-  struct Helper {
-    using type = ::jni::metaprogramming::ConcatenateTup_t<
-        ::jni::metaprogramming::Detect_t<UserDefined, JniUserDefinedCorpusTag>,
-        std::tuple<Defaults...>>;
-  };
-
-  template <typename T>
-  struct Helper<T, false> {
-    using type = std::tuple<Defaults...>;
-  };
-
-  template <typename T>
-  using type = typename Helper<T>::type;
-};
-
-template <typename T, typename... Defaults>
-using Corpus_t = typename Corpus<Defaults...>::template type<T>;
-
-}  // namespace jni
 
 #include <type_traits>
 #include <utility>
@@ -3685,9 +4136,13 @@ template <>
 struct LifecycleHelper<jstring, LifecycleType::LOCAL>
     : public LifecycleLocalBase<jstring> {
   static inline jstring Construct(const char* chars) {
-    Trace("NewStringUTF", chars);
+    Trace(metaprogramming::LambdaToStr(STR("NewStringUTF")), chars);
 
+#ifdef DRY_RUN
+    return Fake<jstring>();
+#else
     return jni::JniEnv::GetEnv()->NewStringUTF(chars);
+#endif  // DRY_RUN
   }
 };
 
@@ -3724,10 +4179,14 @@ struct InvokeHelper<void, 0, false> {
   template <typename... Ts>
   static void Invoke(jobject object, jclass clazz, jmethodID method_id,
                      Ts&&... ts) {
-    Trace("CallVoidMethod", object, clazz, method_id, ts...);
+#ifdef DRY_RUN
+#else
+    Trace(metaprogramming::LambdaToStr(STR("CallVoidMethod")), object, clazz,
+          method_id, ts...);
 
     jni::JniEnv::GetEnv()->CallVoidMethod(object, method_id,
                                           std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -3739,10 +4198,15 @@ struct InvokeHelper<jboolean, 0, false> {
   template <typename... Ts>
   static jboolean Invoke(jobject object, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
-    Trace("CallBooleanMethod", object, clazz, method_id, ts...);
+#ifdef DRY_RUN
+    return Fake<jboolean>();
+#else
+    Trace(metaprogramming::LambdaToStr(STR("CallBooleanMethod")), object, clazz,
+          method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallBooleanMethod(object, method_id,
                                                     std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -3751,10 +4215,15 @@ struct InvokeHelper<jint, 0, false> {
   template <typename... Ts>
   static jint Invoke(jobject object, jclass clazz, jmethodID method_id,
                      Ts&&... ts) {
-    Trace("CallIntMethod", object, clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallIntMethod")), object, clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jint>();
+#else
     return jni::JniEnv::GetEnv()->CallIntMethod(object, method_id,
                                                 std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -3763,10 +4232,15 @@ struct InvokeHelper<jlong, 0, false> {
   template <typename... Ts>
   static jlong Invoke(jobject object, jclass clazz, jmethodID method_id,
                       Ts&&... ts) {
-    Trace("CallLongMethod", object, clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallLongMethod")), object, clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jlong>();
+#else
     return jni::JniEnv::GetEnv()->CallLongMethod(object, method_id,
                                                  std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -3775,10 +4249,16 @@ struct InvokeHelper<jfloat, 0, false> {
   template <typename... Ts>
   static jfloat Invoke(jobject object, jclass clazz, jmethodID method_id,
                        Ts&&... ts) {
-    Trace("CallFloatMethod", object, clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallFloatMethod")), object, clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    //    return Fake<jfloat>();
+    return 123.f;
+#else
     return jni::JniEnv::GetEnv()->CallFloatMethod(object, method_id,
                                                   std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -3787,10 +4267,16 @@ struct InvokeHelper<jdouble, 0, false> {
   template <typename... Ts>
   static jdouble Invoke(jobject object, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
-    Trace("CallDoubleMethod", object, clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallDoubleMethod")), object, clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    // return Fake<jdouble>();
+    return 123.f;
+#else
     return jni::JniEnv::GetEnv()->CallDoubleMethod(object, method_id,
                                                    std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -3801,10 +4287,15 @@ struct InvokeHelper<jobject, 0, false> {
   template <typename... Ts>
   static jobject Invoke(jobject object, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
-    Trace("CallObjectMethod", object, clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallObjectMethod")), object, clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return jni::JniEnv::GetEnv()->CallObjectMethod(object, method_id,
                                                    std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -3813,10 +4304,15 @@ struct InvokeHelper<jstring, 0, false> {
   template <typename... Ts>
   static jobject Invoke(jobject object, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
-    Trace("CallObjectMethod", object, clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallObjectMethod")), object, clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jstring>();
+#else
     return jni::JniEnv::GetEnv()->CallObjectMethod(object, method_id,
                                                    std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -3828,11 +4324,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, false> {
   template <typename... Ts>
   static jbooleanArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                               Ts&&... ts) {
-    Trace("CallObjectMethod (jbooleanArray), Rank 1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jbooleanArray), Rank 1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jbooleanArray>();
+#else
     return static_cast<jbooleanArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -3841,11 +4342,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, false> {
   template <typename... Ts>
   static jbyteArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
-    Trace("CallObjectMethod (jbyteArray), Rank 1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jbyteArray), Rank 1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jbyteArray>();
+#else
     return static_cast<jbyteArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -3854,11 +4360,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, false> {
   template <typename... Ts>
   static jcharArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
-    Trace("CallObjectMethod (jcharArray), Rank 1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jcharArray), Rank 1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jcharArray>();
+#else
     return static_cast<jcharArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -3867,11 +4378,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, false> {
   template <typename... Ts>
   static jshortArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                             Ts&&... ts) {
-    Trace("CallObjectMethod (jshortArray), Rank 1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jshortArray), Rank 1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jshortArray>();
+#else
     return static_cast<jshortArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -3880,11 +4396,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jint>, kRank, false> {
   template <typename... Ts>
   static jintArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                           Ts&&... ts) {
-    Trace("CallObjectMethod (jintArray), Rank 1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jintArray), Rank 1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jintArray>();
+#else
     return static_cast<jintArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -3893,11 +4414,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, false> {
   template <typename... Ts>
   static jlongArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
-    Trace("CallObjectMethod (jlongArray), Rank 1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jlongArray), Rank 1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jlongArray>();
+#else
     return static_cast<jlongArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -3906,11 +4432,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, false> {
   template <typename... Ts>
   static jfloatArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                             Ts&&... ts) {
-    Trace("CallObjectMethod (jfloatArray), Rank 1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jfloatArray), Rank 1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jfloatArray>();
+#else
     return static_cast<jfloatArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -3919,11 +4450,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, false> {
   template <typename... Ts>
   static jdoubleArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jdoubleArray), Rank 1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jdoubleArray), Rank 1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jdoubleArray>();
+#else
     return static_cast<jdoubleArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -3934,11 +4470,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jarray>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jobjectArray), Rank 1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jobjectArray), Rank 1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -3947,11 +4488,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jobject>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jobjectArray), Rank 1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jobjectArray), Rank 1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -3963,11 +4509,16 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jboolean>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jobjectArray), Rank >1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -3976,11 +4527,16 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jbyte>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jobjectArray), Rank >1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -3989,11 +4545,16 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jchar>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jobjectArray), Rank >1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -4002,11 +4563,16 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jshort>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jobjectArray), Rank >1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -4015,11 +4581,16 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jint>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jobjectArray), Rank >1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -4028,11 +4599,15 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jfloat>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
-          ts...);
-
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jobjectArray), Rank >1")),
+          object, clazz, method_id, ts...);
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -4041,11 +4616,16 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jdouble>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jobjectArray), Rank >1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -4054,11 +4634,16 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jlong>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jobjectArray), Rank >1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -4069,11 +4654,16 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jarray>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jobjectArray), Rank >1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -4082,11 +4672,16 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallObjectMethod (jobjectArray), Rank >1", object, clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallObjectMethod (jobjectArray), Rank >1")),
+          object, clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
+#endif
   }
 };
 
@@ -4104,11 +4699,11 @@ template <typename t1, typename t2 = void>
 struct Proxy;
 
 // CDecls for all declarable types (these index into proxy definitions).
-using AllKeys =
-    Corpus_t<JniUserDefinedCorpusTag, void, jboolean, jbyte, jshort, jint,
-             jfloat, jlong, jchar, jdouble, jstring, jobject, Self, jarray,
-             jobjectArray, jintArray, jbooleanArray, jbyteArray, jcharArray,
-             jshortArray, jdoubleArray, jfloatArray, jlongArray>;
+using AllKeys = metaprogramming::Corpus_t<
+    JniUserDefinedCorpusTag, void, jboolean, jbyte, jshort, jint, jfloat, jlong,
+    jchar, jdouble, jstring, jobject, Self, jarray, jobjectArray, jintArray,
+    jbooleanArray, jbyteArray, jcharArray, jshortArray, jdoubleArray,
+    jfloatArray, jlongArray>;
 
 template <typename TUndecayed>
 struct ProxyHelper {
@@ -4525,10 +5120,14 @@ template <>
 struct InvokeHelper<void, 0, true> {
   template <typename... Ts>
   static void Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
-    Trace("CallStaticVoidMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticVoidMethod")), clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->CallStaticVoidMethod(clazz, method_id,
                                                 std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -4540,10 +5139,15 @@ struct InvokeHelper<jboolean, 0, true> {
   template <typename... Ts>
   static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
-    Trace("CallStaticBooleanMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticBooleanMethod")), clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jboolean>();
+#else
     return jni::JniEnv::GetEnv()->CallStaticBooleanMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -4552,10 +5156,15 @@ struct InvokeHelper<jbyte, 0, true> {
   template <typename... Ts>
   static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
-    Trace("CallStaticByteMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticByteMethod")), clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jboolean>();
+#else
     return jni::JniEnv::GetEnv()->CallStaticByteMethod(clazz, method_id,
                                                        std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -4564,10 +5173,15 @@ struct InvokeHelper<jchar, 0, true> {
   template <typename... Ts>
   static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
-    Trace("CallStaticCharMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticCharMethod")), clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jboolean>();
+#else
     return jni::JniEnv::GetEnv()->CallStaticCharMethod(clazz, method_id,
                                                        std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -4576,10 +5190,15 @@ struct InvokeHelper<jshort, 0, true> {
   template <typename... Ts>
   static jboolean Invoke(jobject, jclass clazz, jmethodID method_id,
                          Ts&&... ts) {
-    Trace("CallStaticShortMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticShortMethod")), clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jboolean>();
+#else
     return jni::JniEnv::GetEnv()->CallStaticShortMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -4587,10 +5206,15 @@ template <>
 struct InvokeHelper<jint, 0, true> {
   template <typename... Ts>
   static jint Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
-    Trace("CallStaticIntMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticIntMethod")), clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jint>();
+#else
     return jni::JniEnv::GetEnv()->CallStaticIntMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -4598,10 +5222,15 @@ template <>
 struct InvokeHelper<jlong, 0, true> {
   template <typename... Ts>
   static jlong Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
-    Trace("CallStaticLongMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticLongMethod")), clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jlong>();
+#else
     return jni::JniEnv::GetEnv()->CallStaticLongMethod(clazz, method_id,
                                                        std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -4609,10 +5238,15 @@ template <>
 struct InvokeHelper<jfloat, 0, true> {
   template <typename... Ts>
   static jfloat Invoke(jobject, jclass clazz, jmethodID method_id, Ts&&... ts) {
-    Trace("CallStaticFloatMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticFloatMethod")), clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return 123.f;
+#else
     return jni::JniEnv::GetEnv()->CallStaticFloatMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -4621,10 +5255,15 @@ struct InvokeHelper<jdouble, 0, true> {
   template <typename... Ts>
   static jdouble Invoke(jobject, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
-    Trace("CallStaticDoubleMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticDoubleMethod")), clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return 123.;
+#else
     return jni::JniEnv::GetEnv()->CallStaticDoubleMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -4635,10 +5274,15 @@ struct InvokeHelper<jobject, 0, true> {
   template <typename... Ts>
   static jobject Invoke(jobject, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
-    Trace("CallStaticObjectMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod")), clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return jni::JniEnv::GetEnv()->CallStaticObjectMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -4647,10 +5291,15 @@ struct InvokeHelper<jstring, 0, true> {
   template <typename... Ts>
   static jobject Invoke(jobject, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
-    Trace("CallStaticObjectMethod", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod")), clazz,
+          method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return jni::JniEnv::GetEnv()->CallStaticObjectMethod(
         clazz, method_id, std::forward<Ts>(ts)...);
+#endif  // DRY_RUN
   }
 };
 
@@ -4662,11 +5311,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, true> {
   template <typename... Ts>
   static jbooleanArray Invoke(jobject, jclass clazz, jmethodID method_id,
                               Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jbooleanArray>();
+#else
     return static_cast<jbooleanArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4675,11 +5329,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, true> {
   template <typename... Ts>
   static jbyteArray Invoke(jobject, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jbyteArray>();
+#else
     return static_cast<jbyteArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4688,11 +5347,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, true> {
   template <typename... Ts>
   static jcharArray Invoke(jobject, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jcharArray>();
+#else
     return static_cast<jcharArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4701,11 +5365,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, true> {
   template <typename... Ts>
   static jshortArray Invoke(jobject, jclass clazz, jmethodID method_id,
                             Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jshortArray>();
+#else
     return static_cast<jshortArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4714,10 +5383,15 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jint>, kRank, true> {
   template <typename... Ts>
   static jintArray Invoke(jobject, jclass clazz, jmethodID method_id,
                           Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jintArray>();
+#else
     return static_cast<jintArray>(jni::JniEnv::GetEnv()->CallStaticObjectMethod(
         clazz, method_id, std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4726,11 +5400,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, true> {
   template <typename... Ts>
   static jfloatArray Invoke(jobject, jclass clazz, jmethodID method_id,
                             Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jfloatArray>();
+#else
     return static_cast<jfloatArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4739,11 +5418,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, true> {
   template <typename... Ts>
   static jdoubleArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jdoubleArray>();
+#else
     return static_cast<jdoubleArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4752,11 +5436,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, true> {
   template <typename... Ts>
   static jlongArray Invoke(jobject, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jlongArray>();
+#else
     return static_cast<jlongArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4767,11 +5456,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jarray>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4780,11 +5474,16 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jobject>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod, Rank 1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(STR("CallStaticObjectMethod, Rank 1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4796,12 +5495,17 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jboolean>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jboolean), Rank >1", clazz, method_id,
-          ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jboolean), Rank >1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4810,11 +5514,17 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jbyte>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jbyte), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jbyte), Rank >1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4823,11 +5533,17 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jchar>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jchar), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jchar), Rank >1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4836,11 +5552,17 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jshort>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jshort), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jshort), Rank >1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4849,11 +5571,17 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jint>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jint), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jint), Rank >1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4862,11 +5590,17 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jfloat>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jfloat), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jfloat), Rank >1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4875,11 +5609,17 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jdouble>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jdouble), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jdouble), Rank >1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4888,11 +5628,17 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jlong>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jlong), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jlong), Rank >1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4903,11 +5649,17 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jarray>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jarray), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jarray), Rank >1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4916,11 +5668,17 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, true> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace("CallStaticObjectMethod (jobject), Rank >1", clazz, method_id, ts...);
+    Trace(metaprogramming::LambdaToStr(
+              STR("CallStaticObjectMethod (jobject), Rank >1")),
+          clazz, method_id, ts...);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->CallStaticObjectMethod(clazz, method_id,
                                                       std::forward<Ts>(ts)...));
+#endif  // DRY_RUN
   }
 };
 
@@ -4945,16 +5703,25 @@ template <>
 struct FieldHelper<jboolean, 0, false, void> {
   static inline jboolean GetValue(const jobject object_ref,
                                   const jfieldID field_ref_) {
-    Trace("GetBooleanValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jboolean>();
+#else
     return jni::JniEnv::GetEnv()->GetBooleanField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jboolean&& value) {
-    Trace("GetBooleanValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetBooleanField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -4962,16 +5729,25 @@ template <>
 struct FieldHelper<jbyte, 0, false, void> {
   static inline jbyte GetValue(const jobject object_ref,
                                const jfieldID field_ref_) {
-    Trace("GetByteValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetByteValue")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jbyte>();
+#else
     return jni::JniEnv::GetEnv()->GetByteField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jbyte&& value) {
-    Trace("SetByteValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetByteValue")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetByteField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -4979,16 +5755,25 @@ template <>
 struct FieldHelper<jchar, 0, false, void> {
   static inline jchar GetValue(const jobject object_ref,
                                const jfieldID field_ref_) {
-    Trace("GetCharValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetCharValue")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jchar>();
+#else
     return jni::JniEnv::GetEnv()->GetCharField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jchar&& value) {
-    Trace("SetCharValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetCharValue")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetCharField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -4996,16 +5781,25 @@ template <>
 struct FieldHelper<jshort, 0, false, void> {
   static inline jshort GetValue(const jobject object_ref,
                                 const jfieldID field_ref_) {
-    Trace("GetShortValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetShortValue")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jshort>();
+#else
     return jni::JniEnv::GetEnv()->GetShortField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jshort&& value) {
-    Trace("SetShortValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetShortValue")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetShortField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -5013,16 +5807,25 @@ template <>
 struct FieldHelper<jint, 0, false, void> {
   static inline jint GetValue(const jobject object_ref,
                               const jfieldID field_ref_) {
-    Trace("GetIntValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetIntValue")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jint>();
+#else
     return jni::JniEnv::GetEnv()->GetIntField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jint&& value) {
-    Trace("SetIntValue", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetIntValue")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetIntField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -5030,16 +5833,25 @@ template <>
 struct FieldHelper<jlong, 0, false, void> {
   static inline jlong GetValue(const jobject object_ref,
                                const jfieldID field_ref_) {
-    Trace("GetLongField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetLongField")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jlong>();
+#else
     return jni::JniEnv::GetEnv()->GetLongField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jlong&& value) {
-    Trace("SetLongField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetLongField")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetLongField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -5047,16 +5859,25 @@ template <>
 struct FieldHelper<jfloat, 0, false, void> {
   static inline jfloat GetValue(const jobject object_ref,
                                 const jfieldID field_ref_) {
-    Trace("GetFloatField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetFloatField")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return 123.f;
+#else
     return jni::JniEnv::GetEnv()->GetFloatField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jfloat&& value) {
-    Trace("SetFloatField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetFloatField")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetFloatField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -5064,16 +5885,25 @@ template <>
 struct FieldHelper<jdouble, 0, false, void> {
   static inline jdouble GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
-    Trace("GetDoubleField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetDoubleField")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return 123.;
+#else
     return jni::JniEnv::GetEnv()->GetDoubleField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jdouble&& value) {
-    Trace("SetDoubleField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetDoubleField")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetDoubleField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -5081,16 +5911,25 @@ template <>
 struct FieldHelper<jobject, 0, false, void> {
   static inline jobject GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
-    Trace("GetObjectField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jobject&& new_value) {
-    Trace("SetObjectField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
+#endif  // DRY_RUN
   }
 };
 
@@ -5098,15 +5937,26 @@ template <>
 struct FieldHelper<jstring, 0, false, void> {
   static inline jstring GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
-    Trace("GetObjectField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jstring>();
+#else
     return reinterpret_cast<jstring>(
         jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jstring&& new_value) {
-    Trace("SetObjectField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
+          field_ref_);
+
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
+#endif  // DRY_RUN
   }
 };
 
@@ -5117,17 +5967,26 @@ template <typename ArrayType>
 struct BaseFieldArrayHelper {
   static inline ArrayType GetValue(const jobject object_ref,
                                    const jfieldID field_ref_) {
-    Trace("GetObjectField, Rank 1", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField, Rank 1")),
+          object_ref, field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<ArrayType>();
+#else
     return static_cast<ArrayType>(
         jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, ArrayType&& value) {
-    Trace("SetObjectField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -5174,16 +6033,26 @@ struct FieldHelper<
                       std::is_same_v<jstring, T> || (kRank > 1))>> {
   static inline jobjectArray GetValue(const jobject object_ref,
                                       const jfieldID field_ref_) {
-    Trace("GetObjectField, Rank >1", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField, Rank >1")),
+          object_ref, field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jobjectArray&& value) {
-    Trace("SetObjectField, Rank >1", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField, Rank >1")),
+          object_ref, field_ref_);
+
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -5958,112 +6827,175 @@ template <>
 struct FieldHelper<jboolean, 0, true, void> {
   static inline jboolean GetValue(const jclass clazz,
                                   const jfieldID field_ref_) {
-    Trace("GetStaticBooleanField", clazz, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticBooleanField")), clazz,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jboolean>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticBooleanField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jboolean&& value) {
-    Trace("SetStaticBooleanField", clazz, field_ref_, value);
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticBooleanField")), clazz,
+          field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticBooleanField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
 template <>
 struct FieldHelper<jbyte, 0, true, void> {
   static inline jbyte GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace("GetStaticByteField", clazz, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticByteField")), clazz,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jbyte>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticByteField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jbyte&& value) {
-    Trace("SetStaticByteField", clazz, field_ref_, value);
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticByteField")), clazz,
+          field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     return jni::JniEnv::GetEnv()->SetStaticByteField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
 template <>
 struct FieldHelper<jchar, 0, true, void> {
   static inline jchar GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace("GetStaticCharField", clazz, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticCharField")), clazz,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jchar>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticCharField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jchar&& value) {
-    Trace("SetStaticCharField", clazz, field_ref_, value);
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticCharField")), clazz,
+          field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticCharField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
 template <>
 struct FieldHelper<jshort, 0, true, void> {
   static inline jshort GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace("GetStaticShortField", clazz, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticShortField")), clazz,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jshort>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticShortField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jshort&& value) {
-    Trace("SetStaticShortField", clazz, field_ref_, value);
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticShortField")), clazz,
+          field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticShortField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
 template <>
 struct FieldHelper<jint, 0, true, void> {
   static inline jint GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace("GetStaticIntField", clazz, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticIntField")), clazz,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jint>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticIntField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jint&& value) {
-    Trace("SetStaticIntField", clazz, field_ref_, value);
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticIntField")), clazz,
+          field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticIntField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
 template <>
 struct FieldHelper<jlong, 0, true, void> {
   static inline jlong GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace("GetStaticLongField", clazz, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticLongField")), clazz,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jlong>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticLongField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jlong&& value) {
-    Trace("SetStaticLongField", clazz, field_ref_, value);
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticLongField")), clazz,
+          field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticLongField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
 template <>
 struct FieldHelper<jfloat, 0, true, void> {
   static inline jfloat GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace("GetStaticFloatField", clazz, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticFloatField")), clazz,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return 123.f;
+#else
     return jni::JniEnv::GetEnv()->GetStaticFloatField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jfloat&& value) {
-    Trace("SetStaticFloatField", clazz, field_ref_, value);
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticFloatField")), clazz,
+          field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticFloatField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -6071,16 +7003,25 @@ template <>
 struct FieldHelper<jdouble, 0, true, void> {
   static inline jdouble GetValue(const jclass clazz,
                                  const jfieldID field_ref_) {
-    Trace("GetStaticDoubleField", clazz, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticDoubleField")), clazz,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return 123.;
+#else
     return jni::JniEnv::GetEnv()->GetStaticDoubleField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jdouble&& value) {
-    Trace("SetStaticDoubleField", clazz, field_ref_, value);
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticDoubleField")), clazz,
+          field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticDoubleField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -6088,16 +7029,25 @@ template <>
 struct FieldHelper<jobject, 0, true, void> {
   static inline jobject GetValue(const jclass clazz,
                                  const jfieldID field_ref_) {
-    Trace("GetStaticObjectField", clazz, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_);
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jobject&& new_value) {
-    Trace("SetStaticObjectField", clazz, field_ref_, new_value);
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
+          field_ref_, new_value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+#endif  // DRY_RUN
   }
 };
 
@@ -6105,17 +7055,26 @@ template <>
 struct FieldHelper<jstring, 0, true, void> {
   static inline jstring GetValue(const jclass clazz,
                                  const jfieldID field_ref_) {
-    Trace("GetStaticObjectField", clazz, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jstring>();
+#else
     return reinterpret_cast<jstring>(
         jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jstring&& new_value) {
-    Trace("SetStaticObjectField", clazz, field_ref_, new_value);
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
+          field_ref_, new_value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+#endif  // DRY_RUN
   }
 };
 
@@ -6126,17 +7085,26 @@ template <typename ArrayType>
 struct StaticBaseFieldArrayHelper {
   static inline ArrayType GetValue(const jobject object_ref,
                                    const jfieldID field_ref_) {
-    Trace("GetObjectField", object_ref, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
+          field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<ArrayType>();
+#else
     return static_cast<ArrayType>(
         jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, ArrayType&& value) {
-    Trace("SetObjectField", object_ref, field_ref_, value);
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
+          field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -6182,17 +7150,26 @@ struct FieldHelper<
     std::enable_if_t<(std::is_same_v<jobject, T> || (kRank > 1))>> {
   static inline jobjectArray GetValue(const jclass clazz,
                                       const jfieldID field_ref_) {
-    Trace("GetStaticObjectField, Rank 1+", clazz, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField, Rank 1+")),
+          clazz, field_ref_);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return static_cast<jobjectArray>(
         jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+#endif  // DRY_RUN
   }
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jobjectArray&& value) {
-    Trace("SetStaticObjectField, Rank 1+", clazz, field_ref_, value);
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField, Rank 1+")),
+          clazz, field_ref_, value);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, value);
+#endif  // DRY_RUN
   }
 };
 
@@ -7009,10 +7986,8 @@ class UtfStringView {
  public:
   UtfStringView(jstring java_string)
       : java_string_(java_string),
-        chars_(java_string_
-                   ? JniEnv::GetEnv()->GetStringUTFChars(java_string,
-                                                         /*isCopy=*/nullptr)
-                   : nullptr) {}
+        chars_(java_string_ ? JniHelper::GetStringUTFChars(java_string)
+                            : nullptr) {}
 
   ~UtfStringView() {
     if (chars_) {
@@ -7082,18 +8057,15 @@ bool operator!=(const jobject& lhs,
 
 namespace jni {
 
-// Convenience struct for returning results from pinning array.
-template <typename SpanType>
-struct GetArrayElementsResult {
-  SpanType* ptr_;
-  jboolean is_copy;
-};
-
 struct JniArrayHelperBase {
   static inline std::size_t GetLength(jarray array) {
-    Trace("GetArrayLength", array);
+    Trace(metaprogramming::LambdaToStr(STR("GetArrayLength")), array);
 
+#ifdef DRY_RUN
+    return Fake<std::size_t>();
+#else
     return jni::JniEnv::GetEnv()->GetArrayLength(array);
+#endif  // DRY_RUN
   }
 };
 
@@ -7105,25 +8077,39 @@ struct JniArrayHelper : public JniArrayHelperBase {
   static inline jobjectArray NewArray(std::size_t size,
                                       jclass class_id = nullptr,
                                       jobject initial_element = nullptr) {
-    Trace("NewObjectArray", size, class_id, initial_element);
+    Trace(metaprogramming::LambdaToStr(STR("NewObjectArray")), size, class_id,
+          initial_element);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
                                                  initial_element);
+#endif  // DRY_RUN
   }
 
   // The API of fetching objects only permits accessing one object at a time.
   static inline jobject GetArrayElement(jobjectArray array, std::size_t idx) {
-    Trace("GetObjectArrayElement", array, idx);
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectArrayElement")), array,
+          idx);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
+#endif  // DRY_RUN
   };
 
   // The API of fetching objects only permits accessing one object at a time.
   static inline void SetArrayElement(jobjectArray array, std::size_t idx,
                                      SpannedType obj) {
-    Trace("SetObjectArrayElement", array, idx, obj);
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectArrayElement")), array,
+          idx, obj);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectArrayElement(array, idx, obj);
+#endif  // DRY_RUN
   };
 };
 
@@ -7132,29 +8118,44 @@ struct JniArrayHelper<jboolean, 1> : public JniArrayHelperBase {
   using AsArrayType = jbooleanArray;
 
   static inline jbooleanArray NewArray(std::size_t size) {
-    Trace("NewBooleanArray, Rank 1", size);
+    Trace(metaprogramming::LambdaToStr(STR("NewBooleanArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jbooleanArray>();
+#else
     return jni::JniEnv::GetEnv()->NewBooleanArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jboolean> GetArrayElements(
       jarray array) {
-    Trace("GetArrayElements, jboolean, Rank 1", array);
+    Trace(
+        metaprogramming::LambdaToStr(STR("GetArrayElements, jboolean, Rank 1")),
+        array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jboolean>{};
+#else
     GetArrayElementsResult<jboolean> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetBooleanArrayElements(
         static_cast<jbooleanArray>(array), &return_value.is_copy);
+
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jboolean* native_ptr,
                                           bool copy_on_completion) {
-    Trace("ReleaseArrayElements, jboolean, Rank 1", array, native_ptr,
-          copy_on_completion);
+    Trace(metaprogramming::LambdaToStr(
+              STR("ReleaseArrayElements, jboolean, Rank 1")),
+          array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseBooleanArrayElements(
         static_cast<jbooleanArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -7163,28 +8164,42 @@ struct JniArrayHelper<jbyte, 1> : public JniArrayHelperBase {
   using AsArrayType = jbyteArray;
 
   static inline jbyteArray NewArray(std::size_t size) {
-    Trace("NewByteArray, Rank 1", size);
+    Trace(metaprogramming::LambdaToStr(STR("NewByteArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jbyteArray>();
+#else
     return jni::JniEnv::GetEnv()->NewByteArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jbyte> GetArrayElements(jarray array) {
-    Trace("GetArrayElements, jbyte, Rank 1", array);
+    Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jbyte, Rank 1")),
+          array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jbyte>{};
+#else
     GetArrayElementsResult<jbyte> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetByteArrayElements(
         static_cast<jbyteArray>(array), &return_value.is_copy);
+
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jbyte* native_ptr,
                                           bool copy_on_completion) {
-    Trace("ReleaseArrayElements, jbyte, Rank 1", array, native_ptr,
-          copy_on_completion);
+    Trace(metaprogramming::LambdaToStr(
+              STR("ReleaseArrayElements, jbyte, Rank 1")),
+          array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseByteArrayElements(
         static_cast<jbyteArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -7193,28 +8208,42 @@ struct JniArrayHelper<jchar, 1> : public JniArrayHelperBase {
   using AsArrayType = jcharArray;
 
   static inline jcharArray NewArray(std::size_t size) {
-    Trace("NewCharArray, Rank 1", size);
+    Trace(metaprogramming::LambdaToStr(STR("NewCharArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jcharArray>();
+#else
     return jni::JniEnv::GetEnv()->NewCharArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jchar> GetArrayElements(jarray array) {
-    Trace("GetArrayElements, jchar, Rank 1", array);
+    Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jchar, Rank 1")),
+          array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jchar>{};
+#else
     GetArrayElementsResult<jchar> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetCharArrayElements(
         static_cast<jcharArray>(array), &return_value.is_copy);
+
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jchar* native_ptr,
                                           bool copy_on_completion) {
-    Trace("ReleaseArrayElements, jchar, Rank 1", array, native_ptr,
-          copy_on_completion);
+    Trace(metaprogramming::LambdaToStr(
+              STR("ReleaseArrayElements, jchar, Rank 1")),
+          array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseCharArrayElements(
         static_cast<jcharArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -7223,28 +8252,42 @@ struct JniArrayHelper<jshort, 1> : public JniArrayHelperBase {
   using AsArrayType = jshortArray;
 
   static inline jshortArray NewArray(std::size_t size) {
-    Trace("NewShortArray, Rank 1", size);
+    Trace(metaprogramming::LambdaToStr(STR("NewShortArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jshortArray>();
+#else
     return jni::JniEnv::GetEnv()->NewShortArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jshort> GetArrayElements(jarray array) {
-    Trace("GetArrayElements, jshort, Rank 1", array);
+    Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jshort, Rank 1")),
+          array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jshort>{};
+#else
     GetArrayElementsResult<jshort> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetShortArrayElements(
         static_cast<jshortArray>(array), &return_value.is_copy);
+
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jshort* native_ptr,
                                           bool copy_on_completion) {
-    Trace("ReleaseArrayElements, jshort, Rank 1", array, native_ptr,
-          copy_on_completion);
+    Trace(metaprogramming::LambdaToStr(
+              STR("ReleaseArrayElements, jshort, Rank 1")),
+          array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseShortArrayElements(
         static_cast<jshortArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -7253,28 +8296,42 @@ struct JniArrayHelper<jint, 1> : public JniArrayHelperBase {
   using AsArrayType = jintArray;
 
   static inline jintArray NewArray(std::size_t size) {
-    Trace("NewIntArray, Rank 1", size);
+    Trace(metaprogramming::LambdaToStr(STR("NewIntArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jintArray>();
+#else
     return jni::JniEnv::GetEnv()->NewIntArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jint> GetArrayElements(jarray array) {
-    Trace("GetArrayElements, jint, Rank 1", array);
+    Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jint, Rank 1")),
+          array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jint>{};
+#else
     GetArrayElementsResult<jint> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetIntArrayElements(
         static_cast<jintArray>(array), &return_value.is_copy);
+
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, int* native_ptr,
                                           bool copy_on_completion) {
-    Trace("ReleaseArrayElements, jint, Rank 1", array, native_ptr,
-          copy_on_completion);
+    Trace(
+        metaprogramming::LambdaToStr(STR("ReleaseArrayElements, jint, Rank 1")),
+        array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseIntArrayElements(
         static_cast<jintArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -7283,28 +8340,41 @@ struct JniArrayHelper<jlong, 1> : public JniArrayHelperBase {
   using AsArrayType = jlongArray;
 
   static inline jlongArray NewArray(std::size_t size) {
-    Trace("NewLongArray, Rank 1", size);
+    Trace(metaprogramming::LambdaToStr(STR("NewLongArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jlongArray>();
+#else
     return jni::JniEnv::GetEnv()->NewLongArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jlong> GetArrayElements(jarray array) {
-    Trace("GetArrayElements, jlong, Rank 1", array);
+    Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jlong, Rank 1")),
+          array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jlong>{};
+#else
     GetArrayElementsResult<jlong> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetLongArrayElements(
         static_cast<jlongArray>(array), &return_value.is_copy);
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jlong* native_ptr,
                                           bool copy_on_completion) {
-    Trace("ReleaseArrayElements, jlong, Rank 1", array, native_ptr,
-          copy_on_completion);
+    Trace(metaprogramming::LambdaToStr(
+              STR("ReleaseArrayElements, jlong, Rank 1")),
+          array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseLongArrayElements(
         static_cast<jlongArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -7313,24 +8383,34 @@ struct JniArrayHelper<jfloat, 1> : public JniArrayHelperBase {
   using AsArrayType = jfloatArray;
 
   static inline jfloatArray NewArray(std::size_t size) {
-    Trace("NewFloatArray, Rank 1", size);
+    Trace(metaprogramming::LambdaToStr(STR("NewFloatArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jfloatArray>();
+#else
     return jni::JniEnv::GetEnv()->NewFloatArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jfloat> GetArrayElements(jarray array) {
-    Trace("GetArrayElements, jfloat, Rank 1", array);
+    Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jfloat, Rank 1")),
+          array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jfloat>{};
+#else
     GetArrayElementsResult<jfloat> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetFloatArrayElements(
         static_cast<jfloatArray>(array), &return_value.is_copy);
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jfloat* native_ptr,
                                           bool copy_on_completion) {
-    Trace("ReleaseArrayElements, jfloat, Rank 1", array, native_ptr,
-          copy_on_completion);
+    Trace(metaprogramming::LambdaToStr(
+              STR("ReleaseArrayElements, jfloat, Rank 1")),
+          array, native_ptr, copy_on_completion);
 
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseFloatArrayElements(
@@ -7343,28 +8423,42 @@ struct JniArrayHelper<jdouble, 1> : public JniArrayHelperBase {
   using AsArrayType = jdoubleArray;
 
   static inline jdoubleArray NewArray(std::size_t size) {
-    Trace("NewDoubleArray, Rank 1", size);
+    Trace(metaprogramming::LambdaToStr(STR("NewDoubleArray, Rank 1")), size);
 
+#ifdef DRY_RUN
+    return Fake<jdoubleArray>();
+#else
     return jni::JniEnv::GetEnv()->NewDoubleArray(size);
+#endif  // DRY_RUN
   }
 
   static inline GetArrayElementsResult<jdouble> GetArrayElements(jarray array) {
-    Trace("GetArrayElements, jdouble, Rank 1", array);
+    Trace(
+        metaprogramming::LambdaToStr(STR("GetArrayElements, jdouble, Rank 1")),
+        array);
 
+#ifdef DRY_RUN
+    return GetArrayElementsResult<jdouble>();
+#else
     GetArrayElementsResult<jdouble> return_value;
     return_value.ptr_ = jni::JniEnv::GetEnv()->GetDoubleArrayElements(
         static_cast<jdoubleArray>(array), &return_value.is_copy);
     return return_value;
+#endif  // DRY_RUN
   }
 
   static inline void ReleaseArrayElements(jarray array, jdouble* native_ptr,
                                           bool copy_on_completion) {
-    Trace("ReleaseArrayElements, jdouble, Rank 1", array, native_ptr,
-          copy_on_completion);
+    Trace(metaprogramming::LambdaToStr(
+              STR("ReleaseArrayElements, jdouble, Rank 1")),
+          array, native_ptr, copy_on_completion);
 
+#ifdef DRY_RUN
+#else
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
     jni::JniEnv::GetEnv()->ReleaseDoubleArrayElements(
         static_cast<jdoubleArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
   }
 };
 
@@ -7376,25 +8470,36 @@ struct JniArrayHelper<jobject, kRank> : public JniArrayHelperBase {
 
   static inline jobjectArray NewArray(std::size_t size, jclass class_id,
                                       jobject initial_element) {
-    Trace("NewArray, Rank >1", kRank);
+    Trace(metaprogramming::LambdaToStr(STR("NewArray, Rank >1")), kRank);
 
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
     return jni::JniEnv::GetEnv()->NewObjectArray(size, class_id,
                                                  initial_element);
+#endif  // DRY_RUN
   }
 
   // The API of fetching objects only permits accessing one object at a time.
   static inline jobject GetArrayElement(jobjectArray array, std::size_t idx) {
-    Trace("GetArrayElement, Rank >1", kRank);
+    Trace(metaprogramming::LambdaToStr(STR("GetArrayElement, Rank >1")), kRank);
 
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
     return jni::JniEnv::GetEnv()->GetObjectArrayElement(array, idx);
+#endif  // DRY_RUN
   };
 
   // The API of fetching objects only permits accessing one object at a time.
   static inline void SetArrayElement(jobjectArray array, std::size_t idx,
                                      jobject obj) {
-    Trace("SetArrayElement, Rank >1", kRank);
+    Trace(metaprogramming::LambdaToStr(STR("SetArrayElement, Rank >1")), kRank);
 
+#ifdef DRY_RUN
+#else
     jni::JniEnv::GetEnv()->SetObjectArrayElement(array, idx, obj);
+#endif  // DRY_RUN
   };
 };
 

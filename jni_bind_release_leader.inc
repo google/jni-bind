@@ -15,8 +15,8 @@
  */
 
 /*******************************************************************************
- * JNI Bind Version 0.9.9.
- * Alpha Public Release.
+ * JNI Bind Version __JNI_BIND_VERSION__.
+ * Beta Public Release.
  ********************************************************************************
  * This header is the single header version which you can use to quickly test or
  * deploy in your own project without using Bazel. It is self contained.
@@ -28,6 +28,10 @@
  *
  * See GitHub for sample API usage.
  * https://github.com/google/jni-bind
+ *
+ * 🚨 Are you enjoying JNI Bind? Please consider adding a ⭐️ on GitHub! 🚨
+ * JNI Bind is the culmination of a lot of hard work and your support is greatly
+ * appreciated.
  *
  * CODE BELOW IS AUTO GENERATED.
  *******************************************************************************/
