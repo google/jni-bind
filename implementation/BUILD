@@ -30,9 +30,9 @@ cc_test(
     name = "array_test",
     srcs = ["array_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -92,9 +92,9 @@ cc_test(
     name = "array_view_test",
     srcs = ["array_view_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -171,9 +171,9 @@ cc_test(
     name = "class_loader_test",
     srcs = ["class_loader_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -207,9 +207,9 @@ cc_test(
     name = "class_loader_ref_test",
     srcs = ["class_loader_ref_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -218,9 +218,9 @@ cc_test(
     name = "class_loader_ref_second_test",
     srcs = ["class_loader_ref_second_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -263,16 +263,6 @@ cc_library(
 )
 
 ################################################################################
-# Fake Test Constants.
-################################################################################
-cc_library(
-    name = "fake_test_constants",
-    testonly = True,
-    hdrs = ["fake_test_constants.h"],
-    deps = ["//:jni_dep"],
-)
-
-################################################################################
 # Field.
 ################################################################################
 cc_library(
@@ -307,9 +297,9 @@ cc_test(
     name = "field_ref_test",
     srcs = ["field_ref_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -398,9 +388,9 @@ cc_test(
     name = "global_object_test",
     srcs = ["global_object_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -451,9 +441,9 @@ cc_test(
     name = "local_array_field_multidimensional_test",
     srcs = ["local_array_field_multidimensional_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -462,9 +452,9 @@ cc_test(
     name = "local_array_field_test",
     srcs = ["local_array_field_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -473,9 +463,9 @@ cc_test(
     name = "local_array_iteration_test",
     srcs = ["local_array_iteration_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -484,9 +474,9 @@ cc_test(
     name = "local_array_multidimensional_test",
     srcs = ["local_array_multidimensional_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -495,9 +485,9 @@ cc_test(
     name = "local_array_method_test",
     srcs = ["local_array_method_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -506,9 +496,9 @@ cc_test(
     name = "local_array_method_multidimensional_test",
     srcs = ["local_array_method_multidimensional_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -539,9 +529,9 @@ cc_test(
     name = "local_array_string_test",
     srcs = ["local_array_string_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -550,9 +540,9 @@ cc_test(
     name = "local_array_test",
     srcs = ["local_array_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -759,9 +749,9 @@ cc_test(
     name = "local_object_test",
     srcs = ["local_object_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -834,9 +824,9 @@ cc_test(
     name = "method_ref_test",
     srcs = ["method_ref_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -884,9 +874,9 @@ cc_test(
     name = "multi_type_test",
     srcs = ["multi_type_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -1244,9 +1234,9 @@ cc_test(
     name = "static_ref_test",
     srcs = ["static_ref_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -1255,9 +1245,9 @@ cc_test(
     name = "string_ref_test",
     srcs = ["string_ref_test.cc"],
     deps = [
-        ":fake_test_constants",
         "//:jni_bind",
         "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )

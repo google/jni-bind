@@ -17,15 +17,15 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "implementation/fake_test_constants.h"
+#include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_dep.h"
 #include "jni_test.h"
 #include "mock_jni_env.h"
 
 namespace {
 
+using ::jni::Fake;
 using ::jni::InvokeHelper;
-using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::Return;

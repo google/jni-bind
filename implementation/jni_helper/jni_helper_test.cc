@@ -17,7 +17,7 @@
 #include "jni_helper.h"
 
 #include <gtest/gtest.h>
-#include "implementation/fake_test_constants.h"
+#include "implementation/jni_helper/fake_test_constants.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "jni_bind.h"
 #include "jni_dep.h"
@@ -26,10 +26,10 @@
 
 namespace {
 
+using ::jni::Fake;
 using ::jni::JniHelper;
 using ::jni::LifecycleHelper;
 using ::jni::LifecycleType;
-using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::InSequence;
 using ::testing::StrEq;

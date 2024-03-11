@@ -18,7 +18,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "implementation/fake_test_constants.h"
+#include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
@@ -29,6 +29,7 @@ using ::jni::AdoptLocal;
 using ::jni::Class;
 using ::jni::ClassLoader;
 using ::jni::Constructor;
+using ::jni::Fake;
 using ::jni::GlobalClassLoader;
 using ::jni::Jvm;
 using ::jni::JvmRef;
@@ -42,7 +43,6 @@ using ::jni::PromoteToGlobal;
 using ::jni::Return;
 using ::jni::SupportedClassSet;
 using ::jni::test::AsGlobal;
-using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::jni::test::JniTestWithNoDefaultJvmRef;
 using ::testing::_;

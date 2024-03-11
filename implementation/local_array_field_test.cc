@@ -15,7 +15,7 @@
  */
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "implementation/fake_test_constants.h"
+#include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
@@ -24,12 +24,12 @@ namespace {
 using ::jni::AdoptLocal;
 using ::jni::Array;
 using ::jni::Class;
+using ::jni::Fake;
 using ::jni::Field;
 using ::jni::LocalArray;
 using ::jni::LocalObject;
 using ::jni::Rank;
 using ::jni::test::AsNewLocalReference;
-using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::InSequence;

@@ -19,7 +19,6 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "implementation/fake_test_constants.h"
 #include "mock_jni_env.h"
 #include "mock_jvm.h"
 

@@ -15,7 +15,7 @@
  */
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "implementation/fake_test_constants.h"
+#include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
@@ -24,6 +24,7 @@ namespace {
 using ::jni::AdoptGlobal;
 using ::jni::Array;
 using ::jni::Class;
+using ::jni::Fake;
 using ::jni::GlobalObject;
 using ::jni::Id;
 using ::jni::IdType;
@@ -36,7 +37,6 @@ using ::jni::OverloadRef;
 using ::jni::Params;
 using ::jni::Rank;
 using ::jni::Return;
-using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::Eq;

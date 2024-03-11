@@ -20,13 +20,14 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "implementation/fake_test_constants.h"
+#include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
 namespace {
 
 using ::jni::Class;
+using ::jni::Fake;
 using ::jni::Field;
 using ::jni::kDefaultClassLoader;
 using ::jni::kDefaultJvm;
@@ -35,7 +36,6 @@ using ::jni::Method;
 using ::jni::NewRef;
 using ::jni::Params;
 using ::jni::test::AsNewLocalReference;
-using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::InSequence;

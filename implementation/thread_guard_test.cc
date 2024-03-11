@@ -24,11 +24,11 @@
 #include "jni_test.h"
 
 using ::jni::Class;
+using ::jni::Fake;
 using ::jni::GlobalObject;
 using ::jni::JvmRef;
 using ::jni::PromoteToGlobal;
 using ::jni::ThreadGuard;
-using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::jni::test::MockJvm;
 using ::testing::_;

@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef JNI_BIND_FAKE_TEST_CONSTANTS_H_
-#define JNI_BIND_FAKE_TEST_CONSTANTS_H_
+#ifndef JNI_BIND_JNI_HELPER_FAKE_TEST_CONSTANTS_H_
+#define JNI_BIND_JNI_HELPER_FAKE_TEST_CONSTANTS_H_
 
 #include <cstdint>
 #include <type_traits>
 
 #include "jni_dep.h"
 
-namespace jni::test {
+namespace jni {
 
 template <typename T>
 struct FakeImpl;
@@ -216,6 +216,6 @@ struct FakeImpl<jobjectArray> {
   }
 };
 
-}  // namespace jni::test
+}  // namespace jni
 
-#endif  // JNI_BIND_FAKE_TEST_CONSTANTS_H_
+#endif  // JNI_BIND_JNI_HELPER_FAKE_TEST_CONSTANTS_H_

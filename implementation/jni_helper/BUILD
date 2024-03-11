@@ -1,6 +1,6 @@
 # Do not depend on any targets in this package.  Instead, depend //third_party/jni_wrapper:jni_bind
 package(
-    default_visibility = ["//implementation:__subpackages__"],
+    default_visibility = ["//:__subpackages__"],
 )
 
 licenses(["notice"])
@@ -24,6 +24,15 @@ cc_test(
         "//:jni_dep",
         "@googletest//:gtest_main",
     ],
+)
+
+################################################################################
+# Fake Test Constants.
+################################################################################
+cc_library(
+    name = "fake_test_constants",
+    hdrs = ["fake_test_constants.h"],
+    deps = ["//:jni_dep"],
 )
 
 ################################################################################
@@ -74,7 +83,7 @@ cc_test(
         "//:jni_dep",
         "//:jni_test",
         "//:mock_jni_env",
-        "//implementation:fake_test_constants",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -122,7 +131,7 @@ cc_test(
     deps = [
         ":jni_env",
         "//:jni_dep",
-        "//implementation:fake_test_constants",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -134,6 +143,7 @@ cc_library(
     name = "jni_helper",
     hdrs = ["jni_helper.h"],
     deps = [
+        ":fake_test_constants",
         ":jni_env",
         ":trace",
         "//:jni_dep",
@@ -151,7 +161,7 @@ cc_test(
         "//:jni_dep",
         "//:jni_test",
         "//:mock_jni_env",
-        "//implementation:fake_test_constants",
+        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )

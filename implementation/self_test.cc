@@ -22,13 +22,13 @@
 namespace {
 
 using ::jni::Class;
+using ::jni::Fake;
 using ::jni::LocalObject;
 using ::jni::Method;
 using ::jni::Params;
 using ::jni::Return;
 using ::jni::Self;
 using ::jni::test::AsGlobal;
-using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::AnyNumber;

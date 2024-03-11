@@ -22,10 +22,10 @@
 #include "jni_test.h"
 
 using ::jni::Class;
+using ::jni::Fake;
 using ::jni::JvmRef;
 using ::jni::LocalObject;
 using ::jni::test::AsGlobal;
-using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::jni::test::JniTestWithNoDefaultJvmRef;
 using ::testing::AnyNumber;

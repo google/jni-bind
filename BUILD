@@ -65,6 +65,7 @@ cc_library(
         "//implementation:static_ref",
         "//implementation:string_ref",
         "//implementation:supported_class_set",
+        "//implementation/jni_helper:fake_test_constants",
         "//metaprogramming:corpus",
         "//metaprogramming:corpus_tag",
     ],
@@ -100,7 +101,6 @@ cc_library(
         ":jni_bind",
         ":mock_jni_env",
         ":mock_jvm",
-        "//implementation:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )

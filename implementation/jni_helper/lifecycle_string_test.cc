@@ -20,9 +20,9 @@
 #include "jni_bind.h"
 #include "jni_test.h"
 
+using ::jni::Fake;
 using ::jni::LifecycleHelper;
 using ::jni::LifecycleType;
-using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::Eq;
 

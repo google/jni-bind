@@ -16,12 +16,12 @@
 #include "jni_env.h"
 
 #include <gtest/gtest.h>
-#include "implementation/fake_test_constants.h"
+#include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_dep.h"
 
 namespace {
 
-using ::jni::test::Fake;
+using ::jni::Fake;
 
 class JniEnvForTest : public jni::JniEnv {
  public:

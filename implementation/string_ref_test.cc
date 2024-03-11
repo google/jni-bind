@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
-#include "implementation/fake_test_constants.h"
+#include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
 namespace {
 
 using ::jni::AdoptGlobal;
+using ::jni::Fake;
 using ::jni::GlobalObject;
 using ::jni::GlobalString;
 using ::jni::kJavaLangString;
@@ -29,7 +30,6 @@ using ::jni::LocalString;
 using ::jni::NewRef;
 using ::jni::UtfStringView;
 using ::jni::test::AsNewLocalReference;
-using ::jni::test::Fake;
 using ::jni::test::JniTest;
 using ::testing::_;
 using ::testing::Return;
