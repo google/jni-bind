@@ -19,9 +19,8 @@ package com.jnibind.android;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.os.Environment;
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
-import androidx.test.services.storage.TestStorage;
+import androidx.test.platform.io.PlatformTestStorageRegistry;
 import com.google.android.apps.common.proguard.UsedByNative;
 import dalvik.system.PathClassLoader;
 import java.io.File;
@@ -84,7 +83,7 @@ public final class ClassLoaderTest {
         new File(
             Environment.getExternalStorageDirectory(),
             "googletest/test_runfiles/google3/"
-                + new TestStorage(ApplicationProvider.getApplicationContext().getContentResolver())
+                + PlatformTestStorageRegistry.getInstance()
                     .getInputArgs()
                     .get(REMOTE_CLASS_PATH_KEY));
     assertThat(customClassJar.exists()).isTrue();
