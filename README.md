@@ -38,6 +38,7 @@ If you're enjoying JNI Bind, or just want to support it, please consider adding 
   - [Multhreading](#multi-threading)
   - [Overloads](#overloads)
   - [Statics](#statics)
+  - [Builder Patterns](#builder-patterns)
   - [Class Loaders](#class-loaders)
   - [Arrays](#arrays)
 - [Upcoming Features](#upcoming-features)
@@ -439,6 +440,56 @@ StaticRef<kClass>{}["staticObjectField"].Set(LocalObject<kSomeClass>{});
 Statics will follow the rules laid out in [Type Conversion Rules](#type-conversion-rules). *Invalid static method names won't compile, and `jmethodID`s are cached on your behalf. Static method lookups are compile time, there is no hash lookup cost.*
 
 Sample [static_test_jni.cc](javatests/com/jnibind/test/static_test_jni.cc), [StaticTest.java](javatests/com/jnibind/test/StaticTest.java).
+
+<a name="builder-patterns"></a>
+
+Some classes expose a builder style pattern like so:
+
+```java
+  // Class:
+  public static class Builder {
+    private int valOne = 0;
+    private int valTwo = 0;
+
+    public Builder() {}
+    public SomeObj build() { return new SomeObj(valOne, valTwo); }
+
+    public Builder setOne(int val) {
+      valOne = val;
+      return this;
+    }
+
+    public Builder setTwo(int val) {
+      valTwo = val;
+      return this;
+    }
+  }
+
+  // Usage:
+  SomeObj b = new Builder().setOne(123).setTwo(456);
+```
+
+In these circumstances, it is not viable to simply use forward declarations, because the return value will lack the function declarations needed to continue building. To circumvent this, you can use `Self`, which will return a fully decorated class object with its own class definition.
+
+```cpp
+constexpr Class kBuilder {
+    "com/jnibind/test/BuilderTest$Builder",
+
+    Constructor<>{},
+
+    Method{"setOne", Return{Self{}}, Params<int>{}},
+    Method{"setTwo", Return{Self{}}, Params<int>{}},
+    // FAILS:
+    // Method{"setTwo", Return{Class{"com/jnibind/test/BuilderTest$Builder"}}, Params<int>{}},
+    Method{"build", Return{kObjectTestHelperClass}, Params{}},
+};
+
+ LocalObject<kBuilder>{}("setOne", 111)("setTwo", 222)("build")
+```
+
+The commented line above would fail to compile at the invocation, because the return value of `setTwo` is a shallow copy.  Self preserves the methods and fields so the returned `LocalObject` "just works".
+
+Sample: [BuilderTest.java](https://github.com/google/jni-bind/blob/main/javatests/com/jnibind/test/BuilderTest.java), [builder_test_jni.cc](https://github.com/google/jni-bind/blob/main/javatests/com/jnibind/test/builder_jni.cc).
 
 <a name="arrays"></a>
 ## Arrays
