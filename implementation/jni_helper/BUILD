@@ -22,7 +22,7 @@ cc_test(
     deps = [
         ":arg_string",
         "//:jni_dep",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -38,7 +38,7 @@ cc_test(
     ],
     deps = [
         "//:jni_bind",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -112,7 +112,7 @@ cc_test(
         "//:jni_test",
         "//:mock_jni_env",
         "//implementation/jni_helper:fake_test_constants",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -161,7 +161,7 @@ cc_test(
         ":jni_env",
         "//:jni_dep",
         "//implementation/jni_helper:fake_test_constants",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -191,7 +191,7 @@ cc_test(
         "//:jni_test",
         "//:mock_jni_env",
         "//implementation/jni_helper:fake_test_constants",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -210,7 +210,7 @@ cc_test(
     deps = [
         ":jni_typename_to_string",
         "//:jni_dep",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -246,7 +246,7 @@ cc_test(
         ":lifecycle_object",
         "//:jni_bind",
         "//:jni_test",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -268,7 +268,7 @@ cc_test(
         ":lifecycle_string",
         "//:jni_bind",
         "//:jni_test",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
