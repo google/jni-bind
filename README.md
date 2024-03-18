@@ -380,7 +380,35 @@ Sample [method_test_jni.cc](javatests/com/jnibind/test/method_test_jni.cc), [Met
 <a name="class-loaders"></a>
 ## Class Loaders
 
-*Documentation coming soon!*
+Class loaders are a powerful but complex tool that enable loading class definitions at runtime from classes not present in the primordial loader.  Their scope is well in excess of this documentation, but you will need a solid understanding of their usage to deploy them successfully (check out the reference links).
+
+To define a class loaded class, you must first define a [`ClassLoader`](https://github.com/google/jni-bind/blob/75225652d1f88140770ae2368ca9d60e390680ed/implementation/class_loader.h):
+```cpp
+static constexpr ClassLoader kTestClassLoader{
+    kDefaultClassLoader, SupportedClassSet{kClassLoaderHelperClass}};
+```
+
+The first argument is the "parent" loader, which can be either `kDefaultClassLoader`, `kNullClassLoader` or a different `ClassLoader` instance you have defined.
+I recommend reading [Baeldung's "Class loaders in Java"](https://www.baeldung.com/java-classloaders), but, a rough explanation is that the [`DefaultLoader`](https://github.com/google/jni-bind/blob/75225652d1f88140770ae2368ca9d60e390680ed/implementation/default_class_loader.h) supports everything, the [`NullLoader`](https://github.com/google/jni-bind/blob/75225652d1f88140770ae2368ca9d60e390680ed/implementation/default_class_loader.h#L77) will support nothing, and a custom loader will support its own classes. When building classes using a loader, your hierarchy will be searched from base to parent searching for the first viable loader.
+
+The second argument is the `SupportedClassSet`, a set of all classes this loader will directly support building. It is acceptable to support building the same class at multiple layers in your loader hierarchy.
+
+To build objects with a `ClassLoader` you create a [`LocalClassLoader`](https://github.com/google/jni-bind/blob/75225652d1f88140770ae2368ca9d60e390680ed/implementation/local_class_loader.h#L38) or [`GlobalClassLoader`](implementation/global_class_loader.h) instance. Unfortunately, these currently must be constructed in Java [like in the sample](https://github.com/google/jni-bind/blob/75225652d1f88140770ae2368ca9d60e390680ed/javatests/com/jnibind/test/ClassLoaderTest.java#L80) (this is deficiency of JNI Bind, feel free to file a bug if you actually need this from native).
+
+```cpp
+LocalClassLoader<kTestClassLoader> class_loader{jclass_loader_obj};
+jni::LocalObject<kClassLoaderHelperClass, kTestClassLoader> = class_loader.BuildLocalObject<kClassLoaderHelperClass>();
+```
+
+:warning: *You* must add the `kTestClassLoader` above, JNI Bind incorrectly does not enforce this, but it will be a compilation error in the future, and failing to do so may cause crashes.
+
+Classloaders support building their own instances of classes, and if they can't build it themselves, they will defer to their parents. JNI Bind will validate any class you attempt to build by traversing its hierarchy and resolving to the base most loader available (or the primordial loader if no custom loader is found). Note that the constructor set of the class will be respected, so pass these arguments to `Build[Local|Global]Object` as if you constructed the object directly.
+
+You can now use this object as usual. This additional decoration may seem excessive, however, this is actually required, because objects of different class loaders are not interchangeable, and they require completely independent class and method lookups.
+
+Sample [class_loader_test_jni.cc](javatests/com/jnibind/test/class_loader_test_jni.cc), [ClassLoaderTest.java](https://github.com/google/jni-bind/blob/75225652d1f88140770ae2368ca9d60e390680ed/javatests/com/jnibind/test/ClassLoaderTest.java#L80).
+
+[Intro to classloaders](https://www.baeldung.com/java-classloaders), [Oracle's intro to classloaders](https://docs.oracle.com/javase/8/docs/api/java/lang/ClassLoader.html), [Baeldung's "Class loaders in Java"](https://www.baeldung.com/java-classloaders).
 
 <a name="statics"></a>
 ## Statics
