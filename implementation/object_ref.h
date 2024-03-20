@@ -16,6 +16,7 @@
 #ifndef JNI_BIND_OBJECT_REF_H
 #define JNI_BIND_OBJECT_REF_H
 
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -82,6 +83,8 @@ class ObjectRef
   }
 
  public:
+  ObjectRef(std::nullptr_t) : RefBase(nullptr) {}
+
   explicit ObjectRef(RefBaseTag<typename JniT::StorageType>&& rhs)
       : RefBase(std::move(rhs)) {}
 
