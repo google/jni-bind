@@ -45,7 +45,7 @@ static constexpr Class kClass{"kClass"};
 static constexpr Class kClass2{"kClass2"};
 
 TEST_F(JniTest, LocalObject_DoesntTryToDeleteNull) {
-  EXPECT_CALL(*env_, NewLocalRef).Times(0);
+  EXPECT_CALL(*env_, NewLocalRef).Times(500);
   EXPECT_CALL(*env_, DeleteLocalRef).Times(0);
 
   LocalObject<kClass> obj{jobject{nullptr}};
