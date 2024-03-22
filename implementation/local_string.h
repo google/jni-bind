@@ -46,7 +46,6 @@ class LocalString : public LocalStringImpl {
   using Base = LocalStringImpl;
   using Base::Base;
 
-  LocalString(std::nullptr_t) : Base(jstring{nullptr}) {}
   LocalString(LocalObject<kJavaLangString>&& obj)
       : Base(AdoptLocal{}, static_cast<jstring>(obj.Release())) {}
 

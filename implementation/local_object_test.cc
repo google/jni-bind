@@ -44,6 +44,14 @@ using ::testing::StrEq;
 static constexpr Class kClass{"kClass"};
 static constexpr Class kClass2{"kClass2"};
 
+TEST_F(JniTest, LocalObject_AllowsNullPtrT) {
+  EXPECT_CALL(*env_, NewLocalRef).Times(0);
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(0);
+
+  LocalObject<kClass> obj{nullptr};
+  EXPECT_EQ(jobject{obj}, nullptr);
+}
+
 TEST_F(JniTest, LocalObject_DoesntTryToDeleteNull) {
   EXPECT_CALL(*env_, NewLocalRef).Times(0);
   EXPECT_CALL(*env_, DeleteLocalRef).Times(0);

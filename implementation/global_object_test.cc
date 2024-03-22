@@ -43,6 +43,17 @@ using ::testing::InSequence;
 using ::testing::Return;
 using ::testing::StrEq;
 
+TEST_F(JniTest, GlobalObject_AllowsNullPtrT) {
+  static constexpr Class kClass{"kClass"};
+  EXPECT_CALL(*env_, NewLocalRef).Times(0);
+  EXPECT_CALL(*env_, NewGlobalRef).Times(0);
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(0);
+  EXPECT_CALL(*env_, DeleteGlobalRef).Times(0);
+
+  GlobalObject<kClass> obj{nullptr};
+  EXPECT_EQ(jobject{obj}, nullptr);
+}
+
 TEST_F(JniTest, GlobalObject_CallsNewAndDeleteOnNewObject) {
   static constexpr Class kClass{"kClass"};
 
@@ -65,7 +76,7 @@ TEST_F(JniTest, GlobalObject_ConstructsFromNonStandardConstructor) {
 
   GlobalObject<kClass> global_object{1.f, 2.f};
 
-  EXPECT_NE(jobject{global_object}, nullptr);
+  EXPECT_EQ(jobject{global_object}, AsGlobal(Fake<jobject>()));
 }
 
 TEST_F(JniTest, GlobalObject_DoesNotDeleteAnyLocalsForAdoptedGlobalJobject) {
