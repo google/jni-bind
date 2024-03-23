@@ -38,6 +38,14 @@ using jmethodID = jmethodID;
 using JavaVM = JavaVM;
 using JNIEnv = JNIEnv;
 
+#ifndef JNIEXPORT
+#define JNIEXPORT
+#endif
+
+#ifndef JNICALL
+#define JNICALL
+#endif
+
 // IWYU pragma: end_exports
 
 #endif  // JNI_BIND_JNI_HELPER_JNI_DEP_H_
