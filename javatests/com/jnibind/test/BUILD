@@ -454,7 +454,7 @@ cc_test(
     srcs = ["modulo_test.cc"],
     deps = [
         ":modulo",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

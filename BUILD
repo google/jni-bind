@@ -89,6 +89,11 @@ cc_library(
     visibility = [":__subpackages__"],
 )
 
+cc_test(
+    name = "jni_dep_test",
+    srcs = [ "jni_dep_test.cc"],
+)
+
 ################################################################################
 # Testing Targets.
 ################################################################################
@@ -101,7 +106,7 @@ cc_library(
         ":jni_bind",
         ":mock_jni_env",
         ":mock_jvm",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -112,7 +117,7 @@ cc_library(
     visibility = [":__subpackages__"],
     deps = [
         "//:jni_dep",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -123,7 +128,7 @@ cc_library(
     visibility = [":__subpackages__"],
     deps = [
         "//:jni_dep",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

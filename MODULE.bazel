@@ -1,0 +1,12 @@
+###############################################################################
+# Bazel now uses Bzlmod by default to manage external dependencies.
+# Please consider migrating your external dependencies from WORKSPACE to MODULE.bazel.
+#
+# For more details, please check https://github.com/bazelbuild/bazel/issues/18958
+###############################################################################
+#bazel_dep(name='bazel_tools',version='1.0')
+bazel_dep(name = "platforms", version = "0.0.8")
+bazel_dep(name = "googletest", version = "1.14.0.bcr.1", repo_name = "com_google_googletest")
+bazel_dep(name = "rules_jvm_external", version = "4.5")
+bazel_dep(name = "rules_java", version = "6.3.0")
+bazel_dep(name = "rules_robolectric", version = "4.11.1", repo_name = "robolectric")
