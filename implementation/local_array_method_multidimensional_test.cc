@@ -41,8 +41,8 @@ static constexpr Class kClass2{"kClass2"};
 // As Return.
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, V_2I) {
-  static constexpr Class kClass{
-      "kClass", Method{"I", jni::Return{Array<jint, 2>{}}, Params{}}};
+  static constexpr Class kClass{"kClass",
+                                Method{"I", jni::Return{Array<jint, 2>{}}}};
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("I"), StrEq("()[[I")));
 
@@ -52,8 +52,7 @@ TEST_F(JniTest, V_2I) {
 
 TEST_F(JniTest, V_2LkClass) {
   static constexpr Class kClass{
-      "kClass",
-      Method{"Foo", jni::Return{Array{kClass2, Rank<2>{}}}, Params{}}};
+      "kClass", Method{"Foo", jni::Return{Array{kClass2, Rank<2>{}}}}};
 
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("()[[LkClass2;")));
 

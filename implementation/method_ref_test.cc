@@ -57,7 +57,7 @@ TEST_F(JniTest, MethodRef_DoesntStaticCrossTalkWithTagUse) {
 }
 
 TEST_F(JniTest, MethodRef_CallsGetMethodCorrectlyForSingleMethod) {
-  static constexpr Method m1{"FooV", Return<void>{}, Params<>{}};
+  static constexpr Method m1{"FooV", Return<void>{}};
   static constexpr Class c{"SimpleClass", m1};
 
   InSequence seq;
@@ -72,7 +72,7 @@ TEST_F(JniTest, MethodRef_CallsGetMethodCorrectlyForSingleMethod) {
 
 TEST_F(JniTest, MethodRef_ReturnWithObject) {
   static constexpr Class c2{"someClass2"};
-  static constexpr Method m1{"FooV", Return{c2}, Params<>{}};
+  static constexpr Method m1{"FooV", Return{c2}};
   static constexpr Class c{"someClass", m1};
 
   InSequence seq;
@@ -87,7 +87,7 @@ TEST_F(JniTest, MethodRef_ReturnWithObject) {
 
 TEST_F(JniTest, MethodRef_ReturnWithRank1Object) {
   static constexpr Class c2{"someClass2"};
-  static constexpr Method m1{"FooV", Return{Array{c2}}, Params<>{}};
+  static constexpr Method m1{"FooV", Return{Array{c2}}};
   static constexpr Class c{"someClass", m1};
 
   InSequence seq;
@@ -117,9 +117,9 @@ TEST_F(JniTest, MethodRef_ReturnWithRank2Object) {
 }
 
 TEST_F(JniTest, MethodRef_ReturnWithNoParams) {
-  static constexpr Method m1{"FooV", Return<void>{}, Params<>{}};
-  static constexpr Method m2{"BarI", Return<jint>{}, Params<>{}};
-  static constexpr Method m3{"BazF", Return<jfloat>{}, Params<>{}};
+  static constexpr Method m1{"FooV", Return<void>{}};
+  static constexpr Method m2{"BarI", Return<jint>{}};
+  static constexpr Method m3{"BazF", Return<jfloat>{}};
   static constexpr Class c{"someClass", m1, m2, m3};
 
   InSequence seq;
@@ -233,16 +233,16 @@ TEST_F(JniTest, MethodRef_SupportsForwardDefines) {
       "kClass1",
       Method{"m1", Return<void>{}, Params{Class{"kClass1"}}},
       Method{"m2", Return<void>{}, Params{Class{"kClass2"}}},
-      Method{"m3", Return{Class{"kClass1"}}, Params{}},
-      Method{"m4", Return{Class{"kClass2"}}, Params{}},
+      Method{"m3", Return{Class{"kClass1"}}},
+      Method{"m4", Return{Class{"kClass2"}}},
   };
 
   static constexpr Class kClass2{
       "kClass2",
       Method{"m1", Return<void>{}, Params{Class{"kClass1"}}},
       Method{"m2", Return<void>{}, Params{Class{"kClass2"}}},
-      Method{"m3", Return{Class{"kClass1"}}, Params{}},
-      Method{"m4", Return{Class{"kClass2"}}, Params{}},
+      Method{"m3", Return{Class{"kClass1"}}},
+      Method{"m4", Return{Class{"kClass2"}}},
   };
 
   LocalObject<kClass1> c1_obj1{Fake<jobject>(1)};
@@ -273,7 +273,7 @@ TEST_F(JniTest, MethodRef_SupportsStrings) {
       "com/google/SupportsStrings",
       Method{"Foo", Return<void>{}, Params<jstring>{}},
       Method{"Bar", Return<void>{}, Params<jstring, jstring>{}},
-      Method{"Baz", Return<jstring>{}, Params<>{}},
+      Method{"Baz", Return<jstring>{}},
   };
 
   LocalObject<class_under_test> obj1{Fake<jobject>()};

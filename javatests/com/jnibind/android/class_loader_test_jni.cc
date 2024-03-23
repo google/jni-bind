@@ -45,11 +45,11 @@ static constexpr ClassLoader kLiteTestClassLoader{
 
 static constexpr Class kClassLoaderHelperClass{
     "com/jnibind/android/ClassLoaderHelperClass", Constructor<jint>{},
-    Method{"getValue", Return<jint>{}, Params{}}};
+    Method{"getValue", Return<jint>{}}};
 static constexpr Class kClassLoaderHelperSubclass{
     "com/jnibind/android/ClassLoaderHelperSubclass", Constructor<jint>{},
-    Method{"getValue", Return<jint>{}, Params{}},
-    Method{"castToParent", Return{kClassLoaderHelperClass}, Params{}}};
+    Method{"getValue", Return<jint>{}},
+    Method{"castToParent", Return{kClassLoaderHelperClass}}};
 
 static constexpr ClassLoader kCustomClassLoader{
     kDefaultClassLoader,

@@ -782,7 +782,10 @@ cc_library(
 cc_library(
     name = "method",
     hdrs = ["method.h"],
-    deps = [":params"],
+    deps = [
+        ":params",
+        ":return",
+    ],
 )
 
 cc_library(

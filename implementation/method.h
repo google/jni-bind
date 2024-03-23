@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef JNI_BIND_METHOD_H_
 #define JNI_BIND_METHOD_H_
 
 #include <tuple>
 #include <type_traits>
 
-#include "params.h"
+#include "implementation/params.h"
+#include "implementation/return.h"
 
 namespace jni {
 
@@ -33,9 +33,17 @@ struct Overload : OverloadBase {
   const ReturnT_ return_;
   const Params_ params_;
 
+  // `Return`, no `Params`.
+  constexpr Overload(ReturnT_ return_type)
+      : return_(return_type), params_(Params{}) {}
+
+  // `Return` and `Params`.
   constexpr Overload(ReturnT_ return_type, Params_ params)
       : return_(return_type), params_(params) {}
 };
+
+template <typename ReturnT_>
+Overload(ReturnT_) -> Overload<ReturnT_, Params<>>;
 
 template <typename ReturnT_, typename Params_>
 Overload(ReturnT_, Params_) -> Overload<ReturnT_, Params_>;
@@ -50,14 +58,28 @@ struct Method<std::tuple<Returns...>, std::tuple<Params_...>>
   const char* name_;
   const std::tuple<Overload<Returns, Params_>...> invocations_;
 
+  // `Return`, no `Params`.
+  template <typename ReturnT_,
+            std::enable_if_t<std::is_base_of_v<ReturnBase, ReturnT_>, int> = 0>
+  constexpr Method(const char* name, ReturnT_ return_type)
+      : name_(name), invocations_(Overload{return_type}) {}
+
+  // `Return` and `Params`.
   template <typename ReturnT_, typename ParamsT_,
-            std::enable_if_t<std::is_base_of_v<ParamsBase, ParamsT_>, int> = 0>
+            std::enable_if_t<std::is_base_of_v<ReturnBase, ReturnT_>, int> = 0>
   constexpr Method(const char* name, ReturnT_ return_type, ParamsT_ params)
       : name_(name), invocations_(Overload{return_type, params}) {}
 
+  // `Overload` Set.
   constexpr Method(const char* name, Overload<Returns, Params_>... invocations)
       : name_(name), invocations_(invocations...) {}
 };
+
+// CTAD for Non-overloaded form, no Params.
+template <typename ReturnT, typename = std::enable_if_t<
+                                !std::is_base_of_v<OverloadBase, ReturnT>>>
+Method(const char*,
+       ReturnT) -> Method<std::tuple<ReturnT>, std::tuple<Params<>>>;
 
 // CTAD for Non-overloaded form.
 template <

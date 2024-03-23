@@ -34,8 +34,7 @@ using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::StrEq;
 
-static constexpr Class kClass{"Builder",
-                              Method{"build", Return{Self{}}, Params{}},
+static constexpr Class kClass{"Builder", Method{"build", Return{Self{}}},
                               Method{"takesBuilder", Return{}, Params{Self{}}}};
 
 TEST_F(JniTest, SelfCanBeUsedAsAReturnValue) {

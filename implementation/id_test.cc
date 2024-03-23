@@ -52,12 +52,12 @@ static constexpr Class kClass1{
     Constructor{jfloat{}, jboolean{}},
     Constructor{Array{jint{}}},
 
-    Method{"m0", jni::Return<void>{}, Params{}},
+    Method{"m0", jni::Return<void>{}},
     Method{"m1", jni::Return<jshort>{}, Params<jint>{}},
     Method{"m2", jni::Return{Class{"kClass2"}}, Params<jfloat, jboolean>{}},
     Method{
         "m3",
-        Overload{jni::Return<void>{}, Params{}},
+        Overload{jni::Return<void>{}},
         Overload{jni::Return<jint>{}, Params<jboolean>{}},
         Overload{jni::Return<jfloat>{}, Params<jshort, jdouble>{}},
         Overload{jni::Return{Array{Class{"kClass2"}}},
@@ -69,9 +69,9 @@ static constexpr Class kClass1{
         Overload{jni::Return{Array<jboolean, 2>{}}, Params{Array<jfloat, 2>{}}},
         Overload{jni::Return{Array<jboolean, 3>{}}, Params{Array<jshort, 3>{}}},
     },
-    Method{"m5", jni::Return{Array{Class{"kClass2"}}}, Params<>{}},
-    Method{"m6", jni::Return{Array{Class{"kClass2"}, Rank<2>{}}}, Params<>{}},
-    Method{"m7", jni::Return{LoadedBy{kClassLoader, kOtherClass}}, Params<>{}},
+    Method{"m5", jni::Return{Array{Class{"kClass2"}}}},
+    Method{"m6", jni::Return{Array{Class{"kClass2"}, Rank<2>{}}}},
+    Method{"m7", jni::Return{LoadedBy{kClassLoader, kOtherClass}}},
 
     Field{"f0", int{}},
     Field{"f1", Class{"kClass2"}}};
@@ -217,13 +217,13 @@ static constexpr Class kStaticClass{
     "kStaticClass",
 
     Static{
-        Method{"sm0", jni::Return<void>{}, Params{}},
+        Method{"sm0", jni::Return<void>{}},
         Method{"sm1", jni::Return<jshort>{}, Params<jint>{}},
         Method{"sm2", jni::Return{Class{"kClass2"}},
                Params<jfloat, jboolean>{}},
         Method{
             "sm3",
-            Overload{jni::Return<void>{}, Params{}},
+            Overload{jni::Return<void>{}},
             Overload{jni::Return<jint>{}, Params<jboolean>{}},
             Overload{jni::Return<jfloat>{}, Params<jshort, jdouble>{}},
         },

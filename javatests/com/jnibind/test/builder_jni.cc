@@ -41,7 +41,7 @@ constexpr Class kBuilder {
     Method{"setOne", Return{Self{}}, Params<int>{}},
     Method{"setTwo", Return{Self{}}, Params<int>{}},
     Method{"setThree", Return{Self{}}, Params<int>{}},
-    Method{"build", Return{kObjectTestHelperClass}, Params{}},
+    Method{"build", Return{kObjectTestHelperClass}},
 };
 // clang-format on
 
