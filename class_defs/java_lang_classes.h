@@ -31,12 +31,12 @@ namespace jni {
 
 inline constexpr Class kJavaLangClass{
   "java/lang/Class",
-  Method{"getClassLoader", Return{ Class { "java/lang/ClassLoader" } }, Params{}},
+  Method{"getClassLoader", Return{ Class { "java/lang/ClassLoader" } }},
 };
 
 inline constexpr Class kJavaLangObject{
   "java/lang/Object",
-  Method{"getClass", Return{kJavaLangClass}, Params{}},
+  Method{"getClass", Return{kJavaLangClass}},
 };
 
 inline constexpr Class kJavaLangClassLoader{

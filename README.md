@@ -481,7 +481,7 @@ constexpr Class kBuilder {
     Method{"setTwo", Return{Self{}}, Params<int>{}},
     // FAILS:
     // Method{"setTwo", Return{Class{"com/jnibind/test/BuilderTest$Builder"}}, Params<int>{}},
-    Method{"build", Return{kObjectTestHelperClass}, Params{}},
+    Method{"build", Return{kObjectTestHelperClass}},
 };
 
  LocalObject<kBuilder>{}("setOne", 111)("setTwo", 222)("build")

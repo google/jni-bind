@@ -122,7 +122,7 @@ TEST_F(JniTest, Array_LocalVanillaObjectRValuesCanBeSet) {
 TEST_F(JniTest, Array_CorrectReturnSignatureForStrings) {
   static constexpr Class kClass{
       "kClass",
-      Method{"StringArray", jni::Return{Array{jstring{}}}, Params{}},
+      Method{"StringArray", jni::Return{Array{jstring{}}}},
   };
 
   LocalObject<kClass> obj{Fake<jobject>()};

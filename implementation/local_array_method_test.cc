@@ -44,15 +44,15 @@ static constexpr Class kClass2{"kClass2"};
 TEST_F(JniTest, ReturnSmokeTest) {
   static constexpr Class kClass{
       "kClass",
-      Method{"BooleanArray", Return{Array{jboolean{}}}, Params{}},
-      Method{"ByteArray", Return{Array{jbyte{}}}, Params{}},
-      Method{"CharArray", Return{Array{jchar{}}}, Params{}},
-      Method{"ShortArray", Return{Array{jshort{}}}, Params{}},
-      Method{"IntArray", Return{Array{jint{}}}, Params{}},
-      Method{"FloatArray", Return{Array{jfloat{}}}, Params{}},
-      Method{"DoubleArray", Return{Array{jdouble{}}}, Params{}},
-      Method{"LongArray", Return{Array{jlong{}}}, Params{}},
-      Method{"ObjectArray", Return{Array{kClass2}}, Params{}},
+      Method{"BooleanArray", Return{Array{jboolean{}}}},
+      Method{"ByteArray", Return{Array{jbyte{}}}},
+      Method{"CharArray", Return{Array{jchar{}}}},
+      Method{"ShortArray", Return{Array{jshort{}}}},
+      Method{"IntArray", Return{Array{jint{}}}},
+      Method{"FloatArray", Return{Array{jfloat{}}}},
+      Method{"DoubleArray", Return{Array{jdouble{}}}},
+      Method{"LongArray", Return{Array{jlong{}}}},
+      Method{"ObjectArray", Return{Array{kClass2}}},
   };
 
   EXPECT_CALL(*env_, CallObjectMethodV)
