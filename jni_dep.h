@@ -20,7 +20,6 @@ using jclass = jclass;
 using jthrowable = jthrowable;
 using jstring = jstring;
 using jarray = jarray;
-afidsjidasfj
 using jbooleanArray = jbooleanArray;
 using jbyteArray = jbyteArray;
 using jcharArray = jcharArray;
