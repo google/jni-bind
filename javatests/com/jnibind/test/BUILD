@@ -24,6 +24,18 @@ cc_binary(
     deps = [":array_test_field_rank_1_jni_impl"],
 )
 
+
+java_library(
+    name = "truth",
+    testonly = 1,
+    exports = [
+        "@maven//:com_google_truth_extensions_truth_java8_extension",
+        "@maven//:com_google_truth_extensions_truth_proto_extension",
+        "@maven//:com_google_truth_truth",
+        #"@stardoc_maven//:com_google_truth_truth",
+    ],
+)
+
 java_test(
     name = "ArrayTestFieldRank1",
     testonly = True,
@@ -33,7 +45,13 @@ java_test(
     runtime_deps = [":array_test_helpers"],
     deps = [
         ":object_test_helper",
-        "@maven//:com_google_truth_truth_1_1",
+        #"@maven//:com_google_truth_truth_1_1",
+        #"@maven//:com_google_truth_truth",
+        #":truth",
+        "@maven//:com_google_truth_truth",
+        "@maven//:junit_junit",
+
+        #"@maven//:junit_junit_4_13_1",
     ],
 )
 
@@ -85,8 +103,10 @@ java_library(
     srcs = ["ArrayTestHelpers.java"],
     deps = [
         ":object_test_helper",
-        "@maven//:com_google_truth_truth_1_1",
-        "@maven//:junit_junit_4_13_1",
+        #"@maven//:com_google_truth_truth_1_1",
+        #"@maven//:junit_junit_4_13_1",
+        "@maven//:com_google_truth_truth",
+        "@maven//:junit_junit",
     ],
 )
 
@@ -576,7 +596,7 @@ java_test(
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     deps = [
         ":object_test_helper",
-        "@maven//:com_google_truth_truth_1_1",
-        "@maven//:org_mockito_mockito_core_2_28_2",
+        #"@maven//:com_google_truth_truth_1_1",
+        #"@maven//:org_mockito_mockito_core_2_28_2",
     ],
 )

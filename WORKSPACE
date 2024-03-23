@@ -1,4 +1,4 @@
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+#load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 ## Bazel Rules.
 #http_archive(
@@ -36,17 +36,17 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 #)
 #
 ## Google Truth.
-#load("@rules_jvm_external//:defs.bzl", "maven_install")
+load("@rules_jvm_external//:defs.bzl", "maven_install")
 #
-#maven_install(
-#    artifacts = [
-#        "com.google.truth:truth:1.1",
-#        "junit:junit:4.12",
-#        "org.mockito:mockito-core:2.28.2",
-#    ],
-#    repositories = [
-#        # Private repositories are supported through HTTP Basic auth
-#        "https://maven.google.com",
-#        "https://repo1.maven.org/maven2",
-#    ],
-#)
+maven_install(
+    artifacts = [
+        "com.google.truth:truth:1.1",
+        "junit:junit:4.12",
+        "org.mockito:mockito-core:2.28.2",
+    ],
+    repositories = [
+        # Private repositories are supported through HTTP Basic auth
+        "https://maven.google.com",
+        "https://repo1.maven.org/maven2",
+    ],
+)
