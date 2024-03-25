@@ -51,7 +51,7 @@ If you're enjoying JNI Bind, or just want to support it, please consider adding 
 
 **`JNI Bind` is header only (no auto-generation), and it generates robust, easily maintained, and expressive code.** It obeys the regular RAII idioms of C++17 and can help separate JNI symbols in compilation. Classes are provided in `static constexpr` definitions which can be shared across different implementations enabling code re-use.
 
-This is a sample  Java class and its corresponding `JNI Bind` class definition:
+This is a sample Java class and its corresponding `JNI Bind` class definition:
 
 ```java
 package com.project;
