@@ -271,8 +271,7 @@ TEST_F(JniTest, LocalObject_SupportsReturningAString) {
 }
 
 jobject ReturnOutputOfMethod() {
-  static constexpr Class kClass2{
-      "Class2", Method{"Foo", jni::Return{kClass}, Params<>{}}};
+  static constexpr Class kClass2{"Class2", Method{"Foo", jni::Return{kClass}}};
 
   return LocalObject<kClass2>{}("Foo").Release();
 }

@@ -37,7 +37,7 @@ using ::jni::Params;
 using ::jni::Rank;
 using ::jni::Return;
 
-static constexpr Class kClass1{"class1", Method{"Foo", Return{}, Params{}}};
+static constexpr Class kClass1{"class1", Method{"Foo", Return{}}};
 static constexpr Class kClass1NoDefinition{"class1"};
 static constexpr Class kClass2{"class2"};
 static constexpr Class kUnusedClass{"invalidClass"};
@@ -56,7 +56,7 @@ using GlobalInvalidObj = GlobalObject<kUnusedClass>;
 ////////////////////////////////////////////////////////////////////////////////
 constexpr Class c1{
     "c1",
-    Method{"0", Return<void>{}, Params{}},
+    Method{"0", Return<void>{}},
     Method{"1", Return<void>{}, Params<jboolean>{}},
     Method{"2", Return<void>{}, Params<jchar>{}},
     Method{"3", Return<void>{}, Params<jshort>{}},
@@ -210,7 +210,7 @@ static_assert(MthdId_t<c2, 3>::ArgSetViable<jboolean, jintArray>());
 constexpr Class c3{
     "c3", Method{
               "0",
-              Overload{Return<void>{}, Params{}},
+              Overload{Return<void>{}},
               Overload{Return<void>{}, Params<int>{}},
               Overload{Return<void>{}, Params<int, int>{}},
               Overload{Return<void>{}, Params<int, int, float, int>{}},

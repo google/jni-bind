@@ -310,8 +310,7 @@ TEST_F(JniTest, ArrayView_ShallowObjectsAreIterable) {
 }
 
 TEST_F(JniTest, ArrayView_RichObjectsAreIterable) {
-  static constexpr Class kClass{"kClass",
-                                Method{"Foo", Return<int>{}, Params<>{}}};
+  static constexpr Class kClass{"kClass", Method{"Foo", Return<int>{}}};
 
   EXPECT_CALL(*env_, GetArrayLength(Fake<jobjectArray>()))
       .WillOnce(testing::Return(3));

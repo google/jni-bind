@@ -50,9 +50,8 @@ using ::testing::Eq;
 using ::testing::InSequence;
 using ::testing::StrEq;
 
-static constexpr Class kClass1{
-    "Class1", Constructor{}, Constructor<jint>{},
-    Method{"Foo", Return{Class{"Class2"}}, Params{}}};
+static constexpr Class kClass1{"Class1", Constructor{}, Constructor<jint>{},
+                               Method{"Foo", Return{Class{"Class2"}}}};
 
 static constexpr Class kClass2{
     "Class2", Constructor{}, Constructor{kClass1},
@@ -259,7 +258,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
        ClassLoaderRefTest_ClassesOfDifferentClassLoadersAreUnique) {
   static constexpr Class class_under_test{
       "com/google/ARCore",
-      Method{"Foo", jni::Return{}, Params<>{}},
+      Method{"Foo", jni::Return{}},
   };
   static constexpr ClassLoader class_loader{
       kNullClassLoader, SupportedClassSet{class_under_test}};

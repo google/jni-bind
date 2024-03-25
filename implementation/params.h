@@ -22,8 +22,6 @@
 #include <tuple>
 #include <utility>
 
-#include "object.h"
-
 namespace jni {
 
 struct ParamsBase {};

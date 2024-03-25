@@ -39,7 +39,7 @@ TEST_F(JniTest, MultiTypeTest_SimpleSmokeTestForSingleObject) {
   static constexpr Class object{
       "ARCore",
       Method{"Foo", jni::Return<jint>{}, Params<jint, jfloat>{}},
-      Method{"Bar", jni::Return{jint{}}, Params<>{}},
+      Method{"Bar", jni::Return{jint{}}},
       Method{"Baz", jni::Return<void>{}, Params<jfloat>{}},
       Field{"SomeField", jint{}},
   };

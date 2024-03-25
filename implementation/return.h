@@ -23,8 +23,10 @@
 
 namespace jni {
 
+struct ReturnBase {};
+
 template <typename Raw_>
-struct Return {
+struct Return : ReturnBase {
   const Raw_ raw_ = {};
 
   using Raw = Raw_;
@@ -36,7 +38,7 @@ struct Return {
 };
 
 template <>
-struct Return<void> {
+struct Return<void> : ReturnBase {
   using Raw = void;
   const Void raw_{};
 
