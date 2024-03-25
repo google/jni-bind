@@ -299,3 +299,20 @@ cc_library(
         "//metaprogramming:lambda_string",
     ],
 )
+
+cc_library(
+    name = "lifecycle_class",
+    hdrs = ["lifecycle_class.h"],
+    deps = [":lifecycle"],
+)
+
+cc_test(
+    name = "lifecycle_class_test",
+    srcs = ["lifecycle_class_test.cc"],
+    deps = [
+        ":lifecycle_class",
+        "//:jni_bind",
+        "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
