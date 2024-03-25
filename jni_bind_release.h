@@ -628,6 +628,28 @@ struct ArgStringify<bool> {
 
 namespace jni {
 
+// Single type that be used as a value when expressing void.
+struct Void {
+  using Raw = void;
+};
+
+template <typename T>
+struct VoidIfVoid {
+  using type = T;
+};
+
+template <>
+struct VoidIfVoid<Void> {
+  using type = void;
+};
+
+template <typename T>
+using VoidIfVoid_t = typename VoidIfVoid<T>::type;
+
+}  // namespace jni
+
+namespace jni {
+
 struct Object {
   const char* name_;
   constexpr explicit Object(const char* name) : name_(name) {}
@@ -1103,25 +1125,39 @@ struct FakeImpl<jobjectArray> {
 
 }  // namespace jni
 
+#include <string_view>
+
 namespace jni {
 
-// Single type that be used as a value when expressing void.
-struct Void {
-  using Raw = void;
-};
+struct ReturnBase {};
 
-template <typename T>
-struct VoidIfVoid {
-  using type = T;
+template <typename Raw_>
+struct Return : ReturnBase {
+  const Raw_ raw_ = {};
+
+  using Raw = Raw_;
+
+  constexpr Return() = default;
+
+  template <typename Raw>
+  constexpr explicit Return(Raw raw) : raw_(raw) {}
 };
 
 template <>
-struct VoidIfVoid<Void> {
-  using type = void;
+struct Return<void> : ReturnBase {
+  using Raw = void;
+  const Void raw_{};
+
+  constexpr Return() = default;
 };
 
+Return() -> Return<void>;
+
+template <typename Raw>
+Return(Raw) -> Return<Raw>;
+
 template <typename T>
-using VoidIfVoid_t = typename VoidIfVoid<T>::type;
+using Raw_t = typename T::Raw;
 
 }  // namespace jni
 
@@ -1438,40 +1474,6 @@ inline void JniHelper::ReleaseStringUTFChars(jstring str, const char* chars) {
 
 }  // namespace jni
 
-#include <string_view>
-
-namespace jni {
-
-template <typename Raw_>
-struct Return {
-  const Raw_ raw_ = {};
-
-  using Raw = Raw_;
-
-  constexpr Return() = default;
-
-  template <typename Raw>
-  constexpr explicit Return(Raw raw) : raw_(raw) {}
-};
-
-template <>
-struct Return<void> {
-  using Raw = void;
-  const Void raw_{};
-
-  constexpr Return() = default;
-};
-
-Return()->Return<void>;
-
-template <typename Raw>
-Return(Raw) -> Return<Raw>;
-
-template <typename T>
-using Raw_t = typename T::Raw;
-
-}  // namespace jni
-
 #include <tuple>
 #include <type_traits>
 
@@ -1486,9 +1488,17 @@ struct Overload : OverloadBase {
   const ReturnT_ return_;
   const Params_ params_;
 
+  // `Return`, no `Params`.
+  constexpr Overload(ReturnT_ return_type)
+      : return_(return_type), params_(Params{}) {}
+
+  // `Return` and `Params`.
   constexpr Overload(ReturnT_ return_type, Params_ params)
       : return_(return_type), params_(params) {}
 };
+
+template <typename ReturnT_>
+Overload(ReturnT_) -> Overload<ReturnT_, Params<>>;
 
 template <typename ReturnT_, typename Params_>
 Overload(ReturnT_, Params_) -> Overload<ReturnT_, Params_>;
@@ -1503,14 +1513,28 @@ struct Method<std::tuple<Returns...>, std::tuple<Params_...>>
   const char* name_;
   const std::tuple<Overload<Returns, Params_>...> invocations_;
 
+  // `Return`, no `Params`.
+  template <typename ReturnT_,
+            std::enable_if_t<std::is_base_of_v<ReturnBase, ReturnT_>, int> = 0>
+  constexpr Method(const char* name, ReturnT_ return_type)
+      : name_(name), invocations_(Overload{return_type}) {}
+
+  // `Return` and `Params`.
   template <typename ReturnT_, typename ParamsT_,
-            std::enable_if_t<std::is_base_of_v<ParamsBase, ParamsT_>, int> = 0>
+            std::enable_if_t<std::is_base_of_v<ReturnBase, ReturnT_>, int> = 0>
   constexpr Method(const char* name, ReturnT_ return_type, ParamsT_ params)
       : name_(name), invocations_(Overload{return_type, params}) {}
 
+  // `Overload` Set.
   constexpr Method(const char* name, Overload<Returns, Params_>... invocations)
       : name_(name), invocations_(invocations...) {}
 };
+
+// CTAD for Non-overloaded form, no Params.
+template <typename ReturnT, typename = std::enable_if_t<
+                                !std::is_base_of_v<OverloadBase, ReturnT>>>
+Method(const char*,
+       ReturnT) -> Method<std::tuple<ReturnT>, std::tuple<Params<>>>;
 
 // CTAD for Non-overloaded form.
 template <
@@ -2175,12 +2199,12 @@ namespace jni {
 
 inline constexpr Class kJavaLangClass{
   "java/lang/Class",
-  Method{"getClassLoader", Return{ Class { "java/lang/ClassLoader" } }, Params{}},
+  Method{"getClassLoader", Return{ Class { "java/lang/ClassLoader" } }},
 };
 
 inline constexpr Class kJavaLangObject{
   "java/lang/Object",
-  Method{"getClass", Return{kJavaLangClass}, Params{}},
+  Method{"getClass", Return{kJavaLangClass}},
 };
 
 inline constexpr Class kJavaLangClassLoader{
@@ -7652,6 +7676,7 @@ struct DeepEqualDiminished {
 
 }  // namespace jni::metaprogramming
 
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -7699,6 +7724,8 @@ class ObjectRef
   }
 
  public:
+  ObjectRef(std::nullptr_t) : RefBase(nullptr) {}
+
   explicit ObjectRef(RefBaseTag<typename JniT::StorageType>&& rhs)
       : RefBase(std::move(rhs)) {}
 
@@ -8523,7 +8550,6 @@ class LocalString : public LocalStringImpl {
   using Base = LocalStringImpl;
   using Base::Base;
 
-  LocalString(std::nullptr_t) : Base(jstring{nullptr}) {}
   LocalString(LocalObject<kJavaLangString>&& obj)
       : Base(AdoptLocal{}, static_cast<jstring>(obj.Release())) {}
 

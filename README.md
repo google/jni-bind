@@ -18,7 +18,7 @@ It requires clang enabled at C++17 or later, is compatible with Android, and is 
 - **Arrays** *inline object construction for method arguments, efficient pinning of existing spans.*
 - And *much* more!
 
-Curious to try it? Check out the [Godbolt sample](https://godbolt.org/z/6dfs43MK5)!
+Curious to try it? Check out the [Godbolt sample](https://godbolt.org/z/4YMf5sPKc)!
 
 If you're enjoying JNI Bind, or just want to support it, please consider adding a GitHub ⭐️!
 
@@ -88,8 +88,8 @@ If you're already using Bazel add the following to your WORKSPACE:
 ```starlark
 http_archive(
   name = "jni-bind",
-  urls = ["https://github.com/google/jni-bind/archive/refs/tags/Release-0.9.9-alpha.zip"],
-  strip_prefix = "jni-bind-Release-0.9.9-alpha",
+  urls = ["https://github.com/google/jni-bind/archive/refs/tags/Release-1.0.1-beta.zip"],
+  strip_prefix = "jni-bind-Release-1.0.1-beta",
 )
 ```
 
