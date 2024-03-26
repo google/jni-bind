@@ -37,7 +37,7 @@ public final class LocalObjectTest {
   static {
     System.load(
         System.getenv("JAVA_RUNFILES")
-            + "/__main__/javatests/com/jnibind/test/liblocal_object_test_jni.so");
+            + "/_main/javatests/com/jnibind/test/liblocal_object_test_jni.so");
   }
 
   static native ObjectTestHelper jniCreateNewObject();

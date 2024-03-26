@@ -32,7 +32,7 @@ public class ArrayTestMethodRank1 {
   static {
     System.load(
         System.getenv("JAVA_RUNFILES")
-            + "/__main__/javatests/com/jnibind/test/libarray_test_method_rank_1_jni.so");
+            + "/_main/javatests/com/jnibind/test/libarray_test_method_rank_1_jni.so");
   }
 
   @AfterClass

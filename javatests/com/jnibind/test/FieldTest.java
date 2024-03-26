@@ -35,7 +35,7 @@ public class FieldTest {
   static {
     System.load(
         System.getenv("JAVA_RUNFILES")
-            + "/__main__/javatests/com/jnibind/test/libfield_test_jni.so");
+            + "/_main/javatests/com/jnibind/test/libfield_test_jni.so");
   }
 
   public FieldTestHelper rJniTestHelper = new FieldTestHelper();

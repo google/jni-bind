@@ -30,7 +30,7 @@ public final class ContextTest {
   static {
     System.load(
         System.getenv("JAVA_RUNFILES")
-            + "/__main__/javatests/com/jnibind/test/libcontext_test_jni.so");
+            + "/_main/javatests/com/jnibind/test/libcontext_test_jni.so");
   }
 
   public ContextTest() {

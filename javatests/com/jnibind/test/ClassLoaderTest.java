@@ -41,7 +41,7 @@ public final class ClassLoaderTest {
   private static final String REMOTE_CLASS_PATH_KEY = "remote_class_path";
   private static final String JAR_CONTAINING_CLASSES =
       System.getenv("JAVA_RUNFILES")
-          + "/__main__/javatests/com/jnibind/test/ClassLoaderHelperClass_deploy.jar";
+          + "/_main/javatests/com/jnibind/test/ClassLoaderHelperClass_deploy.jar";
 
   private static JarFile jarFile;
   private static URL[] urlArray;
@@ -50,7 +50,7 @@ public final class ClassLoaderTest {
   static {
     System.load(
         System.getenv("JAVA_RUNFILES")
-            + "/__main__/javatests/com/jnibind/test/libclass_loader_test_jni.so");
+            + "/_main/javatests/com/jnibind/test/libclass_loader_test_jni.so");
   }
 
   @BeforeClass

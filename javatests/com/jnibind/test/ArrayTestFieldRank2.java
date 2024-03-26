@@ -27,7 +27,7 @@ public class ArrayTestFieldRank2 {
   static {
     System.load(
         System.getenv("JAVA_RUNFILES")
-            + "/__main__/javatests/com/jnibind/test/libarray_test_field_rank_2_jni.so");
+            + "/_main/javatests/com/jnibind/test/libarray_test_field_rank_2_jni.so");
   }
 
   @AfterClass

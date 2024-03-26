@@ -37,7 +37,7 @@ public final class StringTest {
   static {
     System.load(
         System.getenv("JAVA_RUNFILES")
-            + "/__main__/javatests/com/jnibind/test/libstring_test_jni.so");
+            + "/_main/javatests/com/jnibind/test/libstring_test_jni.so");
   }
 
   static native void jniTearDown();

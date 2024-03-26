@@ -34,7 +34,7 @@ public class BuilderTest {
   static {
     System.load(
         System.getenv("JAVA_RUNFILES")
-            + "/__main__/javatests/com/jnibind/test/libbuilder_jni.so");
+            + "/_main/javatests/com/jnibind/test/libbuilder_jni.so");
   }
 
   static native void nativeJniTeardown();

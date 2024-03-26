@@ -49,7 +49,7 @@ public class MethodTest {
   static {
     System.load(
         System.getenv("JAVA_RUNFILES")
-            + "/__main__/javatests/com/jnibind/test/libmethod_test_jni.so");
+            + "/_main/javatests/com/jnibind/test/libmethod_test_jni.so");
   }
 
   static native void jniTearDown();

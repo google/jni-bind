@@ -87,6 +87,7 @@ cc_library(
             "external/local_jdk/include",
         ],
     visibility = [":__subpackages__"],
+    deps = ["@bazel_tools//tools/jdk:jni"],
 )
 
 ################################################################################
