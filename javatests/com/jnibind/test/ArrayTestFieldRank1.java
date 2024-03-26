@@ -25,9 +25,16 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ArrayTestFieldRank1 {
   static {
+    System.out.println("jif");
+    System.out.println(
+        System.getenv("JAVA_RUNFILES") );
     System.load(
         System.getenv("JAVA_RUNFILES")
-            + "/__main__/javatests/com/jnibind/test/libarray_test_field_rank_1_jni.so");
+            // + "/__main__/javatests/com/jnibind/test/libarray_test_field_rank_1_jni.so");
+            // + "/__main__/libarray_test_field_rank_1_jni.so");
+            //+ "/_main/libarray_test_field_rank_1_jni.so");
+             + "/_main/javatests/com/jnibind/test/libarray_test_field_rank_1_jni.so");
+    System.out.println("jif fif");
   }
 
   @AfterClass

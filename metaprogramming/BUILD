@@ -23,7 +23,7 @@ cc_test(
         ":invoke",
         ":same",
         ":unwrap",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -38,7 +38,7 @@ cc_test(
     srcs = ["all_unique_test.cc"],
     deps = [
         ":all_unique",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -58,7 +58,7 @@ cc_test(
         ":any",
         ":invoke",
         ":same",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -84,7 +84,7 @@ cc_test(
         ":same",
         ":tuple_manipulation",
         ":type_of_nth_element",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -107,7 +107,7 @@ cc_test(
     srcs = ["base_filter_test.cc"],
     deps = [
         ":base_filter",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -124,7 +124,7 @@ cc_test(
     srcs = ["call_test.cc"],
     deps = [
         ":call",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -151,7 +151,7 @@ cc_test(
         ":invoke",
         ":n_bit",
         ":n_bit_sequence",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -175,7 +175,7 @@ cc_test(
         ":increment",
         ":invoke",
         ":same",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -192,7 +192,7 @@ cc_test(
     srcs = ["color_test.cc"],
     deps = [
         ":color",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -215,7 +215,7 @@ cc_test(
     srcs = ["concatenate_test.cc"],
     deps = [
         ":concatenate",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -233,7 +233,7 @@ cc_test(
     deps = [
         ":conditional",
         ":same",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -256,7 +256,7 @@ cc_test(
         ":conjunction",
         ":invoke",
         ":next",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -279,7 +279,7 @@ cc_test(
     srcs = ["contains_test.cc"],
     deps = [
         ":contains",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -299,7 +299,7 @@ cc_test(
     deps = [
         ":contains",
         ":contains_base",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -316,7 +316,7 @@ cc_test(
     srcs = ["combine_test.cc"],
     deps = [
         ":combine",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -345,7 +345,7 @@ cc_test(
         ":corpus",
         ":corpus_tag",
         ":detect",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -367,7 +367,7 @@ cc_test(
     deps = [
         ":deep_equal",
         ":pack_discriminator",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -386,7 +386,7 @@ cc_test(
     deps = [
         ":deep_equal_diminished",
         ":pack_discriminator",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -403,7 +403,7 @@ cc_test(
     srcs = ["detect_test.cc"],
     deps = [
         ":detect",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -420,7 +420,7 @@ cc_test(
     srcs = ["double_locked_value_test.cc"],
     deps = [
         ":double_locked_value",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -438,7 +438,7 @@ cc_test(
     srcs = ["even_odd_test.cc"],
     deps = [
         ":even_odd",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -464,7 +464,7 @@ cc_test(
         ":filter",
         ":invoke",
         ":same",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -486,7 +486,7 @@ cc_test(
     srcs = ["find_idx_of_val_test.cc"],
     deps = [
         ":find_idx_of_val",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -504,7 +504,7 @@ cc_test(
     srcs = ["flatten_test.cc"],
     deps = [
         ":flatten",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -521,7 +521,7 @@ cc_test(
     srcs = ["function_traits_test.cc"],
     deps = [
         ":function_traits",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -548,7 +548,7 @@ cc_test(
     deps = [
         ":increment",
         ":invoke",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -566,7 +566,7 @@ cc_test(
     srcs = ["index_test.cc"],
     deps = [
         ":index",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -583,7 +583,7 @@ cc_test(
     srcs = ["interleave_test.cc"],
     deps = [
         ":interleave",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -606,7 +606,7 @@ cc_test(
     srcs = ["invocable_map_test.cc"],
     deps = [
         ":invocable_map",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -631,7 +631,7 @@ cc_test(
         ":invoke",
         ":per_element",
         ":same",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -655,7 +655,7 @@ cc_test(
         ":deep_equal",
         ":lambda_compatible",
         ":vals",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -672,7 +672,7 @@ cc_test(
     srcs = ["lambda_string_test.cc"],
     deps = [
         ":lambda_string",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -689,7 +689,7 @@ cc_test(
     srcs = ["optional_wrap_test.cc"],
     deps = [
         ":optional_wrap",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -706,7 +706,7 @@ cc_test(
     srcs = ["tuple_manipulation_test.cc"],
     deps = [
         ":tuple_manipulation",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -723,7 +723,7 @@ cc_test(
     srcs = ["tuple_from_size_test.cc"],
     deps = [
         ":tuple_from_size",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -747,7 +747,7 @@ cc_test(
     srcs = ["type_map_test.cc"],
     deps = [
         ":type_map",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -765,7 +765,7 @@ cc_test(
     srcs = ["type_of_nth_element_test.cc"],
     deps = [
         ":type_of_nth_element",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -784,7 +784,7 @@ cc_test(
     deps = [
         ":min_max",
         ":reduce",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -801,7 +801,7 @@ cc_test(
     srcs = ["modified_max_test.cc"],
     deps = [
         ":modified_max",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -827,7 +827,7 @@ cc_test(
     deps = [
         ":increment",
         ":n_bit",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -849,7 +849,7 @@ cc_test(
         ":increment",
         ":n_bit",
         ":n_bit_sequence",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -869,7 +869,7 @@ cc_test(
     srcs = ["next_test.cc"],
     deps = [
         ":next",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -886,7 +886,7 @@ cc_test(
     srcs = ["pack_discriminator_test.cc"],
     deps = [
         ":pack_discriminator",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -903,7 +903,7 @@ cc_test(
     srcs = ["passthrough_test.cc"],
     deps = [
         ":passthrough",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -924,7 +924,7 @@ cc_test(
     srcs = ["per_element_test.cc"],
     deps = [
         ":per_element",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -938,7 +938,7 @@ cc_test(
     srcs = ["per_element_val_test.cc"],
     deps = [
         ":per_element_val",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -962,7 +962,7 @@ cc_test(
     deps = [
         ":lambda_string",
         ":queryable_map",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -989,7 +989,7 @@ cc_test(
         ":reduce",
         ":same",
         ":vals",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1007,7 +1007,7 @@ cc_test(
     srcs = ["repeat_string_test.cc"],
     deps = [
         ":repeat_string",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1022,7 +1022,7 @@ cc_test(
     srcs = ["replace_string_test.cc"],
     deps = [
         ":replace_string",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1043,7 +1043,7 @@ cc_test(
     srcs = ["reverse_test.cc"],
     deps = [
         ":reverse",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1060,7 +1060,7 @@ cc_test(
     srcs = ["same_test.cc"],
     deps = [
         ":same",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1077,7 +1077,7 @@ cc_test(
     srcs = ["string_concatenate_test.cc"],
     deps = [
         ":string_concatenate",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1095,7 +1095,7 @@ cc_test(
     srcs = ["string_contains_test.cc"],
     deps = [
         ":string_contains",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1113,7 +1113,7 @@ cc_test(
     srcs = ["type_index_mask_test.cc"],
     deps = [
         ":type_index_mask",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1139,7 +1139,7 @@ cc_test(
     srcs = ["type_to_type_map_test.cc"],
     deps = [
         ":type_to_type_map",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1159,7 +1159,7 @@ cc_test(
     deps = [
         ":contains",
         ":unfurl",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1180,7 +1180,7 @@ cc_test(
     srcs = ["unique_set_test.cc"],
     deps = [
         ":unique_set",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1200,7 +1200,7 @@ cc_test(
         ":invoke",
         ":same",
         ":unwrap",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1227,7 +1227,7 @@ cc_test(
     deps = [
         ":vals",
         ":vals_equal",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1242,7 +1242,7 @@ cc_test(
     srcs = ["vals_equal_diminished_test.cc"],
     deps = [
         ":vals_equal_diminished",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -1271,6 +1271,6 @@ cc_test(
         ":same",
         ":unwrap",
         ":zip_invoke",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
