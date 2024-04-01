@@ -31,7 +31,6 @@ using ::jni::Fake;
 using ::jni::LocalArray;
 using ::jni::LocalObject;
 using ::jni::Method;
-using ::jni::Params;
 using ::jni::Return;
 using ::jni::test::AsNewLocalReference;
 using ::jni::test::JniTest;
