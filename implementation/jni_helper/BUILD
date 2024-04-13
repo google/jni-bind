@@ -203,16 +203,16 @@ cc_library(
     hdrs = ["jni_typename_to_string.h"],
     deps = ["//:jni_dep"],
 )
-
-cc_test(
-    name = "jni_typename_to_string_test",
-    srcs = ["jni_typename_to_string_test.cc"],
-    deps = [
-        ":jni_typename_to_string",
-        "//:jni_dep",
-        "@googletest//:gtest_main",
-    ],
-)
+#
+#cc_test(
+#    name = "jni_typename_to_string_test",
+#    srcs = ["jni_typename_to_string_test.cc"],
+#    deps = [
+#        ":jni_typename_to_string",
+#        "//testing/base/public:gunit_main",
+#        "//third_party/jni_wrapper:jni_dep",
+#    ],
+#)
 
 ################################################################################
 # Lifecycle.

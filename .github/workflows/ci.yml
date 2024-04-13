@@ -10,10 +10,17 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  ubuntu_test:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+    - uses: actions/checkout@v4
     - name: test
       run: bazel test --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors ...
+
+  # macos runner is currently failing for javatests: https://github.com/orgs/community/discussions/118963.
+  macos_test:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: test
+      run: bazel test --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors metaprogramming/... //:jni_dep_test

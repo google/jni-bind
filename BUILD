@@ -90,6 +90,15 @@ cc_library(
     deps = ["@bazel_tools//tools/jdk:jni"],
 )
 
+cc_test(
+    name = "jni_dep_test",
+    srcs = ["jni_dep_build_test.cc"],
+    deps = [
+        ":jni_dep",
+        "@googletest//:gtest_main",
+    ],
+)
+
 ################################################################################
 # Testing Targets.
 ################################################################################
