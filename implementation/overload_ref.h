@@ -23,6 +23,7 @@
 
 #include "implementation/class_loader.h"
 #include "implementation/class_ref.h"
+#include "implementation/configuration.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/invoke.h"
@@ -83,7 +84,9 @@ struct OverloadRef {
   static jmethodID GetMethodID(jclass clazz) {
     static auto get_lambda =
         [clazz](metaprogramming::DoubleLockedValue<jmethodID>* storage) {
-          DefaultRefs<jmethodID>().push_back(storage);
+          if (kConfiguration.release_method_ids_on_teardown_) {
+            DefaultRefs<jmethodID>().push_back(storage);
+          }
 
           if constexpr (IdT::kIsStatic) {
             return jni::JniHelper::GetStaticMethodID(clazz, IdT::Name(),

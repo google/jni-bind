@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "class_defs/java_lang_classes.h"
+#include "implementation/configuration.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jni_helper/invoke.h"
 #include "implementation/jni_helper/jni_helper.h"
@@ -61,7 +62,9 @@ class ClassRef {
     if constexpr (JniT::GetClassLoader() == kDefaultClassLoader) {
       static auto get_lambda = [](metaprogramming::DoubleLockedValue<jclass>*
                                       storage) {
-        DefaultRefs<jclass>().push_back(storage);
+        if (kConfiguration.release_class_ids_on_teardown_) {
+          DefaultRefs<jclass>().push_back(storage);
+        }
 
         // FindClass uses plain name (e.g. "kClass") for rank 0, qualified
         // class names when used in arrays (e.g. "[LkClass;"). This doesn't

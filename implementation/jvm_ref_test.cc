@@ -28,6 +28,7 @@ using ::jni::LocalObject;
 using ::jni::test::AsGlobal;
 using ::jni::test::JniTest;
 using ::jni::test::JniTestWithNoDefaultJvmRef;
+using ::jni::test::kDefaultConfiguration;
 using ::testing::AnyNumber;
 using ::testing::Return;
 
@@ -68,7 +69,7 @@ TEST_F(JniTest, NoStaticCrossTalkWithUnrelatedTest) {
 
 TEST_F(JniTestWithNoDefaultJvmRef,
        JvmsNeitherQueryNorReleaseIfNoObjectsCreated) {
-  JvmRef<jni::kDefaultJvm> jvm_ref(jvm_.get());
+  JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
   EXPECT_CALL(*env_, FindClass).Times(0);
   EXPECT_CALL(*env_, DeleteGlobalRef).Times(0);
 }
@@ -83,12 +84,12 @@ TEST_F(JniTestWithNoDefaultJvmRef, JvmRefsDontReuuseStaleFindClassValues) {
 
   static constexpr Class kClass1{"com/google/ADifferentClassForVariety"};
   {
-    JvmRef<jni::kDefaultJvm> jvm_ref(jvm_.get());
+    JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
     LocalObject<kClass1> local_object1{};
   }
 
   {
-    JvmRef<jni::kDefaultJvm> jvm_ref(jvm_.get());
+    JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
     LocalObject<kClass1> local_object1{};
   }
 }

@@ -18,7 +18,6 @@
 
 // IWYU pragma: begin_exports
 
-// <jni.h> include helper.
 #include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_dep.h"
 

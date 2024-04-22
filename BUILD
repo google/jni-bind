@@ -34,6 +34,7 @@ cc_library(
         "//implementation:array_view",
         "//implementation:class",
         "//implementation:class_loader",
+        "//implementation:configuration",
         "//implementation:constructor",
         "//implementation:default_class_loader",
         "//implementation:field",

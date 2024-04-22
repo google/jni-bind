@@ -25,6 +25,7 @@
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/class_ref.h"
+#include "implementation/configuration.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_ref.h"
 #include "implementation/forward_declarations.h"
@@ -94,8 +95,10 @@ class JvmRef : public JvmRefBase {
     }
   }
 
-  explicit JvmRef(JNIEnv* env) : JvmRefBase(BuildJavaVMFromEnv(env)) {}
-  explicit JvmRef(JavaVM* vm) : JvmRefBase(vm) {}
+  explicit JvmRef(JNIEnv* env, const Configuration& configuration = {})
+      : JvmRefBase(BuildJavaVMFromEnv(env), configuration) {}
+  explicit JvmRef(JavaVM* vm, const Configuration& configuration = {})
+      : JvmRefBase(vm, configuration) {}
 
   ~JvmRef() {
     TeardownClassloadersHelper(

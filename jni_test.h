@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_JNI_TEST_H_
 #define JNI_BIND_JNI_TEST_H_
 
+#include <memory>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mock_jni_env.h"
@@ -32,6 +34,11 @@ namespace jni::test {
 
 static constexpr std::size_t kGlobalOffset = 0xBABA0000000000;
 static constexpr std::size_t kCopyOffset = 0X100000000000A0;
+
+static constexpr Configuration kDefaultConfiguration{
+    .release_class_ids_on_teardown_ = true,
+    .release_method_ids_on_teardown_ = true,
+};
 
 // "Translates" a fake local object into its global counterpart.
 // This obviously isn't doing anything meaningful, however, it provides distinct
@@ -144,8 +151,8 @@ class JniTest : public JniTestWithNoDefaultJvmRef {
     // This mimics a JNI_OnLoad call.
     // https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/invocation.html#JNJI_OnLoad
     (*this).JniTestWithNoDefaultJvmRef::SetUp();
-    default_jvm_ref_ =
-        std::make_unique<jni::JvmRef<jni::kDefaultJvm>>(jvm_.get());
+    default_jvm_ref_ = std::make_unique<jni::JvmRef<jni::kDefaultJvm>>(
+        jvm_.get(), kDefaultConfiguration);
   }
 
   void TearDown() override {

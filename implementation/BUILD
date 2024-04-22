@@ -122,6 +122,7 @@ cc_library(
     name = "class_ref",
     hdrs = ["class_ref.h"],
     deps = [
+        ":configuration",
         ":default_class_loader",
         ":jni_type",
         ":ref_storage",
@@ -207,6 +208,7 @@ cc_test(
     name = "class_loader_ref_test",
     srcs = ["class_loader_ref_test.cc"],
     deps = [
+        ":configuration",
         "//:jni_bind",
         "//:jni_test",
         "//implementation/jni_helper:fake_test_constants",
@@ -223,6 +225,15 @@ cc_test(
         "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
+)
+
+################################################################################
+# Configuratino.
+################################################################################
+cc_library(
+    name = "configuration",
+    hdrs = ["configuration.h"],
+    deps = ["//metaprogramming:detect"],
 )
 
 ################################################################################
@@ -651,6 +662,7 @@ cc_library(
         ":class",
         ":class_loader",
         ":class_ref",
+        ":configuration",
         ":default_class_loader",
         ":field_ref",
         ":forward_declarations",
@@ -674,6 +686,7 @@ cc_library(
     name = "jvm_ref_base",
     hdrs = ["jvm_ref_base.h"],
     deps = [
+        ":configuration",
         ":forward_declarations",
         "//:jni_dep",
     ],
@@ -794,6 +807,7 @@ cc_library(
     deps = [
         ":class_loader",
         ":class_ref",
+        ":configuration",
         ":default_class_loader",
         ":id_type",
         ":jni_type",

@@ -19,6 +19,7 @@
 
 #include <atomic>
 
+#include "implementation/configuration.h"
 #include "implementation/forward_declarations.h"
 #include "jni_dep.h"
 
@@ -31,7 +32,11 @@ class JvmRefBase {
   friend class ThreadGuard;
   friend class ThreadLocalGuardDestructor;
 
-  JvmRefBase(JavaVM* vm) { process_level_jvm_.store(vm); }
+  JvmRefBase(JavaVM* vm, const Configuration& configuration) {
+    process_level_jvm_.store(vm);
+    kConfiguration = configuration;
+  }
+
   ~JvmRefBase() { process_level_jvm_.store(nullptr); }
 
   static JavaVM* GetJavaVm() { return process_level_jvm_.load(); }

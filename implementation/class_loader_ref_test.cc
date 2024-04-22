@@ -18,7 +18,6 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 
@@ -45,6 +44,7 @@ using ::jni::SupportedClassSet;
 using ::jni::test::AsGlobal;
 using ::jni::test::JniTest;
 using ::jni::test::JniTestWithNoDefaultJvmRef;
+using ::jni::test::kDefaultConfiguration;
 using ::testing::_;
 using ::testing::Eq;
 using ::testing::InSequence;
@@ -114,7 +114,7 @@ TEST_F(JniTest, GlobalsAreMoveable) {
 // as independent processes which would reflect the static nature of the memory.
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTest, LocalObject_SupportsPassingAnObjectWithAClassLoader) {
-  JvmRef<kDefaultJvm> jvm_ref{jvm_.get()};
+  JvmRef<kDefaultJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
 
   // LocalObject<kClass2, kClassLoader> a{}; // doesn't compile (good).
   LocalObject<kClass1, kClassLoader> a{Fake<jobject>()};
@@ -126,7 +126,7 @@ TEST_F(JniTest, LocalObject_SupportsPassingAnObjectWithAClassLoader) {
 
 TEST_F(JniTestForClassLoaders,
        ClassLoaderRefTest_ConstructorsAcceptClassLoadedObjects) {
-  JvmRef<kDefaultJvm> jvm_ref{jvm_.get()};
+  JvmRef<kDefaultJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
 
   LocalClassLoader<kClassLoader> local_class_loader{Fake<jobject>()};
   auto a = local_class_loader.BuildLocalObject<kClass1>();
@@ -139,7 +139,7 @@ TEST_F(JniTestForClassLoaders,
 
 TEST_F(JniTestForClassLoaders,
        lassLoaderRefTest_ConstructorsAcceptGlobalClassLoadedObjects) {
-  JvmRef<kDefaultJvm> jvm_ref{jvm_.get()};
+  JvmRef<kDefaultJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
 
   LocalClassLoader<kClassLoader> local_class_loader{Fake<jobject>()};
   auto a = local_class_loader.BuildGlobalObject<kClass1>();
@@ -155,8 +155,7 @@ TEST_F(JniTestForClassLoaders,
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(JniTestForClassLoaders,
        ClassLoaderRefTest_DefaultLoadedObjectBuildsWithClassLoadedObject) {
-  JvmRef<kJvm> jvm_ref{jvm_.get()};
-
+  JvmRef<kJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{AdoptLocal{},
                                                           Fake<jobject>()};
   LocalObject<kClass1, kClassLoader> a =
@@ -168,7 +167,7 @@ TEST_F(JniTestForClassLoaders,
 }
 
 TEST_F(JniTestForClassLoaders, ClassLoaderRefTest_ConstructsFromRValue) {
-  JvmRef<kJvm> jvm_ref{jvm_.get()};
+  JvmRef<kJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
   LocalObject<kClass1, kClassLoader, kJvm> b{
@@ -181,7 +180,7 @@ TEST_F(JniTestForClassLoaders, ClassLoaderRefTest_ConstructsFromRValue) {
 
 TEST_F(JniTestForClassLoaders,
        ClassLoaderRefTest_ClassLoadedObjectBuildsWithDefaultLoadedObject) {
-  JvmRef<kJvm> jvm_ref{jvm_.get()};
+  JvmRef<kJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
 
@@ -196,7 +195,7 @@ TEST_F(JniTestForClassLoaders,
 TEST_F(
     JniTestForClassLoaders,
     ClassLoaderRefTest_LocalClassLoaderWithSingleClassAndConstructorCompiles) {
-  JvmRef<kJvm> jvm_ref{jvm_.get()};
+  JvmRef<kJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
   auto a = local_class_loader.BuildLocalObject<kClass1>(12345);
@@ -213,7 +212,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   static constexpr ClassLoader kClassLoader{
       kNullClassLoader, SupportedClassSet{kClass1, kClass2, kClass3, kClass4}};
   static constexpr Jvm kJvm{kClassLoader};
-  JvmRef<kJvm> jvm_ref{jvm_.get()};
+  JvmRef<kJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
 
@@ -230,7 +229,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
       .WillByDefault(::testing::Return(Fake<jclass>()));
 
-  JvmRef<kJvm> jvm_ref{jvm_.get()};
+  JvmRef<kJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
 
@@ -246,7 +245,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
        ClassLoaderRefTest_DefaultLoadedClassCompiles) {
   ON_CALL(*env_, CallObjectMethodV(testing::_, testing::_, testing::_))
       .WillByDefault(::testing::Return(Fake<jclass>()));
-  JvmRef<kJvm> jvm_ref{jvm_.get()};
+  JvmRef<kJvm> jvm_ref{jvm_.get(), kDefaultConfiguration};
 
   LocalClassLoader<kClassLoader, kJvm> local_class_loader{Fake<jobject>()};
 
@@ -307,7 +306,8 @@ TEST_F(JniTestWithNoDefaultJvmRef,
       .WillOnce(testing::Return(Fake<jmethodID>(1)));
 
   // Code under test.
-  jni::JvmRef<atypical_jvm_definition> jvm_ref{jvm_.get()};
+  jni::JvmRef<atypical_jvm_definition> jvm_ref{jvm_.get(),
+                                               kDefaultConfiguration};
   jni::LocalObject<class_under_test, class_loader, atypical_jvm_definition>
       obj1{AdoptLocal{}, Fake<jobject>(1)};
   obj1("Foo");
