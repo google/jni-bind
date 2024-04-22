@@ -60,7 +60,7 @@ android_instrumentation_test(
     name = "context_instrumentation_test",
     # Emulators don't support sanitizer tests because of performance reasons.
     tags = ["nosan"],
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    target_device = "//tools/mobile/devices/android/generic_phone:android_26_x86",
     test_app = ":context_test_app",
     test_class = ".ContextTest",
 )
@@ -110,7 +110,7 @@ android_instrumentation_test(
     name = "object_local_instrumentation_test",
     # Emulators don't support sanitizer tests because of performance reasons.
     tags = ["nosan"],
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    target_device = "//tools/mobile/devices/android/generic_phone:android_26_x86",
     test_app = ":object_test_local_app",
     test_class = ".LocalObjectTest",
 )
@@ -160,7 +160,7 @@ android_instrumentation_test(
     name = "object_global_instrumentation_test",
     # Emulators don't support sanitizer tests because of performance reasons.
     tags = ["nosan"],
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    target_device = "//tools/mobile/devices/android/generic_phone:android_26_x86",
     test_app = ":object_test_global_app",
     test_class = ".GlobalObjectTest",
 )
@@ -208,7 +208,7 @@ android_instrumentation_test(
     name = "array_instrumentation_test",
     # Emulators don't support sanitizer tests because of performance reasons.
     tags = ["nosan"],
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    target_device = "//tools/mobile/devices/android/generic_phone:android_26_x86",
     test_app = ":array_test_app",
     test_class = ".ArrayTest",
 )
@@ -258,7 +258,7 @@ android_instrumentation_test(
     name = "field_instrumentation_test",
     # Emulators don't support sanitizer tests because of performance reasons.
     tags = ["nosan"],
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    target_device = "//tools/mobile/devices/android/generic_phone:android_26_x86",
     test_app = ":field_test_app",
     test_class = ".FieldTest",
 )
@@ -309,7 +309,7 @@ android_instrumentation_test(
     name = "method_instrumentation_test",
     # Emulators don't support sanitizer tests because of performance reasons.
     tags = ["nosan"],
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    target_device = "//tools/mobile/devices/android/generic_phone:android_26_x86",
     test_app = ":method_test_app",
     test_class = ".MethodTest",
 )
@@ -360,7 +360,7 @@ android_instrumentation_test(
     name = "string_instrumentation_test",
     # Emulators don't support sanitizer tests because of performance reasons.
     tags = ["nosan"],
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    target_device = "//tools/mobile/devices/android/generic_phone:android_26_x86",
     test_app = ":string_test_app",
     test_class = ".StringTest",
 )
@@ -428,7 +428,7 @@ android_instrumentation_test(
     data = [":class_loader_helpers.apk"],
     # Emulators don't support sanitizer tests because of performance reasons.
     tags = ["nosan"],
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    target_device = "//tools/mobile/devices/android/generic_phone:android_26_x86",
     test_app = ":class_loader_test_local_app",
     test_class = ".ClassLoaderTest",
 )
@@ -477,7 +477,7 @@ android_binary(
 android_instrumentation_test(
     name = "thread_instrumentation_test",
     tags = ["nosan"],
-    target_device = "//tools/android/emulated_devices/generic_phone:android_26_x86",
+    target_device = "//tools/mobile/devices/android/generic_phone:android_26_x86",
     test_app = ":thread_test_app",
     test_class = ".ThreadTest",
 )
