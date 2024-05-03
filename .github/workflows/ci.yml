@@ -10,10 +10,18 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  linux_test:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+    - uses: actions/checkout@v4
     - name: test
       run: bazel test --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors ...
+
+  # NOTE: Mac is only running a small subset of targets due to an unresolved
+  # issue in Bazel. When this is fixed in the future I will expand testing.
+  macos_test:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: test
+      run: bazel test --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors metaprogramming/...
