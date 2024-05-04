@@ -27,6 +27,9 @@ cc_test(
     ],
 )
 
+################################################################################
+# All Unique.
+################################################################################
 cc_library(
     name = "all_unique",
     hdrs = ["all_unique.h"],
@@ -1060,6 +1063,23 @@ cc_test(
     srcs = ["same_test.cc"],
     deps = [
         ":same",
+        "@googletest//:gtest_main",
+    ],
+)
+
+################################################################################
+# Singleton.
+################################################################################
+cc_library(
+    name = "singleton",
+    hdrs = ["singleton.h"],
+)
+
+cc_test(
+    name = "singleton_test",
+    srcs = ["singleton_test.cc"],
+    deps = [
+        ":singleton",
         "@googletest//:gtest_main",
     ],
 )
