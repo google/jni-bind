@@ -23,6 +23,8 @@
 #include "implementation/method.h"
 #include "implementation/params.h"
 #include "implementation/return.h"
+#include "implementation/self.h"
+#include "implementation/static.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -41,6 +43,9 @@ inline constexpr Class kJavaLangObject{
 
 inline constexpr Class kJavaLangClassLoader{
   "java/lang/ClassLoader",
+  Static {
+    Method{"getSystemClassLoader", Return{Self{}}},
+  },
   Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}},
   Method{"toString", Return{jstring{}}, Params<>{}},
 };
