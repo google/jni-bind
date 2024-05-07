@@ -23,6 +23,8 @@ cc_library(
         "//implementation:method",
         "//implementation:params",
         "//implementation:return",
+        "//implementation:self",
+        "//implementation:static",
     ],
 )
 
