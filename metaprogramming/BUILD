@@ -12,7 +12,6 @@ exports_files(["LICENSE"])
 cc_library(
     name = "all",
     hdrs = ["all.h"],
-    deps = [":tuple_manipulation"],
 )
 
 cc_test(
@@ -71,10 +70,7 @@ cc_test(
 cc_library(
     name = "apply",
     hdrs = ["apply.h"],
-    deps = [
-        ":invoke",
-        ":tuple_manipulation",
-    ],
+    deps = [":tuple_manipulation"],
 )
 
 cc_test(
@@ -137,13 +133,7 @@ cc_test(
 cc_library(
     name = "cartesian_product",
     hdrs = ["cartesian_product.h"],
-    deps = [
-        ":concatenate",
-        ":n_bit",
-        ":n_bit_sequence",
-        ":type_index_mask",
-        ":type_of_nth_element",
-    ],
+    deps = [":n_bit_sequence"],
 )
 
 cc_test(
@@ -164,10 +154,7 @@ cc_test(
 cc_library(
     name = "chain",
     hdrs = ["chain.h"],
-    deps = [
-        ":invoke",
-        ":tuple_manipulation",
-    ],
+    deps = [":invoke"],
 )
 
 cc_test(
@@ -206,10 +193,8 @@ cc_library(
     name = "concatenate",
     hdrs = ["concatenate.h"],
     deps = [
-        ":invoke",
-        ":per_element",
+        ":combine",
         ":reduce",
-        ":tuple_manipulation",
     ],
 )
 

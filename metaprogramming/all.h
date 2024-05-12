@@ -20,8 +20,6 @@
 #include <tuple>
 #include <type_traits>
 
-#include "tuple_manipulation.h"
-
 namespace jni::metaprogramming {
 
 template <typename Func>

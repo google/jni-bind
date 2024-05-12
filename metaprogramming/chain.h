@@ -18,7 +18,6 @@
 #define JNI_BIND_METAPROGRAMMING_CHAIN_H_
 
 #include "invoke.h"
-#include "tuple_manipulation.h"
 
 namespace jni::metaprogramming {
 

@@ -21,11 +21,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "concatenate.h"
-#include "n_bit.h"
 #include "n_bit_sequence.h"
-#include "type_index_mask.h"
-#include "type_of_nth_element.h"
 
 namespace jni::metaprogramming {
 

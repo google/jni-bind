@@ -19,10 +19,8 @@
 
 #include <tuple>
 
-#include "invoke.h"
-#include "per_element.h"
+#include "combine.h"
 #include "reduce.h"
-#include "tuple_manipulation.h"
 
 namespace jni::metaprogramming {
 

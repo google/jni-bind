@@ -19,7 +19,6 @@
 
 #include <tuple>
 
-#include "invoke.h"
 #include "tuple_manipulation.h"
 
 namespace jni::metaprogramming {
