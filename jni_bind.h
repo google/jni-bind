@@ -51,6 +51,7 @@
 
 // Convenience headers for system libraries.
 #include "class_defs/java_lang_classes.h"
+#include "class_defs/java_util_array_list.h"
 #include "class_defs/java_util_classes.h"
 
 // Headers for dynamic definitions.

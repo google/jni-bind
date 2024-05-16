@@ -29,6 +29,20 @@ cc_library(
 )
 
 cc_library(
+    name = "java_util_array_list",
+    hdrs = ["java_util_array_list.h"],
+    deps = [
+        ":java_lang_classes",
+        "//:jni_dep",
+        "//implementation:class",
+        "//implementation:constructor",
+        "//implementation:method",
+        "//implementation:params",
+        "//implementation:return",
+    ],
+)
+
+cc_library(
     name = "java_util_classes",
     hdrs = ["java_util_classes.h"],
     deps = [
