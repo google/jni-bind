@@ -9,7 +9,6 @@ bazel_dep(name = "rules_java", version = "7.1.0")
 bazel_dep(name = "rules_jvm_external", version = "5.2")
 bazel_dep(name = "rules_license", version = "0.0.7")
 bazel_dep(name = "freetype", version = "2.9")
-bazel_dep(name = "protobuf", version = "21.7", repo_name = "com_google_protobuf")
 
 bazel_dep(
     name = "googletest",
