@@ -30,7 +30,6 @@
 namespace jni {
 
 // clang-format off
-
 inline constexpr Class kJavaLangClass{
   "java/lang/Class",
   Method{"getClassLoader", Return{ Class { "java/lang/ClassLoader" } }},
