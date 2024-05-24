@@ -18,6 +18,17 @@
 
 // IWYU pragma: begin_exports
 
+#include "implementation/configuration.h"
+
+namespace jni {
+
+static constexpr Configuration kConfig{
+    .release_class_ids_on_teardown_ = false,
+    .release_method_ids_on_teardown_ = false,
+};
+
+}  // namespace jni
+
 #include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_dep.h"
 

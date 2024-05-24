@@ -2,7 +2,7 @@
 
 ![Ubuntu Build](https://github.com/google/jni-bind/actions/workflows/ci.yml/badge.svg)
 
-`JNI Bind` is a new metaprogramming library that provides syntactic sugar for `C++` => `Java/Kotlin`.  It is header only and provides sophisticated type conversion with compile time validation of method calls and field accesses.
+`JNI Bind` is a new metaprogramming library that provides syntactic sugar for `C++` => `Java/Kotlin`. It is header only and provides sophisticated type conversion with compile time validation of method calls and field accesses.
 
 It requires clang enabled at C++17 or later, is compatible with Android, and is unit / E2E tested on `x86`/`ARM` toolchains.
 
@@ -51,7 +51,7 @@ If you're enjoying JNI Bind, or just want to support it, please consider adding 
 
 **`JNI Bind` is header only (no auto-generation), and it generates robust, easily maintained, and expressive code.** It obeys the regular RAII idioms of C++17 and can help separate JNI symbols in compilation. Classes are provided in `static constexpr` definitions which can be shared across different implementations enabling code re-use.
 
-This is a sample  Java class and it's corresponding`JNI Bind` class definition:
+This is a sample Java class and it's corresponding`JNI Bind` class definition:
 
 ```java
 package com.project;
@@ -64,19 +64,21 @@ public class Clazz {
 #include "jni_bind_release.h"
 
 static constexpr jni::Class kClass {
-  "com/project/clazz", jni::Method { "Foo", jni::Return<jint>{}, jni::Params<jfloat, jstring>{}},
+  "com/project/clazz",
+  jni::Method { "Foo", jni::Return<jint>{}, jni::Params<jfloat, jstring>{}
+},
 
 jni::LocalObject<kClass> obj { jobject_to_wrap };
 obj("Foo", 1.5f, "argString");
 // obj("Bar", 1.5, "argString");  // won't compile (good).
 ```
 
-There are [sample tests](javatests/com/jnibind/test/) which can be a good way to see some example code.  Consider starting with with [context_test_jni](javatests/com/jnibind/test/context_test_jni.cc), [object_test_helper_jni.h](/javatests/com/jnibind/test/object_test_helper_jni.h) and [ContextTest.java](javatests/com/jnibind/test/ContextTest.java).
+There are [sample tests](javatests/com/jnibind/test/) which can be a good way to see some example code. Consider starting with with [context_test_jni](javatests/com/jnibind/test/context_test_jni.cc), [object_test_helper_jni.h](/javatests/com/jnibind/test/object_test_helper_jni.h) and [ContextTest.java](javatests/com/jnibind/test/ContextTest.java).
 
 <a name="installation-without-bazel"></a>
 ## Installation *without Bazel*
 
-If you want to jump right in, copy [jni_bind_release.h](jni_bind_release.h) into your own project.  The header itself is an automatically generated "flattened" version of the Bazel dependency set, so this documentation is a simpler introduction to `JNI Bind` than reading the header directly.
+If you want to jump right in, copy [jni_bind_release.h](jni_bind_release.h) into your own project. The header itself is an automatically generated "flattened" version of the Bazel dependency set, so this documentation is a simpler introduction to `JNI Bind` than reading the header directly.
 
 You are responsible for ensuring `#include <jni.h>` compiles when you include `JNI Bind`.
 
@@ -151,7 +153,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
   return JNI_VERSION_1_6;
 }
 ```
-:warning: If you using another JNI Library initialise `JNI Bind` after. `JNI Bind` "attaches" the thread explicitly through JNI, and some libraries behaviour will be conditional on this being unset.  If JNI Bind discovers a thread has been attached previously it will not attempt to tear the thread down on teardown.
+:warning: If you using another JNI Library initialise `JNI Bind` after. `JNI Bind` "attaches" the thread explicitly through JNI, and some libraries behaviour will be conditional on this being unset. If JNI Bind discovers a thread has been attached previously it will not attempt to tear the thread down on teardown.
 
 You can also build a `jni::jvmRef` from any `JNIEnv*`.
 
@@ -164,7 +166,7 @@ Class definitions are the basic mechanism by which you interact with Java throug
 static constexpr jni::Class kClass{"com/full/class/name/JavaClassName", jni::Field..., jni::Method... };
 ```
 
-jni::Class definitions are static (the class names of any Java object is known in advance).  Instances of these classes are created at runtime using [`jni::LocalObject`](implementation/local_object.h) or [`jni::GlobalObject`](implementation/global_object.h).
+jni::Class definitions are static (the class names of any Java object is known in advance). Instances of these classes are created at runtime using [`jni::LocalObject`](implementation/local_object.h) or [`jni::GlobalObject`](implementation/global_object.h).
 
 <a name="local-and-global-objects"></a>
 ## Local and Global Objects
@@ -173,11 +175,11 @@ Local and global objects manage lifetimes of underlying `jobjects` using the nor
 
 `jni::LocalObject` is built by either wrapping a `jobject` passed to native JNI from Java, or constructing a new object from native (see [Constructors](constructors)).
 
-When `jni::LocalObject` or `jni::GlobalObject` falls off scope, it will unpin the underlying `jobject`, making it available for garbage collection by the JVM.  If you want to to prevent this, call `Release()`. This is useful to return a `jobject` back from native, or to simply pass to another native component that isn't JNI Bind aware.  Calling methods for a released object is undefined.
+When `jni::LocalObject` or `jni::GlobalObject` falls off scope, it will unpin the underlying `jobject`, making it available for garbage collection by the JVM. If you want to to prevent this, call `Release()`. This is useful to return a `jobject` back from native, or to simply pass to another native component that isn't JNI Bind aware. Calling methods for a released object is undefined.
 
 When possible try to avoid using raw `jobject`. Managing lifetimes with regular JNI is difficult, e.g. `jobject` can mean either local or global object (the former will be automatically unpinned at the end of the JNI call, but the latter won't and must be deleted _exactly_ once).
 
-Because `jobject` does not uniquely identify its underlying storage, it is presumed to always be local.  If you want to build a global, you must use either `jni::PromoteToGlobal` or `jni::AdoptGlobal`. e.g.
+Because `jobject` does not uniquely identify its underlying storage, it is presumed to always be local. If you want to build a global, you must use either `jni::PromoteToGlobal` or `jni::AdoptGlobal`. e.g.
 
 ```cpp
 jobject obj1, obj2, obj3;
@@ -188,7 +190,7 @@ jni::GlobalObject global_obj_2 {AdoptGlobal{}, obj3}; // obj3 will *not* be prom
 ```
   When using a jobject you may add `NewRef{}` which creates a new local reference, or `AdoptLocal{}` which takes full ownership.
 
-*Because JNI objects passed to native should never be deleted, `NewRef` is used by default (so that `LocalObject` may always call delete).  A non-deleting `FastLocal` that does not delete may be added in the future.  In general you shouldn't need to worry about this.*
+*Because JNI objects passed to native should never be deleted, `NewRef` is used by default (so that `LocalObject` may always call delete). A non-deleting `FastLocal` that does not delete may be added in the future. In general you shouldn't need to worry about this.*
 
 
 [Sample C++](javatests/com/jnibind/test/context_test_jni.cc), [Sample Java](javatests/com/jnibind/test/ContextTest.java)
@@ -263,7 +265,7 @@ Constructors follow the arguments rules laid out in [Type Conversion Rules](#typ
 <a name="type-conversion-rules"></a>
 ## Type Conversion Rules
 
-All JNI types have corresponding `JNI Bind` types. These types are used differently depending on their context.  Sometimes multiple types are valid as an argument, and you can use them interchangeably, however *types are strictly enforced, so you can't pass arguments that might otherwise implictly cast*.
+All JNI types have corresponding `JNI Bind` types. These types are used differently depending on their context. Sometimes multiple types are valid as an argument, and you can use them interchangeably, however *types are strictly enforced, so you can't pass arguments that might otherwise implictly cast*.
 
 | JNI C API    | Jni Bind Declaration         | Types valid when used as arg                      | Return Type                                    |
 | ------------ | ---------------------------- | ------------------------------------------------- | ---------------------------------------------- |
@@ -281,7 +283,7 @@ All JNI types have corresponding `JNI Bind` types. These types are used differen
 |              |                              | jfloatArray, jintArray                            |                                                |
 | jobjectarray | jni::Array<jobject, kClass>  | jarray, jni::LocalArray<jobject, kClass>,         | jni::LocalArray<T>                             |
 
-More conversions will be added later and this table will be updated as they are. In particular `wchar` views into jstrings will offer a zero copy view into java strings.  Also, `jarray` will support `std::span` views for its underlying types.
+More conversions will be added later and this table will be updated as they are. In particular `wchar` views into jstrings will offer a zero copy view into java strings. Also, `jarray` will support `std::span` views for its underlying types.
 
 [^1]:Note, if you pass a `jni::LocalObject` or `jni::GlobalObject`as an rvalue, it will release the underlying jobject (mimicking the same rules used for [const& in C++](https://en.cppreference.com/w/cpp/language/lifetime)).
 
@@ -293,7 +295,7 @@ More conversions will be added later and this table will be updated as they are.
 
 Strings are slightly atypical as they are a regular Java class ([java/lang/String](https://docs.oracle.com/javase/7/docs/api/java/lang/String.html)) but have a separate JNI type, `jstring`. They therefore have two separate `JNI Bind` types: `jni::LocalString` and `jni::GlobalString`.
 
-Unlike `jni::LocalObject`, you must explicitly pin the underlying string data to access it (arrays also follow this paradigm). To "view" into the string, you must call `Pin()` which returns a `jni::UtfStringView`.  You can call `ToString()` to get a `std::string_view` into the string.
+Unlike `jni::LocalObject`, you must explicitly pin the underlying string data to access it (arrays also follow this paradigm). To "view" into the string, you must call `Pin()` which returns a `jni::UtfStringView`. You can call `ToString()` to get a `std::string_view` into the string.
 
 ```cpp
 jni::LocalString new_string{"TestString"};             // builds a new java/lang/String instance.
@@ -346,13 +348,20 @@ Sample: [proxy_test.cc](implementation/proxy_test.cc).
 <a name="multi-threading"></a>
 ## Multhreading
 
-When using multi-threaded code in native, it's important to remember the difference between maintaining thread safety in your native code vs your Java code. `JNI Bind` *only* handles thread safety of your native handles and class ids.  E.g. you might safely pass a `jobject` from one native thread to another (i.e. you managed to get the handle correctly to the other thread), however, your Java code may not be expecting calls from multiple threads.
+When using multi-threaded code in native, it's important to remember the difference between maintaining thread safety in your native code vs your Java code. `JNI Bind` *only* handles thread safety of your native handles and class ids. e.g. you might safely pass a `jobject` from one native thread to another (i.e. you managed to get the handle correctly to the other thread), however, your Java code may not be expecting calls from multiple threads.
 
 **To pass a jobject from one thread to another you must use `jni::GlobalObject`** (using `jni::LocalObject` is undefined).
 
-Upon spinning a new native thread (that isn't the main thread), you must declare a `jni::ThreadGuard` to explicitly announce to JNI the existence of this thread.  It's permissible to to have nested `jni::ThreadGuard`s.
+Upon spinning a new native thread (that isn't the main thread), you *must* declare a `jni::ThreadGuard` to explicitly announce to JNI the existence of this thread. It's permissible to to have nested `jni::ThreadGuard`s.
 
 Sample [jvm_test.cc](implementation/jvm_test.cc).
+
+<a name="multi-threading-on-Android"></a>
+[!CAUTION] A note for Android multi-threaded use.
+
+On Android JVMs, you must take an additional step to enable multi-threading. You must invoke `JvmRef::SetFallbackClassLoaderFromJObject` on your `JvmRef` object.  You should call it with any `jobject` that has been built in Android with a default classloader (if you don't know what that is, you're probably using it).
+
+This is necessary because new threads spun up on Android do not have a primordial loader like they do on vanilla, non-Android JVMs. When you call this function, you will capture the classloader that has loaded the `jobject` and save it to load classes later.
 
 <a name="overloads"></a>
 ## Overloads
@@ -381,7 +390,7 @@ Sample [method_test_jni.cc](javatests/com/jnibind/test/method_test_jni.cc), [Met
 <a name="class-loaders"></a>
 ## Class Loaders
 
-Class loaders are a powerful but complex tool that enable loading class definitions at runtime from classes not present in the primordial loader.  Their scope is well in excess of this documentation, but you will need a solid understanding of their usage to deploy them successfully (check out the reference links).
+Class loaders are a powerful but complex tool that enable loading class definitions at runtime from classes not present in the primordial loader. Their scope is well in excess of this documentation, but you will need a solid understanding of their usage to deploy them successfully (check out the reference links).
 
 To define a class loaded class, you must first define a [`ClassLoader`](https://github.com/google/jni-bind/blob/75225652d1f88140770ae2368ca9d60e390680ed/implementation/class_loader.h):
 ```cpp
@@ -487,7 +496,7 @@ constexpr Class kBuilder {
  LocalObject<kBuilder>{}("setOne", 111)("setTwo", 222)("build")
 ```
 
-The commented line above would fail to compile at the invocation, because the return value of `setTwo` is a shallow copy.  Self preserves the methods and fields so the returned `LocalObject` "just works".
+The commented line above would fail to compile at the invocation, because the return value of `setTwo` is a shallow copy. Self preserves the methods and fields so the returned `LocalObject` "just works".
 
 Sample: [BuilderTest.java](https://github.com/google/jni-bind/blob/main/javatests/com/jnibind/test/BuilderTest.java), [builder_test_jni.cc](https://github.com/google/jni-bind/blob/main/javatests/com/jnibind/test/builder_jni.cc).
 
