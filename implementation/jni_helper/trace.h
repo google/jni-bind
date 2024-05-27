@@ -76,7 +76,7 @@ inline void PostTrace(metaprogramming::StringAsType<chars...> tag) {
 
 template <char... chars, typename... Args>
 inline void Trace(metaprogramming::StringAsType<chars...> tag,
-                  const Args&... args) {
+                  const Return& ret, const Args&... args) {
 // WARNING: This define is temporary and will be replaced. This unblocks
 // 1.0 release but will eventually be configurable at compile time.
 #ifdef ENABLE_DEBUG_OUTPUT
