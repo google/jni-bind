@@ -556,6 +556,7 @@ cc_library(
     srcs = ["thread_test_jni.cc"],
     defines = ["ENABLE_DEBUG_OUTPUT"],
     deps = [
+        ":array_test_helpers_native",
         ":object_test_helper_jni",
         "//:jni_bind",
     ],
@@ -574,6 +575,7 @@ java_test(
     srcs = ["ThreadTest.java"],
     data = [":libthread_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    runtime_deps = [":array_test_helpers"],
     deps = [
         ":object_test_helper",
         "@maven//:junit_junit",

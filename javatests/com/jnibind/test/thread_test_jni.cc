@@ -17,12 +17,14 @@
 #include <memory>
 #include <thread>  // NOLINT
 
+#include "array_test_helpers_native.h"
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
 
 namespace {
 
 using ::jni::GlobalObject;
+using ::jni::LocalObject;
 using ::jni::PromoteToGlobal;
 using ::jni::ThreadGuard;
 
@@ -41,7 +43,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ThreadTest_jniTearDown(JNIEnv* env,
   jvm = nullptr;
 }
 
-JNIEXPORT void JNICALL Java_com_jnibind_test_ThreadTest_DoSetup(JNIEnv* env,
+JNIEXPORT void JNICALL Java_com_jnibind_test_ThreadTest_doSetup(JNIEnv* env,
                                                                 jclass) {
   jvm.reset(new jni::JvmRef<jni::kDefaultJvm>{env});
 }
@@ -56,6 +58,23 @@ Java_com_jnibind_test_ThreadTest_RunsThreadedWorkOnObject(JNIEnv* env, jclass,
         ThreadGuard thread_guard{};
         global_object_lambda_scope("foo");
       }};
+
+  worker.join();
+}
+
+JNIEXPORT void JNICALL
+Java_com_jnibind_test_ThreadTest_AndroidMultiThreadedSetup(JNIEnv* env, jclass,
+                                                           jobject obj) {
+  jvm->SetFallbackClassLoaderFromJObject(obj);
+}
+
+JNIEXPORT void JNICALL
+Java_com_jnibind_test_ThreadTest_RunsThreadedWorkOnClassWithFirstClassUsageOnSecondThread(
+    JNIEnv* env, jclass) {
+  std::thread worker{[]() mutable {
+    ThreadGuard thread_guard{};
+    LocalObject<kArrayTestHelperClass> test_obj{};
+  }};
 
   worker.join();
 }

@@ -357,11 +357,14 @@ Upon spinning a new native thread (that isn't the main thread), you *must* decla
 Sample [jvm_test.cc](implementation/jvm_test.cc).
 
 <a name="multi-threading-on-Android"></a>
-[!CAUTION] A note for Android multi-threaded use.
+> [!CAUTION]
+> A note for Android multi-threaded use.
+>
+> On Android JVMs, you must take an additional step to enable multi-threading. You must invoke `JvmRef::SetFallbackClassLoaderFromJObject` on your `JvmRef` object.  You should call it with any  `jobject` that has been built in Android with a default classloader (if you don't know what that is, you're probably using it).
+>
+> This is necessary because new threads spun up on Android do not have a primordial loader like they do on vanilla, non-Android JVMs. When you call this function, you will capture the classloader that has loaded the `jobject` and save it to load classes later.
 
-On Android JVMs, you must take an additional step to enable multi-threading. You must invoke `JvmRef::SetFallbackClassLoaderFromJObject` on your `JvmRef` object.  You should call it with any `jobject` that has been built in Android with a default classloader (if you don't know what that is, you're probably using it).
-
-This is necessary because new threads spun up on Android do not have a primordial loader like they do on vanilla, non-Android JVMs. When you call this function, you will capture the classloader that has loaded the `jobject` and save it to load classes later.
+Sample [thread_test_jni.cc](javatests/com/jnibind/test/method_test_jni.cc).
 
 <a name="overloads"></a>
 ## Overloads

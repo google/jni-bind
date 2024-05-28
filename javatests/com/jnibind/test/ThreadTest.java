@@ -19,6 +19,7 @@ package com.jnibind.test;
 import static org.mockito.Mockito.verify;
 
 import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,8 +41,9 @@ public final class ThreadTest {
             + "/_main/javatests/com/jnibind/test/libthread_test_jni.so");
   }
 
-  public ThreadTest() {
-    DoSetup();
+  @BeforeClass
+  public static void setup() {
+    doSetup();
   }
 
   @AfterClass
@@ -55,12 +57,24 @@ public final class ThreadTest {
     verify(objectTestHelper).foo();
   }
 
+  @Test
+  public void runsThreadedWorkStartingOnSecondaryTrhead() {
+    AndroidMultiThreadedSetup(this);
+    RunsThreadedWorkOnClassWithFirstClassUsageOnSecondThread();
+  }
+
   // Setup JvmRef.
-  native void DoSetup();
+  static native void doSetup();
 
   // Tears down the JvmRef.
   static native void jniTearDown();
 
   // Creates a thread, waits until it finishes some work, uses passed object.
   native void RunsThreadedWorkOnObject(ObjectTestHelper objectTestHelper);
+
+  // Sample of setup work you only have to do on Android.
+  native void AndroidMultiThreadedSetup(Object thisClass);
+
+  // Creates a thread, uses a class for the first time on second thread.
+  native void RunsThreadedWorkOnClassWithFirstClassUsageOnSecondThread();
 }
