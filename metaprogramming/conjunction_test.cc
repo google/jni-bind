@@ -11,7 +11,6 @@ namespace {
 
 using ::jni::metaprogramming::Conjunction_v;
 using ::jni::metaprogramming::Invoke_t;
-using ::jni::metaprogramming::NextVal;
 
 template <std::size_t I>
 struct ValCounter {
