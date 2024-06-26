@@ -25,9 +25,6 @@ using ::jni::metaprogramming::EndType;
 using ::jni::metaprogramming::EndVal;
 
 using ::jni::metaprogramming::Next_t;
-using ::jni::metaprogramming::NextConstRefVal;
-using ::jni::metaprogramming::NextType;
-using ::jni::metaprogramming::NextVal;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Type tests.
