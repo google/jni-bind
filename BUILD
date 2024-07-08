@@ -38,6 +38,7 @@ cc_library(
         "//implementation:configuration",
         "//implementation:constructor",
         "//implementation:default_class_loader",
+        "//implementation:extends",
         "//implementation:field",
         "//implementation:find_class_fallback",
         "//implementation:forward_declarations",

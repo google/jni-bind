@@ -107,14 +107,15 @@ cc_library(
     hdrs = ["class.h"],
     deps = [
         ":constructor",
+        ":extends",
         ":field",
         ":method",
-        ":no_idx",
+        ":no_class_specified",
         ":object",
         ":static",
-        "//:jni_dep",
-        "//metaprogramming:all_unique",
         "//metaprogramming:base_filter",
+        "//metaprogramming:tuple_manipulation",
+        "//metaprogramming:type_of_nth_element",
     ],
 )
 
@@ -270,6 +271,19 @@ cc_library(
     deps = [
         ":no_idx",
         "//metaprogramming:modified_max",
+    ],
+)
+
+################################################################################
+# Extend.
+################################################################################
+cc_library(
+    name = "extends",
+    hdrs = ["extends.h"],
+    deps = [
+        ":no_class_specified",
+        "//metaprogramming:tuple_manipulation",
+        "//metaprogramming:type_of_nth_element",
     ],
 )
 
@@ -913,6 +927,15 @@ cc_test(
         "//:jni_bind",
         "@googletest//:gtest_main",
     ],
+)
+
+################################################################################
+# NoClassSpecified.
+################################################################################
+cc_library(
+    name = "no_class_specified",
+    hdrs = ["no_class_specified.h"],
+    deps = [":static"],
 )
 
 ################################################################################

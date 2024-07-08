@@ -13,55 +13,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef JNI_BIND_CLASS_H_
 #define JNI_BIND_CLASS_H_
 
-#include <limits>
 #include <string_view>
 #include <tuple>
-#include <type_traits>
 
 #include "implementation/constructor.h"
+#include "implementation/extends.h"
 #include "implementation/field.h"
 #include "implementation/method.h"
-#include "implementation/no_idx.h"
+#include "implementation/no_class_specified.h"
 #include "implementation/object.h"
 #include "implementation/static.h"
-#include "jni_dep.h"
-#include "metaprogramming/all_unique.h"
 #include "metaprogramming/base_filter.h"
+#include "metaprogramming/type_of_nth_element.h"
 
 namespace jni {
 
-static constexpr struct NoClass {
-  const char* name_ = "__JNI_BIND__NO_CLASS__";
-  const Static<std::tuple<>, std::tuple<>> static_{};
-  const std::tuple<> methods_{};
-  const std::tuple<> fields_{};
-
-  constexpr bool operator==(const NoClass&) const { return true; }
-  constexpr bool operator!=(const NoClass&) const { return true; }
-} kNoClassSpecified;
-
-template <typename Constructors_, typename Static_, typename Methods_,
-          typename Fields_>
+template <typename Extends_, typename Constructors_, typename Static_,
+          typename Methods_, typename Fields_>
 struct Class {};
 
-template <typename... Constructors_, typename... StaticMethods_,
-          typename... StaticFields_, typename... Methods_, typename... Fields_>
-struct Class<std::tuple<Constructors_...>,
+template <typename Extends_, typename... Constructors_,
+          typename... StaticMethods_, typename... StaticFields_,
+          typename... Methods_, typename... Fields_>
+struct Class<Extends_, std::tuple<Constructors_...>,
              std::tuple<Static<std::tuple<StaticMethods_...>,
                                std::tuple<StaticFields_...>>>,
              std::tuple<Methods_...>, std::tuple<Fields_...>> : public Object {
  public:
+  // Filtering outputs a std::tuple<T>, the caller will use just T in ctor.
+  using ExtendsArgT = metaprogramming::TypeOfNthTupleElement_t<0, Extends_>;
+
+  // The type of the parent class (default `RootObject`).
+  const ExtendsStrip_t<Extends_> parent_;
+
   const std::tuple<Constructors_...> constructors_;
   const Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
       static_;
   const std::tuple<Methods_...> methods_;
   const std::tuple<Fields_...> fields_;
 
-  // Ctors + static.
+  ////////////////////////////////////////////////////////////////////////////////
+  // Constructors can pass any correctly ordered permutation of:
+  // -  Extends (parent declaration)
+  // -  Constructors
+  // -  Statics
+  // -  Methods
+  // -  Fields
+  //
+  // For types that are not packs (e.g. Statics), they must have permutations
+  // provided where they are and aren't present.
+  ////////////////////////////////////////////////////////////////////////////////
+
+  // Methods + Fields.
+  explicit constexpr Class(const char* class_name, Methods_... methods,
+                           Fields_... fields)
+      : Class(class_name, Constructor<>{}, Static{}, methods..., fields...) {}
+
+  // Constructors + Statics + Methods + Fields.
   explicit constexpr Class(
       const char* class_name, Constructors_... constructors,
       Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
@@ -73,7 +84,7 @@ struct Class<std::tuple<Constructors_...>,
         methods_(methods...),
         fields_(fields...) {}
 
-  // No ctors, static.
+  // Statics + Methods + Fields.
   explicit constexpr Class(
       const char* class_name,
       Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
@@ -85,7 +96,7 @@ struct Class<std::tuple<Constructors_...>,
         methods_(methods...),
         fields_(fields...) {}
 
-  // Ctors, no static.
+  // Constructors only + Methods + Fields.
   explicit constexpr Class(const char* class_name,
                            Constructors_... constructors, Methods_... methods,
                            Fields_... fields)
@@ -95,16 +106,62 @@ struct Class<std::tuple<Constructors_...>,
         methods_(methods...),
         fields_(fields...) {}
 
-  // No ctors, no static.
-  explicit constexpr Class(const char* class_name, Methods_... methods,
-                           Fields_... fields)
-      : Class(class_name, Constructor<>{}, Static{}, methods..., fields...) {}
+  ////////////////////////////////////////////////////////////////////////////////
+  // Constructors with `Extends`.
+  ////////////////////////////////////////////////////////////////////////////////
 
-  template <typename... Params, typename... Constructors,
+  // Extends + Methods + Fields.
+  explicit constexpr Class(const char* class_name, ExtendsArgT extends,
+                           Methods_... methods, Fields_... fields)
+      : parent_(extends.parent_),
+        Object(class_name),
+        methods_(methods...),
+        fields_(fields...) {}
+
+  // Extends + Statics + Methods + Fields.
+  explicit constexpr Class(
+      const char* class_name, ExtendsArgT extends,
+      Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
+          statik,
+      Methods_... methods, Fields_... fields)
+      : Object(class_name),
+        parent_(extends.parent_),
+        static_(statik),
+        methods_(methods...),
+        fields_(fields...) {}
+
+  // Extends + Constructors + Methods + Fields.
+  explicit constexpr Class(const char* class_name, ExtendsArgT extends,
+                           Constructors_... constructors, Methods_... methods,
+                           Fields_... fields)
+      : Object(class_name),
+        parent_(extends.parent_),
+        constructors_(constructors...),
+        methods_(methods...),
+        fields_(fields...) {}
+
+  // Extends + Statics + Constructor + Methods + Fields.
+  explicit constexpr Class(
+      const char* class_name, ExtendsArgT extends,
+      Constructors_... constructors,
+      Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
+          statik,
+      Methods_... methods, Fields_... fields)
+      : Object(class_name),
+        parent_(extends.parent_),
+        constructors_(constructors...),
+        static_(statik),
+        methods_(methods...),
+        fields_(fields...) {}
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Equality operators.
+  ////////////////////////////////////////////////////////////////////////////////
+  template <typename ParentClass, typename... Params, typename... Constructors,
             typename... StaticMethods, typename... StaticFields,
             typename... Fields, typename... Methods>
   constexpr bool operator==(
-      const Class<std::tuple<Constructors...>,
+      const Class<ParentClass, std::tuple<Constructors...>,
                   std::tuple<Static<std::tuple<StaticMethods...>,
                                     std::tuple<StaticFields...>>>,
                   std::tuple<Methods...>, std::tuple<Fields...>>& rhs) const {
@@ -119,7 +176,9 @@ struct Class<std::tuple<Constructors_...>,
 
 template <typename... Params>
 Class(const char*, Params...)
-    -> Class<metaprogramming::BaseFilterWithDefault_t<ConstructorBase,
+    -> Class<metaprogramming::BaseFilterWithDefault_t<
+                 ExtendsBase, Extends<RootObject>, Params...>,
+             metaprogramming::BaseFilterWithDefault_t<ConstructorBase,
                                                       Constructor<>, Params...>,
              metaprogramming::BaseFilterWithDefault_t<
                  StaticBase, Static<std::tuple<>, std::tuple<>>, Params...>,
@@ -127,9 +186,9 @@ Class(const char*, Params...)
              metaprogramming::BaseFilter_t<FieldBase, Params...>>;
 
 Class(const char*)
-    ->Class<std::tuple<Constructor<>>,
-            std::tuple<Static<std::tuple<>, std::tuple<>>>, std::tuple<>,
-            std::tuple<>>;
+    -> Class<std::tuple<Extends<RootObject>>, std::tuple<Constructor<>>,
+             std::tuple<Static<std::tuple<>, std::tuple<>>>, std::tuple<>,
+             std::tuple<>>;
 
 }  // namespace jni
 
