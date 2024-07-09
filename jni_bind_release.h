@@ -117,7 +117,6 @@ using ExtractTupleFromType_t =
 
 }  // namespace jni::metaprogramming
 
-
 namespace jni::metaprogramming {
 
 // Metafunction to forward all args in a tuple on to a metafunction.
@@ -135,7 +134,6 @@ template <typename Func, typename... Ts>
 static constexpr auto Unwrap_v = Unwrap_t<Func, Ts...>::value;
 
 }  // namespace jni::metaprogramming
-
 
 #include <tuple>
 #include <type_traits>
@@ -169,7 +167,6 @@ using TypeOfNthTupleElement_t = Unwrap_t<TypeOfNthElement<N>, TupType>;
 
 }  // namespace jni::metaprogramming
 
-
 #include <tuple>
 
 namespace jni::metaprogramming {
@@ -199,75 +196,6 @@ using PerElement_t = typename PerElement<Func>::template type<Ts...>;
 
 }  // namespace jni::metaprogramming
 
-
-#include <tuple>
-#include <type_traits>
-
-namespace jni::metaprogramming {
-
-// Metafunction to take a sequence of values and emit std::true or std::false
-// per element based on their type equality.
-template <typename... Ts>
-struct Same {
-  template <typename... Us>
-  using type =
-      typename std::is_same<std::tuple<Ts...>, std::tuple<Us...>>::type;
-
-  template <typename... Us>
-  constexpr static bool value = type<Us...>::value;
-};
-
-}  // namespace jni::metaprogramming
-
-#include <tuple>
-#include <type_traits>
-
-namespace jni::metaprogramming {
-
-// "Invokes" a metafunction (i.e. a type alias for Func::type).
-// Handles both variadic or non-variadic args for a consistent syntax.
-template <typename Func>
-struct Invoke {
-  template <typename, typename Enable = void>
-  struct InvokeHelper {};
-
-  // Variadic forwarding.
-  template <typename... Ts>
-  struct InvokeHelper<std::tuple<Ts...>> {
-    using type = typename Func::template type<Ts...>;
-  };
-
-  // Non-variadic forwarding.
-  template <typename Ts>
-  struct InvokeHelper<std::tuple<Ts>> {
-    using type = typename Func::template type<Ts>;
-  };
-
-  template <typename... Args>
-  using type = typename InvokeHelper<std::tuple<Args...>>::type;
-};
-
-// Helper alias to invoke a metafunction with args as a variadic pack.
-template <typename Func, typename... Args>
-using Invoke_t = typename Invoke<Func>::template type<Args...>;
-
-// Helper alias to take a pack from a tuple and use it as args to invocation.
-template <typename Func, typename TupleOfArgs>
-using InvokeAsPack_t = TupleUnroller_t<Invoke<Func>, TupleOfArgs>;
-
-// Helper alias to invoke a metafunction with args contained in a tuple. Each
-// tuple element will itself be an arg.
-template <typename Func, typename TupleOfArgs>
-using InvokePerTupArg_t = TupleUnroller_t<PerElement<Func>, TupleOfArgs>;
-
-// Helper alias to invoke a metafunction with args contained in each element of
-// a tuple. Each tuple element will itself be a tuple of arguments.
-template <typename Func, typename TupleOfTupleOfArgs>
-using InvokePerTupArgAsPack_t =
-    InvokePerTupArg_t<Unwrap<Func>, TupleOfTupleOfArgs>;
-
-}  // namespace jni::metaprogramming
-
 #include <tuple>
 
 namespace jni::metaprogramming {
@@ -294,33 +222,24 @@ using Combine_t = typename Combine::template type<Tup1, Tup2>;
 
 }  // namespace jni::metaprogramming
 
-
 #include <tuple>
 #include <type_traits>
 
 namespace jni::metaprogramming {
 
-template <typename Func>
-struct Any {
-  template <typename... Ts>
+// Metafunction to take a sequence of values and emit std::true or std::false
+// per element based on their type equality.
+template <typename... Ts>
+struct Same {
+  template <typename... Us>
   using type =
-      typename std::disjunction<typename Func::template type<Ts>...>::type;
+      typename std::is_same<std::tuple<Ts...>, std::tuple<Us...>>::type;
+
+  template <typename... Us>
+  constexpr static bool value = type<Us...>::value;
 };
 
-template <typename Func, typename... Ts>
-using Any_t = typename Any<Func>::template type<Ts...>;
-
-template <typename Func, typename... Ts>
-static constexpr bool Any_v = Any_t<Func, Ts...>::value;
-
-template <typename Func, typename Ts>
-using Any_Tup = TupleUnroller_t<Any<Func>, Ts>;
-
-template <typename Func, typename Ts>
-static constexpr bool Any_Tup_v = TupleUnroller_t<Any<Func>, Ts>::value;
-
 }  // namespace jni::metaprogramming
-
 
 #include <tuple>
 #include <type_traits>
@@ -374,6 +293,111 @@ static constexpr auto ReduceAsPack_v =
 
 }  // namespace jni::metaprogramming
 
+#include <tuple>
+#include <type_traits>
+
+namespace jni::metaprogramming {
+
+// "Invokes" a metafunction (i.e. a type alias for Func::type).
+// Handles both variadic or non-variadic args for a consistent syntax.
+template <typename Func>
+struct Invoke {
+  template <typename, typename Enable = void>
+  struct InvokeHelper {};
+
+  // Variadic forwarding.
+  template <typename... Ts>
+  struct InvokeHelper<std::tuple<Ts...>> {
+    using type = typename Func::template type<Ts...>;
+  };
+
+  // Non-variadic forwarding.
+  template <typename Ts>
+  struct InvokeHelper<std::tuple<Ts>> {
+    using type = typename Func::template type<Ts>;
+  };
+
+  template <typename... Args>
+  using type = typename InvokeHelper<std::tuple<Args...>>::type;
+};
+
+// Helper alias to invoke a metafunction with args as a variadic pack.
+template <typename Func, typename... Args>
+using Invoke_t = typename Invoke<Func>::template type<Args...>;
+
+// Helper alias to take a pack from a tuple and use it as args to invocation.
+template <typename Func, typename TupleOfArgs>
+using InvokeAsPack_t = TupleUnroller_t<Invoke<Func>, TupleOfArgs>;
+
+// Helper alias to invoke a metafunction with args contained in a tuple. Each
+// tuple element will itself be an arg.
+template <typename Func, typename TupleOfArgs>
+using InvokePerTupArg_t = TupleUnroller_t<PerElement<Func>, TupleOfArgs>;
+
+// Helper alias to invoke a metafunction with args contained in each element of
+// a tuple. Each tuple element will itself be a tuple of arguments.
+template <typename Func, typename TupleOfTupleOfArgs>
+using InvokePerTupArgAsPack_t =
+    InvokePerTupArg_t<Unwrap<Func>, TupleOfTupleOfArgs>;
+
+}  // namespace jni::metaprogramming
+
+#include <tuple>
+#include <type_traits>
+
+namespace jni::metaprogramming {
+
+template <typename Func>
+struct Any {
+  template <typename... Ts>
+  using type =
+      typename std::disjunction<typename Func::template type<Ts>...>::type;
+};
+
+template <typename Func, typename... Ts>
+using Any_t = typename Any<Func>::template type<Ts...>;
+
+template <typename Func, typename... Ts>
+static constexpr bool Any_v = Any_t<Func, Ts...>::value;
+
+template <typename Func, typename Ts>
+using Any_Tup = TupleUnroller_t<Any<Func>, Ts>;
+
+template <typename Func, typename Ts>
+static constexpr bool Any_Tup_v = TupleUnroller_t<Any<Func>, Ts>::value;
+
+}  // namespace jni::metaprogramming
+
+namespace jni {
+
+// Single type that be used as a value when expressing void.
+struct Void {
+  using Raw = void;
+};
+
+template <typename T>
+struct VoidIfVoid {
+  using type = T;
+};
+
+template <>
+struct VoidIfVoid<Void> {
+  using type = void;
+};
+
+template <typename T>
+using VoidIfVoid_t = typename VoidIfVoid<T>::type;
+
+}  // namespace jni
+
+namespace jni {
+
+struct Object {
+  const char* name_;
+  constexpr explicit Object(const char* name) : name_(name) {}
+};
+
+}  // namespace jni
 
 #include <tuple>
 #include <type_traits>
@@ -399,6 +423,126 @@ constexpr bool ContainsValue(const SoughtType& sought_value, Ts&&... ts) {
 }
 
 }  // namespace jni::metaprogramming
+
+#include <tuple>
+
+namespace jni::metaprogramming {
+
+// Metafunction to generate a concatenation of variadic args.
+struct Concatenate {
+  template <typename... Ts>
+  using type = std::tuple<Ts...>;
+};
+
+template <typename... Ts>
+using Concatenate_t = typename Concatenate::template type<Ts...>;
+
+// Metafunction to concatenate tuples into a single tuple.
+template <typename... Ts>
+struct ConcatenateTup {
+  static_assert(sizeof...(Ts) != 0, "ConcatenateTup must only take tuples.");
+};
+
+template <typename... T1s>
+struct ConcatenateTup<std::tuple<T1s...>> {
+  using type = std::tuple<T1s...>;
+};
+
+template <typename... Tups>
+using ConcatenateTup_t = Reduce_t<Combine, Tups...>;
+
+}  // namespace jni::metaprogramming
+
+#include <string_view>
+
+namespace jni {
+
+struct ReturnBase {};
+
+template <typename Raw_>
+struct Return : ReturnBase {
+  const Raw_ raw_ = {};
+
+  using Raw = Raw_;
+
+  constexpr Return() = default;
+
+  template <typename Raw>
+  constexpr explicit Return(Raw raw) : raw_(raw) {}
+};
+
+template <>
+struct Return<void> : ReturnBase {
+  using Raw = void;
+  const Void raw_{};
+
+  constexpr Return() = default;
+};
+
+Return() -> Return<void>;
+
+template <typename Raw>
+Return(Raw) -> Return<Raw>;
+
+template <typename T>
+using Raw_t = typename T::Raw;
+
+}  // namespace jni
+
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <utility>
+
+namespace jni {
+
+struct ParamsBase {};
+
+// Represents a sequence of parameters for a method in a compile time
+// definition.
+//
+// These may be in their native type (e.g. int, float, etc) or they may have
+// some minimal type wrapping such as Object<Name> (see JniTProxy).
+template <typename... ValuesRaw_>
+struct Params : ParamsBase {
+ public:
+  using ParamsRawTup = std::tuple<ValuesRaw_...>;
+
+  const std::tuple<ValuesRaw_...> values_ = {};
+
+  // Zero args constructor.
+  template <std::size_t N = sizeof...(ValuesRaw_),
+            typename std::enable_if<(N == 0), int>::type = 0>
+  constexpr explicit Params() {}
+
+  // CTAD constructor, fully defined args (e.g. Params{class_value}).
+  template <
+      std::size_t N = sizeof...(ValuesRaw_), typename... Args,
+      typename std::enable_if<(N > 0 && sizeof...(Args) == N), int>::type = 0>
+  constexpr explicit Params(Args... args) : values_(args...) {}
+
+  // Constructor for explicit templatizing, no args (e.g. Params<jint>{}).
+  template <
+      std::size_t N = sizeof...(ValuesRaw_), typename... Args,
+      typename std::enable_if<(N > 0 && sizeof...(Args) == 0), int>::type = 0>
+  constexpr explicit Params() {}
+};
+
+template <typename... Ts>
+Params(Ts...) -> Params<Ts...>;
+
+template <typename... LhsValuesRaw, typename... RhsValuesRaw>
+constexpr bool operator==(const Params<LhsValuesRaw...>& lhs,
+                          const Params<RhsValuesRaw...>& rhs) {
+  return lhs.values_ == rhs.values_;
+}
+
+//==============================================================================
+
+template <typename T>
+using ParamsRawTup_t = typename T::ParamsRawTup;
+
+}  // namespace jni
 
 #include <string_view>
 #include <type_traits>
@@ -440,35 +584,6 @@ constexpr auto LambdaToStr(Identifier id) {
 
 template <typename NameLambda>
 using LambdaStringToType = decltype(LambdaToStr(std::declval<NameLambda>()));
-
-}  // namespace jni::metaprogramming
-
-#include <tuple>
-
-namespace jni::metaprogramming {
-
-// Metafunction to generate a concatenation of variadic args.
-struct Concatenate {
-  template <typename... Ts>
-  using type = std::tuple<Ts...>;
-};
-
-template <typename... Ts>
-using Concatenate_t = typename Concatenate::template type<Ts...>;
-
-// Metafunction to concatenate tuples into a single tuple.
-template <typename... Ts>
-struct ConcatenateTup {
-  static_assert(sizeof...(Ts) != 0, "ConcatenateTup must only take tuples.");
-};
-
-template <typename... T1s>
-struct ConcatenateTup<std::tuple<T1s...>> {
-  using type = std::tuple<T1s...>;
-};
-
-template <typename... Tups>
-using ConcatenateTup_t = Reduce_t<Combine, Tups...>;
 
 }  // namespace jni::metaprogramming
 
@@ -528,6 +643,54 @@ inline std::string Colorize(std::string_view colour, std::string_view str,
 
 }  // namespace jni::metaprogramming
 
+#include <tuple>
+#include <type_traits>
+
+namespace jni::metaprogramming {
+
+// Returns all elements derived from DesiredBase.
+//
+// Note, if no values found, this will be std::tuple<>.  If you'd like a default
+// value use BaseFilterWithDefault.
+template <typename DesiredBase, typename Enable = void,
+          typename T = std::tuple<>>
+struct BaseFilter {
+  static_assert(std::is_same_v<T, std::tuple<>>);
+  using type = std::tuple<>;
+};
+
+template <typename DesiredBase, typename... Ts>
+using BaseFilter_t =
+    typename BaseFilter<DesiredBase, void, std::tuple<Ts...>>::type;
+
+template <typename DesiredBase, typename T, typename... Ts>
+struct BaseFilter<DesiredBase,
+                  std::enable_if_t<std::is_base_of_v<DesiredBase, T>, void>,
+                  std::tuple<T, Ts...>> {
+  using type =
+      ConcatenateTup_t<std::tuple<T>, BaseFilter_t<DesiredBase, Ts...>>;
+};
+
+template <typename DesiredBase, typename T, typename... Ts>
+struct BaseFilter<DesiredBase,
+                  std::enable_if_t<!std::is_base_of_v<DesiredBase, T>, void>,
+                  std::tuple<T, Ts...>> {
+  using type = BaseFilter_t<DesiredBase, Ts...>;
+};
+
+//==============================================================================
+template <typename PostFilterValue, typename DefaultValue>
+using DefaultIfEmpty_Tup =
+    std::conditional_t<std::is_same_v<PostFilterValue, std::tuple<>>,
+                       DefaultValue, PostFilterValue>;
+
+template <typename DesiredBase, typename DefaultValue, typename... Ts>
+using BaseFilterWithDefault_t =
+    DefaultIfEmpty_Tup<BaseFilter_t<DesiredBase, Ts...>,
+                       std::tuple<DefaultValue>>;
+
+}  // namespace jni::metaprogramming
+
 #include <type_traits>
 
 namespace jni::metaprogramming {
@@ -557,7 +720,6 @@ constexpr bool AllUniqueValues(const T1&& t1, const Ts&&... ts) {
 }
 
 }  // namespace jni::metaprogramming
-
 
 namespace jni {
 
@@ -626,34 +788,115 @@ struct ArgStringify<bool> {
 
 }  // namespace jni
 
+#include <tuple>
+#include <type_traits>
+
 namespace jni {
 
-// Single type that be used as a value when expressing void.
-struct Void {
-  using Raw = void;
+struct OverloadBase {};
+struct MethodBase {};
+
+// Represents a single overload of a given method.
+template <typename ReturnT_, typename Params_>
+struct Overload : OverloadBase {
+  const ReturnT_ return_;
+  const Params_ params_;
+
+  // `Return`, no `Params`.
+  constexpr Overload(ReturnT_ return_type)
+      : return_(return_type), params_(Params{}) {}
+
+  // `Return` and `Params`.
+  constexpr Overload(ReturnT_ return_type, Params_ params)
+      : return_(return_type), params_(params) {}
 };
 
-template <typename T>
-struct VoidIfVoid {
-  using type = T;
+template <typename ReturnT_>
+Overload(ReturnT_) -> Overload<ReturnT_, Params<>>;
+
+template <typename ReturnT_, typename Params_>
+Overload(ReturnT_, Params_) -> Overload<ReturnT_, Params_>;
+
+template <typename Returns_, typename Params_>
+struct Method {};
+
+template <typename... Returns, typename... Params_>
+struct Method<std::tuple<Returns...>, std::tuple<Params_...>>
+    : public MethodBase {
+ public:
+  const char* name_;
+  const std::tuple<Overload<Returns, Params_>...> invocations_;
+
+  // `Return`, no `Params`.
+  template <typename ReturnT_,
+            std::enable_if_t<std::is_base_of_v<ReturnBase, ReturnT_>, int> = 0>
+  constexpr Method(const char* name, ReturnT_ return_type)
+      : name_(name), invocations_(Overload{return_type}) {}
+
+  // `Return` and `Params`.
+  template <typename ReturnT_, typename ParamsT_,
+            std::enable_if_t<std::is_base_of_v<ReturnBase, ReturnT_>, int> = 0>
+  constexpr Method(const char* name, ReturnT_ return_type, ParamsT_ params)
+      : name_(name), invocations_(Overload{return_type, params}) {}
+
+  // `Overload` Set.
+  constexpr Method(const char* name, Overload<Returns, Params_>... invocations)
+      : name_(name), invocations_(invocations...) {}
 };
 
-template <>
-struct VoidIfVoid<Void> {
-  using type = void;
-};
+// CTAD for Non-overloaded form, no Params.
+template <typename ReturnT, typename = std::enable_if_t<
+                                !std::is_base_of_v<OverloadBase, ReturnT>>>
+Method(const char*,
+       ReturnT) -> Method<std::tuple<ReturnT>, std::tuple<Params<>>>;
 
-template <typename T>
-using VoidIfVoid_t = typename VoidIfVoid<T>::type;
+// CTAD for Non-overloaded form.
+template <
+    typename ReturnT, typename ParamsT,
+    typename = std::enable_if_t<!std::is_base_of_v<OverloadBase, ReturnT> &&
+                                !std::is_base_of_v<OverloadBase, ParamsT>>>
+Method(const char*, ReturnT,
+       ParamsT) -> Method<std::tuple<ReturnT>, std::tuple<ParamsT>>;
+
+// CTAD for Overloaded form.
+template <typename... Returns, typename... Params>
+Method(const char*, Overload<Returns, Params>...)
+    -> Method<std::tuple<Returns...>, std::tuple<Params...>>;
+
+template <typename ReturnT1, typename ParamsT1, typename ReturnT2,
+          typename ParamsT2>
+constexpr bool operator==(const Method<ReturnT1, ParamsT1>& lhs,
+                          const Method<ReturnT2, ParamsT2>& rhs) {
+  return std::string_view(lhs.name_) == std::string_view(rhs.name_);
+}
 
 }  // namespace jni
 
+#include <string>
+
 namespace jni {
 
-struct Object {
+struct FieldBase {};
+
+template <typename Raw_>
+struct Field : public FieldBase {
+ public:
+  using Raw = Raw_;
+
   const char* name_;
-  constexpr explicit Object(const char* name) : name_(name) {}
+
+  const Raw_ raw_ = {};
+
+  constexpr Field(const char* name) : name_(name) {}
+  constexpr Field(const char* name, Raw_ value_raw)
+      : name_(name), raw_(value_raw) {}
 };
+
+template <typename Raw_>
+Field(const char*, Raw_) -> Field<Raw_>;
+
+template <typename T>
+using Raw_t = typename T::Raw;
 
 }  // namespace jni
 
@@ -745,7 +988,6 @@ static constexpr std::size_t FindIdxOfValInTup_idx =
     FindIdxOfValInTupWithComparator_idx<Same<Query>, TupType>;
 
 }  // namespace jni::metaprogramming
-
 
 #include <tuple>
 
@@ -1126,96 +1368,34 @@ struct FakeImpl<jobjectArray> {
 }  // namespace jni
 
 #include <string_view>
-
-namespace jni {
-
-struct ReturnBase {};
-
-template <typename Raw_>
-struct Return : ReturnBase {
-  const Raw_ raw_ = {};
-
-  using Raw = Raw_;
-
-  constexpr Return() = default;
-
-  template <typename Raw>
-  constexpr explicit Return(Raw raw) : raw_(raw) {}
-};
-
-template <>
-struct Return<void> : ReturnBase {
-  using Raw = void;
-  const Void raw_{};
-
-  constexpr Return() = default;
-};
-
-Return() -> Return<void>;
-
-template <typename Raw>
-Return(Raw) -> Return<Raw>;
-
-template <typename T>
-using Raw_t = typename T::Raw;
-
-}  // namespace jni
-
-#include <string>
-#include <string_view>
 #include <tuple>
-#include <utility>
 
 namespace jni {
 
-struct ParamsBase {};
+class StaticBase {};
 
-// Represents a sequence of parameters for a method in a compile time
-// definition.
-//
-// These may be in their native type (e.g. int, float, etc) or they may have
-// some minimal type wrapping such as Object<Name> (see JniTProxy).
-template <typename... ValuesRaw_>
-struct Params : ParamsBase {
+template <typename Methods_, typename Fields_>
+class Static;
+
+template <typename... Methods_, typename... Fields_>
+class Static<std::tuple<Methods_...>, std::tuple<Fields_...>>
+    : public StaticBase {
  public:
-  using ParamsRawTup = std::tuple<ValuesRaw_...>;
+  const std::tuple<Methods_...> methods_;
+  const std::tuple<Fields_...> fields_;
 
-  const std::tuple<ValuesRaw_...> values_ = {};
-
-  // Zero args constructor.
-  template <std::size_t N = sizeof...(ValuesRaw_),
-            typename std::enable_if<(N == 0), int>::type = 0>
-  constexpr explicit Params() {}
-
-  // CTAD constructor, fully defined args (e.g. Params{class_value}).
-  template <
-      std::size_t N = sizeof...(ValuesRaw_), typename... Args,
-      typename std::enable_if<(N > 0 && sizeof...(Args) == N), int>::type = 0>
-  constexpr explicit Params(Args... args) : values_(args...) {}
-
-  // Constructor for explicit templatizing, no args (e.g. Params<jint>{}).
-  template <
-      std::size_t N = sizeof...(ValuesRaw_), typename... Args,
-      typename std::enable_if<(N > 0 && sizeof...(Args) == 0), int>::type = 0>
-  constexpr explicit Params() {}
+  constexpr Static(Methods_... methods, Fields_... fields)
+      : methods_(methods...), fields_(fields...) {}
 };
 
-template <typename... Ts>
-Params(Ts...) -> Params<Ts...>;
+Static() -> Static<std::tuple<>, std::tuple<>>;
 
-template <typename... LhsValuesRaw, typename... RhsValuesRaw>
-constexpr bool operator==(const Params<LhsValuesRaw...>& lhs,
-                          const Params<RhsValuesRaw...>& rhs) {
-  return lhs.values_ == rhs.values_;
-}
-
-//==============================================================================
-
-template <typename T>
-using ParamsRawTup_t = typename T::ParamsRawTup;
+template <typename... Params>
+Static(Params...)
+    -> Static<metaprogramming::BaseFilter_t<MethodBase, Params...>,
+              metaprogramming::BaseFilter_t<FieldBase, Params...>>;
 
 }  // namespace jni
-
 
 #include <tuple>
 
@@ -1268,54 +1448,6 @@ using TypeToTypeMapFromKeyValues_t = TypeToTypeMap<Even_t<Ts...>, Odd_t<Ts...>>;
 template <typename TupleOfKeyValuePairs>
 using TypeToTypeMapFromKeyValuesTup_t =
     TupleToType_t<TupleOfKeyValuePairs, TypeToTypeMapFromKeyValues_t>;
-
-}  // namespace jni::metaprogramming
-
-#include <tuple>
-#include <type_traits>
-
-namespace jni::metaprogramming {
-
-// Returns all elements derived from DesiredBase.
-//
-// Note, if no values found, this will be std::tuple<>.  If you'd like a default
-// value use BaseFilterWithDefault.
-template <typename DesiredBase, typename Enable = void,
-          typename T = std::tuple<>>
-struct BaseFilter {
-  static_assert(std::is_same_v<T, std::tuple<>>);
-  using type = std::tuple<>;
-};
-
-template <typename DesiredBase, typename... Ts>
-using BaseFilter_t =
-    typename BaseFilter<DesiredBase, void, std::tuple<Ts...>>::type;
-
-template <typename DesiredBase, typename T, typename... Ts>
-struct BaseFilter<DesiredBase,
-                  std::enable_if_t<std::is_base_of_v<DesiredBase, T>, void>,
-                  std::tuple<T, Ts...>> {
-  using type =
-      ConcatenateTup_t<std::tuple<T>, BaseFilter_t<DesiredBase, Ts...>>;
-};
-
-template <typename DesiredBase, typename T, typename... Ts>
-struct BaseFilter<DesiredBase,
-                  std::enable_if_t<!std::is_base_of_v<DesiredBase, T>, void>,
-                  std::tuple<T, Ts...>> {
-  using type = BaseFilter_t<DesiredBase, Ts...>;
-};
-
-//==============================================================================
-template <typename PostFilterValue, typename DefaultValue>
-using DefaultIfEmpty_Tup =
-    std::conditional_t<std::is_same_v<PostFilterValue, std::tuple<>>,
-                       DefaultValue, PostFilterValue>;
-
-template <typename DesiredBase, typename DefaultValue, typename... Ts>
-using BaseFilterWithDefault_t =
-    DefaultIfEmpty_Tup<BaseFilter_t<DesiredBase, Ts...>,
-                       std::tuple<DefaultValue>>;
 
 }  // namespace jni::metaprogramming
 
@@ -1475,153 +1607,64 @@ inline void JniHelper::ReleaseStringUTFChars(jstring str, const char* chars) {
 }  // namespace jni
 
 #include <tuple>
-#include <type_traits>
 
 namespace jni {
 
-struct OverloadBase {};
-struct MethodBase {};
+struct ExtendsBase {};
 
-// Represents a single overload of a given method.
-template <typename ReturnT_, typename Params_>
-struct Overload : OverloadBase {
-  const ReturnT_ return_;
-  const Params_ params_;
-
-  // `Return`, no `Params`.
-  constexpr Overload(ReturnT_ return_type)
-      : return_(return_type), params_(Params{}) {}
-
-  // `Return` and `Params`.
-  constexpr Overload(ReturnT_ return_type, Params_ params)
-      : return_(return_type), params_(params) {}
+struct RootObject {
+  constexpr RootObject() = default;
 };
 
-template <typename ReturnT_>
-Overload(ReturnT_) -> Overload<ReturnT_, Params<>>;
+static constexpr RootObject kObject{};
 
-template <typename ReturnT_, typename Params_>
-Overload(ReturnT_, Params_) -> Overload<ReturnT_, Params_>;
+static constexpr struct NoClass {
+  constexpr NoClass() {}
 
-template <typename Returns_, typename Params_>
-struct Method {};
+  const char* name_ = "__JNI_BIND__NO_CLASS__";
+  const RootObject parent_;
+  const Static<std::tuple<>, std::tuple<>> static_{};
+  const std::tuple<> methods_{};
+  const std::tuple<> fields_{};
 
-template <typename... Returns, typename... Params_>
-struct Method<std::tuple<Returns...>, std::tuple<Params_...>>
-    : public MethodBase {
- public:
-  const char* name_;
-  const std::tuple<Overload<Returns, Params_>...> invocations_;
-
-  // `Return`, no `Params`.
-  template <typename ReturnT_,
-            std::enable_if_t<std::is_base_of_v<ReturnBase, ReturnT_>, int> = 0>
-  constexpr Method(const char* name, ReturnT_ return_type)
-      : name_(name), invocations_(Overload{return_type}) {}
-
-  // `Return` and `Params`.
-  template <typename ReturnT_, typename ParamsT_,
-            std::enable_if_t<std::is_base_of_v<ReturnBase, ReturnT_>, int> = 0>
-  constexpr Method(const char* name, ReturnT_ return_type, ParamsT_ params)
-      : name_(name), invocations_(Overload{return_type, params}) {}
-
-  // `Overload` Set.
-  constexpr Method(const char* name, Overload<Returns, Params_>... invocations)
-      : name_(name), invocations_(invocations...) {}
-};
-
-// CTAD for Non-overloaded form, no Params.
-template <typename ReturnT, typename = std::enable_if_t<
-                                !std::is_base_of_v<OverloadBase, ReturnT>>>
-Method(const char*,
-       ReturnT) -> Method<std::tuple<ReturnT>, std::tuple<Params<>>>;
-
-// CTAD for Non-overloaded form.
-template <
-    typename ReturnT, typename ParamsT,
-    typename = std::enable_if_t<!std::is_base_of_v<OverloadBase, ReturnT> &&
-                                !std::is_base_of_v<OverloadBase, ParamsT>>>
-Method(const char*, ReturnT, ParamsT)
-    -> Method<std::tuple<ReturnT>, std::tuple<ParamsT>>;
-
-// CTAD for Overloaded form.
-template <typename... Returns, typename... Params>
-Method(const char*, Overload<Returns, Params>...)
-    -> Method<std::tuple<Returns...>, std::tuple<Params...>>;
-
-template <typename ReturnT1, typename ParamsT1, typename ReturnT2,
-          typename ParamsT2>
-constexpr bool operator==(const Method<ReturnT1, ParamsT1>& lhs,
-                          const Method<ReturnT2, ParamsT2>& rhs) {
-  return std::string_view(lhs.name_) == std::string_view(rhs.name_);
-}
+  constexpr bool operator==(const NoClass&) const { return true; }
+  constexpr bool operator!=(const NoClass&) const { return true; }
+} kNoClassSpecified;
 
 }  // namespace jni
 
-#include <string>
-
 namespace jni {
 
-struct FieldBase {};
+// Metafunction for helping strip the type for input Extends params.
+struct ExtendsStrip {
+  template <typename T>
+  struct Helper {
+    // Input is in a tuple of 1 element.
+    using StripOuterTuple = metaprogramming::TypeOfNthTupleElement_t<0, T>;
+    // Steal the outer Extends parameter pack into a tuple.
+    // e.g. Extends<RootClass> => std::tuple<RootClass>.
+    using ExtendsToTuple =
+        metaprogramming::ExtractTupleFromType_t<StripOuterTuple>;
+    // Extracts the single element.
+    using type = metaprogramming::TypeOfNthTupleElement_t<0, ExtendsToTuple>;
+  };
 
-template <typename Raw_>
-struct Field : public FieldBase {
- public:
-  using Raw = Raw_;
-
-  const char* name_;
-
-  const Raw_ raw_ = {};
-
-  constexpr Field(const char* name) : name_(name) {}
-  constexpr Field(const char* name, Raw_ value_raw)
-      : name_(name), raw_(value_raw) {}
+  template <typename T>
+  using type = typename Helper<T>::type;
 };
-
-template <typename Raw_>
-Field(const char*, Raw_) -> Field<Raw_>;
 
 template <typename T>
-using Raw_t = typename T::Raw;
+using ExtendsStrip_t = typename ExtendsStrip::template type<T>;
 
-}  // namespace jni
+template <typename ParentT>
+struct Extends : public ExtendsBase {
+  constexpr Extends(ParentT parent) : parent_(parent) {}
 
-#include <string_view>
-#include <tuple>
-
-namespace jni {
-
-class StaticBase {};
-
-template <typename Methods_, typename Fields_>
-class Static;
-
-template <typename... Methods_, typename... Fields_>
-class Static<std::tuple<Methods_...>, std::tuple<Fields_...>>
-    : public StaticBase {
- public:
-  const std::tuple<Methods_...> methods_;
-  const std::tuple<Fields_...> fields_;
-
-  constexpr Static(Methods_... methods, Fields_... fields)
-      : methods_(methods...), fields_(fields...) {}
+  const ParentT parent_;
 };
 
-Static()->Static<std::tuple<>, std::tuple<>>;
-
-template <typename... Params>
-Static(Params...)
-    -> Static<metaprogramming::BaseFilter_t<MethodBase, Params...>,
-              metaprogramming::BaseFilter_t<FieldBase, Params...>>;
-
-}  // namespace jni
-
-#include <cstddef>
-#include <limits>
-
-namespace jni {
-
-static constexpr std::size_t kNoIdx{std::numeric_limits<std::size_t>::max()};
+template <typename T>
+Extends(T) -> Extends<T>;
 
 }  // namespace jni
 
@@ -1814,41 +1857,70 @@ constexpr std::size_t ModifiedMax(
 
 }  // namespace jni::metaprogramming
 
+namespace jni {
+
+// Tag to indicate you are referring to the enclosing class.
+// Useful for builder patterns where the decorated object returned is identical.
+struct Self {};
+
+}  // namespace jni
+
+#include <cstddef>
 #include <limits>
-#include <string_view>
-#include <tuple>
-#include <type_traits>
 
 namespace jni {
 
-static constexpr struct NoClass {
-  const char* name_ = "__JNI_BIND__NO_CLASS__";
-  const Static<std::tuple<>, std::tuple<>> static_{};
-  const std::tuple<> methods_{};
-  const std::tuple<> fields_{};
+static constexpr std::size_t kNoIdx{std::numeric_limits<std::size_t>::max()};
 
-  constexpr bool operator==(const NoClass&) const { return true; }
-  constexpr bool operator!=(const NoClass&) const { return true; }
-} kNoClassSpecified;
+}  // namespace jni
 
-template <typename Constructors_, typename Static_, typename Methods_,
-          typename Fields_>
+#include <string_view>
+#include <tuple>
+
+namespace jni {
+
+template <typename Extends_, typename Constructors_, typename Static_,
+          typename Methods_, typename Fields_>
 struct Class {};
 
-template <typename... Constructors_, typename... StaticMethods_,
-          typename... StaticFields_, typename... Methods_, typename... Fields_>
-struct Class<std::tuple<Constructors_...>,
+template <typename Extends_, typename... Constructors_,
+          typename... StaticMethods_, typename... StaticFields_,
+          typename... Methods_, typename... Fields_>
+struct Class<Extends_, std::tuple<Constructors_...>,
              std::tuple<Static<std::tuple<StaticMethods_...>,
                                std::tuple<StaticFields_...>>>,
              std::tuple<Methods_...>, std::tuple<Fields_...>> : public Object {
  public:
+  // Filtering outputs a std::tuple<T>, the caller will use just T in ctor.
+  using ExtendsArgT = metaprogramming::TypeOfNthTupleElement_t<0, Extends_>;
+
+  // The type of the parent class (default `RootObject`).
+  const ExtendsStrip_t<Extends_> parent_;
+
   const std::tuple<Constructors_...> constructors_;
   const Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
       static_;
   const std::tuple<Methods_...> methods_;
   const std::tuple<Fields_...> fields_;
 
-  // Ctors + static.
+  ////////////////////////////////////////////////////////////////////////////////
+  // Constructors can pass any correctly ordered permutation of:
+  // -  Extends (parent declaration)
+  // -  Constructors
+  // -  Statics
+  // -  Methods
+  // -  Fields
+  //
+  // For types that are not packs (e.g. Statics), they must have permutations
+  // provided where they are and aren't present.
+  ////////////////////////////////////////////////////////////////////////////////
+
+  // Methods + Fields.
+  explicit constexpr Class(const char* class_name, Methods_... methods,
+                           Fields_... fields)
+      : Class(class_name, Constructor<>{}, Static{}, methods..., fields...) {}
+
+  // Constructors + Statics + Methods + Fields.
   explicit constexpr Class(
       const char* class_name, Constructors_... constructors,
       Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
@@ -1860,7 +1932,7 @@ struct Class<std::tuple<Constructors_...>,
         methods_(methods...),
         fields_(fields...) {}
 
-  // No ctors, static.
+  // Statics + Methods + Fields.
   explicit constexpr Class(
       const char* class_name,
       Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
@@ -1872,7 +1944,7 @@ struct Class<std::tuple<Constructors_...>,
         methods_(methods...),
         fields_(fields...) {}
 
-  // Ctors, no static.
+  // Constructors only + Methods + Fields.
   explicit constexpr Class(const char* class_name,
                            Constructors_... constructors, Methods_... methods,
                            Fields_... fields)
@@ -1882,16 +1954,62 @@ struct Class<std::tuple<Constructors_...>,
         methods_(methods...),
         fields_(fields...) {}
 
-  // No ctors, no static.
-  explicit constexpr Class(const char* class_name, Methods_... methods,
-                           Fields_... fields)
-      : Class(class_name, Constructor<>{}, Static{}, methods..., fields...) {}
+  ////////////////////////////////////////////////////////////////////////////////
+  // Constructors with `Extends`.
+  ////////////////////////////////////////////////////////////////////////////////
 
-  template <typename... Params, typename... Constructors,
+  // Extends + Methods + Fields.
+  explicit constexpr Class(const char* class_name, ExtendsArgT extends,
+                           Methods_... methods, Fields_... fields)
+      : parent_(extends.parent_),
+        Object(class_name),
+        methods_(methods...),
+        fields_(fields...) {}
+
+  // Extends + Statics + Methods + Fields.
+  explicit constexpr Class(
+      const char* class_name, ExtendsArgT extends,
+      Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
+          statik,
+      Methods_... methods, Fields_... fields)
+      : Object(class_name),
+        parent_(extends.parent_),
+        static_(statik),
+        methods_(methods...),
+        fields_(fields...) {}
+
+  // Extends + Constructors + Methods + Fields.
+  explicit constexpr Class(const char* class_name, ExtendsArgT extends,
+                           Constructors_... constructors, Methods_... methods,
+                           Fields_... fields)
+      : Object(class_name),
+        parent_(extends.parent_),
+        constructors_(constructors...),
+        methods_(methods...),
+        fields_(fields...) {}
+
+  // Extends + Statics + Constructor + Methods + Fields.
+  explicit constexpr Class(
+      const char* class_name, ExtendsArgT extends,
+      Constructors_... constructors,
+      Static<std::tuple<StaticMethods_...>, std::tuple<StaticFields_...>>
+          statik,
+      Methods_... methods, Fields_... fields)
+      : Object(class_name),
+        parent_(extends.parent_),
+        constructors_(constructors...),
+        static_(statik),
+        methods_(methods...),
+        fields_(fields...) {}
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Equality operators.
+  ////////////////////////////////////////////////////////////////////////////////
+  template <typename ParentClass, typename... Params, typename... Constructors,
             typename... StaticMethods, typename... StaticFields,
             typename... Fields, typename... Methods>
   constexpr bool operator==(
-      const Class<std::tuple<Constructors...>,
+      const Class<ParentClass, std::tuple<Constructors...>,
                   std::tuple<Static<std::tuple<StaticMethods...>,
                                     std::tuple<StaticFields...>>>,
                   std::tuple<Methods...>, std::tuple<Fields...>>& rhs) const {
@@ -1906,19 +2024,21 @@ struct Class<std::tuple<Constructors_...>,
 
 template <typename... Params>
 Class(const char*, Params...)
-    -> Class<metaprogramming::BaseFilterWithDefault_t<ConstructorBase,
+    -> Class<metaprogramming::BaseFilterWithDefault_t<
+                 ExtendsBase, Extends<RootObject>, Params...>,
+             metaprogramming::BaseFilterWithDefault_t<ConstructorBase,
                                                       Constructor<>, Params...>,
              metaprogramming::BaseFilterWithDefault_t<
                  StaticBase, Static<std::tuple<>, std::tuple<>>, Params...>,
              metaprogramming::BaseFilter_t<MethodBase, Params...>,
              metaprogramming::BaseFilter_t<FieldBase, Params...>>;
 
-Class(const char*) -> Class<std::tuple<Constructor<>>,
-                            std::tuple<Static<std::tuple<>, std::tuple<>>>,
-                            std::tuple<>, std::tuple<>>;
+Class(const char*)
+    -> Class<std::tuple<Extends<RootObject>>, std::tuple<Constructor<>>,
+             std::tuple<Static<std::tuple<>, std::tuple<>>>, std::tuple<>,
+             std::tuple<>>;
 
 }  // namespace jni
-
 
 #include <type_traits>
 
@@ -2071,7 +2191,6 @@ constexpr auto FullArrayStripV(const T& val) {
 
 }  // namespace jni
 
-
 #include <tuple>
 
 namespace jni {
@@ -2094,7 +2213,6 @@ template <typename... Classes>
 SupportedClassSet(Classes...) -> SupportedClassSet<Classes...>;
 
 }  // namespace jni
-
 
 #include <tuple>
 
@@ -2192,11 +2310,9 @@ static constexpr auto kShadowDefaultClassLoader = kDefaultClassLoader;
 
 }  // namespace jni
 
-
 namespace jni {
 
 // clang-format off
-
 inline constexpr Class kJavaLangClass{
   "java/lang/Class",
   Method{"getClassLoader", Return{ Class { "java/lang/ClassLoader" } }},
@@ -2209,6 +2325,9 @@ inline constexpr Class kJavaLangObject{
 
 inline constexpr Class kJavaLangClassLoader{
   "java/lang/ClassLoader",
+  Static {
+    Method{"getSystemClassLoader", Return{Self{}}},
+  },
   Method{"loadClass", Return{kJavaLangClass}, Params<jstring>{}},
   Method{"toString", Return{jstring{}}, Params<>{}},
 };
@@ -2221,6 +2340,14 @@ static constexpr Class kJavaLangString{
 
   Method{"toString", Return{jstring{}}, Params<>{}},
 };
+
+static constexpr Class kJavaLangException{
+  "java/lang/Exception",
+  Method{"getMessage", Return{jstring{}}, Params<>{}},
+  Method{"printStackTrace", Return{}, Params<>{}},
+  Method{"toString", Return{jstring{}}, Params<>{}},
+};
+
 // clang-format on
 
 }  // namespace jni
@@ -2352,7 +2479,6 @@ struct LifecycleHelper<Span, LifecycleType::GLOBAL>
 };
 
 }  // namespace jni
-
 
 #include <tuple>
 #include <type_traits>
@@ -2504,7 +2630,6 @@ constexpr const auto& ParentLoaderForClass() {
 
 }  // namespace jni
 
-
 namespace jni::metaprogramming {
 
 template <std::size_t repeat_cnt>
@@ -2599,7 +2724,6 @@ struct Constants {
 };
 
 }  // namespace jni::metaprogramming
-
 
 namespace jni {
 
@@ -2736,14 +2860,6 @@ constexpr std::string_view JavaTypeToString<jstring>() {
   using namespace std::literals;
   return "Ljava/lang/String;"sv;
 }
-
-}  // namespace jni
-
-namespace jni {
-
-// Tag to indicate you are referring to the enclosing class.
-// Useful for builder patterns where the decorated object returned is identical.
-struct Self {};
 
 }  // namespace jni
 
@@ -2939,7 +3055,6 @@ struct NBit {
 
 }  // namespace jni::metaprogramming
 
-
 #include <type_traits>
 #include <utility>
 
@@ -2968,6 +3083,7 @@ using Increment_t = typename Increment<I>::template type<T>;
 
 }  // namespace jni::metaprogramming
 
+#include <cstddef>
 #include <string_view>
 
 namespace jni {
@@ -2982,6 +3098,22 @@ struct ParentIfSelf<true, T> {
   using type = typename T::template ChangeIdType<IdType::CLASS>;
 };
 
+template <bool useParent, typename T>
+using ParentIfSelf_t = typename ParentIfSelf<useParent, T>::type;
+
+template <typename IdT, std::size_t I>
+struct Ancestor {
+  using type = typename Ancestor<typename IdT::ParentIdT, I - 1>::type;
+};
+
+template <typename IdT>
+struct Ancestor<IdT, 0> {
+  using type = IdT;
+};
+
+template <typename IdT, std::size_t I>
+using Ancestor_t = typename Ancestor<IdT, I>::type;
+
 // Helper to generate full signature information for a "selected" value, and
 // possibly some container information.  Here, |Selector| is |MethodSelection|,
 // |FieldSelection|, etc.
@@ -2995,7 +3127,8 @@ template <typename SelectorIn>
 struct SelectorStaticInfo {
   static constexpr inline bool kIsSelf =
       std::is_same_v<Self, typename SelectorIn::RawValT>;
-  using Selector = typename ParentIfSelf<kIsSelf, SelectorIn>::type;
+  using Selector =
+      ParentIfSelf_t<kIsSelf, Ancestor_t<SelectorIn, SelectorIn::kAncestorIdx>>;
 
   template <std::size_t I>
   struct IthRawTypeMember {
@@ -3138,7 +3271,8 @@ struct ArrayViewHelper;
 
 // Id.
 template <typename JniT_, IdType kIdType_, std::size_t idx,
-          std::size_t secondary_idx, std::size_t tertiary_idx>
+          std::size_t secondary_idx, std::size_t tertiary_idx,
+          std::size_t ancestry_idx>
 struct Id;
 
 // Scope.
@@ -3472,9 +3606,12 @@ template <typename>
 struct Signature {};
 
 template <typename JniT_, IdType kIdType_, std::size_t idx,
-          std::size_t secondary_idx, std::size_t tertiary_idx>
-struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
-  using IdT = Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>;
+          std::size_t secondary_idx, std::size_t tertiary_idx,
+          std::size_t ancestry_idx>
+struct Signature<
+    Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx, ancestry_idx>> {
+  using IdT =
+      Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx, ancestry_idx>;
 
   static constexpr IdType kChildIdType = kIdType_ == IdType::OVERLOAD
                                              ? IdType::OVERLOAD_PARAM
@@ -3487,8 +3624,8 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
   struct Helper<std::index_sequence<Is...>> {
     template <std::size_t I>
     struct Val {
-      static constexpr std::string_view val =
-          Signature<Id<JniT_, kChildIdType, idx, secondary_idx, I>>::val;
+      static constexpr std::string_view val = Signature<
+          Id<JniT_, kChildIdType, idx, secondary_idx, I, ancestry_idx>>::val;
     };
 
     static constexpr std::string_view val =
@@ -3496,8 +3633,8 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
   };
 
   struct ReturnHelper {
-    static constexpr std::string_view val =
-        Signature<Id<JniT_, kChildIdType, idx, secondary_idx, kNoIdx>>::val;
+    static constexpr std::string_view val = Signature<
+        Id<JniT_, kChildIdType, idx, secondary_idx, kNoIdx, ancestry_idx>>::val;
   };
 
   // For methods and ctors generates the signature, e.g. "(II)LClass1;".
@@ -3594,7 +3731,6 @@ constexpr auto StripClassLoaderFromLoadedBy(T val) {
 
 }  // namespace jni
 
-
 namespace jni::metaprogramming {
 
 // Builds a stable (i.e. first unique type is preserved) set of unique types
@@ -3635,7 +3771,6 @@ template <typename Tup>
 using UniqueSet_Tup = TupleUnroller_t<UniqueSet, Tup>;
 
 }  // namespace jni::metaprogramming
-
 
 #include <tuple>
 
@@ -3911,6 +4046,10 @@ struct JniT {
   static constexpr std::size_t kRank = kRank_;
   static_assert(kRank != -1);
 
+  static constexpr auto kParent = class_v_.parent_;
+  using ParentT = JniT<SpanType_, kParent, class_loader_v_, jvm_v_, kRank_,
+                       class_idx_, class_loader_idx_>;
+
   // Same as this type, except uses rank-1.
   using RankLess1 = JniT<SpanType_, class_v_, class_loader_v_, jvm_v_,
                          kRank_ - 1, class_idx_, class_loader_idx_>;
@@ -4080,18 +4219,18 @@ struct RawProxy<JniT, jobject, kLessRank> {
 
 // Helper to generate signatures for objects at rank-1 but span types at rank.
 // Used in static selection signature generation (for types like LocalArray).
-template <typename JniT, int kLessRank>
+template <typename JniT, int kLessRank, std::size_t ancestor_idx>
 struct JniTSelector {
   using RawProxyT = RawProxy<JniT, typename JniT::SpanType, kLessRank>;
   using RawValT = typename RawProxyT::RawValT;
 
   static constexpr std::size_t kRank = RawProxyT::kRank;
+  static constexpr std::size_t kAncestorIdx = ancestor_idx;
 
   static constexpr auto Val() { return RawProxyT{}; }
 };
 
 }  // namespace jni
-
 
 #include <type_traits>
 #include <utility>
@@ -4152,7 +4291,6 @@ struct Interleaved<std::tuple<T0...>, std::tuple<T1...>> {
 };
 
 }  // namespace jni::metaprogramming
-
 
 namespace jni {
 
@@ -4711,7 +4849,6 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, false> {
 
 }  // namespace jni
 
-
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -4802,7 +4939,6 @@ struct ProxyBase {
 
 }  // namespace jni
 
-
 #include <cstddef>
 #include <limits>
 #include <string_view>
@@ -4811,7 +4947,8 @@ struct ProxyBase {
 namespace jni {
 
 template <typename JniT_, IdType kIdType_, std::size_t idx = kNoIdx,
-          std::size_t secondary_idx = kNoIdx, std::size_t tertiary_idx = kNoIdx>
+          std::size_t secondary_idx = kNoIdx, std::size_t tertiary_idx = kNoIdx,
+          std::size_t ancestry_idx = 0>
 struct Id {
   using JniT = JniT_;
   static constexpr IdType kIdType = kIdType_;
@@ -4821,6 +4958,7 @@ struct Id {
   static constexpr std::size_t kIdx = idx;
   static constexpr std::size_t kSecondaryIdx = secondary_idx;
   static constexpr std::size_t kTertiaryIdx = tertiary_idx;
+  static constexpr std::size_t kAncestorIdx = ancestry_idx;
 
   static constexpr bool kIsConstructor =
       (kIdType == IdType::OVERLOAD || kIdType == IdType::OVERLOAD_PARAM ||
@@ -4840,7 +4978,7 @@ struct Id {
                        (kIdxToChange == 1 ? kNewValue : secondary_idx),
                        (kIdxToChange == 2 ? kNewValue : tertiary_idx)>;
 
-  static constexpr auto Val() {
+  static constexpr auto ValWhenAncestryIs0() {
     if constexpr (kIdType == IdType::CLASS) {
       return Class();
     } else if constexpr (kIdType == IdType::STATIC_FIELD) {
@@ -4919,6 +5057,17 @@ struct Id {
     } else if constexpr (kIdType == IdType::FIELD) {
       static_assert(idx != kNoIdx);
       return std::get<idx>(Class().fields_).raw_;
+    }
+  }
+
+  using ParentIdT = Id<typename JniT::ParentT, kIdType_, idx, secondary_idx,
+                       tertiary_idx, ancestry_idx - 1>;
+
+  static constexpr auto Val() {
+    if constexpr (ancestry_idx > 0) {
+      return ParentIdT::Val();
+    } else {
+      return ValWhenAncestryIs0();
     }
   }
 
@@ -5004,6 +5153,19 @@ struct Id {
 
 }  // namespace jni
 
+namespace jni {
+
+struct Configuration {
+  // Release jclassID on JVM teardown (needed in test to  balance global IDs).
+  bool release_class_ids_on_teardown_ = false;
+
+  // Release jmethodID on JVM teardown (needed in test to  balance global IDs).
+  bool release_method_ids_on_teardown_ = false;
+};
+
+static inline Configuration kConfiguration = {};
+
+}  // namespace jni
 
 #include <optional>
 #include <tuple>
@@ -5130,7 +5292,6 @@ class InvocableMap
               std::decay_t<decltype(tup_container_v.*nameable_member)>>>> {};
 
 }  // namespace jni::metaprogramming
-
 
 #include <cstddef>
 #include <utility>
@@ -6467,7 +6628,6 @@ struct AdoptGlobal {};
 
 }  // namespace jni
 
-
 #include <type_traits>
 #include <vector>
 
@@ -6499,7 +6659,9 @@ class ClassRef {
     if constexpr (JniT::GetClassLoader() == kDefaultClassLoader) {
       static auto get_lambda =
           [](metaprogramming::DoubleLockedValue<jclass>* storage) {
-            DefaultRefs<jclass>().push_back(storage);
+            if (kConfiguration.release_class_ids_on_teardown_) {
+              DefaultRefs<jclass>().push_back(storage);
+            }
 
             // FindClass uses plain name (e.g. "kClass") for rank 0, qualified
             // class names when used in arrays (e.g. "[LkClass;"). This doesn't
@@ -6519,14 +6681,14 @@ class ClassRef {
                   LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
                       JniHelper::FindClass(
                           SelectorStaticInfo<
-                              JniTSelector<JniTForLifecycle, -1>>::TypeName()
+                              JniTSelector<JniTForLifecycle, -1, 0>>::TypeName()
                               .data())));
             }
           };
 
       return RefStorage<
           decltype(get_lambda),
-          SelectorStaticInfo<JniTSelector<JniT, 0>>>::Get(get_lambda);
+          SelectorStaticInfo<JniTSelector<JniT, 0, 0>>>::Get(get_lambda);
     } else {
       // For non default classloader, storage in class member.
       return class_ref_.LoadAndMaybeInit([=]() {
@@ -7236,7 +7398,9 @@ struct OverloadRef {
   static jmethodID GetMethodID(jclass clazz) {
     static auto get_lambda =
         [clazz](metaprogramming::DoubleLockedValue<jmethodID>* storage) {
-          DefaultRefs<jmethodID>().push_back(storage);
+          if (kConfiguration.release_method_ids_on_teardown_) {
+            DefaultRefs<jmethodID>().push_back(storage);
+          }
 
           if constexpr (IdT::kIsStatic) {
             return jni::JniHelper::GetStaticMethodID(clazz, IdT::Name(),
@@ -7286,7 +7450,6 @@ struct OverloadRef {
 };
 
 }  // namespace jni
-
 
 namespace jni {
 
@@ -7503,6 +7666,7 @@ struct OverloadSelector {
 #include <mutex>
 #include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 namespace jni {
@@ -7523,6 +7687,8 @@ class FieldRef {
  public:
   using IdT = Id<JniT, field_type, I>;
   using FieldSelectionT = FieldSelection<JniT, I>;
+
+  using SelfIdT = typename IdT::template ChangeIdType<IdType::CLASS>;
 
   explicit FieldRef(jclass class_ref, jobject object_ref)
       : class_ref_(class_ref), object_ref_(object_ref) {}
@@ -7550,7 +7716,10 @@ class FieldRef {
     });
   }
 
-  using ReturnProxied = Return_t<typename IdT::MaterializeCDeclT, IdT>;
+  using ReturnProxied =
+      std::conditional_t<IdT::kIsSelf,
+                         Return_t<typename SelfIdT::MaterializeCDeclT, SelfIdT>,
+                         Return_t<typename IdT::MaterializeCDeclT, IdT>>;
 
   const auto& SelfVal() {
     if constexpr (IdT::kIsStatic) {
@@ -8676,7 +8845,11 @@ class JvmRefBase {
   friend class ThreadGuard;
   friend class ThreadLocalGuardDestructor;
 
-  JvmRefBase(JavaVM* vm) { process_level_jvm_.store(vm); }
+  JvmRefBase(JavaVM* vm, const Configuration& configuration) {
+    process_level_jvm_.store(vm);
+    kConfiguration = configuration;
+  }
+
   ~JvmRefBase() { process_level_jvm_.store(nullptr); }
 
   static JavaVM* GetJavaVm() { return process_level_jvm_.load(); }
@@ -9304,9 +9477,9 @@ LocalArray(
     -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
 
 template <typename SpanType>
-LocalArray(std::size_t, SpanType)
-    -> LocalArray<SpanType, 1, kNoClassSpecified, kDefaultClassLoader,
-                  kDefaultJvm>;
+LocalArray(std::size_t,
+           SpanType) -> LocalArray<SpanType, 1, kNoClassSpecified,
+                                   kDefaultClassLoader, kDefaultJvm>;
 
 template <typename SpanType, std::size_t kRank_minus_1>
 LocalArray(std::size_t, LocalArray<SpanType, kRank_minus_1>)
@@ -9384,8 +9557,10 @@ class JvmRef : public JvmRefBase {
     }
   }
 
-  explicit JvmRef(JNIEnv* env) : JvmRefBase(BuildJavaVMFromEnv(env)) {}
-  explicit JvmRef(JavaVM* vm) : JvmRefBase(vm) {}
+  explicit JvmRef(JNIEnv* env, const Configuration& configuration = {})
+      : JvmRefBase(BuildJavaVMFromEnv(env), configuration) {}
+  explicit JvmRef(JavaVM* vm, const Configuration& configuration = {})
+      : JvmRefBase(vm, configuration) {}
 
   ~JvmRef() {
     TeardownClassloadersHelper(
@@ -9650,7 +9825,6 @@ inline jclass FindClassFallback(const char* class_name) {
 
 }  // namespace jni
 
-
 namespace jni {
 
 inline constexpr Class kJavaUtilList{
@@ -9660,6 +9834,19 @@ inline constexpr Class kJavaUtilList{
     Method{"get", jni::Return{kJavaLangObject}, jni::Params<jint>{}},
     Method{"remove", jni::Return{kJavaLangObject}, jni::Params<jint>{}},
     Method{"size", jni::Return<jint>{}, jni::Params{}}};
+
+}  // namespace jni
+
+namespace jni {
+
+static constexpr ::jni::Class kJavaUtilArrayList{
+    "java/util/ArrayList",
+    Constructor{},
+    Constructor{kJavaLangObject},
+    Constructor{int{}},
+
+    Method{"add", Return<jboolean>{}, Params{kJavaLangObject}},
+};
 
 }  // namespace jni
 
