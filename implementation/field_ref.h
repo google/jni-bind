@@ -20,6 +20,7 @@
 #include <mutex>
 #include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 #include "implementation/class_ref.h"
@@ -57,6 +58,8 @@ class FieldRef {
   using IdT = Id<JniT, field_type, I>;
   using FieldSelectionT = FieldSelection<JniT, I>;
 
+  using SelfIdT = typename IdT::template ChangeIdType<IdType::CLASS>;
+
   explicit FieldRef(jclass class_ref, jobject object_ref)
       : class_ref_(class_ref), object_ref_(object_ref) {}
 
@@ -83,7 +86,10 @@ class FieldRef {
     });
   }
 
-  using ReturnProxied = Return_t<typename IdT::MaterializeCDeclT, IdT>;
+  using ReturnProxied =
+      std::conditional_t<IdT::kIsSelf,
+                         Return_t<typename SelfIdT::MaterializeCDeclT, SelfIdT>,
+                         Return_t<typename IdT::MaterializeCDeclT, IdT> >;
 
   const auto& SelfVal() {
     if constexpr (IdT::kIsStatic) {

@@ -31,6 +31,7 @@ using ::jni::LocalString;
 using ::jni::Method;
 using ::jni::Params;
 using ::jni::Rank;
+using ::jni::Self;
 using ::jni::Static;
 using ::jni::StaticRef;
 using ::jni::test::JniTest;
@@ -57,7 +58,8 @@ static constexpr Class kClass{
         Field{"floatField", jfloat{}},
         Field{"doubleField", jdouble{}},
         Field{"stringField", jstring{}},
-        Field{"classField", Class{"kClass2"}}
+        Field{"classField", Class{"kClass2"}},
+        Field{"selfField", Self{}}
       },
 };
 // clang-format on
@@ -190,6 +192,25 @@ TEST_F(JniTest, StaticField_ObjectSet) {
       LocalObject<kClass2>{AdoptLocal{}, Fake<jobject>()});
 }
 
+TEST_F(JniTest, StaticField_SelfGet) {
+  EXPECT_CALL(*env_, GetStaticFieldID(_, StrEq("selfField"), StrEq("LkClass;")))
+      .WillOnce(Return(Fake<jfieldID>()));
+  EXPECT_CALL(*env_, GetStaticObjectField(_, Fake<jfieldID>()))
+      .WillOnce(Return(Fake<jobject>()));
+
+  jni::LocalObject<kClass> obj = StaticRef<kClass>{}["selfField"].Get();
+}
+
+TEST_F(JniTest, StaticField_SelfSet) {
+  EXPECT_CALL(*env_, GetStaticFieldID(_, StrEq("selfField"), StrEq("LkClass;")))
+      .WillOnce(Return(Fake<jfieldID>()));
+  EXPECT_CALL(*env_,
+              SetStaticObjectField(_, Fake<jfieldID>(), Fake<jobject>()));
+
+  StaticRef<kClass>{}["selfField"].Set(
+      LocalObject<kClass>{AdoptLocal{}, Fake<jobject>()});
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Static Methods.
 ////////////////////////////////////////////////////////////////////////////////
@@ -210,6 +231,7 @@ static constexpr Class kMethodClass{
         Method{"objectMethod", ::jni::Return{Class{"kClass2"}}},
         Method{"rank1ArrayMethod", ::jni::Return{Array{Class{"kClass2"}}}},
         Method{"rank2ArrayMethod", ::jni::Return{Array{Class{"kClass2"}, Rank<2>{}}}},
+        Method{"selfMethod", ::jni::Return{Self{}}},
 
         Method{"simpleFunc", ::jni::Return{int{}}, Params{jfloat{}}},
         Method{"complexFunc", ::jni::Return{float{}},
@@ -248,8 +270,10 @@ TEST_F(JniTest, StaticExerciseAllReturns) {
                                        StrEq("()[LkClass2;")));
   EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("rank2ArrayMethod"),
                                        StrEq("()[[LkClass2;")));
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("selfMethod"),
+                                       StrEq("()LkMethodClass;")));
 
-  EXPECT_CALL(*env_, CallStaticObjectMethodV).Times(4);
+  EXPECT_CALL(*env_, CallStaticObjectMethodV).Times(5);
 
   StaticRef<kMethodClass>{}("booleanMethod");
   StaticRef<kMethodClass>{}("byteMethod");
@@ -261,10 +285,11 @@ TEST_F(JniTest, StaticExerciseAllReturns) {
   StaticRef<kMethodClass>{}("doubleMethod");
   StaticRef<kMethodClass>{}("stringMethod");
 
-  // It would be more complete to exercise all types here.
   StaticRef<kMethodClass>{}("objectMethod");
   StaticRef<kMethodClass>{}("rank1ArrayMethod");
   StaticRef<kMethodClass>{}("rank2ArrayMethod");
+
+  LocalObject<kClass> self_ret = StaticRef<kMethodClass>{}("selfMethod");
 }
 
 // clang-format off
@@ -283,6 +308,7 @@ static constexpr Class kMethodClassSingleParam{
         Method{"objectMethod", ::jni::Return<void>{}, Params{Class{"kClass2"}}},
         Method{"rank1ArrayMethod", ::jni::Return<void>{}, Params{Array{Class{"kClass2"}}}},
         Method{"rank2ArrayMethod", ::jni::Return<void>{}, Params{Array{Class{"kClass2"}, Rank<2>{}}}},
+        Method{"selfMethod", ::jni::Return<void>{}, Params{Self{}}}
       },
 };
 // clang-format on
@@ -307,8 +333,10 @@ TEST_F(JniTest, StaticExerciseAllTypesThroughSingleParam) {
                                        StrEq("([LkClass2;)V")));
   EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("rank2ArrayMethod"),
                                        StrEq("([[LkClass2;)V")));
+  EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("selfMethod"),
+                                       StrEq("(LkMethodClassSingleParam;)V")));
 
-  EXPECT_CALL(*env_, CallStaticVoidMethodV).Times(12);
+  EXPECT_CALL(*env_, CallStaticVoidMethodV).Times(13);
 
   StaticRef<kMethodClassSingleParam>{}("booleanMethod", jboolean{true});
   StaticRef<kMethodClassSingleParam>{}("byteMethod", jbyte{1});
@@ -326,6 +354,7 @@ TEST_F(JniTest, StaticExerciseAllTypesThroughSingleParam) {
                                        Fake<jobjectArray>());
   StaticRef<kMethodClassSingleParam>{}("rank2ArrayMethod",
                                        Fake<jobjectArray>());
+  StaticRef<kMethodClassSingleParam>{}("selfMethod", Fake<jobject>());
 }
 
 TEST_F(JniTest, StaticExerciseComplexSetOfParams) {
