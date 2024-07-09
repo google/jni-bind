@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_SELECTOR_STATIC_INFO_H_
 #define JNI_BIND_SELECTOR_STATIC_INFO_H_
 
+#include <cstddef>
 #include <string_view>
 
 #include "implementation/array.h"
@@ -43,6 +44,22 @@ struct ParentIfSelf<true, T> {
   using type = typename T::template ChangeIdType<IdType::CLASS>;
 };
 
+template <bool useParent, typename T>
+using ParentIfSelf_t = typename ParentIfSelf<useParent, T>::type;
+
+template <typename IdT, std::size_t I>
+struct Ancestor {
+  using type = typename Ancestor<typename IdT::ParentIdT, I - 1>::type;
+};
+
+template <typename IdT>
+struct Ancestor<IdT, 0> {
+  using type = IdT;
+};
+
+template <typename IdT, std::size_t I>
+using Ancestor_t = typename Ancestor<IdT, I>::type;
+
 // Helper to generate full signature information for a "selected" value, and
 // possibly some container information.  Here, |Selector| is |MethodSelection|,
 // |FieldSelection|, etc.
@@ -56,7 +73,8 @@ template <typename SelectorIn>
 struct SelectorStaticInfo {
   static constexpr inline bool kIsSelf =
       std::is_same_v<Self, typename SelectorIn::RawValT>;
-  using Selector = typename ParentIfSelf<kIsSelf, SelectorIn>::type;
+  using Selector =
+      ParentIfSelf_t<kIsSelf, Ancestor_t<SelectorIn, SelectorIn::kAncestorIdx>>;
 
   template <std::size_t I>
   struct IthRawTypeMember {

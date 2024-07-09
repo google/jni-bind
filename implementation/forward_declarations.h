@@ -40,7 +40,8 @@ struct ArrayViewHelper;
 
 // Id.
 template <typename JniT_, IdType kIdType_, std::size_t idx,
-          std::size_t secondary_idx, std::size_t tertiary_idx>
+          std::size_t secondary_idx, std::size_t tertiary_idx,
+          std::size_t ancestry_idx>
 struct Id;
 
 // Scope.

@@ -29,6 +29,7 @@ using ::jni::JniTSelector;
 using ::jni::kNoIdx;
 using ::jni::Rank;
 using ::jni::SelectorStaticInfo;
+using ::jni::Self;
 using ::jni::Signature_v;
 
 // clang-format off
@@ -66,18 +67,14 @@ static constexpr Class kClass1{
    Field{"f23", Array{jfloat{}, Rank<2>{}}},
    Field{"f24", Array{jdouble{}, Rank<2>{}}},
    Field{"f25", Array{jlong{}, Rank<2>{}}},
-   Field{"f26", Array{Class{"kClass2"}, Rank<2>{}}}
+   Field{"f26", Array{Class{"kClass2"}, Rank<2>{}}},
+
+   // Self.
+  Field{"f27", Self{}}
 };
 // clang-format on
 
 using JT = JniT<jobject, kClass1>;
-
-////////////////////////////////////////////////////////////////////////////////
-// Class (i.e. self).
-////////////////////////////////////////////////////////////////////////////////
-using kSelf1 = Id<JT, IdType::CLASS, kNoIdx, 0>;
-using JniSelfT = JniTSelector<jni::LocalArray<jobject, 3, kClass1>::JniT_, -1>;
-using StaticSelectorInfoSelf = SelectorStaticInfo<JniSelfT>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Rank 0.
@@ -128,5 +125,11 @@ static_assert(std::string_view{"[[J"} ==
               Signature_v<Id<JT, IdType::FIELD, 25>>);
 static_assert(std::string_view{"[[LkClass2;"} ==
               Signature_v<Id<JT, IdType::FIELD, 26>>);
+
+////////////////////////////////////////////////////////////////////////////////
+// Self.
+////////////////////////////////////////////////////////////////////////////////
+static_assert(std::string_view{"LkClass1;"} ==
+              Signature_v<Id<JT, IdType::FIELD, 27>>);
 
 }  // namespace

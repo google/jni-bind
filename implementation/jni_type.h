@@ -43,6 +43,10 @@ struct JniT {
   static constexpr std::size_t kRank = kRank_;
   static_assert(kRank != -1);
 
+  static constexpr auto kParent = class_v_.parent_;
+  using ParentT = JniT<SpanType_, kParent, class_loader_v_, jvm_v_, kRank_,
+                       class_idx_, class_loader_idx_>;
+
   // Same as this type, except uses rank-1.
   using RankLess1 = JniT<SpanType_, class_v_, class_loader_v_, jvm_v_,
                          kRank_ - 1, class_idx_, class_loader_idx_>;
@@ -212,12 +216,13 @@ struct RawProxy<JniT, jobject, kLessRank> {
 
 // Helper to generate signatures for objects at rank-1 but span types at rank.
 // Used in static selection signature generation (for types like LocalArray).
-template <typename JniT, int kLessRank>
+template <typename JniT, int kLessRank, std::size_t ancestor_idx>
 struct JniTSelector {
   using RawProxyT = RawProxy<JniT, typename JniT::SpanType, kLessRank>;
   using RawValT = typename RawProxyT::RawValT;
 
   static constexpr std::size_t kRank = RawProxyT::kRank;
+  static constexpr std::size_t kAncestorIdx = ancestor_idx;
 
   static constexpr auto Val() { return RawProxyT{}; }
 };

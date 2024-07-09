@@ -1187,11 +1187,30 @@ cc_test(
 )
 
 cc_test(
+    name = "signature_inherited_method_test",
+    srcs = ["signature_inherited_method_test.cc"],
+    deps = [
+        "//:jni_bind",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "signature_field_test",
     srcs = ["signature_field_test.cc"],
     deps = [
         "//:jni_bind",
         "//:jni_test",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "signature_inherited_field_test",
+    srcs = ["signature_inherited_field_test.cc"],
+    deps = [
+        ":id_type",
+        "//:jni_bind",
         "@googletest//:gtest_main",
     ],
 )

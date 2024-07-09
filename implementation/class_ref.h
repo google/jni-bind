@@ -60,38 +60,38 @@ class ClassRef {
       jobject optional_object_to_build_loader_from) {
     // For the default classloader, storage in uniquely IDed struct static.
     if constexpr (JniT::GetClassLoader() == kDefaultClassLoader) {
-      static auto get_lambda = [](metaprogramming::DoubleLockedValue<jclass>*
-                                      storage) {
-        if (kConfiguration.release_class_ids_on_teardown_) {
-          DefaultRefs<jclass>().push_back(storage);
-        }
+      static auto get_lambda =
+          [](metaprogramming::DoubleLockedValue<jclass>* storage) {
+            if (kConfiguration.release_class_ids_on_teardown_) {
+              DefaultRefs<jclass>().push_back(storage);
+            }
 
-        // FindClass uses plain name (e.g. "kClass") for rank 0, qualified
-        // class names when used in arrays (e.g. "[LkClass;"). This doesn't
-        // come up in the API until rank 2.
-        if constexpr (JniT::kRank <= 1) {
-          return static_cast<jclass>(
-              LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
-                  JniHelper::FindClass(JniT::kName.data())));
-        } else {
-          // Primitive types drop their rank by 1 because of how their
-          // signatures get derived in array_ref.h.
-          using JniTForLifecycle = std::conditional_t<
-              std::is_same_v<jobject, typename JniT::SpanType>, JniT,
-              typename JniT::RankLess1>;
+            // FindClass uses plain name (e.g. "kClass") for rank 0, qualified
+            // class names when used in arrays (e.g. "[LkClass;"). This doesn't
+            // come up in the API until rank 2.
+            if constexpr (JniT::kRank <= 1) {
+              return static_cast<jclass>(
+                  LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
+                      JniHelper::FindClass(JniT::kName.data())));
+            } else {
+              // Primitive types drop their rank by 1 because of how their
+              // signatures get derived in array_ref.h.
+              using JniTForLifecycle = std::conditional_t<
+                  std::is_same_v<jobject, typename JniT::SpanType>, JniT,
+                  typename JniT::RankLess1>;
 
-          return static_cast<jclass>(
-              LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
-                  JniHelper::FindClass(
-                      SelectorStaticInfo<
-                          JniTSelector<JniTForLifecycle, -1>>::TypeName()
-                          .data())));
-        }
-      };
+              return static_cast<jclass>(
+                  LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(
+                      JniHelper::FindClass(
+                          SelectorStaticInfo<
+                              JniTSelector<JniTForLifecycle, -1, 0>>::TypeName()
+                              .data())));
+            }
+          };
 
       return RefStorage<
           decltype(get_lambda),
-          SelectorStaticInfo<JniTSelector<JniT, 0>>>::Get(get_lambda);
+          SelectorStaticInfo<JniTSelector<JniT, 0, 0>>>::Get(get_lambda);
     } else {
       // For non default classloader, storage in class member.
       return class_ref_.LoadAndMaybeInit([=]() {

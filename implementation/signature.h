@@ -36,9 +36,12 @@ template <typename>
 struct Signature {};
 
 template <typename JniT_, IdType kIdType_, std::size_t idx,
-          std::size_t secondary_idx, std::size_t tertiary_idx>
-struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
-  using IdT = Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>;
+          std::size_t secondary_idx, std::size_t tertiary_idx,
+          std::size_t ancestry_idx>
+struct Signature<
+    Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx, ancestry_idx>> {
+  using IdT =
+      Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx, ancestry_idx>;
 
   static constexpr IdType kChildIdType = kIdType_ == IdType::OVERLOAD
                                              ? IdType::OVERLOAD_PARAM
@@ -52,7 +55,7 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
     template <std::size_t I>
     struct Val {
       static constexpr std::string_view val = Signature<
-          Id<JniT_, kChildIdType, idx, secondary_idx, I>>::val;
+          Id<JniT_, kChildIdType, idx, secondary_idx, I, ancestry_idx>>::val;
     };
 
     static constexpr std::string_view val =
@@ -61,7 +64,7 @@ struct Signature<Id<JniT_, kIdType_, idx, secondary_idx, tertiary_idx>> {
 
   struct ReturnHelper {
     static constexpr std::string_view val = Signature<
-        Id<JniT_, kChildIdType, idx, secondary_idx, kNoIdx>>::val;
+        Id<JniT_, kChildIdType, idx, secondary_idx, kNoIdx, ancestry_idx>>::val;
   };
 
   // For methods and ctors generates the signature, e.g. "(II)LClass1;".

@@ -24,12 +24,17 @@ namespace jni {
 
 struct ExtendsBase {};
 
-struct RootObject {};
+struct RootObject {
+  constexpr RootObject() = default;
+};
 
 static constexpr RootObject kObject{};
 
 static constexpr struct NoClass {
+  constexpr NoClass() {}
+
   const char* name_ = "__JNI_BIND__NO_CLASS__";
+  const RootObject parent_;
   const Static<std::tuple<>, std::tuple<>> static_{};
   const std::tuple<> methods_{};
   const std::tuple<> fields_{};

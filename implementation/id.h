@@ -38,7 +38,8 @@
 namespace jni {
 
 template <typename JniT_, IdType kIdType_, std::size_t idx = kNoIdx,
-          std::size_t secondary_idx = kNoIdx, std::size_t tertiary_idx = kNoIdx>
+          std::size_t secondary_idx = kNoIdx, std::size_t tertiary_idx = kNoIdx,
+          std::size_t ancestry_idx = 0>
 struct Id {
   using JniT = JniT_;
   static constexpr IdType kIdType = kIdType_;
@@ -48,6 +49,7 @@ struct Id {
   static constexpr std::size_t kIdx = idx;
   static constexpr std::size_t kSecondaryIdx = secondary_idx;
   static constexpr std::size_t kTertiaryIdx = tertiary_idx;
+  static constexpr std::size_t kAncestorIdx = ancestry_idx;
 
   static constexpr bool kIsConstructor =
       (kIdType == IdType::OVERLOAD || kIdType == IdType::OVERLOAD_PARAM ||
@@ -67,7 +69,7 @@ struct Id {
                        (kIdxToChange == 1 ? kNewValue : secondary_idx),
                        (kIdxToChange == 2 ? kNewValue : tertiary_idx)>;
 
-  static constexpr auto Val() {
+  static constexpr auto ValWhenAncestryIs0() {
     if constexpr (kIdType == IdType::CLASS) {
       return Class();
     } else if constexpr (kIdType == IdType::STATIC_FIELD) {
@@ -146,6 +148,17 @@ struct Id {
     } else if constexpr (kIdType == IdType::FIELD) {
       static_assert(idx != kNoIdx);
       return std::get<idx>(Class().fields_).raw_;
+    }
+  }
+
+  using ParentIdT = Id<typename JniT::ParentT, kIdType_, idx, secondary_idx,
+                       tertiary_idx, ancestry_idx - 1>;
+
+  static constexpr auto Val() {
+    if constexpr (ancestry_idx > 0) {
+      return ParentIdT::Val();
+    } else {
+      return ValWhenAncestryIs0();
     }
   }
 
