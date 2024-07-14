@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cstddef>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "jni_bind.h"
@@ -76,60 +78,52 @@ static constexpr Class kClass1{
 
 using JT = JniT<jobject, kClass1>;
 
+template <std::size_t I>
+static constexpr auto Sig_v =
+    Signature_v<Id<JT, IdType::FIELD, I, kNoIdx, kNoIdx, 0>>;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Rank 0.
 ////////////////////////////////////////////////////////////////////////////////
-static_assert(std::string_view{"Z"} == Signature_v<Id<JT, IdType::FIELD, 0>>);
-static_assert(std::string_view{"B"} == Signature_v<Id<JT, IdType::FIELD, 1>>);
-static_assert(std::string_view{"C"} == Signature_v<Id<JT, IdType::FIELD, 2>>);
-static_assert(std::string_view{"S"} == Signature_v<Id<JT, IdType::FIELD, 3>>);
-static_assert(std::string_view{"I"} == Signature_v<Id<JT, IdType::FIELD, 4>>);
-static_assert(std::string_view{"F"} == Signature_v<Id<JT, IdType::FIELD, 5>>);
-static_assert(std::string_view{"D"} == Signature_v<Id<JT, IdType::FIELD, 6>>);
-static_assert(std::string_view{"J"} == Signature_v<Id<JT, IdType::FIELD, 7>>);
-static_assert(std::string_view{"LkClass2;"} ==
-              Signature_v<Id<JT, IdType::FIELD, 8>>);
+static_assert(std::string_view{"Z"} == Sig_v<0>);
+static_assert(std::string_view{"B"} == Sig_v<1>);
+static_assert(std::string_view{"C"} == Sig_v<2>);
+static_assert(std::string_view{"S"} == Sig_v<3>);
+static_assert(std::string_view{"I"} == Sig_v<4>);
+static_assert(std::string_view{"F"} == Sig_v<5>);
+static_assert(std::string_view{"D"} == Sig_v<6>);
+static_assert(std::string_view{"J"} == Sig_v<7>);
+static_assert(std::string_view{"LkClass2;"} == Sig_v<8>);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Rank 1.
 ////////////////////////////////////////////////////////////////////////////////
-static_assert(std::string_view{"[Z"} == Signature_v<Id<JT, IdType::FIELD, 9>>);
-static_assert(std::string_view{"[B"} == Signature_v<Id<JT, IdType::FIELD, 10>>);
-static_assert(std::string_view{"[C"} == Signature_v<Id<JT, IdType::FIELD, 11>>);
-static_assert(std::string_view{"[S"} == Signature_v<Id<JT, IdType::FIELD, 12>>);
-static_assert(std::string_view{"[I"} == Signature_v<Id<JT, IdType::FIELD, 13>>);
-static_assert(std::string_view{"[F"} == Signature_v<Id<JT, IdType::FIELD, 14>>);
-static_assert(std::string_view{"[D"} == Signature_v<Id<JT, IdType::FIELD, 15>>);
-static_assert(std::string_view{"[J"} == Signature_v<Id<JT, IdType::FIELD, 16>>);
-static_assert(std::string_view{"[LkClass2;"} ==
-              Signature_v<Id<JT, IdType::FIELD, 17>>);
+static_assert(std::string_view{"[Z"} == Sig_v<9>);
+static_assert(std::string_view{"[B"} == Sig_v<10>);
+static_assert(std::string_view{"[C"} == Sig_v<11>);
+static_assert(std::string_view{"[S"} == Sig_v<12>);
+static_assert(std::string_view{"[I"} == Sig_v<13>);
+static_assert(std::string_view{"[F"} == Sig_v<14>);
+static_assert(std::string_view{"[D"} == Sig_v<15>);
+static_assert(std::string_view{"[J"} == Sig_v<16>);
+static_assert(std::string_view{"[LkClass2;"} == Sig_v<17>);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Rank 2.
 ////////////////////////////////////////////////////////////////////////////////
-static_assert(std::string_view{"[[Z"} ==
-              Signature_v<Id<JT, IdType::FIELD, 18>>);
-static_assert(std::string_view{"[[B"} ==
-              Signature_v<Id<JT, IdType::FIELD, 19>>);
-static_assert(std::string_view{"[[C"} ==
-              Signature_v<Id<JT, IdType::FIELD, 20>>);
-static_assert(std::string_view{"[[S"} ==
-              Signature_v<Id<JT, IdType::FIELD, 21>>);
-static_assert(std::string_view{"[[I"} ==
-              Signature_v<Id<JT, IdType::FIELD, 22>>);
-static_assert(std::string_view{"[[F"} ==
-              Signature_v<Id<JT, IdType::FIELD, 23>>);
-static_assert(std::string_view{"[[D"} ==
-              Signature_v<Id<JT, IdType::FIELD, 24>>);
-static_assert(std::string_view{"[[J"} ==
-              Signature_v<Id<JT, IdType::FIELD, 25>>);
-static_assert(std::string_view{"[[LkClass2;"} ==
-              Signature_v<Id<JT, IdType::FIELD, 26>>);
+static_assert(std::string_view{"[[Z"} == Sig_v<18>);
+static_assert(std::string_view{"[[B"} == Sig_v<19>);
+static_assert(std::string_view{"[[C"} == Sig_v<20>);
+static_assert(std::string_view{"[[S"} == Sig_v<21>);
+static_assert(std::string_view{"[[I"} == Sig_v<22>);
+static_assert(std::string_view{"[[F"} == Sig_v<23>);
+static_assert(std::string_view{"[[D"} == Sig_v<24>);
+static_assert(std::string_view{"[[J"} == Sig_v<25>);
+static_assert(std::string_view{"[[LkClass2;"} == Sig_v<26>);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Self.
 ////////////////////////////////////////////////////////////////////////////////
-static_assert(std::string_view{"LkClass1;"} ==
-              Signature_v<Id<JT, IdType::FIELD, 27>>);
+static_assert(std::string_view{"LkClass1;"} == Sig_v<27>);
 
 }  // namespace

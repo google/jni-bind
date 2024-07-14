@@ -91,8 +91,7 @@ struct OverloadSelection {
   }
 };
 
-template <typename IdT_, IdType kIDType = IdType::OVERLOAD,
-          IdType kReturnIDType = IdType::OVERLOAD_PARAM>
+template <typename IdT_, IdType kIDType, IdType kReturnIDType>
 struct MethodSelection {
   using IdT = IdT_;
   using JniT = typename IdT::JniT;
@@ -100,7 +99,7 @@ struct MethodSelection {
   template <std::size_t I, typename... Ts>
   struct Helper {
     using type = metaprogramming::Val_t<OverloadSelection<
-        Id<JniT, kIDType, IdT::kIdx, I>,
+        Id<JniT, kIDType, IdT::kIdx, I, kNoIdx, 0>,
         kReturnIDType>::template OverloadIdxIfViable<Ts...>()>;
   };
 
@@ -110,24 +109,30 @@ struct MethodSelection {
                                 IdT::NumParams(), Helper, Ts...>>>::val;
 
   template <typename... Ts>
-  using FindOverloadSelection =
-      OverloadSelection<Id<JniT, kIDType, IdT::kIdx, kIdxForTs<Ts...>>,
-                        kReturnIDType>;
+  using FindOverloadSelection = OverloadSelection<
+      Id<JniT, kIDType, IdT::kIdx, kIdxForTs<Ts...>, kNoIdx, 0>, kReturnIDType>;
 
   template <typename... Ts>
   static constexpr bool ArgSetViable() {
-    return kIdxForTs<Ts...> != kNoIdx;
+    if constexpr (IdT::kAncestorIdx != 0) {
+      return MethodSelection<typename IdT::ParentIdT, kIDType,
+                             kReturnIDType>::template ArgSetViable<Ts...>();
+      ;
+    } else {
+      return kIdxForTs<Ts...> != kNoIdx;
+    }
   }
 };
 
-template <typename IdT, IdType kIDType, IdType kReturnIDType, typename... Args>
+template <typename IdT, IdType kIDType, IdType kReturnIDType, bool kTryParents,
+          typename... Args>
 struct OverloadSelector {
   using OverloadSelectionForArgs = typename MethodSelection<
       IdT, kIDType, kReturnIDType>::template FindOverloadSelection<Args...>;
 
   using OverloadRef =
       OverloadRef<Id<typename IdT::JniT, kIDType, IdT::kIdx,
-                     OverloadSelectionForArgs::IdT::kSecondaryIdx>,
+                     OverloadSelectionForArgs::IdT::kSecondaryIdx, kNoIdx, 0>,
                   kReturnIDType>;
 
   static constexpr bool kIsValidArgSet =

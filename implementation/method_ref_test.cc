@@ -30,6 +30,7 @@ using ::jni::Id;
 using ::jni::IdType;
 using ::jni::JniT;
 using ::jni::kDefaultClassLoader;
+using ::jni::kNoIdx;
 using ::jni::LocalArray;
 using ::jni::LocalObject;
 using ::jni::Method;
@@ -44,9 +45,9 @@ using ::testing::InSequence;
 using ::testing::StrEq;
 
 template <const auto& class_loader_v, const auto& class_v, size_t I>
-using MethodRefT_t = OverloadRef<
-    Id<JniT<jobject, class_v, class_loader_v>, IdType::OVERLOAD, I, 0>,
-    IdType::OVERLOAD_PARAM>;
+using MethodRefT_t = OverloadRef<Id<JniT<jobject, class_v, class_loader_v>,
+                                    IdType::OVERLOAD, I, 0, kNoIdx, 0>,
+                                 IdType::OVERLOAD_PARAM>;
 
 TEST_F(JniTest, MethodRef_DoesntStaticCrossTalkWithTagUse) {
   static constexpr Method m{"FooV", Return<void>{}, Params{jint{}}};
@@ -102,8 +103,7 @@ TEST_F(JniTest, MethodRef_ReturnWithRank1Object) {
 
 TEST_F(JniTest, MethodRef_ReturnWithRank2Object) {
   static constexpr Class c2{"someClass2"};
-  static constexpr Method m1{"FooV", Return{Array{c2, Rank<2>{}}},
-                             Params<>{}};
+  static constexpr Method m1{"FooV", Return{Array{c2, Rank<2>{}}}, Params<>{}};
   static constexpr Class c{"someClass", m1};
 
   InSequence seq;

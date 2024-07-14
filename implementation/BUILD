@@ -188,11 +188,12 @@ cc_library(
         ":class_loader",
         ":global_object",
         ":id",
+        ":id_type",
         ":jni_type",
         ":local_object",
         ":local_string",
         ":method",
-        ":method_ref",
+        ":no_idx",
         ":object_ref",
         ":params",
         ":return",
@@ -304,6 +305,7 @@ cc_library(
         ":field_selection",
         ":id",
         ":id_type",
+        ":no_idx",
         ":promotion_mechanics_tags",
         ":proxy",
         ":proxy_convenience_aliases",
@@ -334,7 +336,9 @@ cc_library(
     hdrs = ["field_selection.h"],
     deps = [
         ":id",
+        ":id_type",
         ":name_constants",
+        ":no_idx",
         ":object",
         ":selector_static_info",
         "//implementation/jni_helper:jni_typename_to_string",
@@ -898,6 +902,15 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "method_selection_inherited_test",
+    srcs = ["method_selection_inherited_test.cc"],
+    deps = [
+        "//:jni_bind",
+        "@googletest//:gtest_main",
+    ],
+)
+
 ################################################################################
 # Multi type test.
 ################################################################################
@@ -965,9 +978,11 @@ cc_library(
         ":constructor",
         ":default_class_loader",
         ":field_ref",
+        ":id",
+        ":id_type",
         ":jni_type",
-        ":method_ref",
         ":method_selection",
+        ":no_idx",
         ":proxy",
         ":ref_base",
         "//:jni_dep",
@@ -1284,6 +1299,7 @@ cc_library(
         ":jni_type",
         ":jvm",
         ":method_selection",
+        ":no_idx",
         "//metaprogramming:invocable_map",
         "//metaprogramming:queryable_map",
     ],

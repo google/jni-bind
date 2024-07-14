@@ -23,6 +23,7 @@
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/method_selection.h"
+#include "implementation/no_idx.h"
 #include "metaprogramming/invocable_map.h"
 #include "metaprogramming/queryable_map.h"
 
@@ -69,10 +70,10 @@ struct StaticRef
 
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
-    using IdT = Id<JniT, IdType::STATIC_OVERLOAD_SET, I>;
+    using IdT = Id<JniT, IdType::STATIC_OVERLOAD_SET, I, kNoIdx, kNoIdx, 0>;
     using MethodSelectionForArgs =
         OverloadSelector<IdT, IdType::STATIC_OVERLOAD,
-                         IdType::STATIC_OVERLOAD_PARAM, Args...>;
+                         IdType::STATIC_OVERLOAD_PARAM, false, Args...>;
 
     static_assert(MethodSelectionForArgs::kIsValidArgSet,
                   "JNI Error: Invalid argument set.");
