@@ -23,12 +23,14 @@
 #include "implementation/class_loader.h"
 #include "implementation/global_object.h"
 #include "implementation/id.h"
+#include "implementation/id_type.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/local_object.h"
 #include "implementation/local_string.h"
 #include "implementation/method.h"
+#include "implementation/no_idx.h"
 #include "implementation/object_ref.h"
 #include "implementation/params.h"
 #include "implementation/return.h"
@@ -66,7 +68,7 @@ class ClassLoaderRef : public ClassLoaderImpl<lifecycleType> {
   template <const auto& class_v, typename... Params>
   [[nodiscard]] auto BuildLocalObject(Params&&... params) {
     using JniClassT = JniT<jobject, class_v>;
-    using IdClassT = Id<JniClassT, IdType::CLASS>;
+    using IdClassT = Id<JniClassT, IdType::CLASS, kNoIdx, kNoIdx, kNoIdx, 0>;
     static_assert(
         !(ParentLoaderForClass<class_loader_v_, class_v>() == kNullClassLoader),
         "Cannot build this class with this loader.");

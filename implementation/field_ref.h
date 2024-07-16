@@ -30,6 +30,7 @@
 #include "implementation/jni_helper/field_value.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/static_field_value.h"
+#include "implementation/no_idx.h"
 #include "implementation/promotion_mechanics_tags.h"
 #include "implementation/proxy.h"
 #include "implementation/proxy_convenience_aliases.h"
@@ -55,7 +56,7 @@ static inline auto& GetDefaultLoadedFieldList() {
 template <typename JniT, IdType field_type, std::size_t I>
 class FieldRef {
  public:
-  using IdT = Id<JniT, field_type, I>;
+  using IdT = Id<JniT, field_type, I, kNoIdx, kNoIdx, 0>;
   using FieldSelectionT = FieldSelection<JniT, I>;
 
   using SelfIdT = typename IdT::template ChangeIdType<IdType::CLASS>;

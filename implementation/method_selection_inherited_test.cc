@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <cstddef>
+#include <string>
+#include <string_view>
+
 #include "jni_bind.h"
 
 namespace {
@@ -23,6 +25,7 @@ namespace {
 using ::jni::Array;
 using ::jni::Class;
 using ::jni::Constructor;
+using ::jni::Extends;
 using ::jni::GlobalObject;
 using ::jni::Id;
 using ::jni::IdType;
@@ -54,7 +57,7 @@ using GlobalInvalidObj = GlobalObject<kUnusedClass>;
 ////////////////////////////////////////////////////////////////////////////////
 // Single argument to method.
 ////////////////////////////////////////////////////////////////////////////////
-constexpr Class c1{
+constexpr Class kParentClass{
     "c1",
     Method{"0", Return<void>{}},
     Method{"1", Return<void>{}, Params<jboolean>{}},
@@ -72,17 +75,17 @@ constexpr Class c1{
     Method{"13", Return<void>{}, Params{Array{kClass1, Rank<2>{}}}},
     Method{"14", Return<void>{}, Params{Array{kClass1, Rank<3>{}}}}};
 
+constexpr Class c1{"c1", Extends{kParentClass}};
+
 template <const auto& class_v, size_t method_idx>
 using MthdId_t =
     MethodSelection<Id<JniT<jobject, class_v>, IdType::OVERLOAD_SET, method_idx,
-                       kNoIdx, kNoIdx, 0>,
+                       kNoIdx, kNoIdx, 1>,
                     IdType::OVERLOAD, IdType::OVERLOAD_PARAM>;
 
-static_assert(MthdId_t<c1, 0>::ArgSetViable<>());
 static_assert(!MthdId_t<c1, 0>::ArgSetViable<int>());
 static_assert(!MthdId_t<c1, 0>::ArgSetViable<int, float>());
 static_assert(!MthdId_t<c1, 0>::ArgSetViable<LocalObj1>());
-
 static_assert(MthdId_t<c1, 1>::ArgSetViable<jboolean>());
 static_assert(MthdId_t<c1, 1>::ArgSetViable<bool>());
 
@@ -187,33 +190,39 @@ static_assert(!MthdId_t<c1, 14>::ArgSetViable<jintArray>());
 ////////////////////////////////////////////////////////////////////////////////
 
 // clang-format off
-constexpr Class c2{
-    "c2",
+constexpr Class kParent2{
+    "kParent2",
     Method{"0", Return<void>{}, Params<jint, jint>{}},
     Method{"1", Return<void>{}, Params<jfloat, jfloat, jfloat>{}},
     Method{"2", Return<void>{}, Params{jint{}, jfloat{}, kClass1}},
     Method{"3", Return<void>{}, Params{jboolean{}, Array{int{}}}}
 };
+
+constexpr Class kChild2 {
+    "c2",
+    Extends {kParent2}
+};
 // clang-format on
 
-static_assert(MthdId_t<c2, 0>::ArgSetViable<int, int>());
-static_assert(!MthdId_t<c2, 0>::ArgSetViable<int>());
-static_assert(!MthdId_t<c2, 0>::ArgSetViable<int, int, int>());
-static_assert(!MthdId_t<c2, 0>::ArgSetViable<double, double>());
-static_assert(!MthdId_t<c2, 0>::ArgSetViable<LocalObj1, LocalObj1>());
+static_assert(MthdId_t<kChild2, 0>::ArgSetViable<int, int>());
+static_assert(!MthdId_t<kChild2, 0>::ArgSetViable<int>());
+static_assert(!MthdId_t<kChild2, 0>::ArgSetViable<int, int, int>());
+static_assert(!MthdId_t<kChild2, 0>::ArgSetViable<double, double>());
+static_assert(!MthdId_t<kChild2, 0>::ArgSetViable<LocalObj1, LocalObj1>());
 
-static_assert(MthdId_t<c2, 1>::ArgSetViable<float, float, float>());
-static_assert(!MthdId_t<c2, 1>::ArgSetViable<float>());
-static_assert(!MthdId_t<c2, 1>::ArgSetViable<float, float>());
+static_assert(MthdId_t<kChild2, 1>::ArgSetViable<float, float, float>());
+static_assert(!MthdId_t<kChild2, 1>::ArgSetViable<float>());
+static_assert(!MthdId_t<kChild2, 1>::ArgSetViable<float, float>());
 
-static_assert(MthdId_t<c2, 2>::ArgSetViable<int, float, LocalObj1>());
+static_assert(MthdId_t<kChild2, 2>::ArgSetViable<int, float, LocalObj1>());
 
-static_assert(MthdId_t<c2, 3>::ArgSetViable<jboolean, jintArray>());
+static_assert(MthdId_t<kChild2, 3>::ArgSetViable<jboolean, jintArray>());
 
 ////////////////////////////////////////////////////////////////////////////////
 // Multi param methods, single overload method.
 ////////////////////////////////////////////////////////////////////////////////
-constexpr Class c3{
+
+constexpr Class kParent3{
     "c3", Method{
               "0",
               Overload{Return<void>{}},
@@ -230,62 +239,66 @@ constexpr Class c3{
               Overload{Return<void>{}, Params{jboolean{}, Array{int{}}}},
           }};
 
-static_assert(MthdId_t<c3, 0>::ArgSetViable<int, int>());
-static_assert(MthdId_t<c3, 0>::ArgSetViable<int>());
-static_assert(MthdId_t<c3, 0>::ArgSetViable<int, int, float, int>());
-static_assert(MthdId_t<c3, 0>::ArgSetViable<char*>());
-static_assert(MthdId_t<c3, 0>::ArgSetViable<std::string>());
-static_assert(MthdId_t<c3, 0>::ArgSetViable<std::string_view>());
+constexpr Class kChild3{"c3", Extends{kParent3}};
+
+static_assert(MthdId_t<kChild3, 0>::ArgSetViable<int, int>());
+static_assert(MthdId_t<kChild3, 0>::ArgSetViable<int>());
+static_assert(MthdId_t<kChild3, 0>::ArgSetViable<int, int, float, int>());
+static_assert(MthdId_t<kChild3, 0>::ArgSetViable<char*>());
+static_assert(MthdId_t<kChild3, 0>::ArgSetViable<std::string>());
+static_assert(MthdId_t<kChild3, 0>::ArgSetViable<std::string_view>());
 
 // TODO(b/143908983): The following is ambiguous because it could potentially
 // refer to multiple signatures. For now, it's viable, but it shouldn't be.
-static_assert(MthdId_t<c3, 0>::ArgSetViable<jobject>());
+static_assert(MthdId_t<kChild3, 0>::ArgSetViable<jobject>());
 
-static_assert(!MthdId_t<c3, 0>::ArgSetViable<int, int, int>());
-static_assert(!MthdId_t<c3, 0>::ArgSetViable<double, double>());
-static_assert(!MthdId_t<c3, 0>::ArgSetViable<LocalObj1, LocalObj1>());
-static_assert(!MthdId_t<c3, 0>::ArgSetViable<float>());
-static_assert(!MthdId_t<c3, 0>::ArgSetViable<float, float>());
-static_assert(!MthdId_t<c3, 0>::ArgSetViable<std::string*>());
+static_assert(!MthdId_t<kChild3, 0>::ArgSetViable<int, int, int>());
+static_assert(!MthdId_t<kChild3, 0>::ArgSetViable<double, double>());
+static_assert(!MthdId_t<kChild3, 0>::ArgSetViable<LocalObj1, LocalObj1>());
+static_assert(!MthdId_t<kChild3, 0>::ArgSetViable<float>());
+static_assert(!MthdId_t<kChild3, 0>::ArgSetViable<float, float>());
+static_assert(!MthdId_t<kChild3, 0>::ArgSetViable<std::string*>());
 
-static_assert(MthdId_t<c3, 0>::ArgSetViable<jboolean, jintArray>());
-static_assert(MthdId_t<c3, 0>::ArgSetViable<jboolean, LocalArray<jint>>());
+static_assert(MthdId_t<kChild3, 0>::ArgSetViable<jboolean, jintArray>());
+static_assert(MthdId_t<kChild3, 0>::ArgSetViable<jboolean, LocalArray<jint>>());
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor Method Tests
 // (Roughly same logic, so just smoking the code path ought be sufficient).
 ////////////////////////////////////////////////////////////////////////////////
-constexpr Class c5{"c5",
-                   Constructor{},
+constexpr Class kParent5{"c5",
+                         Constructor{},
 
-                   Constructor{int{}},
-                   Constructor{float{}},
-                   Constructor{kClass1},
+                         Constructor{int{}},
+                         Constructor{float{}},
+                         Constructor{kClass1},
 
-                   Constructor{int{}, int{}},
-                   Constructor{float{}, float{}, float{}},
-                   Constructor{int{}, float{}, kClass1},
-                   Constructor{kClass2}};
+                         Constructor{int{}, int{}},
+                         Constructor{float{}, float{}, float{}},
+                         Constructor{int{}, float{}, kClass1},
+                         Constructor{kClass2}};
+
+constexpr Class kChild5{"c5", Extends{kParent5}};
 
 template <const auto& class_v>
 using ConstructorId_t = MethodSelection<
-    Id<JniT<jobject, class_v>, IdType::OVERLOAD_SET, kNoIdx, kNoIdx, kNoIdx, 0>,
+    Id<JniT<jobject, class_v>, IdType::OVERLOAD_SET, kNoIdx, kNoIdx, kNoIdx, 1>,
     IdType::OVERLOAD, IdType::OVERLOAD_PARAM>;
 
-static_assert(ConstructorId_t<c5>::ArgSetViable<>());
-static_assert(ConstructorId_t<c5>::ArgSetViable<int>());
-static_assert(ConstructorId_t<c5>::ArgSetViable<float>());
-static_assert(ConstructorId_t<c5>::ArgSetViable<LocalObj1>());
+static_assert(ConstructorId_t<kChild5>::ArgSetViable<>());
+static_assert(ConstructorId_t<kChild5>::ArgSetViable<int>());
+static_assert(ConstructorId_t<kChild5>::ArgSetViable<float>());
+static_assert(ConstructorId_t<kChild5>::ArgSetViable<LocalObj1>());
 
-static_assert(ConstructorId_t<c5>::ArgSetViable<int, int>());
-static_assert(ConstructorId_t<c5>::ArgSetViable<float, float, float>());
-static_assert(ConstructorId_t<c5>::ArgSetViable<int, float, LocalObj1>());
+static_assert(ConstructorId_t<kChild5>::ArgSetViable<int, int>());
+static_assert(ConstructorId_t<kChild5>::ArgSetViable<float, float, float>());
+static_assert(ConstructorId_t<kChild5>::ArgSetViable<int, float, LocalObj1>());
 
 // Impermissible arg sets (none of the constructors match.)
-static_assert(!ConstructorId_t<c5>::ArgSetViable<int, float>());
-static_assert(!ConstructorId_t<c5>::ArgSetViable<int, float, float>());
-static_assert(!ConstructorId_t<c5>::ArgSetViable<int, float, LocalObj2>());
-static_assert(!ConstructorId_t<c5>::ArgSetViable<LocalInvalidObj>());
-static_assert(!ConstructorId_t<c5>::ArgSetViable<GlobalInvalidObj>());
+static_assert(!ConstructorId_t<kChild5>::ArgSetViable<int, float>());
+static_assert(!ConstructorId_t<kChild5>::ArgSetViable<int, float, float>());
+static_assert(!ConstructorId_t<kChild5>::ArgSetViable<int, float, LocalObj2>());
+static_assert(!ConstructorId_t<kChild5>::ArgSetViable<LocalInvalidObj>());
+static_assert(!ConstructorId_t<kChild5>::ArgSetViable<GlobalInvalidObj>());
 
 }  // namespace

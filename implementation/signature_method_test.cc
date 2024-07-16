@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cstddef>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "jni_bind.h"
@@ -68,16 +70,22 @@ static constexpr Class kClass1{
 
 using JT = JniT<jobject, kClass1>;
 
+// Ancestry locked to self.
+template <IdType kIdType, std::size_t primary_idx = kNoIdx,
+          std::size_t secondary_idx = kNoIdx, std::size_t tertiary_idx = kNoIdx>
+static constexpr auto Sig_v =
+    Signature_v<Id<JT, kIdType, primary_idx, secondary_idx, tertiary_idx, 0>>;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Class (i.e. self).
 ////////////////////////////////////////////////////////////////////////////////
-using kSelf1 = Id<JT, IdType::CLASS, kNoIdx, 0>;
+using kSelf1 = Id<JT, IdType::CLASS, kNoIdx, 0, kNoIdx, 0>;
 using JniSelfT =
     JniTSelector<jni::LocalArray<jobject, 3, kClass1>::JniT_, -1, 0>;
 using StaticSelectorInfoSelf = SelectorStaticInfo<JniSelfT>;
 
 static_assert(std::string_view{"LkClass1;"} ==
-              Signature_v<Id<JT, IdType::CLASS>>);
+              Signature_v<Id<JT, IdType::CLASS, kNoIdx, kNoIdx, kNoIdx, 0>>);
 static_assert(std::string_view{"[[LkClass1;"} ==
               StaticSelectorInfoSelf::TypeName());
 
@@ -85,96 +93,73 @@ static_assert(std::string_view{"[[LkClass1;"} ==
 // Constructors.
 ////////////////////////////////////////////////////////////////////////////////
 static_assert(std::string_view{"I"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, kNoIdx, 1, 0>>);
+              Sig_v<IdType::OVERLOAD_PARAM, kNoIdx, 1, 0>);
 static_assert(std::string_view{"F"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, kNoIdx, 2, 0>>);
+              Sig_v<IdType::OVERLOAD_PARAM, kNoIdx, 2, 0>);
 static_assert(std::string_view{"Z"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, kNoIdx, 2, 1>>);
+              Sig_v<IdType::OVERLOAD_PARAM, kNoIdx, 2, 1>);
 static_assert(std::string_view{"[I"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, kNoIdx, 3, 0>>);
+              Sig_v<IdType::OVERLOAD_PARAM, kNoIdx, 3, 0>);
 
-static_assert(std::string_view{"()V"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, kNoIdx, 0>>);
-static_assert(std::string_view{"(I)V"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, kNoIdx, 1>>);
-static_assert(std::string_view{"(FZ)V"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, kNoIdx, 2>>);
-static_assert(std::string_view{"([I)V"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, kNoIdx, 3>>);
-static_assert(std::string_view{"([[I)V"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, kNoIdx, 4>>);
+static_assert(std::string_view{"()V"} == Sig_v<IdType::OVERLOAD, kNoIdx, 0>);
+static_assert(std::string_view{"(I)V"} == Sig_v<IdType::OVERLOAD, kNoIdx, 1>);
+static_assert(std::string_view{"(FZ)V"} == Sig_v<IdType::OVERLOAD, kNoIdx, 2>);
+static_assert(std::string_view{"([I)V"} == Sig_v<IdType::OVERLOAD, kNoIdx, 3>);
+static_assert(std::string_view{"([[I)V"} == Sig_v<IdType::OVERLOAD, kNoIdx, 4>);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Methods (Overload sets with only one overload).
 ////////////////////////////////////////////////////////////////////////////////
-static_assert(std::string_view{"S"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 1, 0>>);
-static_assert(std::string_view{"I"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 1, 0, 0>>);
+static_assert(std::string_view{"S"} == Sig_v<IdType::OVERLOAD_PARAM, 1, 0>);
+static_assert(std::string_view{"I"} == Sig_v<IdType::OVERLOAD_PARAM, 1, 0, 0>);
 static_assert(std::string_view{"LkClass2;"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 2, 0, kNoIdx>>);
-static_assert(std::string_view{"F"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 2, 0, 0>>);
-static_assert(std::string_view{"Z"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 2, 0, 1>>);
+              Sig_v<IdType::OVERLOAD_PARAM, 2, 0, kNoIdx>);
+static_assert(std::string_view{"F"} == Sig_v<IdType::OVERLOAD_PARAM, 2, 0, 0>);
+static_assert(std::string_view{"Z"} == Sig_v<IdType::OVERLOAD_PARAM, 2, 0, 1>);
 
-static_assert(std::string_view{"V"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 0, 0>>);
-static_assert(std::string_view{"S"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 1, 0>>);
-static_assert(std::string_view{"I"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 1, 0, 0>>);
+static_assert(std::string_view{"V"} == Sig_v<IdType::OVERLOAD_PARAM, 0, 0>);
+static_assert(std::string_view{"S"} == Sig_v<IdType::OVERLOAD_PARAM, 1, 0>);
+static_assert(std::string_view{"I"} == Sig_v<IdType::OVERLOAD_PARAM, 1, 0, 0>);
 static_assert(std::string_view{"LkClass2;"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 2, 0, kNoIdx>>);
-static_assert(std::string_view{"F"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 2, 0, 0>>);
-static_assert(std::string_view{"Z"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD_PARAM, 2, 0, 1>>);
+              Sig_v<IdType::OVERLOAD_PARAM, 2, 0, kNoIdx>);
+static_assert(std::string_view{"F"} == Sig_v<IdType::OVERLOAD_PARAM, 2, 0, 0>);
+static_assert(std::string_view{"Z"} == Sig_v<IdType::OVERLOAD_PARAM, 2, 0, 1>);
 
-static_assert(std::string_view{"()V"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, 0, 0>>);
-static_assert(std::string_view{"(I)S"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, 1, 0>>);
+static_assert(std::string_view{"()V"} == Sig_v<IdType::OVERLOAD, 0, 0>);
+static_assert(std::string_view{"(I)S"} == Sig_v<IdType::OVERLOAD, 1, 0>);
 static_assert(std::string_view{"(FZ)LkClass2;"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, 2, 0>>);
+              Sig_v<IdType::OVERLOAD, 2, 0>);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Overloaded Method (smoke test, they should behave the same).
 ////////////////////////////////////////////////////////////////////////////////
-static_assert(std::string_view{"()V"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, 3, 0>>);
-static_assert(std::string_view{"(Z)I"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, 3, 1>>);
-static_assert(std::string_view{"(SD)F"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, 3, 2>>);
+static_assert(std::string_view{"()V"} == Sig_v<IdType::OVERLOAD, 3, 0>);
+static_assert(std::string_view{"(Z)I"} == Sig_v<IdType::OVERLOAD, 3, 1>);
+static_assert(std::string_view{"(SD)F"} == Sig_v<IdType::OVERLOAD, 3, 2>);
 static_assert(std::string_view{"(LkClass2;)F"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, 3, 3>>);
-static_assert(std::string_view{"()LkClass3;"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, 3, 4>>);
+              Sig_v<IdType::OVERLOAD, 3, 3>);
+static_assert(std::string_view{"()LkClass3;"} == Sig_v<IdType::OVERLOAD, 3, 4>);
 
-static_assert(std::string_view{"([I)[Z"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, 4, 0>>);
-static_assert(std::string_view{"([[F)[[Z"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, 4, 1>>);
-static_assert(std::string_view{"([[[S)[[[Z"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, 4, 2>>);
+static_assert(std::string_view{"([I)[Z"} == Sig_v<IdType::OVERLOAD, 4, 0>);
+static_assert(std::string_view{"([[F)[[Z"} == Sig_v<IdType::OVERLOAD, 4, 1>);
+static_assert(std::string_view{"([[[S)[[[Z"} == Sig_v<IdType::OVERLOAD, 4, 2>);
 static_assert(std::string_view{"()[[LkClass2;"} ==
-              Signature_v<Id<JT, IdType::OVERLOAD, 4, 3>>);
+              Sig_v<IdType::OVERLOAD, 4, 3>);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Self Referencing Method (gives richly decorated self back).
 ////////////////////////////////////////////////////////////////////////////////
-using kMethod5 = Id<JT, IdType::OVERLOAD, 5, 0>;
+using kMethod5 = Id<JT, IdType::OVERLOAD, 5, 0, kNoIdx, 0>;
 static_assert(std::string_view{"()LkClass1;"} == Signature_v<kMethod5>.data());
 
-using kMethod6 = Id<JT, IdType::OVERLOAD, 6, 0>;
+using kMethod6 = Id<JT, IdType::OVERLOAD, 6, 0, kNoIdx, 0>;
 static_assert(std::string_view{"(LkClass1;)V"} == Signature_v<kMethod6>.data());
 
-using kMethod7 = Id<JT, IdType::OVERLOAD, 7, 0>;
+using kMethod7 = Id<JT, IdType::OVERLOAD, 7, 0, kNoIdx, 0>;
 static_assert(std::string_view{"(LkClass1;LkClass1;)V"} ==
               Signature_v<kMethod7>.data());
 
-using kMethod8 = Id<JT, IdType::OVERLOAD, 8, 0>;
+using kMethod8 = Id<JT, IdType::OVERLOAD, 8, 0, kNoIdx, 0>;
 static_assert(std::string_view{"(LkClass1;LkClass1;)LkClass1;"} ==
               Signature_v<kMethod8>.data());
 

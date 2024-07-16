@@ -18,8 +18,10 @@
 #define JNI_BIND_FIELD_SELECTION_H_
 
 #include "implementation/id.h"
+#include "implementation/id_type.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
 #include "implementation/name_constants.h"
+#include "implementation/no_idx.h"
 #include "implementation/object.h"
 #include "implementation/selector_static_info.h"
 #include "metaprogramming/string_concatenate.h"
@@ -28,7 +30,7 @@ namespace jni {
 
 template <typename JniT, size_t field_idx_>
 struct FieldSelection {
-  using IdT = Id<JniT, IdType::FIELD, field_idx_>;
+  using IdT = Id<JniT, IdType::FIELD, field_idx_, kNoIdx, kNoIdx, 0>;
   static constexpr IdType kRetTypeId = IdType::FIELD;
 };
 
