@@ -73,9 +73,10 @@ constexpr Class c1{
     Method{"14", Return<void>{}, Params{Array{kClass1, Rank<3>{}}}}};
 
 template <const auto& class_v, size_t method_idx>
-using MthdId_t = MethodSelection<
-    Id<JniT<jobject, class_v>, IdType::OVERLOAD_SET, method_idx>,
-    IdType::OVERLOAD, IdType::OVERLOAD_PARAM>;
+using MthdId_t =
+    MethodSelection<Id<JniT<jobject, class_v>, IdType::OVERLOAD_SET, method_idx,
+                       kNoIdx, kNoIdx, 0>,
+                    IdType::OVERLOAD, IdType::OVERLOAD_PARAM>;
 
 static_assert(MthdId_t<c1, 0>::ArgSetViable<>());
 static_assert(!MthdId_t<c1, 0>::ArgSetViable<int>());
@@ -263,7 +264,8 @@ constexpr Class c5{"c5",
 
 template <const auto& class_v>
 using ConstructorId_t =
-    MethodSelection<Id<JniT<jobject, class_v>, IdType::OVERLOAD_SET, kNoIdx>>;
+    MethodSelection<Id<JniT<jobject, class_v>, IdType::OVERLOAD_SET, kNoIdx,
+                       kNoIdx, kNoIdx, 0>>;
 
 static_assert(ConstructorId_t<c5>::ArgSetViable<>());
 static_assert(ConstructorId_t<c5>::ArgSetViable<int>());

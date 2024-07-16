@@ -29,9 +29,12 @@
 #include "implementation/constructor.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_ref.h"
+#include "implementation/id.h"
+#include "implementation/id_type.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_type.h"
 #include "implementation/method_selection.h"
+#include "implementation/no_idx.h"
 #include "implementation/proxy.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
@@ -91,7 +94,7 @@ class ObjectRef
   // Invoked through CRTP from InvocableMap.
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
-    using IdT = Id<JniT, IdType::OVERLOAD_SET, I>;
+    using IdT = Id<JniT, IdType::OVERLOAD_SET, I, kNoIdx, kNoIdx, 0>;
     using MethodSelectionForArgs =
         OverloadSelector<IdT, IdType::OVERLOAD, IdType::OVERLOAD_PARAM,
                          Args...>;
@@ -131,7 +134,7 @@ class ConstructorValidator : public ObjectRef<JniT> {
 
   template <typename... Args>
   struct Helper {
-    using IdT = Id<JniT, IdType::OVERLOAD_SET, kNoIdx>;
+    using IdT = Id<JniT, IdType::OVERLOAD_SET, kNoIdx, kNoIdx, kNoIdx, 0>;
 
     // 0 is (always) used to represent the constructor.
     using type = OverloadSelector<IdT, IdType::OVERLOAD, IdType::OVERLOAD_PARAM,
@@ -157,8 +160,7 @@ class ConstructorValidator : public ObjectRef<JniT> {
   ConstructorValidator()
       : Base(Permutation_t<>::OverloadRef::Invoke(Base::GetJClass(),
                                                   Base::object_ref_)
-                 .Release()) {
-  }
+                 .Release()) {}
 };
 
 // Forward declaration for constructor validator (ctor augmentations).

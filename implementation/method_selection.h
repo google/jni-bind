@@ -100,7 +100,7 @@ struct MethodSelection {
   template <std::size_t I, typename... Ts>
   struct Helper {
     using type = metaprogramming::Val_t<OverloadSelection<
-        Id<JniT, kIDType, IdT::kIdx, I>,
+        Id<JniT, kIDType, IdT::kIdx, I, kNoIdx, 0>,
         kReturnIDType>::template OverloadIdxIfViable<Ts...>()>;
   };
 
@@ -110,9 +110,8 @@ struct MethodSelection {
                                 IdT::NumParams(), Helper, Ts...>>>::val;
 
   template <typename... Ts>
-  using FindOverloadSelection =
-      OverloadSelection<Id<JniT, kIDType, IdT::kIdx, kIdxForTs<Ts...>>,
-                        kReturnIDType>;
+  using FindOverloadSelection = OverloadSelection<
+      Id<JniT, kIDType, IdT::kIdx, kIdxForTs<Ts...>, kNoIdx, 0>, kReturnIDType>;
 
   template <typename... Ts>
   static constexpr bool ArgSetViable() {
@@ -127,7 +126,7 @@ struct OverloadSelector {
 
   using OverloadRef =
       OverloadRef<Id<typename IdT::JniT, kIDType, IdT::kIdx,
-                     OverloadSelectionForArgs::IdT::kSecondaryIdx>,
+                     OverloadSelectionForArgs::IdT::kSecondaryIdx, kNoIdx, 0>,
                   kReturnIDType>;
 
   static constexpr bool kIsValidArgSet =
