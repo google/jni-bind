@@ -19,6 +19,7 @@
 
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "implementation/field_selection.h"
 #include "implementation/id.h"

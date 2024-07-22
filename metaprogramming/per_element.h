@@ -17,9 +17,10 @@
 #ifndef JNI_BIND_METAPROGRAMMING_PER_ELEMENT_H_
 #define JNI_BIND_METAPROGRAMMING_PER_ELEMENT_H_
 
+#include <cstddef>
 #include <tuple>
+#include <utility>
 
-#include "tuple_manipulation.h"
 #include "type_of_nth_element.h"
 
 namespace jni::metaprogramming {

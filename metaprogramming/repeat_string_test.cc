@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "metaprogramming/repeat_string.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <string_view>
 
 using ::jni::metaprogramming::RepeatString_v;
 

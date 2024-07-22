@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_METAPROGRAMMING_NAME_CONSTANTS_H_
 #define JNI_BIND_METAPROGRAMMING_NAME_CONSTANTS_H_
 

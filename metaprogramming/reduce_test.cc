@@ -16,13 +16,10 @@
 
 #include "reduce.h"
 
+#include <tuple>
+#include <type_traits>
+
 #include "combine.h"
-#include "concatenate.h"
-#include "conditional.h"
-#include "invoke.h"
-#include "same.h"
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 
 namespace {
 

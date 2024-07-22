@@ -16,15 +16,12 @@
 
 #include "queryable_map.h"
 
-#include <optional>
-#include <string>
+#include <cstddef>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "lambda_string.h"
 
 namespace {
 

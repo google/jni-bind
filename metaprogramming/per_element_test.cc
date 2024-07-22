@@ -16,11 +16,9 @@
 
 #include "per_element.h"
 
+#include <cstddef>
 #include <tuple>
 #include <type_traits>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 
 namespace {
 

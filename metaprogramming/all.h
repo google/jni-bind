@@ -17,7 +17,6 @@
 #ifndef JNI_BIND_METAPROGRAMMING_ALL_H_
 #define JNI_BIND_METAPROGRAMMING_ALL_H_
 
-#include <tuple>
 #include <type_traits>
 
 namespace jni::metaprogramming {

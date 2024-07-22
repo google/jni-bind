@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_METAPROGRAMMING_TYPE_INDEX_MASK_H_
 #define JNI_BIND_METAPROGRAMMING_TYPE_INDEX_MASK_H_
 
+#include <cstddef>
 #include <tuple>
 #include <utility>
 

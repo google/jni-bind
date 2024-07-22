@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "metaprogramming/call.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <tuple>
+#include <type_traits>
 
 using ::jni::metaprogramming::Call_t;
 

@@ -17,8 +17,7 @@
 #ifndef JNI_BIND_METAPROGRAMMING_VALS_EQUAL_H_
 #define JNI_BIND_METAPROGRAMMING_VALS_EQUAL_H_
 
-#include <cstddef>
-#include <utility>
+#include <type_traits>
 
 #include "metaprogramming/vals.h"
 

@@ -16,8 +16,6 @@
 
 #include "contains_base.h"
 
-#include <tuple>
-
 #include "contains.h"
 
 namespace {

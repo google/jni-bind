@@ -16,11 +16,12 @@
 
 #include "chain.h"
 
+#include <cstddef>
+#include <type_traits>
+
 #include "increment.h"
 #include "invoke.h"
 #include "same.h"
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 
 using ::jni::metaprogramming::Chain;
 using ::jni::metaprogramming::Increment;

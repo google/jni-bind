@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_IMPLEMENTATION_REF_STORAGE_H_
 #define JNI_BIND_IMPLEMENTATION_REF_STORAGE_H_
 
+#include <functional>
 #include <vector>
 
 #include "metaprogramming/double_locked_value.h"

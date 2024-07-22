@@ -17,9 +17,7 @@
 #include "combine.h"
 
 #include <tuple>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <type_traits>
 
 using ::jni::metaprogramming::Combine_t;
 

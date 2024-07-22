@@ -17,8 +17,7 @@
 #ifndef JNI_BIND_METAPROGRAMMING_TYPE_OF_NTH_ELEMENT_H_
 #define JNI_BIND_METAPROGRAMMING_TYPE_OF_NTH_ELEMENT_H_
 
-#include <tuple>
-#include <type_traits>
+#include <cstddef>
 
 #include "unwrap.h"
 

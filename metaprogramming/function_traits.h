@@ -17,8 +17,8 @@
 #ifndef JNI_BIND_METAPROGRAMMING_FunctionTraits_H_
 #define JNI_BIND_METAPROGRAMMING_FunctionTraits_H_
 
+#include <cstddef>
 #include <tuple>
-#include <type_traits>
 
 namespace jni::metaprogramming {
 

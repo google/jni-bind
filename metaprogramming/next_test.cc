@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "metaprogramming/next.h"
 
 #include <cstddef>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <type_traits>
 
 using ::jni::metaprogramming::EndConstRefVal;
 using ::jni::metaprogramming::EndType;
 using ::jni::metaprogramming::EndVal;
 
 using ::jni::metaprogramming::Next_t;
-using ::jni::metaprogramming::NextConstRefVal;
-using ::jni::metaprogramming::NextType;
-using ::jni::metaprogramming::NextVal;
+using ::jni::metaprogramming::NextConstRefVal;  // NOLINT
+using ::jni::metaprogramming::NextType;         // NOLINT
+using ::jni::metaprogramming::NextVal;          // NOLINT
 
 ////////////////////////////////////////////////////////////////////////////////
 // Type tests.

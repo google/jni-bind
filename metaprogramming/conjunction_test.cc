@@ -1,9 +1,8 @@
 #include "metaprogramming/conjunction.h"
 
+#include <cstddef>
 #include <type_traits>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include "metaprogramming/invoke.h"
 #include "metaprogramming/next.h"
 
@@ -11,7 +10,7 @@ namespace {
 
 using ::jni::metaprogramming::Conjunction_v;
 using ::jni::metaprogramming::Invoke_t;
-using ::jni::metaprogramming::NextVal;
+using ::jni::metaprogramming::NextVal;  // NOLINT
 
 template <std::size_t I>
 struct ValCounter {

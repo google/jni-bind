@@ -17,8 +17,7 @@
 #ifndef JNI_BIND_METAPROGRAMMING_INCREMENT_H_
 #define JNI_BIND_METAPROGRAMMING_INCREMENT_H_
 
-#include <type_traits>
-#include <utility>
+#include <cstddef>
 
 namespace jni::metaprogramming {
 

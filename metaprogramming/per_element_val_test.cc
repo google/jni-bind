@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "per_element_val.h"
 
+#include <array>
+#include <cstddef>
 #include <utility>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 
 using ::jni::metaprogramming::PerElementVal_v;
 

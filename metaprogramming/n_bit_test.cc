@@ -16,8 +16,6 @@
 
 #include "n_bit.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include "increment.h"
 
 namespace {

@@ -18,13 +18,9 @@
 #define JNI_BIND_METAPROGRAMMING_FILTER_H_
 
 #include <tuple>
-#include <type_traits>
 
-#include "combine.h"
 #include "concatenate.h"
 #include "conditional.h"
-#include "reduce.h"
-#include "same.h"
 
 namespace jni::metaprogramming {
 

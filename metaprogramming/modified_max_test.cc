@@ -16,6 +16,8 @@
 
 #include "modified_max.h"
 
+#include <cstddef>
+
 namespace {
 
 using ::jni::metaprogramming::kNegativeOne;

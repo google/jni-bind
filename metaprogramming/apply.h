@@ -17,8 +17,6 @@
 #ifndef JNI_BIND_METAPROGRAMMING_APPLY_H_
 #define JNI_BIND_METAPROGRAMMING_APPLY_H_
 
-#include <tuple>
-
 #include "tuple_manipulation.h"
 
 namespace jni::metaprogramming {

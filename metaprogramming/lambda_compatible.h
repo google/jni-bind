@@ -17,11 +17,12 @@
 #ifndef JNI_BIND_METAPROGRAMMING_LAMBDA_COMPATIBLE_H_
 #define JNI_BIND_METAPROGRAMMING_LAMBDA_COMPATIBLE_H_
 
+#include <cstddef>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 #include "deep_equal.h"
-#include "tuple_manipulation.h"
 #include "type_of_nth_element.h"
 
 namespace jni::metaprogramming {

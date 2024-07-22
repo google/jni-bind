@@ -19,8 +19,6 @@
 #include <tuple>
 #include <type_traits>
 
-#include <gtest/gtest.h>
-
 using ::jni::metaprogramming::FindIdxOfVal_idx;
 using ::jni::metaprogramming::FindIdxOfValInTup_idx;
 using ::jni::metaprogramming::FindIdxOfValInTupWithComparator_idx;

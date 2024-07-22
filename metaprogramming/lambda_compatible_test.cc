@@ -16,10 +16,8 @@
 
 #include "metaprogramming/lambda_compatible.h"
 
-#include <type_traits>
+#include <tuple>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include "metaprogramming/vals.h"
 
 using ::jni::metaprogramming::LambdaCompatible_v;

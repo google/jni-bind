@@ -17,8 +17,13 @@
 #ifndef JNI_BIND_METAPROGRAMMING_UNIQUE_SET_H_
 #define JNI_BIND_METAPROGRAMMING_UNIQUE_SET_H_
 
+#include <tuple>
+#include <type_traits>
+
+#include "concatenate.h"
 #include "contains.h"
 #include "reverse.h"
+#include "tuple_manipulation.h"
 
 namespace jni::metaprogramming {
 

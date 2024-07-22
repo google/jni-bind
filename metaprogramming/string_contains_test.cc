@@ -16,8 +16,7 @@
 
 #include "metaprogramming/string_contains.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <string_view>
 
 using ::jni::metaprogramming::StringContains_v;
 

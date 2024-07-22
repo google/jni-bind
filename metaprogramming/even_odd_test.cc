@@ -17,9 +17,7 @@
 #include "even_odd.h"
 
 #include <tuple>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <type_traits>
 
 using ::jni::metaprogramming::Even_t;
 using ::jni::metaprogramming::Odd_t;

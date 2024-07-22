@@ -17,14 +17,11 @@
 #ifndef JNI_BIND_METAPROGRAMMING_QUERYABLE_MAP_H
 #define JNI_BIND_METAPROGRAMMING_QUERYABLE_MAP_H
 
+#include <cstddef>
 #include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <utility>
-
-#include "interleave.h"
-#include "tuple_from_size.h"
-#include "tuple_manipulation.h"
-#include "type_of_nth_element.h"
 
 namespace jni::metaprogramming {
 
@@ -52,8 +49,9 @@ class QueryableMapBase {};
 // The motivation for using inheritance as opposed to a simple member is that
 // the the const char cannot be propagated without losing its constexpr-ness,
 // and so the clang extension can no longer restrict function candidates.
-template <typename CrtpBase, const auto& tup_container_v, std::size_t container_size,
-          typename TupContainerT, const auto TupContainerT::*nameable_member>
+template <typename CrtpBase, const auto& tup_container_v,
+          std::size_t container_size, typename TupContainerT,
+          const auto TupContainerT::*nameable_member>
 class QueryableMap
     : public QueryableMapBase<CrtpBase, tup_container_v, TupContainerT,
                               nameable_member,
@@ -63,8 +61,8 @@ template <typename CrtpBase, const auto& tup_container_v,
           const auto std::decay_t<decltype(tup_container_v)>::*nameable_member>
 using QueryableMap_t =
     QueryableMap<CrtpBase, tup_container_v,
-                 std::tuple_size_v<std::decay_t<decltype(
-                     (tup_container_v.*nameable_member))>>,
+                 std::tuple_size_v<std::decay_t<decltype((tup_container_v.*
+                                                          nameable_member))>>,
                  std::decay_t<decltype(tup_container_v)>, nameable_member>;
 
 template <typename CrtpBase, const auto& tup_container_v,

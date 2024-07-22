@@ -16,6 +16,9 @@
 
 #include "tuple_from_size.h"
 
+#include <tuple>
+#include <type_traits>
+
 #include <gtest/gtest.h>
 
 namespace {

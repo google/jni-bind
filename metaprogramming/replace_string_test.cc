@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "metaprogramming/replace_string.h"
 
 #include <string_view>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 
 using ::jni::metaprogramming::Replace_v;
 

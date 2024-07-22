@@ -16,14 +16,11 @@
 
 #include "zip_invoke.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <tuple>
+#include <type_traits>
+
 #include "all.h"
-#include "base.h"
-#include "increment.h"
-#include "per_element.h"
 #include "same.h"
-#include "unwrap.h"
 
 namespace {
 

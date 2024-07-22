@@ -17,9 +17,7 @@
 #include "type_to_type_map.h"
 
 #include <tuple>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <type_traits>
 
 namespace {
 

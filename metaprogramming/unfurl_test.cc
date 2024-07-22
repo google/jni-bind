@@ -16,10 +16,10 @@
 
 #include "unfurl.h"
 
-#include <utility>
+#include <cstddef>
+#include <tuple>
+#include <type_traits>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include "contains.h"
 
 namespace {

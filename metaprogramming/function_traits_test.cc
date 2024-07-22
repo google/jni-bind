@@ -16,6 +16,10 @@
 
 #include "function_traits.h"
 
+#include <string>
+#include <type_traits>
+#include <utility>
+
 #include <gtest/gtest.h>
 
 namespace {

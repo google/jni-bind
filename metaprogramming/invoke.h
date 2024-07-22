@@ -18,11 +18,9 @@
 #define JNI_BIND_METAPROGRAMMING_MONOID_H_
 
 #include <tuple>
-#include <type_traits>
 
 #include "per_element.h"
 #include "tuple_manipulation.h"
-#include "type_of_nth_element.h"
 
 namespace jni::metaprogramming {
 

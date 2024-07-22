@@ -17,11 +17,11 @@
 #ifndef JNI_BIND_METAPROGRAMMING_N_BIT_SEQUENCE_H
 #define JNI_BIND_METAPROGRAMMING_N_BIT_SEQUENCE_H
 
-#include <algorithm>
+#include <cstddef>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
-#include "increment.h"
 #include "n_bit.h"
 #include "type_index_mask.h"
 #include "type_of_nth_element.h"

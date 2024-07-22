@@ -17,14 +17,11 @@
 #ifndef JNI_BIND_METAPROGRAMMING_INVOCABLE_MAP_H
 #define JNI_BIND_METAPROGRAMMING_INVOCABLE_MAP_H
 
+#include <cstddef>
 #include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <utility>
-
-#include "interleave.h"
-#include "tuple_from_size.h"
-#include "tuple_manipulation.h"
-#include "type_of_nth_element.h"
 
 namespace jni::metaprogramming {
 

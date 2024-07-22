@@ -16,11 +16,7 @@
 
 #include "increment.h"
 
-#include <type_traits>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-#include "invoke.h"
+#include <cstddef>
 
 using ::jni::metaprogramming::Increment_t;
 

@@ -17,11 +17,14 @@
 #ifndef JNI_BIND_METAPROGRAMMING_CARTESIAN_PRODUCT_H_
 #define JNI_BIND_METAPROGRAMMING_CARTESIAN_PRODUCT_H_
 
+#include <cstddef>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 
+#include "increment.h"
+#include "n_bit.h"
 #include "n_bit_sequence.h"
+#include "type_of_nth_element.h"
 
 namespace jni::metaprogramming {
 

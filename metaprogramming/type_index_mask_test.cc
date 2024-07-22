@@ -16,8 +16,8 @@
 
 #include "type_index_mask.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <tuple>
+#include <type_traits>
 
 namespace {
 
@@ -99,4 +99,5 @@ static_assert(std::is_same_v<
 static_assert(std::is_same_v<
               TypeTupFromIndexMask_t<Tup<Tup<A, B>, Tup<C, D, E, F, G>>, 1, 4>,
               Tup<B, G>>);
+
 }  // namespace

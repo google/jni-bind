@@ -17,12 +17,11 @@
 #ifndef JNI_BIND_METAPROGRAMMING_CONTAINS_BASE_H_
 #define JNI_BIND_METAPROGRAMMING_CONTAINS_BASE_H_
 
-#include <tuple>
-#include <type_traits>
-
+#include "any.h"
 #include "base.h"
-#include "contains.h"
 #include "invoke.h"
+#include "same.h"
+#include "tuple_manipulation.h"
 
 namespace jni::metaprogramming {
 

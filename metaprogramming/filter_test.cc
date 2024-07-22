@@ -16,9 +16,9 @@
 
 #include "filter.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-#include "invoke.h"
+#include <tuple>
+#include <type_traits>
+
 #include "same.h"
 
 namespace {

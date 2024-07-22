@@ -18,6 +18,7 @@
 #define JNI_BIND_METAPROGRAMMING_STRING_CONCATENATE_H_
 
 #include <array>
+#include <cstddef>
 #include <string_view>
 
 namespace jni::metaprogramming {

@@ -17,6 +17,7 @@
 #include "metaprogramming/index.h"
 
 #include <tuple>
+#include <type_traits>
 
 namespace {
 

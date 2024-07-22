@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_METAPROGRAMMING_LAMBDA_STRING_H_
 #define JNI_BIND_METAPROGRAMMING_LAMBDA_STRING_H_
 
+#include <cstddef>
 #include <string_view>
 #include <type_traits>
 #include <utility>

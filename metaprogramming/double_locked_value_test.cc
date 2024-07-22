@@ -16,23 +16,20 @@
 
 #include "double_locked_value.h"
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
-#include <thread>
 
 namespace {
 
 using ::jni::metaprogramming::DoubleLockedValue;
 
 TEST(DoubleLockedValue, ConstructsTrivialValue) {
-  auto a = []() {return 1;};
+  auto a = []() { return 1; };
   DoubleLockedValue<int> double_locked_value{};
   EXPECT_EQ(1, double_locked_value.LoadAndMaybeInit(a));
 }
 
 TEST(DoubleLockedValue, HasNoCrossTalkAcrossInstances) {
-  auto a = []() {return 1;};
+  auto a = []() { return 1; };
   DoubleLockedValue<int> double_locked_value_1;
   DoubleLockedValue<int> double_locked_value_2;
   DoubleLockedValue<int> double_locked_value_3;
@@ -45,62 +42,56 @@ TEST(DoubleLockedValue, HasNoCrossTalkAcrossInstances) {
 TEST(DoubleLockedValue, AllowsNonTrivialInitLambdas) {
   int a = 123;
   DoubleLockedValue<int> double_locked_value;
-  EXPECT_EQ(123, double_locked_value.LoadAndMaybeInit([a]() {return a;}));
+  EXPECT_EQ(123, double_locked_value.LoadAndMaybeInit([a]() { return a; }));
 }
 
-TEST(DoubleLockedValue, DoesntDoExpensiveInitialisationTwice){
+TEST(DoubleLockedValue, DoesntDoExpensiveInitialisationTwice) {
   int a = 1;
-  auto lambda {[&]() {return a++;}};
+  auto lambda{[&]() { return a++; }};
   DoubleLockedValue<int> double_locked_value;
   EXPECT_EQ(1, double_locked_value.LoadAndMaybeInit(lambda));
   EXPECT_EQ(1, double_locked_value.LoadAndMaybeInit(lambda));
   EXPECT_EQ(1, double_locked_value.LoadAndMaybeInit(lambda));
 }
 
-TEST(DoubleLockedValue, PassesTheCorrectValueOnTeardown){
+TEST(DoubleLockedValue, PassesTheCorrectValueOnTeardown) {
   DoubleLockedValue<int> double_locked_value;
-  EXPECT_EQ(123, double_locked_value.LoadAndMaybeInit([](){return 123;}));
-  double_locked_value.Reset([](int teardown_val) {
-    EXPECT_EQ(teardown_val, 123);
-  });
+  EXPECT_EQ(123, double_locked_value.LoadAndMaybeInit([]() { return 123; }));
+  double_locked_value.Reset(
+      [](int teardown_val) { EXPECT_EQ(teardown_val, 123); });
 }
 
-TEST(DoubleLockedValue, DoesExpensiveInitialisationOnlyTwice){
+TEST(DoubleLockedValue, DoesExpensiveInitialisationOnlyTwice) {
   int a = 1;
-  auto lambda {[&]() {return a++;}};
+  auto lambda{[&]() { return a++; }};
   DoubleLockedValue<int> double_locked_value;
   EXPECT_EQ(1, double_locked_value.LoadAndMaybeInit(lambda));
   EXPECT_EQ(1, double_locked_value.LoadAndMaybeInit(lambda));
   EXPECT_EQ(1, double_locked_value.LoadAndMaybeInit(lambda));
-double_locked_value.Reset();
+  double_locked_value.Reset();
   EXPECT_EQ(2, double_locked_value.LoadAndMaybeInit(lambda));
   EXPECT_EQ(2, double_locked_value.LoadAndMaybeInit(lambda));
   EXPECT_EQ(2, double_locked_value.LoadAndMaybeInit(lambda));
 }
 
-TEST(DoubleLockedValue, MixesResetWithAndWithoutLambda){
+TEST(DoubleLockedValue, MixesResetWithAndWithoutLambda) {
   DoubleLockedValue<int> double_locked_value;
 
   // First time the value is loaded.
-  EXPECT_EQ(123, double_locked_value.LoadAndMaybeInit([](){return 123;}));
+  EXPECT_EQ(123, double_locked_value.LoadAndMaybeInit([]() { return 123; }));
   // Second time, the value is already stored.
-  EXPECT_EQ(123, double_locked_value.LoadAndMaybeInit([](){return -1;}));
+  EXPECT_EQ(123, double_locked_value.LoadAndMaybeInit([]() { return -1; }));
   // This value is used for the teardown lambda.
-  double_locked_value.Reset([](int teardown_val) {
-    EXPECT_EQ(teardown_val, 123);
-  });
+  double_locked_value.Reset(
+      [](int teardown_val) { EXPECT_EQ(teardown_val, 123); });
   // The teardown lambda remains uncalled because the value is already reset.
-  double_locked_value.Reset([](int teardown_val) {
-    FAIL();
-  });
+  double_locked_value.Reset([](int teardown_val) { FAIL(); });
   // The value is updated after a reset.
-  EXPECT_EQ(456, double_locked_value.LoadAndMaybeInit([](){return 456;}));
+  EXPECT_EQ(456, double_locked_value.LoadAndMaybeInit([]() { return 456; }));
   // Using a reset without a lambda silently sets to 0.
   double_locked_value.Reset();
   // The value is 0 and so the teardown lambda is not invoked.
-  double_locked_value.Reset([](int teardown_val) {
-    FAIL();
-  });
+  double_locked_value.Reset([](int teardown_val) { FAIL(); });
 }
 
 }  // namespace

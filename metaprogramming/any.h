@@ -17,7 +17,6 @@
 #ifndef JNI_BIND_METAPROGRAMMING_ANY_H_
 #define JNI_BIND_METAPROGRAMMING_ANY_H_
 
-#include <tuple>
 #include <type_traits>
 
 #include "tuple_manipulation.h"

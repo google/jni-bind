@@ -19,13 +19,8 @@
 #include <tuple>
 #include <type_traits>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-#include "concatenate.h"
 #include "invoke.h"
 #include "same.h"
-#include "tuple_manipulation.h"
-#include "type_of_nth_element.h"
 
 using ::jni::metaprogramming::Apply;
 using ::jni::metaprogramming::Apply_t;

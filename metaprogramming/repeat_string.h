@@ -16,6 +16,9 @@
 #ifndef JNI_BIND_METAPROGRAMMING_REPEAT_H_
 #define JNI_BIND_METAPROGRAMMING_REPEAT_H_
 
+#include <cstddef>
+#include <string_view>
+
 #include "string_concatenate.h"
 
 namespace jni::metaprogramming {

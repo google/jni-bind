@@ -17,9 +17,6 @@
 #ifndef JNI_BIND_METAPROGRAMMING_VALS_EQUAL_DIMINISHED_H_
 #define JNI_BIND_METAPROGRAMMING_VALS_EQUAL_DIMINISHED_H_
 
-#include <cstddef>
-#include <utility>
-
 #include "metaprogramming/vals.h"
 
 namespace jni::metaprogramming {

@@ -18,11 +18,10 @@
 #define JNI_BIND_METAPROGRAMMING_ZIP_INVOKE_H_
 
 #include <tuple>
+#include <type_traits>
 
 #include "apply.h"
 #include "invoke.h"
-#include "per_element.h"
-#include "type_of_nth_element.h"
 
 namespace jni::metaprogramming {
 

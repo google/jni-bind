@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "metaprogramming/detect.h"
 
+#include <tuple>
 #include <type_traits>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 
 using ::jni::metaprogramming::Detect_t;
 using ::jni::metaprogramming::Detect_v;

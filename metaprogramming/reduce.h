@@ -17,10 +17,6 @@
 #ifndef JNI_BIND_METAPROGRAMMING_REDUCE_H_
 #define JNI_BIND_METAPROGRAMMING_REDUCE_H_
 
-#include <tuple>
-#include <type_traits>
-
-#include "combine.h"
 #include "tuple_manipulation.h"
 
 namespace jni::metaprogramming {

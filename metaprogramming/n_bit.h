@@ -18,7 +18,7 @@
 #define JNI_BIND_METAPROGRAMMING_N_BIT_H_
 
 #include <algorithm>
-#include <utility>
+#include <cstddef>
 
 namespace jni::metaprogramming {
 

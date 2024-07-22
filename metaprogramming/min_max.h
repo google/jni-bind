@@ -16,6 +16,8 @@
 #ifndef JNI_BIND_METAPROGRAMMING_MIN_MAX_H_
 #define JNI_BIND_METAPROGRAMMING_MIN_MAX_H_
 
+#include <type_traits>
+
 #include "vals.h"
 
 namespace jni::metaprogramming {

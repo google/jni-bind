@@ -17,9 +17,8 @@
 #ifndef JNI_BIND_METAPROGRAMMING_DOUBLE_LOCKED_VALUE_H_
 #define JNI_BIND_METAPROGRAMMING_DOUBLE_LOCKED_VALUE_H_
 
-#include <mutex>
 #include <atomic>
-#include <functional>
+#include <mutex>
 
 namespace jni::metaprogramming {
 
@@ -30,7 +29,7 @@ namespace jni::metaprogramming {
 //
 // This class is thread-safe.  Loads will be cheap (after a potentially
 // expensive initial init), stores are expensive.
-template<typename T_>
+template <typename T_>
 class DoubleLockedValue {
  public:
   template <typename Lambda>
@@ -38,16 +37,16 @@ class DoubleLockedValue {
     // Typical case, value already initialised, perform cheap load and return.
     T_ return_value = value_.load(std::memory_order_acquire);
 
-    if(return_value != T_{0}) {
+    if (return_value != T_{0}) {
       return return_value;
     }
 
     // Value was nil (uninitialised), perform heavy-weight lock.
-    std::lock_guard<std::mutex> lock_guard {lock_};
+    std::lock_guard<std::mutex> lock_guard{lock_};
 
     // Check another thread didn't race to lock before.
     return_value = value_.load(std::memory_order_acquire);
-    if(return_value != T_{}) {
+    if (return_value != T_{}) {
       return return_value;
     }
 
@@ -59,7 +58,7 @@ class DoubleLockedValue {
 
   // Sets the value to {0}.
   inline void Reset() {
-    std::lock_guard<std::mutex> lock_guard {lock_};
+    std::lock_guard<std::mutex> lock_guard{lock_};
     value_.store(0, std::memory_order_release);
   }
 
@@ -67,9 +66,9 @@ class DoubleLockedValue {
   // down, the teardown lambda will be invoked with this value.
   template <typename TeardownLambda>
   inline void Reset(TeardownLambda lambda) {
-    std::lock_guard<std::mutex> lock_guard {lock_};
+    std::lock_guard<std::mutex> lock_guard{lock_};
     auto val = value_.load();
-    if(val != 0) {
+    if (val != 0) {
       lambda(val);
       value_.store(0, std::memory_order_release);
     }

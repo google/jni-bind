@@ -16,10 +16,10 @@
 
 #include "invoke.h"
 
+#include <cstddef>
+#include <tuple>
 #include <type_traits>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include "increment.h"
 #include "per_element.h"
 #include "same.h"

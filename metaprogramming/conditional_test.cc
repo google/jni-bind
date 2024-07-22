@@ -17,8 +17,8 @@
 #include "conditional.h"
 
 #include <tuple>
+#include <type_traits>
 
-#include <gtest/gtest.h>
 #include "same.h"
 
 namespace {

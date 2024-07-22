@@ -18,8 +18,6 @@
 #define JNI_BIND_METAPROGRAMMING_VALS_H_
 
 #include <array>
-#include <cstddef>
-#include <utility>
 
 namespace jni::metaprogramming {
 

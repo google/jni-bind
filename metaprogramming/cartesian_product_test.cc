@@ -16,10 +16,9 @@
 
 #include "cartesian_product.h"
 
+#include <tuple>
 #include <type_traits>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include "invoke.h"
 #include "n_bit.h"
 #include "n_bit_sequence.h"

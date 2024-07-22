@@ -19,8 +19,6 @@
 #include <tuple>
 #include <type_traits>
 
-#include <gtest/gtest.h>
-#include "invoke.h"
 #include "same.h"
 
 using ::jni::metaprogramming::Same;

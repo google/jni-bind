@@ -17,8 +17,7 @@
 #ifndef JNI_BIND_METAPROGRAMMING_FIND_IDX_OF_VAL_H_
 #define JNI_BIND_METAPROGRAMMING_FIND_IDX_OF_VAL_H_
 
-#include <tuple>
-#include <type_traits>
+#include <cstddef>
 
 #include "all_unique.h"
 #include "same.h"

@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_METAPROGRAMMING_REPLACE_STRING_H_
 #define JNI_BIND_METAPROGRAMMING_REPLACE_STRING_H_
 
+#include <cstddef>
 #include <string_view>
 #include <utility>
 

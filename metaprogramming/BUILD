@@ -133,7 +133,12 @@ cc_test(
 cc_library(
     name = "cartesian_product",
     hdrs = ["cartesian_product.h"],
-    deps = [":n_bit_sequence"],
+    deps = [
+        ":increment",
+        ":n_bit",
+        ":n_bit_sequence",
+        ":type_of_nth_element",
+    ],
 )
 
 cc_test(
@@ -275,9 +280,11 @@ cc_library(
     name = "contains_base",
     hdrs = ["contains_base.h"],
     deps = [
+        ":any",
         ":base",
-        ":contains",
         ":invoke",
+        ":same",
+        ":tuple_manipulation",
     ],
 )
 
@@ -1175,8 +1182,10 @@ cc_library(
     name = "unique_set",
     hdrs = ["unique_set.h"],
     deps = [
+        ":concatenate",
         ":contains",
         ":reverse",
+        ":tuple_manipulation",
     ],
 )
 

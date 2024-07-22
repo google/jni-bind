@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_METAPROGRAMMING_INTERLEAVE_H_
 #define JNI_BIND_METAPROGRAMMING_INTERLEAVE_H_
 
+#include <cstddef>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -47,8 +48,8 @@ struct Interleaved;
 
 template <typename... T0, typename... T1>
 struct Interleaved<std::tuple<T0...>, std::tuple<T1...>> {
-  using type = std::remove_pointer_t<decltype(
-      Interleave<std::tuple<T0...>, std::tuple<T1...>>())>;
+  using type = std::remove_pointer_t<
+      decltype(Interleave<std::tuple<T0...>, std::tuple<T1...>>())>;
 };
 
 }  // namespace jni::metaprogramming

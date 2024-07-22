@@ -16,8 +16,8 @@
 
 #include "flatten.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <tuple>
+#include <type_traits>
 
 using ::jni::metaprogramming::Flatten_t;
 

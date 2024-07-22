@@ -17,7 +17,8 @@
 #ifndef JNI_BIND_METAPROGRAMMING_TUPLE_FROM_SIZE_H_
 #define JNI_BIND_METAPROGRAMMING_TUPLE_FROM_SIZE_H_
 
-#include <type_traits>
+#include <cstddef>
+#include <tuple>
 #include <utility>
 
 namespace jni::metaprogramming {

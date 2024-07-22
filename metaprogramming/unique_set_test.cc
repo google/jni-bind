@@ -16,7 +16,8 @@
 
 #include "unique_set.h"
 
-#include <utility>
+#include <tuple>
+#include <type_traits>
 
 namespace {
 

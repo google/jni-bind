@@ -16,8 +16,8 @@
 
 #include "n_bit_sequence.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <type_traits>
+
 #include "increment.h"
 #include "n_bit.h"
 
