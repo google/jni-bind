@@ -15,6 +15,7 @@
  */
 
 #include <memory>
+#include <utility>
 
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
@@ -49,6 +50,7 @@ JNIEXPORT jobject JNICALL
 Java_com_jnibind_test_LocalObjectTest_jniCreateNewLocalObjectFromObject(
     JNIEnv* env, jclass, jobject object) {
   jni::LocalObject<kObjectClass> java_object{object};
+
   return jni::LocalObject<kObjectTestHelperClass>{java_object}.Release();
 }
 
@@ -62,6 +64,7 @@ JNIEXPORT jobject JNICALL
 Java_com_jnibind_test_LocalObjectTest_jniBuildNewObjectsFromExistingObjects(
     JNIEnv* env, jclass, jobject jtest_obj, jobject jhelper_obj) {
   jni::LocalObject<kObjectTestHelperClass> helper_obj{jhelper_obj};
+
   return jni::LocalObject<kLocalObjectTestClass>{jtest_obj}(
              "methodTakesLocalObjectReturnsNewObject", helper_obj)
       .Release();
@@ -71,6 +74,7 @@ JNIEXPORT jobject JNICALL
 Java_com_jnibind_test_LocalObjectTest_jniManipulateNewLocalObjectSetIntVal238(
     JNIEnv* env, jclass, jobject jtest_obj) {
   jni::LocalObject<kObjectTestHelperClass> helper_obj{2, 3, 8};
+
   return jni::LocalObject<kLocalObjectTestClass>{jtest_obj}(
              "methodTakesLocalObjectReturnsNewObject", std::move(helper_obj))
       .Release();

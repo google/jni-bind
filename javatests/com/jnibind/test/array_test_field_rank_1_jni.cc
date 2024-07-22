@@ -16,7 +16,9 @@
 
 #include <array>
 #include <cstring>
+#include <limits>
 #include <memory>
+#include <string>
 
 #include "array_test_helpers_native.h"
 #include "object_test_helper_jni.h"

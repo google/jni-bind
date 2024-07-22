@@ -15,8 +15,9 @@
  */
 
 #include <memory>
+#include <string>
+#include <string_view>
 
-#include "object_test_helper_jni.h"
 #include "jni_bind.h"
 
 using ::jni::Class;

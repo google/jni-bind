@@ -15,6 +15,7 @@
  */
 
 #include <memory>
+#include <utility>
 
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
@@ -55,6 +56,7 @@ JNIEXPORT jobject JNICALL
 Java_com_jnibind_test_GlobalObjectTest_jniBuildNewObjectsFromExistingObjects(
     JNIEnv* env, jclass, jobject test_helper_object, jobject object_to_mutate) {
   jni::LocalObject<kObjectTestHelperClass> helper_obj{object_to_mutate};
+
   return jni::LocalObject<kGlobalObjectTestClass>{test_helper_object}(
              "methodTakesGlobalObjectReturnsNewObject", helper_obj)
       .Release();
@@ -64,6 +66,7 @@ JNIEXPORT jobject JNICALL
 Java_com_jnibind_test_GlobalObjectTest_jniManipulateNewGlobalObjectSetIntVal238(
     JNIEnv* env, jclass, jobject jtest_obj) {
   jni::GlobalObject<kObjectTestHelperClass> helper_obj{2, 3, 8};
+
   return jni::LocalObject<kGlobalObjectTestClass>{jtest_obj}(
              "methodTakesGlobalObjectReturnsNewObject", std::move(helper_obj))
       .Release();

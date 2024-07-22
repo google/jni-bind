@@ -16,7 +16,6 @@
 
 #include <memory>
 
-#include "object_test_helper_jni.h"
 #include "jni_bind.h"
 
 using ::jni::Class;
@@ -49,6 +48,7 @@ extern "C" {
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
   jvm.reset(new jni::JvmRef<jni::kDefaultJvm>(pjvm));
+
   return JNI_VERSION_1_6;
 }
 
@@ -61,6 +61,7 @@ JNIEXPORT jint JNICALL Java_com_jnibind_test_FieldTest_jniIntField(
     JNIEnv* env, jclass, jobject object, jint val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
   rjni_test_helper["intField"].Set(jint{val});
+
   return rjni_test_helper["intField"].Get();
 }
 
@@ -68,6 +69,7 @@ JNIEXPORT jfloat JNICALL Java_com_jnibind_test_FieldTest_jniFloatField(
     JNIEnv* env, jclass, jobject object, jfloat val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
   rjni_test_helper["floatField"].Set(jfloat{val});
+
   return rjni_test_helper["floatField"].Get();
 }
 
@@ -75,6 +77,7 @@ JNIEXPORT jdouble JNICALL Java_com_jnibind_test_FieldTest_jniDoubleField(
     JNIEnv* env, jclass, jobject object, jdouble val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
   rjni_test_helper["doubleField"].Set(jdouble{val});
+
   return rjni_test_helper["doubleField"].Get();
 }
 
@@ -82,6 +85,7 @@ JNIEXPORT jstring JNICALL Java_com_jnibind_test_FieldTest_jniStringField(
     JNIEnv* env, jclass, jobject object, jstring val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
   rjni_test_helper["stringField"].Set(val);
+
   return rjni_test_helper["stringField"].Get().Release();
 }
 

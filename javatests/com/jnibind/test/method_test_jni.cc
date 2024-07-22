@@ -16,7 +16,6 @@
 
 #include <memory>
 
-#include "object_test_helper_jni.h"
 #include "jni_bind.h"
 
 using ::jni::Class;
@@ -119,6 +118,7 @@ Java_com_jnibind_test_MethodTest_jniVoidMethodTakesFiveInts(JNIEnv* env, jclass,
 JNIEXPORT jboolean JNICALL Java_com_jnibind_test_MethodTest_jniBooleanMethod(
     JNIEnv* env, jclass, jobject object) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("booleanMethod");
 }
 
@@ -136,6 +136,7 @@ Java_com_jnibind_test_MethodTest_jniBooleanMethodTakesFiveBooleans(
     JNIEnv* env, jclass, jobject object, jboolean i1, jboolean i2, jboolean i3,
     jboolean i4, jboolean i5) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("booleanMethodTakesFiveBooleans", jboolean{i1},
                       jboolean{i2}, jboolean{i3}, jboolean{i4}, jboolean{i5});
 }
@@ -144,12 +145,14 @@ Java_com_jnibind_test_MethodTest_jniBooleanMethodTakesFiveBooleans(
 JNIEXPORT jint JNICALL Java_com_jnibind_test_MethodTest_jniIntMethod(
     JNIEnv* env, jclass, jobject object) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("intMethod");
 }
 
 JNIEXPORT jint JNICALL Java_com_jnibind_test_MethodTest_jniIntMethodTakesOneInt(
     JNIEnv* env, jclass, jobject object, jint i) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("intMethodTakesOneInt", jint{i});
 }
 
@@ -160,6 +163,7 @@ Java_com_jnibind_test_MethodTest_jniIntMethodTakesFiveInts(JNIEnv* env, jclass,
                                                            jint i3, jint i4,
                                                            jint i5) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("intMethodTakesFiveInts", jint{i1}, jint{i2}, jint{i3},
                       jint{i4}, jint{i5});
 }
@@ -168,6 +172,7 @@ Java_com_jnibind_test_MethodTest_jniIntMethodTakesFiveInts(JNIEnv* env, jclass,
 JNIEXPORT jlong JNICALL Java_com_jnibind_test_MethodTest_jniLongMethod(
     JNIEnv* env, jclass, jobject object) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("longMethod");
 }
 
@@ -176,6 +181,7 @@ Java_com_jnibind_test_MethodTest_jniLongMethodTakesOneLong(JNIEnv* env, jclass,
                                                            jobject object,
                                                            jlong i) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("longMethodTakesOneLong", jlong{i});
 }
 
@@ -184,6 +190,7 @@ Java_com_jnibind_test_MethodTest_jniLongMethodTakesFiveLongs(
     JNIEnv* env, jclass, jobject object, jlong i1, jlong i2, jlong i3, jlong i4,
     jlong i5) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("longMethodTakesFiveLongs", jlong{i1}, jlong{i2},
                       jlong{i3}, jlong{i4}, jlong{i5});
 }
@@ -192,6 +199,7 @@ Java_com_jnibind_test_MethodTest_jniLongMethodTakesFiveLongs(
 JNIEXPORT jfloat JNICALL Java_com_jnibind_test_MethodTest_jniFloatMethod(
     JNIEnv* env, jclass, jobject object) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("floatMethod");
 }
 
@@ -201,6 +209,7 @@ Java_com_jnibind_test_MethodTest_jniFloatMethodTakesOneFloat(JNIEnv* env,
                                                              jobject object,
                                                              jfloat i) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("floatMethodTakesOneFloat", jfloat{i});
 }
 
@@ -209,6 +218,7 @@ Java_com_jnibind_test_MethodTest_jniFloatMethodTakesFiveFloats(
     JNIEnv* env, jclass, jobject object, jfloat i1, jfloat i2, jfloat i3,
     jfloat i4, jfloat i5) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("floatMethodTakesFiveFloats", jfloat{i1}, jfloat{i2},
                       jfloat{i3}, jfloat{i4}, jfloat{i5});
 }
@@ -217,6 +227,7 @@ Java_com_jnibind_test_MethodTest_jniFloatMethodTakesFiveFloats(
 JNIEXPORT jdouble JNICALL Java_com_jnibind_test_MethodTest_jniDoubleMethod(
     JNIEnv* env, jclass, jobject object) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("doubleMethod");
 }
 
@@ -226,6 +237,7 @@ Java_com_jnibind_test_MethodTest_jniDoubleMethodTakesOneDouble(JNIEnv* env,
                                                                jobject object,
                                                                jdouble i) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("doubleMethodTakesOneDouble", jdouble{i});
 }
 
@@ -234,6 +246,7 @@ Java_com_jnibind_test_MethodTest_jniDoubleMethodTakesFiveDoubles(
     JNIEnv* env, jclass, jobject object, jdouble i1, jdouble i2, jdouble i3,
     jdouble i4, jdouble i5) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("doubleMethodTakesFiveDoubles", jdouble{i1}, jdouble{i2},
                       jdouble{i3}, jdouble{i4}, jdouble{i5});
 }
@@ -242,18 +255,21 @@ Java_com_jnibind_test_MethodTest_jniDoubleMethodTakesFiveDoubles(
 JNIEXPORT int JNICALL Java_com_jnibind_test_MethodTest_jniCallFooOverload1(
     JNIEnv* env, jclass, jobject object) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("foo");
 }
 
 JNIEXPORT int JNICALL Java_com_jnibind_test_MethodTest_jniCallFooOverload2(
     JNIEnv* env, jclass, jobject object) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("foo", 123.f);
 }
 
 JNIEXPORT int JNICALL Java_com_jnibind_test_MethodTest_jniCallFooOverload3(
     JNIEnv* env, jclass, jobject object) {
   LocalObject<kMethodTestHelper> gtest_helper{object};
+
   return gtest_helper("foo", 123.f, 456.f);
 }
 

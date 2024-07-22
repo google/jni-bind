@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <thread>  // NOLINT
+#include <utility>
 
 #include "array_test_helpers_native.h"
 #include "object_test_helper_jni.h"
