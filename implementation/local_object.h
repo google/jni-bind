@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_LOCAL_OBJECT_H
 #define JNI_BIND_LOCAL_OBJECT_H
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/lifecycle.h"

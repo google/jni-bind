@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_SUPPORTED_CLASS_SET_H_
 #define JNI_BIND_SUPPORTED_CLASS_SET_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include <tuple>
 
 namespace jni {

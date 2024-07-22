@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_TYPE_FORWARD_DECLARATIONS_H_
 #define JNI_BIND_TYPE_FORWARD_DECLARATIONS_H_
+
+// IWYU pragma: private, include "../jni_bind.h"
 
 #include "implementation/default_class_loader.h"
 #include "implementation/id_type.h"

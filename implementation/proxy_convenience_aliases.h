@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_IMPLEMENTATION_PROXY_CONVENIENCE_ALIASES_H_
 #define JNI_BIND_IMPLEMENTATION_PROXY_CONVENIENCE_ALIASES_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include <type_traits>
 
 namespace jni {

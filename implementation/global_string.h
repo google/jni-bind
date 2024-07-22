@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_GLOBAL_STRING_H_
 #define JNI_BIND_GLOBAL_STRING_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include "class_defs/java_lang_classes.h"
 #include "implementation/global_object.h"
 #include "implementation/jni_helper/lifecycle_string.h"

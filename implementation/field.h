@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_FIELD_H_
 #define JNI_BIND_FIELD_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include <string>
 
 #include "params.h"

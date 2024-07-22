@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_OBJECT_REF_H
 #define JNI_BIND_OBJECT_REF_H
+
+// IWYU pragma: private, include "../jni_bind.h"
 
 #include <cstddef>
 #include <type_traits>

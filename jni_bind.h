@@ -19,7 +19,7 @@
 
 // IWYU pragma: begin_exports
 
-#include "implementation/configuration.h"
+#include "implementation/configuration.h"  // IWYU pragma: export
 
 namespace jni {
 
@@ -29,6 +29,8 @@ static constexpr Configuration kConfig{
 };
 
 }  // namespace jni
+
+// IWYU pragma: begin_exports
 
 #include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_dep.h"

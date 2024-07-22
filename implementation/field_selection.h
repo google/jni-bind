@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_FIELD_SELECTION_H_
 #define JNI_BIND_FIELD_SELECTION_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include "implementation/id.h"
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"

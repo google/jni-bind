@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_IMPLEMENTATION_PROXY_DEFINITIONS_STRING_H_
 #define JNI_BIND_IMPLEMENTATION_PROXY_DEFINITIONS_STRING_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include <cstddef>
 #include <string>
 #include <string_view>

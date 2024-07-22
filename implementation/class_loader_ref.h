@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_CLASS_LOADER_REF_H_
 #define JNI_BIND_CLASS_LOADER_REF_H_
+
+// IWYU pragma: private, include "../jni_bind.h"
 
 #include "class_defs/java_lang_classes.h"
 #include "implementation/class_loader.h"

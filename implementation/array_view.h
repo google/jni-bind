@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_IMPLEMENTATION_ARRAY_VIEW_H_
 #define JNI_BIND_IMPLEMENTATION_ARRAY_VIEW_H_
+
+// IWYU pragma: private, include "../jni_bind.h"
 
 #include <cstddef>
 #include <iterator>

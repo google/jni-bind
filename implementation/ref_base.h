@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_REF_BASE_H_
 #define JNI_BIND_REF_BASE_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include <type_traits>
 
 #include "implementation/jni_helper/lifecycle.h"

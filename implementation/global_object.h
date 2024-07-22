@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_GLOBAL_OBJECT_H_
 #define JNI_BIND_GLOBAL_OBJECT_H_
+
+// IWYU pragma: private, include "../jni_bind.h"
 
 #include "implementation/class.h"
 #include "implementation/forward_declarations.h"

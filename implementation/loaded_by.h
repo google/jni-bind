@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_IMPLEMENTATION_LOADED_BY_H_
 #define JNI_BIND_IMPLEMENTATION_LOADED_BY_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
 

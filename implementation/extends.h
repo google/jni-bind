@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_IMPLEMENTATION_EXTENDS_H_
 #define JNI_BIND_IMPLEMENTATION_EXTENDS_H_
+
+// IWYU pragma: private, include "../jni_bind.h"
 
 #include "implementation/no_class_specified.h"
 #include "metaprogramming/tuple_manipulation.h"

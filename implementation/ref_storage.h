@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_IMPLEMENTATION_REF_STORAGE_H_
 #define JNI_BIND_IMPLEMENTATION_REF_STORAGE_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include <functional>
 #include <vector>
 

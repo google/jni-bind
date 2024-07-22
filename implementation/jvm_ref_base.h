@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_IMPLEMENTATION_JVM_REF_BASE_H_
 #define JNI_BIND_IMPLEMENTATION_JVM_REF_BASE_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include <atomic>
 
 #include "implementation/configuration.h"

@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_DEFAULT_CLASS_LOADER_H_
 #define JNI_BIND_DEFAULT_CLASS_LOADER_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include <cstddef>
 #include <tuple>
 

@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_IMPLEMENTATION_SELF_H_
 #define JNI_BIND_IMPLEMENTATION_SELF_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 namespace jni {
 
 // Tag to indicate you are referring to the enclosing class.

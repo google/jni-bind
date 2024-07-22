@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_IMPLEMENTATION_FIND_CLASS_FALLBACK_H_
 #define JNI_BIND_IMPLEMENTATION_FIND_CLASS_FALLBACK_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include "implementation/default_class_loader.h"
 #include "implementation/global_class_loader.h"
 #include "implementation/jni_helper/jni_helper.h"

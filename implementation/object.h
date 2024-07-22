@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_OBJECT_H_
 #define JNI_BIND_OBJECT_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 namespace jni {
 
 struct Object {

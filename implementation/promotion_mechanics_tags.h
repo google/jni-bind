@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_TAGS_H_
 #define JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_TAGS_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 namespace jni {
 
 // Adopts a local.

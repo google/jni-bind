@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_IMPLEMENTATION_STATIC_REF_H_
 #define JNI_BIND_IMPLEMENTATION_STATIC_REF_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include <cstddef>
 
 #include "implementation/class_ref.h"

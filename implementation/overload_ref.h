@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_OVERLOAD_REF_H
 #define JNI_BIND_OVERLOAD_REF_H
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include <cstddef>
 #include <string_view>
 #include <type_traits>

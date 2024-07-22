@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_RETURN_H_
 #define JNI_BIND_RETURN_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include "implementation/void.h"
 
 namespace jni {

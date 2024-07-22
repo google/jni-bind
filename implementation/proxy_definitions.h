@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_TYPE_PROXY_DEFINITIONS_H_
 #define JNI_BIND_TYPE_PROXY_DEFINITIONS_H_
 
+// IWYU pragma: private, include "../jni_bind.h"
+
 #include <string_view>
 #include <tuple>
 #include <type_traits>
