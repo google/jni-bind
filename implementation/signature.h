@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_IMPLEMENTATION_SIGNATURE_H_
 #define JNI_BIND_IMPLEMENTATION_SIGNATURE_H_
 
-#include <type_traits>
+#include <cstddef>
+#include <string_view>
+#include <utility>
 
-#include "implementation/array.h"
-#include "implementation/class.h"
-#include "implementation/field.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/id_type.h"
-#include "implementation/name_constants.h"
 #include "implementation/no_idx.h"
-#include "implementation/proxy_convenience_aliases.h"
 #include "implementation/selector_static_info.h"
 #include "metaprogramming/name_constants.h"
 

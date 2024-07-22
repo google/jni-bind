@@ -17,14 +17,12 @@
 #ifndef JNI_BIND_ARRAY_H_
 #define JNI_BIND_ARRAY_H_
 
+#include <cstddef>
 #include <type_traits>
 
 #include "implementation/array_type_conversion.h"
 #include "implementation/object.h"
-#include "implementation/return.h"
 #include "jni_dep.h"
-#include "metaprogramming/contains.h"
-#include "metaprogramming/type_to_type_map.h"
 
 namespace jni {
 

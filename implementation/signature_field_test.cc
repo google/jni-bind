@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <cstddef>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <cstddef>
+#include <string_view>
+
 #include "jni_bind.h"
 
 namespace {
@@ -27,10 +27,8 @@ using ::jni::Field;
 using ::jni::Id;
 using ::jni::IdType;
 using ::jni::JniT;
-using ::jni::JniTSelector;
 using ::jni::kNoIdx;
 using ::jni::Rank;
-using ::jni::SelectorStaticInfo;
 using ::jni::Self;
 using ::jni::Signature_v;
 

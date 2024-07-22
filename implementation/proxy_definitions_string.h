@@ -13,23 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_IMPLEMENTATION_PROXY_DEFINITIONS_STRING_H_
 #define JNI_BIND_IMPLEMENTATION_PROXY_DEFINITIONS_STRING_H_
 
-#include <iterator>
+#include <cstddef>
 #include <string>
+#include <string_view>
+#include <tuple>
 #include <type_traits>
 
 #include "class_defs/java_lang_classes.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_string.h"
 #include "implementation/jvm.h"
 #include "implementation/proxy.h"
+#include "implementation/proxy_convenience_aliases.h"
 #include "implementation/ref_base.h"
+#include "jni_dep.h"
 
 namespace jni {
-
 
 template <typename JString>
 struct Proxy<JString,

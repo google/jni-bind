@@ -17,27 +17,17 @@
 #ifndef JNI_BIND_METHOD_SELECTION_H_
 #define JNI_BIND_METHOD_SELECTION_H_
 
-#include <limits>
+#include <cstddef>
 #include <type_traits>
-#include <utility>
 
-#include "implementation/array.h"
-#include "implementation/default_class_loader.h"
 #include "implementation/id.h"
-#include "implementation/jni_helper/jni_typename_to_string.h"
+#include "implementation/id_type.h"
 #include "implementation/no_idx.h"
 #include "implementation/overload_ref.h"
-#include "implementation/proxy.h"
-#include "implementation/selector_static_info.h"
+#include "implementation/proxy_convenience_aliases.h"
 #include "metaprogramming/call.h"
-#include "metaprogramming/concatenate.h"
-#include "metaprogramming/invoke.h"
 #include "metaprogramming/min_max.h"
-#include "metaprogramming/n_bit_sequence.h"
-#include "metaprogramming/per_element.h"
 #include "metaprogramming/reduce.h"
-#include "metaprogramming/tuple_manipulation.h"
-#include "metaprogramming/type_index_mask.h"
 #include "metaprogramming/type_of_nth_element.h"
 #include "metaprogramming/unfurl.h"
 #include "metaprogramming/vals.h"

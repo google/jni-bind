@@ -17,17 +17,12 @@
 #ifndef JNI_BIND_TYPE_PROXY_H_
 #define JNI_BIND_TYPE_PROXY_H_
 
-#include <string>
-#include <string_view>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
-#include "implementation/class.h"
-#include "implementation/class_loader.h"
 #include "implementation/forward_declarations.h"
-#include "implementation/object.h"
 #include "implementation/proxy_convenience_aliases.h"
-#include "implementation/ref_base.h"
 #include "implementation/self.h"
 #include "jni_dep.h"
 #include "metaprogramming/cartesian_product.h"
@@ -36,13 +31,9 @@
 #include "metaprogramming/corpus.h"
 #include "metaprogramming/flatten.h"
 #include "metaprogramming/invoke.h"
-#include "metaprogramming/per_element.h"
 #include "metaprogramming/reduce.h"
-#include "metaprogramming/tuple_manipulation.h"
-#include "metaprogramming/type_of_nth_element.h"
 #include "metaprogramming/type_to_type_map.h"
 #include "metaprogramming/unique_set.h"
-#include "metaprogramming/unwrap.h"
 
 namespace jni {
 

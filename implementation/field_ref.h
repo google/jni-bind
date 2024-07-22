@@ -17,28 +17,21 @@
 #ifndef JNI_BIND_FIELD_REF_H_
 #define JNI_BIND_FIELD_REF_H_
 
-#include <mutex>
-#include <string_view>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 
-#include "implementation/class_ref.h"
 #include "implementation/field_selection.h"
 #include "implementation/id.h"
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/field_value.h"
 #include "implementation/jni_helper/jni_helper.h"
-#include "implementation/jni_helper/static_field_value.h"
 #include "implementation/no_idx.h"
 #include "implementation/promotion_mechanics_tags.h"
-#include "implementation/proxy.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/ref_base.h"
+#include "implementation/signature.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
-#include "metaprogramming/optional_wrap.h"
-#include "metaprogramming/queryable_map.h"
 
 namespace jni {
 

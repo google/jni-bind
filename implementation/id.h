@@ -18,21 +18,14 @@
 #define JNI_BIND_IMPLEMENTATION_ID_H_
 
 #include <cstddef>
-#include <limits>
 #include <string_view>
-#include <utility>
 
 #include "implementation/array.h"
-#include "implementation/class.h"
-#include "implementation/class_loader.h"
-#include "implementation/field.h"
 #include "implementation/id_type.h"
-#include "implementation/name_constants.h"
 #include "implementation/no_idx.h"
 #include "implementation/proxy_convenience_aliases.h"
-#include "implementation/selector_static_info.h"
 #include "implementation/self.h"
-#include "implementation/signature.h"
+#include "implementation/void.h"
 #include "metaprogramming/replace_string.h"
 
 namespace jni {

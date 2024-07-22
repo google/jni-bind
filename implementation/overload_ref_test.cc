@@ -16,7 +16,6 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "implementation/jni_helper/jni_helper.h"
 #include "jni_bind.h"
 #include "jni_test.h"
 

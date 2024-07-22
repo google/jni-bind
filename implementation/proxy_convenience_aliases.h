@@ -19,8 +19,6 @@
 
 #include <type_traits>
 
-#include "implementation/id_type.h"
-
 namespace jni {
 
 template <typename TUndecayed>

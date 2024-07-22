@@ -17,6 +17,9 @@
 #ifndef JNI_BIND_IMPLEMENTATION_ARRAY_TYPE_CONVERSION_H_
 #define JNI_BIND_IMPLEMENTATION_ARRAY_TYPE_CONVERSION_H_
 
+#include <cstddef>
+#include <tuple>
+
 #include "jni_dep.h"
 #include "metaprogramming/type_to_type_map.h"
 

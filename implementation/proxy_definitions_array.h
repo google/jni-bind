@@ -13,13 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_IMPLEMENTATION_PROXY_DEFINITIONS_ARRAY_H_
 #define JNI_BIND_IMPLEMENTATION_PROXY_DEFINITIONS_ARRAY_H_
 
+#include <cstddef>
+#include <string_view>
+#include <tuple>
+#include <type_traits>
+
+#include "implementation/array.h"
+#include "implementation/array_type_conversion.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jvm.h"
 #include "implementation/name_constants.h"
+#include "implementation/no_class_specified.h"
 #include "implementation/proxy.h"
+#include "implementation/proxy_convenience_aliases.h"
+#include "implementation/ref_base.h"
+#include "jni_dep.h"
 
 namespace jni {
 

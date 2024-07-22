@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <cstddef>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <cstddef>
+#include <string_view>
+
 #include "jni_bind.h"
 
 namespace {

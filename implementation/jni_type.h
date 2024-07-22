@@ -17,16 +17,16 @@
 #ifndef JNI_BIND_IMPLEMENTATION_JNI_TYPE_H_
 #define JNI_BIND_IMPLEMENTATION_JNI_TYPE_H_
 
+#include <cstddef>
 #include <type_traits>
-#include <variant>
 
 #include "implementation/array.h"
 #include "implementation/array_type_conversion.h"
-#include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jvm.h"
 #include "implementation/loaded_by.h"
+#include "implementation/no_class_specified.h"
 #include "implementation/no_idx.h"
 #include "jni_dep.h"
 #include "metaprogramming/replace_string.h"

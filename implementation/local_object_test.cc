@@ -15,7 +15,7 @@
  */
 
 #include <array>
-#include <optional>
+#include <tuple>
 #include <utility>
 
 #include <gmock/gmock.h>

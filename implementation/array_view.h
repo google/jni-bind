@@ -16,6 +16,7 @@
 #ifndef JNI_BIND_IMPLEMENTATION_ARRAY_VIEW_H_
 #define JNI_BIND_IMPLEMENTATION_ARRAY_VIEW_H_
 
+#include <cstddef>
 #include <iterator>
 
 #include "implementation/array_type_conversion.h"

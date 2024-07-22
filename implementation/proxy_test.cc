@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
+#include <string>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "jni_bind.h"
 #include "jni_test.h"
-#include "metaprogramming/concatenate.h"
 
 using ::jni::AsDecl_t;
 using ::jni::Class;

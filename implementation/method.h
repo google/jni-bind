@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_METHOD_H_
 #define JNI_BIND_METHOD_H_
 
+#include <string_view>
 #include <tuple>
 #include <type_traits>
 
@@ -86,8 +88,8 @@ template <
     typename ReturnT, typename ParamsT,
     typename = std::enable_if_t<!std::is_base_of_v<OverloadBase, ReturnT> &&
                                 !std::is_base_of_v<OverloadBase, ParamsT>>>
-Method(const char*, ReturnT, ParamsT)
-    -> Method<std::tuple<ReturnT>, std::tuple<ParamsT>>;
+Method(const char*, ReturnT,
+       ParamsT) -> Method<std::tuple<ReturnT>, std::tuple<ParamsT>>;
 
 // CTAD for Overloaded form.
 template <typename... Returns, typename... Params>

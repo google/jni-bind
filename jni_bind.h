@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_JNI_BIND_H_
 #define JNI_BIND_JNI_BIND_H_
 
@@ -32,9 +33,20 @@ static constexpr Configuration kConfig{
 #include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_dep.h"
 
+////////////////////////////////////////////////////////////////////////////////
+// Phase 0 Compilation: JNI Bind bootstap, no class definitions permitted.
+////////////////////////////////////////////////////////////////////////////////
+
 // JNI Corpus.
 #include "metaprogramming/corpus.h"
 #include "metaprogramming/corpus_tag.h"
+
+// JNI Porcelain Helpers.
+#include "implementation/jni_helper/field_value.h"
+#include "implementation/jni_helper/invoke_static.h"
+#include "implementation/jni_helper/jni_env.h"
+#include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/static_field_value.h"
 
 // Headers for static definitions.
 #include "implementation/array.h"
@@ -54,6 +66,7 @@ static constexpr Configuration kConfig{
 #include "implementation/method.h"
 #include "implementation/no_idx.h"
 #include "implementation/params.h"
+#include "implementation/proxy_convenience_aliases.h"
 #include "implementation/return.h"
 #include "implementation/selector_static_info.h"
 #include "implementation/self.h"
@@ -61,6 +74,7 @@ static constexpr Configuration kConfig{
 #include "implementation/static_ref.h"
 #include "implementation/string_ref.h"
 #include "implementation/supported_class_set.h"
+#include "implementation/thread_guard.h"
 
 // Convenience headers for system libraries.
 #include "class_defs/java_lang_classes.h"
@@ -82,7 +96,10 @@ static constexpr Configuration kConfig{
 #include "implementation/promotion_mechanics_tags.h"
 #include "implementation/ref_base.h"
 
-// These headers require Jni Bind is fully bootstrapped.
+////////////////////////////////////////////////////////////////////////////////
+// Phase 1 Compilation: JNI Bind definitions permissible.
+////////////////////////////////////////////////////////////////////////////////
+
 #include "implementation/find_class_fallback.h"
 
 // IWYU pragma: end_exports

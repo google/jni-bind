@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#include <optional>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "implementation/jni_helper/fake_test_constants.h"

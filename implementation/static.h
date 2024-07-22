@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_IMPLEMENTATION_STATIC_H_
 #define JNI_BIND_IMPLEMENTATION_STATIC_H_
 
-#include <string_view>
 #include <tuple>
 
 #include "implementation/field.h"
 #include "implementation/method.h"
-#include "implementation/params.h"
 #include "metaprogramming/base_filter.h"
 
 namespace jni {
@@ -42,7 +41,7 @@ class Static<std::tuple<Methods_...>, std::tuple<Fields_...>>
       : methods_(methods...), fields_(fields...) {}
 };
 
-Static()->Static<std::tuple<>, std::tuple<>>;
+Static() -> Static<std::tuple<>, std::tuple<>>;
 
 template <typename... Params>
 Static(Params...)

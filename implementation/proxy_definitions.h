@@ -13,27 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_TYPE_PROXY_DEFINITIONS_H_
 #define JNI_BIND_TYPE_PROXY_DEFINITIONS_H_
 
-#include <string>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
 
-#include "implementation/class.h"
-#include "implementation/class_loader.h"
-#include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
-#include "implementation/id.h"
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/loaded_by.h"
-#include "implementation/name_constants.h"
 #include "implementation/object.h"
 #include "implementation/proxy.h"
+#include "implementation/proxy_convenience_aliases.h"
 #include "implementation/ref_base.h"
 #include "implementation/self.h"
 #include "jni_dep.h"

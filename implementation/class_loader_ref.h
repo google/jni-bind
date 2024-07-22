@@ -16,27 +16,20 @@
 #ifndef JNI_BIND_CLASS_LOADER_REF_H_
 #define JNI_BIND_CLASS_LOADER_REF_H_
 
-#include <type_traits>
-
 #include "class_defs/java_lang_classes.h"
-#include "implementation/class.h"
 #include "implementation/class_loader.h"
+#include "implementation/default_class_loader.h"
 #include "implementation/global_object.h"
 #include "implementation/id.h"
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/jni_env.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/local_object.h"
-#include "implementation/local_string.h"
-#include "implementation/method.h"
 #include "implementation/no_idx.h"
-#include "implementation/object_ref.h"
-#include "implementation/params.h"
-#include "implementation/return.h"
+#include "implementation/promotion_mechanics.h"
 #include "jni_dep.h"
-#include "metaprogramming/contains.h"
-#include "metaprogramming/queryable_map.h"
 
 namespace jni {
 

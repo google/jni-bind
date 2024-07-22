@@ -16,22 +16,19 @@
 #ifndef JNI_BIND_LOCAL_ARRAY_H_
 #define JNI_BIND_LOCAL_ARRAY_H_
 
-#include <atomic>
 #include <cstddef>
 #include <type_traits>
 
-#include "implementation/array.h"
 #include "implementation/array_ref.h"
 #include "implementation/class.h"
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/jni_array_helper.h"
-#include "implementation/jni_helper/lifecycle_object.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
-#include "implementation/no_idx.h"
-#include "implementation/object.h"
+#include "implementation/no_class_specified.h"
 #include "implementation/promotion_mechanics_tags.h"
 #include "jni_dep.h"
 
@@ -123,9 +120,9 @@ LocalArray(
     -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
 
 template <typename SpanType>
-LocalArray(std::size_t, SpanType)
-    -> LocalArray<SpanType, 1, kNoClassSpecified, kDefaultClassLoader,
-                  kDefaultJvm>;
+LocalArray(std::size_t,
+           SpanType) -> LocalArray<SpanType, 1, kNoClassSpecified,
+                                   kDefaultClassLoader, kDefaultJvm>;
 
 template <typename SpanType, std::size_t kRank_minus_1>
 LocalArray(std::size_t, LocalArray<SpanType, kRank_minus_1>)

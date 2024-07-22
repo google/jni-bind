@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-#include "implementation/thread_guard.h"
-
+#include <mutex>
 #include <thread>
+#include <utility>
+#include <vector>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "jni_bind.h"
 #include "jni_test.h"
+#include "mock_jvm.h"
 
 using ::jni::Class;
 using ::jni::Fake;

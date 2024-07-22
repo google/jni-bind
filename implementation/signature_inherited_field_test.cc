@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "implementation/id_type.h"
+
 #include "jni_bind.h"
 
 using ::jni::Array;

@@ -13,9 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_IMPLEMENTATION_STATIC_REF_H_
 #define JNI_BIND_IMPLEMENTATION_STATIC_REF_H_
 
+#include <cstddef>
+
+#include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_ref.h"
 #include "implementation/id.h"
@@ -24,6 +28,7 @@
 #include "implementation/jvm.h"
 #include "implementation/method_selection.h"
 #include "implementation/no_idx.h"
+#include "jni_dep.h"
 #include "metaprogramming/invocable_map.h"
 #include "metaprogramming/queryable_map.h"
 

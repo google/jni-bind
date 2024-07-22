@@ -20,12 +20,9 @@
 #include <cstddef>
 #include <string_view>
 
-#include "implementation/array.h"
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
-#include "implementation/name_constants.h"
 #include "implementation/object.h"
-#include "implementation/return.h"
 #include "implementation/self.h"
 #include "implementation/void.h"
 #include "metaprogramming/name_constants.h"

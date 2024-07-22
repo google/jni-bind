@@ -17,38 +17,27 @@
 #ifndef JNI_BIND_OVERLOAD_REF_H
 #define JNI_BIND_OVERLOAD_REF_H
 
+#include <cstddef>
 #include <string_view>
 #include <type_traits>
 #include <utility>
 
-#include "implementation/class_loader.h"
-#include "implementation/class_ref.h"
 #include "implementation/configuration.h"
-#include "implementation/default_class_loader.h"
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/invoke.h"
-#include "implementation/jni_helper/invoke_static.h"
-#include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_object.h"
-#include "implementation/jni_type.h"
-#include "implementation/method.h"
-#include "implementation/params.h"
 #include "implementation/promotion_mechanics_tags.h"
-#include "implementation/proxy.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/proxy_definitions.h"
 #include "implementation/proxy_definitions_array.h"
 #include "implementation/proxy_definitions_string.h"
 #include "implementation/ref_base.h"
 #include "implementation/ref_storage.h"
-#include "implementation/return.h"
 #include "implementation/signature.h"
-#include "implementation/void.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
-#include "metaprogramming/invocable_map.h"
-#include "metaprogramming/optional_wrap.h"
 #include "metaprogramming/string_concatenate.h"
 
 namespace jni {
@@ -79,7 +68,7 @@ struct OverloadRef {
   using ReturnProxied = std::conditional_t<
       ReturnIdT::kIsSelf,
       Return_t<typename SelfIdT::MaterializeCDeclT, SelfIdT>,
-      Return_t<typename ReturnIdT::MaterializeCDeclT, ReturnIdT> >;
+      Return_t<typename ReturnIdT::MaterializeCDeclT, ReturnIdT>>;
 
   static jmethodID GetMethodID(jclass clazz) {
     static auto get_lambda =

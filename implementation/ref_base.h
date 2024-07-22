@@ -17,11 +17,8 @@
 #ifndef JNI_BIND_REF_BASE_H_
 #define JNI_BIND_REF_BASE_H_
 
-#include <optional>
+#include <type_traits>
 
-#include "implementation/class.h"
-#include "implementation/class_loader.h"
-#include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/lifecycle.h"
 
 namespace jni {

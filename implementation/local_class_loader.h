@@ -17,19 +17,12 @@
 #ifndef JNI_BIND_LOCAL_CLASS_LOADER_H_
 #define JNI_BIND_LOCAL_CLASS_LOADER_H_
 
-#include "class_defs/java_lang_classes.h"
-#include "implementation/class.h"
-#include "implementation/class_loader.h"
 #include "implementation/class_loader_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
-#include "implementation/jni_helper/lifecycle_object.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jvm.h"
-#include "implementation/jvm_ref.h"
-#include "implementation/local_object.h"
-#include "implementation/promotion_mechanics.h"
 #include "implementation/promotion_mechanics_tags.h"
-#include "jni_dep.h"
 
 namespace jni {
 

@@ -13,26 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_LOCAL_ARRAY_STRING_H_
 #define JNI_BIND_LOCAL_ARRAY_STRING_H_
 
 #include <cstddef>
-#include <type_traits>
+#include <string>
+#include <string_view>
+#include <utility>
 
-#include "implementation/array.h"
-#include "implementation/array_ref.h"
-#include "implementation/class.h"
+#include "class_defs/java_lang_classes.h"
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/jni_array_helper.h"
-#include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/local_array.h"
 #include "implementation/local_object.h"
 #include "implementation/local_string.h"
-#include "implementation/object.h"
 #include "jni_dep.h"
 
 namespace jni {

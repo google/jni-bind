@@ -17,8 +17,6 @@
 #ifndef JNI_BIND_RETURN_H_
 #define JNI_BIND_RETURN_H_
 
-#include <string_view>
-
 #include "implementation/void.h"
 
 namespace jni {
@@ -45,7 +43,7 @@ struct Return<void> : ReturnBase {
   constexpr Return() = default;
 };
 
-Return()->Return<void>;
+Return() -> Return<void>;
 
 template <typename Raw>
 Return(Raw) -> Return<Raw>;

@@ -21,14 +21,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "class_defs/java_lang_classes.h"
-#include "implementation/class.h"
 #include "implementation/default_class_loader.h"
-#include "implementation/no_idx.h"
 #include "implementation/object.h"
 #include "implementation/supported_class_set.h"
-#include "metaprogramming/all_unique.h"
-#include "metaprogramming/base_filter.h"
 #include "metaprogramming/modified_max.h"
 
 namespace jni {

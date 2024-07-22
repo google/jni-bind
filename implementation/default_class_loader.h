@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_DEFAULT_CLASS_LOADER_H_
 #define JNI_BIND_DEFAULT_CLASS_LOADER_H_
 
+#include <cstddef>
 #include <tuple>
 
 #include "implementation/no_idx.h"

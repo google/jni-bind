@@ -17,32 +17,22 @@
 #define JNI_BIND_OBJECT_REF_H
 
 #include <cstddef>
-#include <optional>
-#include <string>
 #include <type_traits>
 #include <utility>
 
-#include "implementation/array.h"
-#include "implementation/class.h"
-#include "implementation/class_loader.h"
 #include "implementation/class_ref.h"
-#include "implementation/constructor.h"
-#include "implementation/default_class_loader.h"
 #include "implementation/field_ref.h"
 #include "implementation/id.h"
 #include "implementation/id_type.h"
-#include "implementation/jni_helper/jni_env.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_type.h"
 #include "implementation/method_selection.h"
 #include "implementation/no_idx.h"
-#include "implementation/proxy.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
 #include "metaprogramming/invocable_map.h"
-#include "metaprogramming/optional_wrap.h"
 #include "metaprogramming/queryable_map.h"
 #include "metaprogramming/string_contains.h"
-#include "metaprogramming/tuple_manipulation.h"
 
 namespace jni {
 

@@ -17,14 +17,12 @@
 #ifndef JNI_BIND_JVM_H_
 #define JNI_BIND_JVM_H_
 
+#include <cstddef>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 
-#include "implementation/class.h"
-#include "implementation/class_loader.h"
-#include "implementation/jni_helper/jni_env.h"
-#include "jni_dep.h"
+#include "implementation/default_class_loader.h"
+#include "metaprogramming/modified_max.h"
 
 namespace jni {
 

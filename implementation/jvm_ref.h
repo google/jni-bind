@@ -17,13 +17,11 @@
 #ifndef JNI_BIND_JVM_REF_H_
 #define JNI_BIND_JVM_REF_H_
 
-#include <atomic>
+#include <cstddef>
 #include <memory>
 #include <utility>
 
 #include "class_defs/java_lang_classes.h"
-#include "implementation/class.h"
-#include "implementation/class_loader.h"
 #include "implementation/class_ref.h"
 #include "implementation/configuration.h"
 #include "implementation/default_class_loader.h"
@@ -31,16 +29,17 @@
 #include "implementation/forward_declarations.h"
 #include "implementation/global_class_loader.h"
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/jvm_ref_base.h"
+#include "implementation/no_class_specified.h"
 #include "implementation/promotion_mechanics_tags.h"
 #include "implementation/ref_storage.h"
 #include "implementation/thread_guard.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
-#include "metaprogramming/function_traits.h"
 
 namespace jni {
 

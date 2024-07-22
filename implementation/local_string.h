@@ -19,8 +19,8 @@
 
 #include "class_defs/java_lang_classes.h"
 #include "implementation/forward_declarations.h"
-#include "implementation/jni_helper/jni_helper.h"
-#include "implementation/jni_helper/lifecycle_string.h"
+#include "implementation/jni_helper/lifecycle.h"
+#include "implementation/jni_type.h"
 #include "implementation/local_object.h"
 #include "implementation/promotion_mechanics.h"
 #include "implementation/promotion_mechanics_tags.h"

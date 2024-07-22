@@ -19,9 +19,6 @@
 
 #include <tuple>
 
-#include "class.h"
-#include "metaprogramming/all_unique.h"
-
 namespace jni {
 
 // The set of classes that a ClassLoader can load.

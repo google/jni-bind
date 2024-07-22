@@ -17,10 +17,9 @@
 #ifndef JNI_BIND_PARAMS_H_
 #define JNI_BIND_PARAMS_H_
 
-#include <string>
-#include <string_view>
+#include <cstddef>
 #include <tuple>
-#include <utility>
+#include <type_traits>
 
 namespace jni {
 

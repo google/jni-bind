@@ -17,22 +17,15 @@
 #ifndef JNI_BIND_STRING_REF_H_
 #define JNI_BIND_STRING_REF_H_
 
-#include <optional>
-#include <string>
+#include <cstddef>
 #include <string_view>
 
 #include "jni_helper/jni_helper.h"
 #include "class_defs/java_lang_classes.h"
-#include "implementation/array.h"
-#include "implementation/class.h"
-#include "implementation/class_loader.h"
-#include "implementation/constructor.h"
 #include "implementation/default_class_loader.h"
-#include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/object_ref.h"
-#include "implementation/ref_base.h"
 #include "jni_dep.h"
 
 namespace jni {

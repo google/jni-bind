@@ -13,22 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_H_
 #define JNI_BIND_IMPLEMENTATION_PROMOTION_MECHANICS_H_
 
 #include <type_traits>
 
 #include "implementation/forward_declarations.h"
-#include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/lifecycle.h"
-#include "implementation/jni_helper/lifecycle_object.h"
-#include "implementation/jni_type.h"
 #include "implementation/object_ref.h"
 #include "implementation/promotion_mechanics_tags.h"
 #include "implementation/ref_base.h"
-#include "jni_dep.h"
 #include "metaprogramming/deep_equal_diminished.h"
-#include "metaprogramming/pack_discriminator.h"
 
 namespace jni {
 
