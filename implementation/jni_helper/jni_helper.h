@@ -17,8 +17,6 @@
 #ifndef JNI_BIND_JNI_HELPER_JNI_HELPER_H_
 #define JNI_BIND_JNI_HELPER_JNI_HELPER_H_
 
-#include <utility>
-
 #include "jni_env.h"
 #include "jni_dep.h"
 #include "metaprogramming/lambda_string.h"

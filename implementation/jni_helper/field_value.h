@@ -17,7 +17,8 @@
 #ifndef JNI_BIND_FIELD_VALUE_GETTER_H_
 #define JNI_BIND_FIELD_VALUE_GETTER_H_
 
-#include <utility>
+#include <cstddef>
+#include <type_traits>
 
 #include "jni_env.h"
 #include "jni_dep.h"

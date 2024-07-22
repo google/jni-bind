@@ -16,6 +16,8 @@
 
 #include "jni_typename_to_string.h"
 
+#include <string_view>  // NOLINT
+
 #include <gtest/gtest.h>
 #include "jni_dep.h"
 

@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_OBJECT_H_
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_OBJECT_H_
 
+#include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/lifecycle.h"
+#include "jni_dep.h"
 #include "metaprogramming/lambda_string.h"
 #include "trace.h"
 

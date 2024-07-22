@@ -184,13 +184,13 @@ cc_test(
     name = "jni_helper_test",
     srcs = ["jni_helper_test.cc"],
     deps = [
+        ":fake_test_constants",
         ":jni_helper",
+        ":lifecycle",
         ":lifecycle_object",
         "//:jni_bind",
         "//:jni_dep",
         "//:jni_test",
-        "//:mock_jni_env",
-        "//implementation/jni_helper:fake_test_constants",
         "@googletest//:gtest_main",
     ],
 )
@@ -233,8 +233,10 @@ cc_library(
     name = "lifecycle_object",
     hdrs = ["lifecycle_object.h"],
     deps = [
+        ":jni_env",
         ":lifecycle",
         ":trace",
+        "//:jni_dep",
         "//metaprogramming:lambda_string",
     ],
 )
@@ -254,9 +256,10 @@ cc_library(
     name = "lifecycle_string",
     hdrs = ["lifecycle_string.h"],
     deps = [
+        ":jni_env",
         ":lifecycle",
-        ":lifecycle_object",
         ":trace",
+        "//:jni_dep",
         "//metaprogramming:lambda_string",
     ],
 )

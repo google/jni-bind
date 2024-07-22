@@ -76,6 +76,7 @@ cc_library(
         "//implementation/jni_helper:field_value_getter",
         "//implementation/jni_helper:invoke_static",
         "//implementation/jni_helper:jni_env",
+        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:static_field_value",
         "//metaprogramming:corpus",
         "//metaprogramming:corpus_tag",

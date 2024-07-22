@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_IMPLEMENTATION_JNI_HELPER_STATIC_FIELD_VALUE_H_
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_STATIC_FIELD_VALUE_H_
 
-#include <utility>
+#include <cstddef>
+#include <type_traits>
 
 #include "jni_env.h"
 #include "implementation/jni_helper/field_value.h"

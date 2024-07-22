@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef JNI_BIND_JNI_HELPER_JNI_ARRAY_HELPER_H_
 #define JNI_BIND_JNI_HELPER_JNI_ARRAY_HELPER_H_
 
-#include <type_traits>
+#include <cstddef>
 
 #include "get_array_element_result.h"
 #include "implementation/jni_helper/jni_env.h"

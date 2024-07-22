@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "implementation/jni_helper/trace.h"
+
+#include <string>
 
 #include "testing/base/public/googletest.h"
 #include <gtest/gtest.h>
@@ -27,7 +30,8 @@ namespace {
 TEST(Trace, ProducesTraceForVoidFunction) {
   CaptureTestStdout();
   Trace(LambdaToStr(STR("Foo")));
-  EXPECT_TRUE(GetCapturedTestStdout().find("Foo();") == std::string::npos);
+  EXPECT_TRUE(GetCapturedTestStdout().find("Foo();") ==
+              std::string::npos);  // NOLINT
 
   // Just for debugging, prints to console.
   Trace(LambdaToStr(STR("Foo")));
@@ -36,7 +40,8 @@ TEST(Trace, ProducesTraceForVoidFunction) {
 TEST(Trace, ProducesTraceWithArgs) {
   CaptureTestStdout();
   Trace(LambdaToStr(STR("Foo")), 123);
-  EXPECT_TRUE(GetCapturedTestStdout().find("Foo(123);") == std::string::npos);
+  EXPECT_TRUE(GetCapturedTestStdout().find("Foo(123);") ==
+              std::string::npos);  // NOLINT
 
   // Just for debugging, prints to console.
   Trace(LambdaToStr(STR("Foo")), 123);
@@ -45,8 +50,8 @@ TEST(Trace, ProducesTraceWithArgs) {
 TEST(Trace, ProducesTraceForStrings) {
   CaptureTestStdout();
   Trace(LambdaToStr(STR("Baz")), "helloworld");
-  EXPECT_TRUE(GetCapturedTestStdout().find("Baz(helloworld);") ==
-              std::string::npos);
+  EXPECT_TRUE(GetCapturedTestStdout().find("Baz(helloworld);") ==  // NOLINT
+              std::string::npos);                                  // NOLINT
 
   // Just for debugging, prints to console.
   Trace(LambdaToStr(STR("Baz")), "helloworld");
@@ -56,8 +61,8 @@ TEST(Trace, ProducesTraceForPointers) {
   CaptureTestStdout();
   void* ptr = reinterpret_cast<void*>(0xabcde);
   Trace(LambdaToStr(STR("Foo")), ptr);
-  EXPECT_TRUE(GetCapturedTestStdout().find("Foo(0xabcde);") ==
-              std::string::npos);
+  EXPECT_TRUE(GetCapturedTestStdout().find("Foo(0xabcde);") ==  // NOLINT
+              std::string::npos);                               // NOLINT
 
   // Just for debugging, prints to console.
   Trace(LambdaToStr(STR("Foo")), ptr);
@@ -67,8 +72,9 @@ TEST(Trace, ProducesTraceForMultipleArgs) {
   CaptureTestStdout();
   void* ptr = reinterpret_cast<void*>(0xabcde);
   Trace(LambdaToStr(STR("Baz")), 123, "Neil", "Breen", ptr);
-  EXPECT_TRUE(GetCapturedTestStdout().find("Baz(123, Neil, Breen, 0xabcde);") ==
-              std::string::npos);
+  EXPECT_TRUE(GetCapturedTestStdout().find(
+                  "Baz(123, Neil, Breen, 0xabcde);") ==  // NOLINT
+              std::string::npos);                        // NOLINT
 
   // Just for debugging, prints to console.
   Trace(LambdaToStr(STR("Baz")), 123, "Neil", "Breen", ptr);

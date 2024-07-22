@@ -16,13 +16,13 @@
 
 #include "jni_helper.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "implementation/jni_helper/fake_test_constants.h"
-#include "implementation/jni_helper/lifecycle_object.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "jni_bind.h"
 #include "jni_dep.h"
 #include "jni_test.h"
-#include "mock_jni_env.h"
 
 namespace {
 

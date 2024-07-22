@@ -18,6 +18,7 @@
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_JNI_STATIC_METHOD_INVOKE_H_
 
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 
 #include "invoke.h"

@@ -17,6 +17,8 @@
 #ifndef JNI_BIND_METHOD_INVOKE_H_
 #define JNI_BIND_METHOD_INVOKE_H_
 
+#include <cstddef>
+#include <type_traits>
 #include <utility>
 
 #include "jni_env.h"
