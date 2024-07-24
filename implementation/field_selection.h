@@ -17,7 +17,7 @@
 #ifndef JNI_BIND_FIELD_SELECTION_H_
 #define JNI_BIND_FIELD_SELECTION_H_
 
-// IWYU pragma: private, include "../jni_bind.h"
+// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
 #include "implementation/id.h"
 #include "implementation/id_type.h"

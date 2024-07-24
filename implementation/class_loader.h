@@ -17,7 +17,7 @@
 #ifndef JNI_BIND_CLASS_LOADER_H_
 #define JNI_BIND_CLASS_LOADER_H_
 
-// IWYU pragma: private, include "../jni_bind.h"
+// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
 #include <tuple>
 #include <type_traits>

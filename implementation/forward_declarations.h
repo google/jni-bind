@@ -17,7 +17,7 @@
 #ifndef JNI_BIND_TYPE_FORWARD_DECLARATIONS_H_
 #define JNI_BIND_TYPE_FORWARD_DECLARATIONS_H_
 
-// IWYU pragma: private, include "../jni_bind.h"
+// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
 #include "implementation/default_class_loader.h"
 #include "implementation/id_type.h"
