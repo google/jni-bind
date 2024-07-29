@@ -20,6 +20,7 @@
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
 #include <cstddef>
+#include <string_view>
 #include <type_traits>
 
 #include "implementation/array.h"
@@ -40,14 +41,40 @@ template <typename SpanType_, const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm, std::size_t kRank_ = 0,
           std::size_t class_idx_ = kNoIdx,
-          std::size_t class_loader_idx_ = kNoIdx>
-struct JniT {
+          std::size_t class_loader_idx_ = kNoIdx, typename Enable = void>
+struct JniT;
+
+// `JniT` for "root" type, the root for all types.
+template <typename SpanType_, const auto& class_v_, const auto& class_loader_v_,
+          const auto& jvm_v_, std::size_t kRank_, std::size_t class_idx_,
+          std::size_t class_loader_idx_>
+struct JniT<SpanType_, class_v_, class_loader_v_, jvm_v_, kRank_, class_idx_,
+            class_loader_idx_,
+            std::enable_if_t<
+                std::is_same_v<std::decay_t<decltype(class_v_)>, RootObject>>> {
+  // `kDepthInAncestors` will recursively calculate depth, but always starts
+  // with a base value of 1, which this -1 will counterbalance.
+  static constexpr std::size_t kDepthInAncestors = -1;
+};
+
+// Represents some JNI type, possibly as an index into a classloader, or
+// possibly fully specified (e.g. `LocalObject<kClass>`). For `Root` see above.
+template <typename SpanType_, const auto& class_v_, const auto& class_loader_v_,
+          const auto& jvm_v_, std::size_t kRank_, std::size_t class_idx_,
+          std::size_t class_loader_idx_>
+struct JniT<SpanType_, class_v_, class_loader_v_, jvm_v_, kRank_, class_idx_,
+            class_loader_idx_,
+            std::enable_if_t<!std::is_same_v<std::decay_t<decltype(class_v_)>,
+                                             RootObject>>> {
   static constexpr std::size_t kRank = kRank_;
   static_assert(kRank != -1);
 
   static constexpr auto kParent = class_v_.parent_;
   using ParentT = JniT<SpanType_, kParent, class_loader_v_, jvm_v_, kRank_,
                        class_idx_, class_loader_idx_>;
+
+  static constexpr std::size_t kDepthInAncestors =
+      1 + ParentT::kDepthInAncestors;
 
   // Same as this type, except uses rank-1.
   using RankLess1 = JniT<SpanType_, class_v_, class_loader_v_, jvm_v_,

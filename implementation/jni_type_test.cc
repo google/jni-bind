@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <type_traits>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "jni_bind.h"
@@ -21,6 +23,7 @@ namespace {
 
 using ::jni::Class;
 using ::jni::ClassLoader;
+using ::jni::Extends;
 using ::jni::JniT;
 using ::jni::JniTEqual_v;
 using ::jni::Jvm;
@@ -133,5 +136,38 @@ static_assert(
     std::is_same_v<JniT<jobject, kClass4, kNullClassLoader, kJvm4,
                         1>::MinimallySpanningType,
                    JniT<jobject, kClass4, kNullClassLoader, kJvm4, 1>>);
+
+////////////////////////////////////////////////////////////////////////////////
+// Inheritance Depth Tests.
+////////////////////////////////////////////////////////////////////////////////
+
+static constexpr Class kParent{
+    "kParent",
+};
+
+static constexpr Class kChild{
+    "kChild",
+    Extends{kParent},
+};
+
+static constexpr Class kGrandchild{
+    "kGrandchild",
+    Extends{kChild},
+};
+
+using GrandparentT = JniT<jobject, kParent>;
+using ParentT = JniT<jobject, kChild>;
+using ChildT = JniT<jobject, kGrandchild>;
+
+static_assert(
+    std::is_same_v<decltype(GrandparentT::kParent), const jni::RootObject>);
+
+static_assert(
+    std::is_same_v<std::decay_t<decltype(jni::kObject)>, jni::RootObject>);
+;
+
+static_assert(GrandparentT::kDepthInAncestors == 0);
+static_assert(ParentT::kDepthInAncestors == 1);
+static_assert(ChildT::kDepthInAncestors == 2);
 
 }  // namespace
