@@ -49,6 +49,7 @@ cc_library(
         "//implementation:global_string",
         "//implementation:id",
         "//implementation:id_type",
+        "//implementation:inheritance",
         "//implementation:jni_type",
         "//implementation:jvm",
         "//implementation:jvm_ref",

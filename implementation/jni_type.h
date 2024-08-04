@@ -55,6 +55,8 @@ struct JniT<SpanType_, class_v_, class_loader_v_, jvm_v_, kRank_, class_idx_,
   // `kDepthInAncestors` will recursively calculate depth, but always starts
   // with a base value of 1, which this -1 will counterbalance.
   static constexpr std::size_t kDepthInAncestors = -1;
+
+  static constexpr bool kIsRoot = true;
 };
 
 // Represents some JNI type, possibly as an index into a classloader, or
@@ -66,6 +68,8 @@ struct JniT<SpanType_, class_v_, class_loader_v_, jvm_v_, kRank_, class_idx_,
             class_loader_idx_,
             std::enable_if_t<!std::is_same_v<std::decay_t<decltype(class_v_)>,
                                              RootObject>>> {
+  static constexpr bool kIsRoot = false;
+
   static constexpr std::size_t kRank = kRank_;
   static_assert(kRank != -1);
 

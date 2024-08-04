@@ -59,7 +59,7 @@ class RefBase : public RefBaseBase {
 
   explicit operator StorageType() const { return object_ref_; }
 
- protected:
+  // protected:
   StorageType object_ref_ = nullptr;
 };
 
