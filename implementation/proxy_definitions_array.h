@@ -80,7 +80,7 @@ struct Proxy<JArrayType, typename std::enable_if_t<
 
   using AsDecl = std::tuple<ArrayTag<JArrayType>>;
   using AsArg =
-      std::tuple<JArrayType, RefBaseTag<JArrayType>, ArrayTag<JArrayType>>;
+      std::tuple<JArrayType, RefBase<JArrayType>, ArrayTag<JArrayType>>;
 
   template <typename Id>
   using AsReturn = typename ArrayHelper<Id>::AsReturn;
@@ -93,7 +93,7 @@ struct Proxy<JArrayType, typename std::enable_if_t<
   };
 
   template <typename T, typename = std::enable_if_t<
-                            std::is_base_of_v<RefBaseTag<JArrayType>, T>>>
+                            std::is_base_of_v<RefBase<JArrayType>, T>>>
   static JArrayType ProxyAsArg(T&& t) {
     return t.Release();
   };

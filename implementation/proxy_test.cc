@@ -106,17 +106,16 @@ static_assert(std::is_same_v<Index_t<Array<std::decay_t<decltype(kClass)>>>,
                              jobjectArray>);
 
 // Rank 1 decorated arguments.
-static_assert(
-    std::is_same_v<Index_t<RefBaseTag<jbooleanArray>>, jbooleanArray>);
-static_assert(std::is_same_v<Index_t<RefBaseTag<jbyteArray>>, jbyteArray>);
-static_assert(std::is_same_v<Index_t<RefBaseTag<jcharArray>>, jcharArray>);
-static_assert(std::is_same_v<Index_t<RefBaseTag<jshortArray>>, jshortArray>);
-static_assert(std::is_same_v<Index_t<RefBaseTag<jintArray>>, jintArray>);
-static_assert(std::is_same_v<Index_t<RefBaseTag<jfloatArray>>, jfloatArray>);
-static_assert(std::is_same_v<Index_t<RefBaseTag<jdoubleArray>>, jdoubleArray>);
-static_assert(std::is_same_v<Index_t<RefBaseTag<jlongArray>>, jlongArray>);
-static_assert(std::is_same_v<Index_t<RefBaseTag<jobjectArray>>, jobjectArray>);
-static_assert(std::is_same_v<Index_t<RefBaseTag<jarray>>, jarray>);
+static_assert(std::is_same_v<Index_t<RefBase<jbooleanArray>>, jbooleanArray>);
+static_assert(std::is_same_v<Index_t<RefBase<jbyteArray>>, jbyteArray>);
+static_assert(std::is_same_v<Index_t<RefBase<jcharArray>>, jcharArray>);
+static_assert(std::is_same_v<Index_t<RefBase<jshortArray>>, jshortArray>);
+static_assert(std::is_same_v<Index_t<RefBase<jintArray>>, jintArray>);
+static_assert(std::is_same_v<Index_t<RefBase<jfloatArray>>, jfloatArray>);
+static_assert(std::is_same_v<Index_t<RefBase<jdoubleArray>>, jdoubleArray>);
+static_assert(std::is_same_v<Index_t<RefBase<jlongArray>>, jlongArray>);
+static_assert(std::is_same_v<Index_t<RefBase<jobjectArray>>, jobjectArray>);
+static_assert(std::is_same_v<Index_t<RefBase<jarray>>, jarray>);
 
 // Rank 2 decorated declarations.
 static_assert(std::is_same_v<Index_t<Array<jbyte, 2>>, jbyteArray>);

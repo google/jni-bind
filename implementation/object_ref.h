@@ -52,7 +52,7 @@ class ObjectRef
           &JniT::ClassT::methods_>,
       public metaprogramming::QueryableMap_t<
           ObjectRef<JniT>, JniT::stripped_class_v, &JniT::ClassT::fields_>,
-      public RefBase<JniT> {
+      public RefBase<typename JniT::StorageType> {
  protected:
   static_assert(
       JniT::class_loader_v
@@ -61,7 +61,7 @@ class ObjectRef
   static_assert(!metaprogramming::StringContains_v<JniT::kName, '.'>,
                 "Use '/', not '.' in class names (for maximum) portability.");
 
-  using RefBase = RefBase<JniT>;
+  using RefBaseT = RefBase<typename JniT::StorageType>;
 
   ObjectRef() = delete;
   ObjectRef& operator=(const ObjectRef& rhs) = delete;
@@ -72,17 +72,16 @@ class ObjectRef
     // always safe. `GetAndMaybeLoadClassRef` requires jobject, so using
     // `RefBase::object_ref_` below obiates ubsan failures.
     if constexpr (std::is_same_v<typename JniT::SpanType, jobject>) {
-      return ClassRef_t<JniT>::GetAndMaybeLoadClassRef(RefBase::object_ref_);
+      return ClassRef_t<JniT>::GetAndMaybeLoadClassRef(RefBaseT::object_ref_);
     } else {
       return ClassRef_t<JniT>::GetAndMaybeLoadClassRef(nullptr);
     }
   }
 
  public:
-  ObjectRef(std::nullptr_t) : RefBase(nullptr) {}
+  ObjectRef(std::nullptr_t) : RefBaseT(nullptr) {}
 
-  explicit ObjectRef(RefBaseTag<typename JniT::StorageType>&& rhs)
-      : RefBase(std::move(rhs)) {}
+  explicit ObjectRef(RefBaseT&& rhs) : RefBaseT(std::move(rhs)) {}
 
   // Invoked through CRTP from InvocableMap.
   template <size_t I, typename... Args>
@@ -96,13 +95,13 @@ class ObjectRef
                   "JNI Error: Invalid argument set.");
 
     return MethodSelectionForArgs::OverloadRef::Invoke(
-        GetJClass(), RefBase::object_ref_, std::forward<Args>(args)...);
+        GetJClass(), RefBaseT::object_ref_, std::forward<Args>(args)...);
   }
 
   // Invoked through CRTP from QueryableMap.
   template <size_t I>
   auto QueryableMapCall(const char* key) const {
-    return FieldRef<JniT, IdType::FIELD, I>{GetJClass(), RefBase::object_ref_};
+    return FieldRef<JniT, IdType::FIELD, I>{GetJClass(), RefBaseT::object_ref_};
   }
 };
 

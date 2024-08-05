@@ -57,7 +57,7 @@ class LocalString : public LocalStringImpl {
 
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
-  UtfStringView Pin() { return {RefBaseTag<jstring>::object_ref_}; }
+  UtfStringView Pin() { return {RefBase<jstring>::object_ref_}; }
 };
 
 }  // namespace jni

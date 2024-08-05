@@ -126,7 +126,7 @@ struct Proxy<JObject,
              typename std::enable_if_t<std::is_same_v<JObject, jobject>>>
     : public ProxyBase<jobject> {
   using AsDecl = std::tuple<Object>;
-  using AsArg = std::tuple<jobject, RefBaseTag<jobject>, LoaderTag>;
+  using AsArg = std::tuple<jobject, RefBase<jobject>, LoaderTag>;
 
   template <typename InputParamSelectionT, typename T>
   struct ContextualViabilityHelper {

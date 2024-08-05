@@ -54,7 +54,7 @@ struct Proxy<JString,
   };
 
   using AsArg = std::tuple<std::string, jstring, char*, const char*,
-                           std::string_view, RefBaseTag<jstring>>;
+                           std::string_view, RefBase<jstring>>;
 
   template <typename Id>
   using AsReturn = typename Helper<Id, Id::kRank>::type;

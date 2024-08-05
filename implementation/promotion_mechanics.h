@@ -40,11 +40,11 @@ struct EntryBase : public Base {
   using Base::Base;
   using Span = typename JniT::SpanType;
 
-  // `RefBaseTag` move constructor for object of same span type.
+  // `RefBase` move constructor for object of same span type.
   template <typename T,
             typename = std::enable_if_t<
                 (::jni::metaprogramming::DeepEqualDiminished_v<EntryBase, T> ||
-                 std::is_base_of_v<RefBaseTag<Span>, T>)>>
+                 std::is_base_of_v<RefBase<Span>, T>)>>
   EntryBase(T&& rhs) : Base(rhs.Release()) {}
   EntryBase(AdoptLocal, ViableSpan object) : Base(object) {}
 
@@ -58,11 +58,11 @@ struct EntryBase : public Base {
                       : nullptr) {}
 
   // Comparison operator for pinned Scoped type (not deep equality).
-  template <typename T, typename = std::enable_if_t<
-                            (std::is_base_of_v<RefBaseTag<Span>, T> ||
-                             std::is_same_v<T, ViableSpan>)>>
+  template <typename T,
+            typename = std::enable_if_t<(std::is_base_of_v<RefBase<Span>, T> ||
+                                         std::is_same_v<T, ViableSpan>)>>
   bool operator==(const T& rhs) const {
-    if constexpr (std::is_base_of_v<RefBaseTag<Span>, T>) {
+    if constexpr (std::is_base_of_v<RefBase<Span>, T>) {
       return static_cast<Span>(rhs.object_ref_) == Base::object_ref_;
     } else if constexpr (std::is_same_v<T, ViableSpan>) {
       return rhs == Base::object_ref_;
@@ -70,9 +70,9 @@ struct EntryBase : public Base {
   }
 
   // Comparison inequality operator for pinned Scoped type (not deep equality).
-  template <typename T, typename = std::enable_if_t<
-                            (std::is_base_of_v<RefBaseTag<Span>, T> ||
-                             std::is_same_v<T, ViableSpan>)>>
+  template <typename T,
+            typename = std::enable_if_t<(std::is_base_of_v<RefBase<Span>, T> ||
+                                         std::is_same_v<T, ViableSpan>)>>
   bool operator!=(const T& rhs) const {
     return !(*this == rhs);
   }
@@ -110,11 +110,11 @@ struct EntryBase<Base, LifecycleType::GLOBAL, JniT, ViableSpan> : public Base {
   using Base::Base;
   using Span = typename JniT::SpanType;
 
-  // `RefBaseTag` move constructor for object of same span type.
+  // `RefBase` move constructor for object of same span type.
   template <typename T,
             typename = std::enable_if_t<
                 (::jni::metaprogramming::DeepEqualDiminished_v<EntryBase, T> ||
-                 std::is_base_of_v<RefBaseTag<Span>, T>)>>
+                 std::is_base_of_v<RefBase<Span>, T>)>>
   EntryBase(T&& rhs)
       : Base(LifecycleHelper<typename JniT::StorageType,
                              LifecycleType::GLOBAL>::Promote(rhs.Release())) {}

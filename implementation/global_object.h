@@ -19,13 +19,13 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
-#include "implementation/class.h"
 #include "implementation/forward_declarations.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/local_object.h"
-#include "implementation/object_ref.h"
 #include "implementation/promotion_mechanics.h"
+#include "implementation/ref_base.h"
 #include "jni_dep.h"
 #include "metaprogramming/deep_equal_diminished.h"
 
@@ -52,13 +52,13 @@ class GlobalObject
 
   template <typename... Ts>
   GlobalObject(Ts&&... vals) : Base(std::forward<Ts&&>(vals)...) {
-    RefBaseTag<jobject>::object_ref_ =
-        LifecycleT::Promote(RefBaseTag<jobject>::object_ref_);
+    RefBase<jobject>::object_ref_ =
+        LifecycleT::Promote(RefBase<jobject>::object_ref_);
   }
 
   GlobalObject() {
-    RefBaseTag<jobject>::object_ref_ =
-        LifecycleT::Promote(RefBaseTag<jobject>::object_ref_);
+    RefBase<jobject>::object_ref_ =
+        LifecycleT::Promote(RefBase<jobject>::object_ref_);
   }
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
