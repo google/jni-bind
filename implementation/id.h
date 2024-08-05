@@ -148,7 +148,7 @@ struct Id {
     }
   }
 
-  using ParentIdT = Id<typename JniT::ParentT, kIdType_, idx, secondary_idx,
+  using ParentIdT = Id<typename JniT::ParentJniT, kIdType_, idx, secondary_idx,
                        tertiary_idx, ancestry_idx - 1>;
 
   static constexpr auto Val() {

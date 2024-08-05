@@ -69,13 +69,6 @@ struct JniT<SpanType_, class_v_, class_loader_v_, jvm_v_, kRank_, class_idx_,
   static constexpr std::size_t kRank = kRank_;
   static_assert(kRank != -1);
 
-  static constexpr auto kParent = class_v_.parent_;
-  using ParentT = JniT<SpanType_, kParent, class_loader_v_, jvm_v_, kRank_,
-                       class_idx_, class_loader_idx_>;
-
-  static constexpr std::size_t kDepthInAncestors =
-      1 + ParentT::kDepthInAncestors;
-
   // Same as this type, except uses rank-1.
   using RankLess1 = JniT<SpanType_, class_v_, class_loader_v_, jvm_v_,
                          kRank_ - 1, class_idx_, class_loader_idx_>;
@@ -117,6 +110,15 @@ struct JniT<SpanType_, class_v_, class_loader_v_, jvm_v_, kRank_, class_idx_,
     return FullArrayStripV(GetClass()).static_;
   }
 
+  // Parent definitions.
+  static constexpr auto kParent = GetClass().parent_;
+  using ParentJniT = JniT<SpanType_, kParent, class_loader_v_, jvm_v_, kRank_,
+                          class_idx_, class_loader_idx_>;
+
+  static constexpr std::size_t kDepthInAncestors =
+      1 + ParentJniT::kDepthInAncestors;
+
+  // Class, classloader, jvm, member definitions.
   static constexpr decltype(GetClass()) class_v = GetClass();
   static constexpr decltype(GetClassLoader()) class_loader_v = GetClassLoader();
   static constexpr decltype(jvm_v_) jvm_v = jvm_v_;

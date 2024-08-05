@@ -155,19 +155,19 @@ static constexpr Class kGrandchild{
     Extends{kChild},
 };
 
-using GrandparentT = JniT<jobject, kParent>;
-using ParentT = JniT<jobject, kChild>;
-using ChildT = JniT<jobject, kGrandchild>;
+using GrandparentJniT = JniT<jobject, kParent>;
+using ParentJniT = JniT<jobject, kChild>;
+using ChildJniT = JniT<jobject, kGrandchild>;
 
 static_assert(
-    std::is_same_v<decltype(GrandparentT::kParent), const jni::RootObject>);
+    std::is_same_v<decltype(GrandparentJniT::kParent), const jni::RootObject>);
 
 static_assert(
     std::is_same_v<std::decay_t<decltype(jni::kObject)>, jni::RootObject>);
 ;
 
-static_assert(GrandparentT::kDepthInAncestors == 0);
-static_assert(ParentT::kDepthInAncestors == 1);
-static_assert(ChildT::kDepthInAncestors == 2);
+static_assert(GrandparentJniT::kDepthInAncestors == 0);
+static_assert(ParentJniT::kDepthInAncestors == 1);
+static_assert(ChildJniT::kDepthInAncestors == 2);
 
 }  // namespace
