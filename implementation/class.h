@@ -116,8 +116,8 @@ struct Class<Extends_, std::tuple<Constructors_...>,
   // Extends + Methods + Fields.
   explicit constexpr Class(const char* class_name, ExtendsArgT extends,
                            Methods_... methods, Fields_... fields)
-      : parent_(extends.parent_),
-        Object(class_name),
+      : Object(class_name),
+        parent_(extends.parent_),
         methods_(methods...),
         fields_(fields...) {}
 
