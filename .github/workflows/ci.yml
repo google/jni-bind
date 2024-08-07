@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: test
-      run: bazel test --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors ...
+      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors ...
 
   # NOTE: Mac is only running a small subset of targets due to an unresolved
   # issue in Bazel. When this is fixed in the future I will expand testing.
@@ -24,4 +24,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: test
-      run: bazel test --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors metaprogramming/...
+      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors metaprogramming/...
