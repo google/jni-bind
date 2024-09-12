@@ -13,6 +13,38 @@ filegroup(
 exports_files(["LICENSE"])
 
 cc_library(
+    name = "java_lang_exception",
+    hdrs = ["java_lang_exception.h"],
+    deps = [
+        ":java_lang_throwable",
+        "//:jni_dep",
+        "//implementation:class",
+        "//implementation:constructor",
+        "//implementation:method",
+        "//implementation:params",
+        "//implementation:return",
+        "//implementation:self",
+        "//implementation:static",
+    ],
+)
+
+cc_library(
+    name = "java_lang_throwable",
+    hdrs = ["java_lang_throwable.h"],
+    deps = [
+        "//:jni_dep",
+        "//implementation:array",
+        "//implementation:class",
+        "//implementation:constructor",
+        "//implementation:method",
+        "//implementation:params",
+        "//implementation:return",
+        "//implementation:self",
+        "//implementation:static",
+    ],
+)
+
+cc_library(
     name = "java_lang_classes",
     hdrs = ["java_lang_classes.h"],
     deps = [

@@ -28,6 +28,8 @@ cc_library(
     deps = [
         ":jni_dep",
         "//class_defs:java_lang_classes",
+        "//class_defs:java_lang_exception",
+        "//class_defs:java_lang_throwable",
         "//class_defs:java_util_array_list",
         "//class_defs:java_util_classes",
         "//implementation:array",
