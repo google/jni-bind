@@ -145,4 +145,9 @@ Java_com_jnibind_test_StringTest_jniStringMethodTakesFiveStrings(
       .Release();
 }
 
+JNIEXPORT void JNICALL
+Java_com_jnibind_test_StringTest_jniReturnsAGlobalString(JNIEnv* env, jclass) {
+  GlobalString g{"fake"};
+}
+
 }  // extern "C"

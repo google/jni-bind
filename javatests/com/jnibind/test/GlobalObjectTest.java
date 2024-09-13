@@ -49,6 +49,13 @@ public final class GlobalObjectTest {
     jniTearDown();
   }
 
+  static native void jniObjectGracefullyDies();
+
+  @Test
+  public void objectGracefullyDies() {
+    jniObjectGracefullyDies();
+  }
+
   @Test
   public void createNewGlobalObjectUsingNoArgConstructor() {
     assertThat(jniCreateNewObject()).isNotEqualTo(null);
@@ -86,7 +93,6 @@ public final class GlobalObjectTest {
   // Takes a test helper and returns the output of |methodTakesGlobalObjectReturnsNewObject|.
   native ObjectTestHelper jniBuildNewObjectsFromExistingObjects(
       GlobalObjectTest testHelperObject, ObjectTestHelper objectToMutate);
-
 
   ObjectTestHelper methodTakesGlobalObjectReturnsNewObject(ObjectTestHelper object) {
     return new ObjectTestHelper(object.intVal1 + 5, object.intVal2 + 6, object.intVal3 + 7);
@@ -136,5 +142,4 @@ public final class GlobalObjectTest {
     assertThat(object.intVal2).isEqualTo(11);
     assertThat(object.intVal3).isEqualTo(16);
   }
-  
 }

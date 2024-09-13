@@ -48,6 +48,12 @@ class GlobalString : public GlobalStringImpl {
   GlobalString(LocalString &&local_string)
       : Base(LifecycleT::Promote(local_string.Release())) {}
 
+  template <typename... Ts>
+  GlobalString(Ts &&...vals) : Base(std::forward<Ts &&>(vals)...) {
+    RefBase<jstring>::object_ref_ =
+        LifecycleT::Promote(RefBase<jstring>::object_ref_);
+  }
+
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
   UtfStringView Pin() { return {RefBase<jstring>::object_ref_}; }

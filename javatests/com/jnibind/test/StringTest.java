@@ -66,7 +66,6 @@ public final class StringTest {
   native void jniVoidMethodTakesFiveStrings(
       StringTestHelper helper, String s1, String s2, String s3, String s4, String s5);
 
-
   // Calls each of the above native methods which will then call the similarly named method on the
   // StringTestHelper.  E.g. jniVoidMethodTakesString calls voidMethodTakesString.
   @Test
@@ -140,4 +139,11 @@ public final class StringTest {
     verify(rJniStringTestHelper).stringMethodTakesString(null);
   }
   */
+
+  native void jniReturnsAGlobalString();
+
+  @Test
+  public void globalReturnsCorrectlyOverJniBoundary() {
+    jniReturnsAGlobalString();
+  }
 }

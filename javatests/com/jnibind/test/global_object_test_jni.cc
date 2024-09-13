@@ -46,6 +46,12 @@ Java_com_jnibind_test_GlobalObjectTest_jniCreateNewObject(JNIEnv* env, jclass) {
   return jni::GlobalObject<kObjectTestHelperClass>{1, 2, 3}.Release();
 }
 
+JNIEXPORT void JNICALL
+Java_com_jnibind_test_GlobalObjectTest_jniObjectGracefullyDies(JNIEnv* env,
+                                                               jclass) {
+  jni::GlobalObject<kObjectTestHelperClass>{1, 2, 3};
+}
+
 JNIEXPORT jobject JNICALL
 Java_com_jnibind_test_GlobalObjectTest_jniCreateNewGlobalObjectSetIntVal123(
     JNIEnv* env, jclass) {
