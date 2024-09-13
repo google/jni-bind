@@ -58,13 +58,6 @@ static constexpr Class kJavaLangString{
   Method{"toString", Return{jstring{}}, Params<>{}},
 };
 
-static constexpr Class kJavaLangException{
-  "java/lang/Exception",
-  Method{"getMessage", Return{jstring{}}, Params<>{}},
-  Method{"printStackTrace", Return{}, Params<>{}},
-  Method{"toString", Return{jstring{}}, Params<>{}},
-};
-
 // clang-format on
 
 }  // namespace jni
