@@ -159,12 +159,24 @@ using GrandparentJniT = JniT<jobject, kParent>;
 using ParentJniT = JniT<jobject, kChild>;
 using ChildJniT = JniT<jobject, kGrandchild>;
 
+static_assert(GrandparentJniT::ParentJniT::kIsRoot);
+static_assert(!GrandparentJniT::kIsRoot);
+static_assert(!ParentJniT::kIsRoot);
+static_assert(!ChildJniT::kIsRoot);
+
+static_assert(JniTEqual_v<ChildJniT, ChildJniT>);
+static_assert(JniTEqual_v<ParentJniT, ChildJniT::ParentJniT>);
+static_assert(JniTEqual_v<GrandparentJniT, ChildJniT::ParentJniT::ParentJniT>);
+
+// Why const differs on localstring?
 static_assert(
     std::is_same_v<decltype(GrandparentJniT::kParent), const jni::RootObject>);
 
+static_assert(!JniT<jstring, jni::kJavaLangString>::kIsRoot);
+static_assert(JniT<jstring, jni::kJavaLangString>::ParentJniT::kIsRoot);
+
 static_assert(
     std::is_same_v<std::decay_t<decltype(jni::kObject)>, jni::RootObject>);
-;
 
 static_assert(GrandparentJniT::kDepthInAncestors == 0);
 static_assert(ParentJniT::kDepthInAncestors == 1);

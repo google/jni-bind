@@ -30,6 +30,7 @@
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_type.h"
 #include "implementation/method_selection.h"
+#include "implementation/no_class_specified.h"
 #include "implementation/no_idx.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
@@ -38,6 +39,34 @@
 #include "metaprogramming/string_contains.h"
 
 namespace jni {
+
+template <typename JniT>
+class ObjectRef;
+
+template <typename JniT_, typename ParentJniT, typename Enable = void>
+struct InheritanceProxy;
+
+// non root
+template <typename JniT_, typename ParentJniT>
+struct InheritanceProxy<JniT_, ParentJniT,
+                        std::enable_if_t<!ParentJniT::kIsRoot>> {
+  static_assert(std::is_same_v<typename JniT_::StorageType,
+                               typename ParentJniT::StorageType>);
+  using type = ObjectRef<ParentJniT>;
+  // using type = RootObject;
+};
+
+// root
+template <typename JniT_, typename ParentJniT>
+struct InheritanceProxy<JniT_, ParentJniT,
+                        std::enable_if_t<ParentJniT::kIsRoot>> {
+  static_assert(std::is_same_v<typename JniT_::StorageType,
+                               typename ParentJniT::StorageType>);
+  using type = RefBase<typename JniT_::StorageType>;
+};
+
+template <typename JniT>
+class ObjectRef;
 
 // Represents a runtime instance of a JNI Object.  Instead of using this class
 // directly, instead the more specialised types such as LocalObject,
@@ -53,7 +82,13 @@ class ObjectRef
       public metaprogramming::QueryableMap_t<
           ObjectRef<JniT>, JniT::stripped_class_v, &JniT::ClassT::fields_>,
       public RefBase<typename JniT::StorageType> {
+  // public InheritanceProxy<JniT, typename JniT::ParentJniT>::type {
  protected:
+  static_assert(std::is_same_v<typename JniT::StorageType, jstring> ||
+                // std::is_same_v< typename JniT::ParentJniT::StorageType,
+                // jobject> std::is_same_v< void,  typename JniT::ParentJniT>
+                std::is_same_v<void, decltype(JniT::GetClass().parent_)>);
+
   static_assert(
       JniT::class_loader_v
           .template SupportedDirectlyOrIndirectly<JniT::class_v>(),

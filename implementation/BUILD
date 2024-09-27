@@ -439,6 +439,28 @@ cc_library(
 )
 
 ################################################################################
+# Inheritance.
+################################################################################
+cc_library(
+    name = "inheritance",
+    hdrs = ["inheritance.h"],
+    deps = [
+        ":id_type",
+    ],
+)
+
+cc_test(
+    name = "inheritance_test",
+    srcs = ["inheritance_test.cc"],
+    deps = [
+        "//:jni_bind",
+        "//:jni_test",
+        "//testing/base/public:gunit_for_library",
+        "@googletest//:gtest_main",
+    ],
+)
+
+################################################################################
 # LocalArray.
 ################################################################################
 cc_library(
@@ -920,6 +942,7 @@ cc_library(
         ":id_type",
         ":jni_type",
         ":method_selection",
+        ":no_class_specified",
         ":no_idx",
         ":ref_base",
         "//:jni_dep",

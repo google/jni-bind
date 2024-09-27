@@ -22,8 +22,12 @@
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
 
+constexpr jni::Class kBase{
+    "kBase", jni::Method{"toString", jni::Return<jstring>{}, jni::Params{}}};
+
 constexpr jni::Class kGlobalObjectTestClass{
     "com/jnibind/test/GlobalObjectTest",
+    jni::Extends{kBase},
     jni::Method{"methodTakesGlobalObjectReturnsNewObject",
                 jni::Return{kObjectTestHelperClass},
                 jni::Params{kObjectTestHelperClass}},
@@ -63,9 +67,11 @@ Java_com_jnibind_test_GlobalObjectTest_jniBuildNewObjectsFromExistingObjects(
     JNIEnv* env, jclass, jobject test_helper_object, jobject object_to_mutate) {
   jni::LocalObject<kObjectTestHelperClass> helper_obj{object_to_mutate};
 
-  return jni::LocalObject<kGlobalObjectTestClass>{test_helper_object}(
-             "methodTakesGlobalObjectReturnsNewObject", helper_obj)
-      .Release();
+  auto a = jni::LocalObject<kGlobalObjectTestClass>{test_helper_object}(
+      "methodTakesGlobalObjectReturnsNewObject", helper_obj);
+  // a("toString");
+
+  return a.Release();
 }
 
 JNIEXPORT jobject JNICALL

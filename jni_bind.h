@@ -63,6 +63,7 @@ static constexpr Configuration kConfig{
 #include "implementation/forward_declarations.h"
 #include "implementation/id.h"
 #include "implementation/id_type.h"
+#include "implementation/inheritance.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/loaded_by.h"
