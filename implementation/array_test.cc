@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <type_traits>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "jni_bind.h"
@@ -107,6 +109,5 @@ static_assert(
 
 static_assert(FullArrayStripV(arr8) == kClass);
 static_assert(FullArrayStripV(arr9) == kClass);
-
 
 }  // namespace

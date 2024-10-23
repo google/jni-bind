@@ -34,11 +34,13 @@ struct Array;
 template <std::size_t kRank>
 struct Rank {};
 
+struct ArrayBase {};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Array Non-Object Implementation.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename RawType, std::size_t kRank>
-struct ArrayNonObjectTypeImpl {
+struct ArrayNonObjectTypeImpl : ArrayBase {
   RawType raw_;
 
   constexpr ArrayNonObjectTypeImpl(RawType raw) : raw_(raw) {}
@@ -52,20 +54,47 @@ struct ArrayNonObjectTypeImpl {
                   "JNI Error: Invalid array declaration, use Array { type{}, "
                   "Rank<kRank>{} }.");
   }
-
-  template <typename RawTypeRhs, std::size_t kRankRhs>
-  constexpr bool operator==(const Array<RawTypeRhs, kRankRhs>& rhs) const {
-    if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
-      return (raw_ == rhs.raw_);
-    }
-    return false;
-  }
-
-  template <typename RawTypeRhs, std::size_t kRankRhs>
-  constexpr bool operator!=(const Array<RawTypeRhs, kRankRhs>& rhs) const {
-    return !(*this == rhs);
-  }
 };
+
+template <typename T>
+struct ArrayComparisonHelper {};
+
+template <typename RawType, std::size_t kRank>
+struct ArrayComparisonHelper<Array<ArrayNonObjectTypeImpl<RawType, kRank>>> {
+  using type = RawType;
+};
+
+template <typename RawType, std::size_t kRank>
+struct ArrayComparisonHelper<Array<RawType, kRank>> {
+  using type = RawType;
+};
+
+template <typename T>
+using ArrayComparisonHelper_t = typename ArrayComparisonHelper<T>::type;
+
+template <typename T1, typename T2>
+static constexpr bool IsArrayComparable() {
+  return std::is_base_of_v<ArrayBase, T1> && std::is_base_of_v<ArrayBase, T2>;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Equality operators.
+////////////////////////////////////////////////////////////////////////////////
+template <typename T1, typename T2>
+constexpr std::enable_if_t<IsArrayComparable<T1, T2>(), bool> operator==(
+    const T1& lhs, const T2& rhs) {
+  if constexpr (std::is_same_v<ArrayComparisonHelper_t<T1>,
+                               ArrayComparisonHelper_t<T2>>) {
+    return (lhs.raw_ == rhs.raw_);
+  }
+  return false;
+}
+
+template <typename T1, typename T2>
+constexpr std::enable_if_t<IsArrayComparable<T1, T2>(), bool> operator!=(
+    const T1& lhs, const T2& rhs) {
+  return !(lhs == rhs);
+}
 
 // Primitive array implementaiton.
 template <typename T, std::size_t kRank, bool HoldsObject>
@@ -79,27 +108,32 @@ struct ArrayImpl : public ArrayNonObjectTypeImpl<T, kRank>,
 // Array Object Implementation.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename RawType, std::size_t kRank_>
-struct ArrayImpl<RawType, kRank_, true> : public ArrayTag<jobjectArray> {
+struct ArrayImpl<RawType, kRank_, true> : public ArrayTag<jobjectArray>,
+                                          ArrayBase {
   RawType raw_;
 
   constexpr ArrayImpl(RawType raw) : raw_(raw) {}
 
   template <std::size_t kRank>
   constexpr ArrayImpl(RawType raw, Rank<kRank>) : raw_(raw) {}
-
-  template <typename RawTypeRhs, std::size_t kRank>
-  constexpr bool operator==(const Array<RawTypeRhs, kRank>& rhs) const {
-    if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
-      return (raw_ == rhs.raw_);
-    }
-    return false;
-  }
-
-  template <typename RawTypeRhs, std::size_t kRank>
-  constexpr bool operator!=(const Array<RawTypeRhs, kRank>& rhs) const {
-    return !(*this == rhs);
-  }
 };
+
+template <typename RawTypeLhs, std::size_t kRankLhs, typename RawTypeRhs,
+          std::size_t kRankRhs>
+constexpr bool operator==(const ArrayImpl<RawTypeLhs, kRankLhs, true>& lhs,
+                          const ArrayImpl<RawTypeRhs, kRankRhs, true>& rhs) {
+  if constexpr (std::is_same_v<RawTypeLhs, RawTypeRhs>) {
+    return (lhs.raw_ == rhs.raw_);
+  }
+  return false;
+}
+
+template <typename RawTypeLhs, std::size_t kRankLhs, typename RawTypeRhs,
+          std::size_t kRankRhs>
+constexpr bool operator!=(const ArrayImpl<RawTypeLhs, kRankLhs, true>& lhs,
+                          const Array<RawTypeRhs, kRankRhs>& rhs) {
+  return !(lhs == rhs);
+}
 
 // This type correlates to those used in declarations,
 //   e.g. Field { Array { Array { jint {} } } }.

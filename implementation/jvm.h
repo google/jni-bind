@@ -50,18 +50,23 @@ class Jvm {
     return IdxOfClassLoaderHelper<class_loader_v>(
         std::make_integer_sequence<std::size_t, sizeof...(ClassLoaderTs)>());
   }
-
-  template <typename T>
-  bool constexpr operator==(const T& rhs) const {
-    return false;
-  }
-  bool constexpr operator==(const Jvm&) const { return true; }
-
-  template <typename T>
-  bool constexpr operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
 };
+
+template <typename... ClassLoaderTs, typename T>
+constexpr bool operator==(const Jvm<ClassLoaderTs...>& lhs, const T& rhs) {
+  return false;
+}
+
+template <typename... ClassLoaderLhsTs>
+constexpr bool operator==(const Jvm<ClassLoaderLhsTs...>& lhs,
+                          const Jvm<ClassLoaderLhsTs...>& rhs) {
+  return true;
+}
+
+template <typename... ClassLoaderTs, typename T>
+bool constexpr operator!=(const Jvm<ClassLoaderTs...>& lhs, const T& rhs) {
+  return !(lhs == rhs);
+}
 
 template <typename... ClassLoaderTs>
 Jvm(ClassLoaderTs...) -> Jvm<ClassLoaderTs...>;

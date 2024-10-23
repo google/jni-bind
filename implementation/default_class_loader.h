@@ -62,18 +62,21 @@ class DefaultClassLoader {
   constexpr std::size_t IdxOfAncestor(std::size_t cur_idx = 0) const {
     return kClassNotInLoaderSetIdx;
   }
-
-  template <typename T>
-  bool constexpr operator==(const T& rhs) const {
-    return false;
-  }
-  bool constexpr operator==(const DefaultClassLoader&) const { return true; }
-
-  template <typename T>
-  bool constexpr operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
 };
+
+template <typename T>
+bool constexpr operator==(const DefaultClassLoader& lhs, const T& rhs) {
+  return false;
+}
+bool constexpr operator==(const DefaultClassLoader& lhs,
+                          const DefaultClassLoader& rhs) {
+  return true;
+}
+
+template <typename T>
+bool constexpr operator!=(const DefaultClassLoader& lhs, const T& rhs) {
+  return !(lhs == rhs);
+}
 
 // Class loader that cannot supply any classes. This should be the root loader
 // for most user defined classes.
@@ -95,18 +98,21 @@ class NullClassLoader {
   constexpr std::size_t IdxOfAncestor(std::size_t cur_idx = 0) const {
     return kClassNotInLoaderSetIdx;
   }
-
-  template <typename T>
-  bool constexpr operator==(const T& rhs) const {
-    return false;
-  }
-  bool constexpr operator==(const NullClassLoader&) const { return true; }
-
-  template <typename T>
-  bool constexpr operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
 };
+
+template <typename T>
+constexpr bool operator==(const NullClassLoader& lhs, const T& rhs) {
+  return false;
+}
+constexpr bool operator==(const NullClassLoader& lhs,
+                          const NullClassLoader& rhs) {
+  return true;
+}
+
+template <typename T>
+constexpr bool operator!=(const NullClassLoader& lhs, const T& rhs) {
+  return !(lhs == rhs);
+}
 
 static constexpr NullClassLoader kNullClassLoader;
 static constexpr DefaultClassLoader kDefaultClassLoader;

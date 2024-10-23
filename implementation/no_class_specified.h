@@ -34,6 +34,8 @@ struct RootObject {
 static constexpr RootObject kObject{};
 
 static constexpr struct NoClass {
+  // For compatability reasons, this must be defined (not default) because some
+  // compilers will complain about defaulted constructors being deleted.
   constexpr NoClass() {}
 
   const char* name_ = "__JNI_BIND__NO_CLASS__";
@@ -41,10 +43,14 @@ static constexpr struct NoClass {
   const Static<std::tuple<>, std::tuple<>> static_{};
   const std::tuple<> methods_{};
   const std::tuple<> fields_{};
-
-  constexpr bool operator==(const NoClass&) const { return true; }
-  constexpr bool operator!=(const NoClass&) const { return true; }
 } kNoClassSpecified;
+
+constexpr bool operator==(const NoClass& lhs, const NoClass& rhs) {
+  return true;
+}
+constexpr bool operator!=(const NoClass& lhs, const NoClass& rhs) {
+  return false;
+}
 
 }  // namespace jni
 

@@ -50,13 +50,13 @@ class RefBase : public RefBaseBase {
             typename = std::enable_if_t<std::is_same_v<T, StorageType>>>
   RefBase(RefBase<T>&& rhs) : object_ref_(rhs.Release()) {}
 
+  // Releases ownership of the underlying object, further use is undefined.
   StorageType Release() {
     StorageType return_value = object_ref_;
     object_ref_ = nullptr;
 
     return return_value;
   }
-
   explicit operator StorageType() const { return object_ref_; }
 
  protected:

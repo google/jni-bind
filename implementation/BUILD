@@ -83,6 +83,7 @@ cc_library(
     deps = [
         ":array_type_conversion",
         "//:jni_dep",
+        "//implementation/jni_helper:get_array_element_result",
         "//implementation/jni_helper:jni_array_helper",
         "//implementation/jni_helper:lifecycle",
     ],
@@ -296,23 +297,19 @@ cc_library(
     name = "field_ref",
     hdrs = ["field_ref.h"],
     deps = [
-        ":class_ref",
+        ":default_class_loader",
         ":field_selection",
         ":id",
         ":id_type",
         ":no_idx",
         ":promotion_mechanics_tags",
-        ":proxy",
         ":proxy_convenience_aliases",
         ":ref_base",
         ":signature",
         "//:jni_dep",
         "//implementation/jni_helper",
         "//implementation/jni_helper:field_value_getter",
-        "//implementation/jni_helper:static_field_value",
         "//metaprogramming:double_locked_value",
-        "//metaprogramming:optional_wrap",
-        "//metaprogramming:queryable_map",
     ],
 )
 
@@ -365,10 +362,8 @@ cc_library(
     name = "forward_declarations",
     hdrs = ["forward_declarations.h"],
     deps = [
-        ":default_class_loader",
         ":id_type",
-        ":jvm",
-        "//implementation/jni_helper:lifecycle_object",
+        "//implementation/jni_helper:lifecycle",
     ],
 )
 
@@ -397,8 +392,10 @@ cc_library(
     name = "global_object",
     hdrs = ["global_object.h"],
     deps = [
+        ":default_class_loader",
         ":forward_declarations",
         ":jni_type",
+        ":jvm",
         ":local_object",
         ":promotion_mechanics",
         ":ref_base",
@@ -724,6 +721,7 @@ cc_library(
         ":forward_declarations",
         ":jvm",
         ":promotion_mechanics_tags",
+        "//:jni_dep",
         "//implementation/jni_helper:lifecycle",
     ],
 )

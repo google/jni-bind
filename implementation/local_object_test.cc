@@ -209,25 +209,25 @@ TEST_F(JniTest, LocalObject_ComparesAgainstjobjects) {
   EXPECT_FALSE(AsNewLocalReference(Fake<jobject>()) != val_1);
 }
 
+struct A {
+  LocalObject<kClass> val_1;
+  LocalObject<kClass2> val_2;
+
+  A(LocalObject<kClass>&& val_1, LocalObject<kClass2>&& val_2)
+      : val_1(std::move(val_1)), val_2(std::move(val_2)) {}
+
+  A(A&& rhs) : val_1(std::move(rhs.val_1)), val_2(std::move(rhs.val_2)) {}
+};
+
+constexpr bool operator==(const A& lhs, const A& rhs) {
+  return lhs.val_1 == rhs.val_1 && lhs.val_2 == rhs.val_2;
+}
+
+constexpr bool operator!=(const A& lhs, const A& rhs) {
+  return lhs.val_1 != rhs.val_1 || lhs.val_2 != rhs.val_2;
+}
+
 TEST_F(JniTest, LocalObject_ComparesAgainstOtherLocalObjects_InContainers) {
-  struct A {
-    LocalObject<kClass> val_1;
-    LocalObject<kClass2> val_2;
-
-    A(LocalObject<kClass>&& val_1, LocalObject<kClass2>&& val_2)
-        : val_1(std::move(val_1)), val_2(std::move(val_2)) {}
-
-    A(A&& rhs) : val_1(std::move(rhs.val_1)), val_2(std::move(rhs.val_2)) {}
-
-    bool operator==(const A& rhs) const {
-      return val_1 == rhs.val_1 && val_2 == rhs.val_2;
-    }
-
-    bool operator!=(const A& rhs) const {
-      return val_1 != rhs.val_1 || val_2 != rhs.val_2;
-    }
-  };
-
   A val_1{LocalObject<kClass>{Fake<jobject>(1)}, {Fake<jobject>(2)}};
   A val_2{LocalObject<kClass2>{Fake<jobject>(1)}, {Fake<jobject>(3)}};
 

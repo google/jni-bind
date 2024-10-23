@@ -19,10 +19,10 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
-#include "implementation/default_class_loader.h"
+#include <cstddef>
+
 #include "implementation/id_type.h"
-#include "implementation/jni_helper/lifecycle_object.h"
-#include "implementation/jvm.h"
+#include "implementation/jni_helper/lifecycle.h"
 
 namespace jni {
 
@@ -36,6 +36,9 @@ namespace jni {
 
 // Provide this base tag to UserDefined to enable custom types.
 struct JniUserDefinedCorpusTag {};
+
+// ArrayViewHelperBase (shared by all `ArrayView`).
+struct ArrayViewHelperBase;
 
 // ArrayView Helper.
 template <typename T>

@@ -79,6 +79,25 @@ TEST_F(JniTest, GlobalObject_ConstructsFromNonStandardConstructor) {
   EXPECT_EQ(jobject{global_object}, AsGlobal(Fake<jobject>()));
 }
 
+TEST_F(JniTest, GlobalObject_ComparesAgainstOtherGlobalObjects) {
+  static constexpr Class kClass{
+      "kClass",
+      Constructor{jfloat{}, jfloat{}},
+  };
+  static constexpr Class kClass2{
+      "kClass2",
+  };
+  GlobalObject<kClass> val_1{AdoptGlobal{}, Fake<jobject>(1)};
+  GlobalObject<kClass2> val_2{AdoptGlobal{}, Fake<jobject>(2)};
+
+  EXPECT_TRUE(val_1 == val_1);
+  EXPECT_FALSE(val_1 == val_2);
+  EXPECT_TRUE(val_1 != val_2);
+  EXPECT_TRUE(val_2 == val_2);
+  EXPECT_TRUE(val_2 != val_1);
+  EXPECT_FALSE(val_1 == val_2);
+}
+
 TEST_F(JniTest, GlobalObject_DoesNotDeleteAnyLocalsForAdoptedGlobalJobject) {
   static constexpr Class kClass{"kClass"};
 

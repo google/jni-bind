@@ -41,16 +41,17 @@ namespace jni {
 // Currently GlobalArrays do not exist, as reasoning about the lifecycles of the
 // underlying objects is non-trivial, e.g. a GlobalArray taking a local object
 // would result in a possibly unexpected extension of lifetime.
-template <typename SpanType, std::size_t kRank_ = 1,
+template <typename SpanType_, std::size_t kRank_ = 1,
           const auto& class_v_ = kNoClassSpecified,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class LocalArray
     : public ArrayRef<
-          JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>> {
+          JniT<SpanType_, class_v_, class_loader_v_, jvm_v_, kRank_>> {
  public:
   static constexpr Class kClass{class_v_.name_};
   static constexpr std::size_t kRank = kRank_;
+  using SpanType = SpanType_;
 
   using RawValT = std::conditional_t<std::is_same_v<jobject, SpanType>,
                                      std::decay_t<decltype(kClass)>, SpanType>;
@@ -80,11 +81,12 @@ class LocalArray
       : Base(AdoptLocal{}, rhs.Release()) {}
 
   // Rvalue ctor.
-  template <typename SpanType_, std::size_t kRank, const auto& class_v,
+  template <typename SpanTypeRhs_, std::size_t kRank, const auto& class_v,
             const auto& class_loader_v, const auto& jvm_v>
-  LocalArray(LocalArray<SpanType_, kRank, class_v, class_loader_v, jvm_v>&& rhs)
+  LocalArray(
+      LocalArray<SpanTypeRhs_, kRank, class_v, class_loader_v, jvm_v>&& rhs)
       : Base(AdoptLocal{}, rhs.Release()) {
-    static_assert(std::is_same_v<SpanType, SpanType_> && kRank == kRank_ &&
+    static_assert(std::is_same_v<SpanType, SpanTypeRhs_> && kRank == kRank_ &&
                   class_v == class_v_ && class_loader_v == class_loader_v_);
   }
 
@@ -93,9 +95,9 @@ class LocalArray
   // e.g.
   //  LocalArray arr { 5, LocalObject<kClass> {args...} };
   //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
-  template <template <const auto&, const auto&, const auto&>
-            class ObjectContainer,
-            const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  template <
+      template <const auto&, const auto&, const auto&> class ObjectContainer,
+      const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   LocalArray(
       std::size_t size,
       const ObjectContainer<class_v, class_loader_v, jvm_v>& local_object)
@@ -108,9 +110,9 @@ class LocalArray
   operator jobject() { return static_cast<jobject>(Base::object_ref_); }
 };
 
-template <template <const auto&, const auto&, const auto&>
-          class ObjectContainer,
-          const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+template <
+    template <const auto&, const auto&, const auto&> class ObjectContainer,
+    const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 LocalArray(std::size_t,
            const ObjectContainer<class_v_, class_loader_v_, jvm_v_>&)
     -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
@@ -123,9 +125,9 @@ LocalArray(
     -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
 
 template <typename SpanType>
-LocalArray(std::size_t,
-           SpanType) -> LocalArray<SpanType, 1, kNoClassSpecified,
-                                   kDefaultClassLoader, kDefaultJvm>;
+LocalArray(std::size_t, SpanType)
+    -> LocalArray<SpanType, 1, kNoClassSpecified, kDefaultClassLoader,
+                  kDefaultJvm>;
 
 template <typename SpanType, std::size_t kRank_minus_1>
 LocalArray(std::size_t, LocalArray<SpanType, kRank_minus_1>)

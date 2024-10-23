@@ -156,27 +156,45 @@ struct Class<Extends_, std::tuple<Constructors_...>,
         static_(statik),
         methods_(methods...),
         fields_(fields...) {}
-
-  ////////////////////////////////////////////////////////////////////////////////
-  // Equality operators.
-  ////////////////////////////////////////////////////////////////////////////////
-  template <typename ParentClass, typename... Params, typename... Constructors,
-            typename... StaticMethods, typename... StaticFields,
-            typename... Fields, typename... Methods>
-  constexpr bool operator==(
-      const Class<ParentClass, std::tuple<Constructors...>,
-                  std::tuple<Static<std::tuple<StaticMethods...>,
-                                    std::tuple<StaticFields...>>>,
-                  std::tuple<Methods...>, std::tuple<Fields...>>& rhs) const {
-    // Don't compare the other parameters so classes can be used as parameters
-    // or return values before the class itself is defined.
-    return std::string_view(name_) == std::string_view(rhs.name_);
-  }
-
-  constexpr bool operator==(const NoClass&) const { return false; }
-  constexpr bool operator!=(const NoClass&) const { return false; }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Equality operators.
+////////////////////////////////////////////////////////////////////////////////
+template <typename LhsParentClass, typename... LhsParams,
+          typename... LhsConstructors, typename... LhsStaticMethods,
+          typename... LhsStaticFields, typename... LhsFields,
+          typename... LhsMethods, typename RhsParentClass,
+          typename... RhsParams, typename... RhsConstructors,
+          typename... RhsStaticMethods, typename... RhsStaticFields,
+          typename... RhsFields, typename... RhsMethods>
+constexpr bool operator==(
+    const Class<LhsParentClass, std::tuple<LhsConstructors...>,
+                std::tuple<Static<std::tuple<LhsStaticMethods...>,
+                                  std::tuple<LhsStaticFields...>>>,
+                std::tuple<LhsMethods...>, std::tuple<LhsFields...>>& lhs,
+    const Class<RhsParentClass, std::tuple<RhsConstructors...>,
+                std::tuple<Static<std::tuple<RhsStaticMethods...>,
+                                  std::tuple<RhsStaticFields...>>>,
+                std::tuple<RhsMethods...>, std::tuple<RhsFields...>>& rhs) {
+  // Don't compare the other parameters so classes can be used as parameters
+  // or return values before the class itself is defined.
+  return std::string_view(lhs.name_) == std::string_view(rhs.name_);
+}
+
+template <typename... Ts>
+constexpr bool operator==(const Class<Ts...>& lhs, const NoClass&) {
+  return false;
+}
+
+template <typename... Ts>
+constexpr bool operator!=(const Class<Ts...>& lhs, const NoClass&) {
+  return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// CTAD.
+////////////////////////////////////////////////////////////////////////////////
 template <typename... Params>
 Class(const char*, Params...)
     -> Class<metaprogramming::BaseFilterWithDefault_t<

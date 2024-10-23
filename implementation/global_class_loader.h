@@ -37,6 +37,7 @@ class GlobalClassLoader
  public:
   using Base = ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_>;
   using Base::Base;
+  using SpanType = jobject;
 
   template <const auto& class_loader_v, const auto& jvm_v>
   GlobalClassLoader(GlobalClassLoader<class_loader_v, jvm_v>&& rhs)

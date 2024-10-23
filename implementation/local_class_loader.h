@@ -25,6 +25,7 @@
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jvm.h"
 #include "implementation/promotion_mechanics_tags.h"
+#include "jni_dep.h"
 
 namespace jni {
 
@@ -35,6 +36,7 @@ class LocalClassLoader
  public:
   using Base = ClassLoaderRef<LifecycleType::LOCAL, class_loader_v_, jvm_v_>;
   using Base::Base;
+  using SpanType = jobject;
 
   template <const auto& class_loader_v, const auto& jvm_v>
   explicit LocalClassLoader(LocalClassLoader<class_loader_v, jvm_v>&& lhs)

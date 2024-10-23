@@ -19,10 +19,12 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
-#include "method.h"
-#include "params.h"
-#include "return.h"
+#include <cstddef>
+#include <string>
+#include <type_traits>
+
 #include "implementation/jni_helper/jni_helper.h"
+#include "implementation/params.h"
 
 namespace jni {
 
@@ -52,14 +54,14 @@ class Constructor : public ConstructorBase {
   constexpr explicit Constructor(Args...) {}
 };
 
-template <typename... ParamsRaw>
-Constructor(ParamsRaw...) -> Constructor<ParamsRaw...>;
-
 template <typename... LhsParams, typename... RhsParams>
 constexpr bool operator==(const Constructor<LhsParams...>& lhs,
                           const Constructor<RhsParams...>& rhs) {
   return lhs.params_ == rhs.params_;
 }
+
+template <typename... ParamsRaw>
+Constructor(ParamsRaw...) -> Constructor<ParamsRaw...>;
 
 //==============================================================================
 // Represents a constructor used at runtime and has index data about where it

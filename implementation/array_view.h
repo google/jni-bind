@@ -21,16 +21,21 @@
 
 #include <cstddef>
 #include <iterator>
+#include <type_traits>
 
 #include "implementation/array_type_conversion.h"
+#include "implementation/jni_helper/get_array_element_result.h"
 #include "implementation/jni_helper/jni_array_helper.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "jni_dep.h"
 
 namespace jni {
 
+struct ArrayViewHelperBase {};
+
 template <typename T>
-struct ArrayViewHelper {
+struct ArrayViewHelper : ArrayViewHelperBase {
+  using SpanType = T;
   const T val_;
   operator T() const { return val_; }
 
@@ -38,9 +43,11 @@ struct ArrayViewHelper {
 };
 
 // Primitive Rank 1 Arrays.
-template <typename SpanType, std::size_t kRank = 1, typename Enable = void>
+template <typename SpanType_, std::size_t kRank = 1, typename Enable = void>
 class ArrayView {
  public:
+  using SpanType = SpanType_;
+
   struct Iterator {
     using iterator_category = std::random_access_iterator_tag;
     using difference_type = std::size_t;
@@ -115,12 +122,14 @@ class ArrayView {
 };
 
 // Object arrays, or arrays with rank > 1 (which are object arrays), or strings.
-template <typename SpanType, std::size_t kRank>
+template <typename SpanType_, std::size_t kRank>
 class ArrayView<
-    SpanType, kRank,
-    std::enable_if_t<(kRank > 1) || std::is_same_v<SpanType, jobject> ||
-                     std::is_same_v<SpanType, jstring>>> {
+    SpanType_, kRank,
+    std::enable_if_t<(kRank > 1) || std::is_same_v<SpanType_, jobject> ||
+                     std::is_same_v<SpanType_, jstring>>> {
  public:
+  using SpanType = SpanType_;
+
   // Metafunction that returns the type after a single dereference.
   template <std::size_t>
   struct PinHelper {

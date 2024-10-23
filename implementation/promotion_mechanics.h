@@ -56,27 +56,47 @@ struct EntryBase : public Base {
                             LifecycleHelper<Span, lifecycleType>::NewReference(
                                 static_cast<Span>(object)))
                       : nullptr) {}
-
-  // Comparison operator for pinned Scoped type (not deep equality).
-  template <typename T,
-            typename = std::enable_if_t<(std::is_base_of_v<RefBase<Span>, T> ||
-                                         std::is_same_v<T, ViableSpan>)>>
-  bool operator==(const T& rhs) const {
-    if constexpr (std::is_base_of_v<RefBase<Span>, T>) {
-      return static_cast<Span>(rhs.object_ref_) == Base::object_ref_;
-    } else if constexpr (std::is_same_v<T, ViableSpan>) {
-      return rhs == Base::object_ref_;
-    }
-  }
-
-  // Comparison inequality operator for pinned Scoped type (not deep equality).
-  template <typename T,
-            typename = std::enable_if_t<(std::is_base_of_v<RefBase<Span>, T> ||
-                                         std::is_same_v<T, ViableSpan>)>>
-  bool operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// Equality operators.
+// Note: Post C++20 these [in]equality operators are required to be reversable.
+////////////////////////////////////////////////////////////////////////////////
+template <typename T, typename Enable = void>
+struct IsComparableHelper {
+  using type = T;
+};
+
+template <typename T>
+struct IsComparableHelper<T, std::void_t<typename T::SpanType>> {
+  using type = typename T::SpanType;
+};
+
+template <typename T>
+using IsComparableHelper_t = typename IsComparableHelper<T>::type;
+
+// Returns if the two types are "JNI Bind" comparable. e.g.
+// jobject == LocalObject or LocalObject == jobject.
+template <typename T1, typename T2>
+constexpr bool IsJniBindComparable() {
+  return std::is_same_v<IsComparableHelper_t<T1>, IsComparableHelper_t<T2>> &&
+         (std::is_base_of_v<RefBaseBase, T1> ||
+          std::is_base_of_v<RefBaseBase, T2>);
+}
+
+template <typename T1, typename T2>
+constexpr std::enable_if_t<IsJniBindComparable<T1, T2>(), bool> operator==(
+    const T1& lhs, const T2& rhs) {
+  return static_cast<IsComparableHelper_t<T1>>(lhs) ==
+         static_cast<IsComparableHelper_t<T2>>(rhs);
+}
+
+template <typename T1, typename T2>
+constexpr std::enable_if_t<IsJniBindComparable<T1, T2>(), bool> operator!=(
+    const T1& lhs, const T2& rhs) {
+  return static_cast<IsComparableHelper_t<T1>>(lhs) !=
+         static_cast<IsComparableHelper_t<T2>>(rhs);
+}
 
 // Local scoped entry augmentation.
 template <LifecycleType lifecycleType, typename JniT, typename ViableSpan,

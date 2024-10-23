@@ -19,10 +19,12 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include <cstddef>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "implementation/default_class_loader.h"
 #include "implementation/field_selection.h"
 #include "implementation/id.h"
 #include "implementation/id_type.h"

@@ -42,6 +42,7 @@ class LocalObject : public LocalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
  public:
   using Base = LocalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
   using Base::Base;
+  using SpanType = jobject;
 
   template <typename T>
   LocalObject(ArrayViewHelper<T> array_view_helper)
@@ -55,18 +56,6 @@ class LocalObject : public LocalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 LocalObject(LocalObject<class_v_, class_loader_v_, jvm_v_>&&)
     -> LocalObject<class_v_, class_loader_v_, jvm_v_>;
-
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-bool operator==(const jobject& lhs,
-                const LocalObject<class_v_, class_loader_v_, jvm_v_>& rhs) {
-  return lhs == static_cast<jobject>(rhs);
-}
-
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-bool operator!=(const jobject& lhs,
-                const LocalObject<class_v_, class_loader_v_, jvm_v_>& rhs) {
-  return !(lhs == rhs);
-}
 
 }  // namespace jni
 

@@ -19,6 +19,7 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include <cstddef>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -67,20 +68,6 @@ class ClassLoader : public Object {
       : Object(class_loader_name),
         parent_loader_(parent_loader),
         supported_classes_(supported_class_set.supported_classes_) {}
-
-  bool constexpr operator==(
-      const ClassLoader<ParentLoader_, SupportedClasses_...>& rhs) const {
-    return (*this).parent_loader_ == rhs.parent_loader_ &&
-           (*this).supported_classes_ == rhs.supported_classes_;
-  }
-  template <typename T>
-  bool constexpr operator==(const T& rhs) const {
-    return false;
-  }
-  template <typename T>
-  bool constexpr operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
 
   template <const auto& class_v, std::size_t... Is>
   constexpr std::size_t IdxOfClassHelper(
@@ -131,6 +118,33 @@ class ClassLoader : public Object {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Equality operators.
+////////////////////////////////////////////////////////////////////////////////
+template <typename ParentLoader_, typename... SupportedClasses_>
+bool constexpr operator==(
+    const ClassLoader<ParentLoader_, SupportedClasses_...>& lhs,
+    const ClassLoader<ParentLoader_, SupportedClasses_...>& rhs) {
+  return lhs.parent_loader_ == rhs.parent_loader_ &&
+         lhs.supported_classes_ == rhs.supported_classes_;
+}
+
+template <typename ParentLoader_, typename... SupportedClasses_, typename T>
+bool constexpr operator==(
+    const ClassLoader<ParentLoader_, SupportedClasses_...>& lhs, const T& rhs) {
+  return false;
+}
+
+template <typename ParentLoader_, typename... SupportedClasses_, typename T>
+bool constexpr operator!=(
+    const ClassLoader<ParentLoader_, SupportedClasses_...>& lhs, const T& rhs) {
+  return !(lhs == rhs);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// CTAD.
+////////////////////////////////////////////////////////////////////////////////
+
 // Note: Null is chosen, not default, because LoadedBy requires a syntax like
 // LoadedBy{ClassLoader{"kClass"}} (using the CTAD loader type below), but
 // we want to prevent explicit usage of a default loader (as it makes no sense).
@@ -146,6 +160,9 @@ template <typename... SupportedClasses_>
 ClassLoader(SupportedClassSet<SupportedClasses_...>)
     -> ClassLoader<DefaultClassLoader, SupportedClasses_...>;
 
+////////////////////////////////////////////////////////////////////////////////
+// Ancestral lookups.
+////////////////////////////////////////////////////////////////////////////////
 template <typename T, std::size_t I>
 constexpr auto& GetAncestor(const T& loader) {
   if constexpr (I == 0) {

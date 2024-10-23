@@ -19,10 +19,12 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
+#include "implementation/jvm.h"
 #include "implementation/local_object.h"
 #include "implementation/promotion_mechanics.h"
 #include "implementation/ref_base.h"
@@ -44,6 +46,7 @@ class GlobalObject
  public:
   using Base = GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
   using Base::Base;
+  using SpanType = jobject;
   using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
