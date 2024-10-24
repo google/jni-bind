@@ -1161,8 +1161,6 @@ cc_test(
 cc_library(
     name = "unfurl",
     hdrs = ["unfurl.h"],
-    deps = [
-    ],
 )
 
 cc_test(
