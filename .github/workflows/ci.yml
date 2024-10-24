@@ -10,18 +10,33 @@ permissions:
   contents: read
 
 jobs:
-  linux_test:
+  ubuntu-latest-cpp17:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: test
-      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors ...
+      run: bazel query --output=label 'kind("...", //...) except attr("tags", "cpp20", "//...")' | xargs bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors 
+
+  ubuntu-latest-cpp20:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: test
+      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++20' --repo_env=CC=clang --test_output=errors ...
+
 
   # NOTE: Mac is only running a small subset of targets due to an unresolved
   # issue in Bazel. When this is fixed in the future I will expand testing.
-  macos_test:
+  macos-latest-cpp17:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
     - name: test
-      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors metaprogramming/...
+      run: bazel query --output=label 'kind("...", //...) except attr(tags, "cpp20", //metaprogramming/...)' | xargs bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors 
+
+  macos-latest-cpp20:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: test
+      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++20' --repo_env=CC=clang --test_output=errors ...
