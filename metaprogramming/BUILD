@@ -1112,6 +1112,24 @@ cc_test(
 )
 
 ################################################################################
+# String Literal.
+################################################################################
+cc_library(
+    name = "string_literal",
+    hdrs = ["string_literal.h"],
+)
+
+cc_test(
+    name = "string_literal_test",
+    srcs = ["string_literal_test.cc"],
+    tags = ["cpp20"],
+    deps = [
+        ":string_literal",
+        "@googletest//:gtest_main",
+    ],
+)
+
+################################################################################
 # Type Index Mask.
 ################################################################################
 cc_library(
@@ -1238,6 +1256,7 @@ cc_library(
 cc_test(
     name = "vals_equal_test",
     srcs = ["vals_equal_test.cc"],
+    tags = ["manual"],
     deps = [
         ":vals",
         ":vals_equal",

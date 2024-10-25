@@ -111,6 +111,7 @@ cc_library(
     name = "jni_test",
     testonly = 1,
     hdrs = ["jni_test.h"],
+    tags = ["nozapfhahn"],
     visibility = [":__subpackages__"],
     deps = [
         ":jni_bind",
@@ -124,6 +125,7 @@ cc_library(
     name = "mock_jni_env",
     testonly = 1,
     hdrs = ["mock_jni_env.h"],
+    tags = ["nozapfhahn"],
     visibility = [":__subpackages__"],
     deps = [
         "//:jni_dep",
@@ -135,6 +137,7 @@ cc_library(
     name = "mock_jvm",
     testonly = 1,
     hdrs = ["mock_jvm.h"],
+    tags = ["nozapfhahn"],
     visibility = [":__subpackages__"],
     deps = [
         "//:jni_dep",

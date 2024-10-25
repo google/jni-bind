@@ -32,6 +32,7 @@ java_test(
     srcs = ["ArrayTestFieldRank1.java"],
     data = [":libarray_test_field_rank_1_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     runtime_deps = [":array_test_helpers"],
     deps = [
         ":object_test_helper",
@@ -69,6 +70,7 @@ java_test(
     srcs = ["ArrayTestFieldRank2.java"],
     data = [":libarray_test_field_rank_2_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     runtime_deps = [
         ":array_test_helpers",
     ],
@@ -133,6 +135,7 @@ java_test(
     srcs = ["ArrayTestMethodRank1.java"],
     data = [":libarray_test_method_rank_1_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     runtime_deps = [
         ":array_test_helpers",
     ],
@@ -173,6 +176,7 @@ java_test(
     srcs = ["ArrayTestMethodRank2.java"],
     data = [":libarray_test_method_rank_2_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     runtime_deps = [
         ":array_test_helpers",
     ],
@@ -210,6 +214,7 @@ java_test(
     srcs = ["BuilderTest.java"],
     data = [":libbuilder_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     deps = [
         ":object_test_helper",
         "@maven//:junit_junit",
@@ -261,6 +266,7 @@ java_test(
         ":libclass_loader_test_jni.so",
     ],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     deps = ["@maven//:junit_junit"],
 )
 
@@ -290,6 +296,7 @@ java_test(
     srcs = ["ContextTest.java"],
     data = [":libcontext_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth",
@@ -328,6 +335,7 @@ java_test(
     ],
     data = [":libfield_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     deps = [
         "@maven//:com_google_truth_truth",
         "@maven//:junit_junit",
@@ -362,6 +370,7 @@ java_test(
     srcs = ["GlobalObjectTest.java"],
     data = [":libglobal_object_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth",
@@ -377,6 +386,7 @@ cc_library(
     testonly = True,
     srcs = ["local_object_test_jni.cc"],
     defines = ["ENABLE_DEBUG_OUTPUT"],
+    tags = ["nosan"],
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",
@@ -397,6 +407,7 @@ java_test(
     srcs = ["LocalObjectTest.java"],
     data = [":liblocal_object_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth",
@@ -435,6 +446,7 @@ java_test(
     ],
     data = [":libmethod_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     deps = [
         "@maven//:com_google_truth_truth",
         "@maven//:junit_junit",
@@ -505,6 +517,7 @@ java_test(
     ],
     data = [":libstatic_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth",
@@ -543,6 +556,7 @@ java_test(
     ],
     data = [":libstring_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     deps = [
         "@maven//:com_google_truth_truth",
         "@maven//:junit_junit",
@@ -577,6 +591,7 @@ java_test(
     srcs = ["ThreadTest.java"],
     data = [":libthread_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
     runtime_deps = [":array_test_helpers"],
     deps = [
         ":object_test_helper",
