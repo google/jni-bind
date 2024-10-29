@@ -29,8 +29,6 @@ namespace {
 using ::jni::Class;
 using ::jni::Fake;
 using ::jni::Field;
-using ::jni::kDefaultClassLoader;
-using ::jni::kDefaultJvm;
 using ::jni::LocalObject;
 using ::jni::Method;
 using ::jni::NewRef;
