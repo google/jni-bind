@@ -56,6 +56,7 @@ static constexpr Class kJavaLangString{
   Constructor{Array{jbyte{}}},
 
   Method{"toString", Return{jstring{}}, Params<>{}},
+  Method{"getBytes", Return{Array{jbyte{}}}, Params<>{}},
 };
 
 // clang-format on
