@@ -849,16 +849,16 @@ struct Method<std::tuple<Returns...>, std::tuple<Params_...>>
 // CTAD for Non-overloaded form, no Params.
 template <typename ReturnT, typename = std::enable_if_t<
                                 !std::is_base_of_v<OverloadBase, ReturnT>>>
-Method(const char*,
-       ReturnT) -> Method<std::tuple<ReturnT>, std::tuple<Params<>>>;
+Method(const char*, ReturnT)
+    -> Method<std::tuple<ReturnT>, std::tuple<Params<>>>;
 
 // CTAD for Non-overloaded form.
 template <
     typename ReturnT, typename ParamsT,
     typename = std::enable_if_t<!std::is_base_of_v<OverloadBase, ReturnT> &&
                                 !std::is_base_of_v<OverloadBase, ParamsT>>>
-Method(const char*, ReturnT,
-       ParamsT) -> Method<std::tuple<ReturnT>, std::tuple<ParamsT>>;
+Method(const char*, ReturnT, ParamsT)
+    -> Method<std::tuple<ReturnT>, std::tuple<ParamsT>>;
 
 // CTAD for Overloaded form.
 template <typename... Returns, typename... Params>
@@ -1625,6 +1625,8 @@ struct RootObject {
 static constexpr RootObject kObject{};
 
 static constexpr struct NoClass {
+  // For compatability reasons, this must be defined (not default) because some
+  // compilers will complain about defaulted constructors being deleted.
   constexpr NoClass() {}
 
   const char* name_ = "__JNI_BIND__NO_CLASS__";
@@ -1632,10 +1634,14 @@ static constexpr struct NoClass {
   const Static<std::tuple<>, std::tuple<>> static_{};
   const std::tuple<> methods_{};
   const std::tuple<> fields_{};
-
-  constexpr bool operator==(const NoClass&) const { return true; }
-  constexpr bool operator!=(const NoClass&) const { return true; }
 } kNoClassSpecified;
+
+constexpr bool operator==(const NoClass& lhs, const NoClass& rhs) {
+  return true;
+}
+constexpr bool operator!=(const NoClass& lhs, const NoClass& rhs) {
+  return false;
+}
 
 }  // namespace jni
 
@@ -1678,6 +1684,10 @@ Extends(T) -> Extends<T>;
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include <cstddef>
+#include <string>
+#include <type_traits>
+
 namespace jni {
 
 struct ConstructorBase {};
@@ -1706,14 +1716,14 @@ class Constructor : public ConstructorBase {
   constexpr explicit Constructor(Args...) {}
 };
 
-template <typename... ParamsRaw>
-Constructor(ParamsRaw...) -> Constructor<ParamsRaw...>;
-
 template <typename... LhsParams, typename... RhsParams>
 constexpr bool operator==(const Constructor<LhsParams...>& lhs,
                           const Constructor<RhsParams...>& rhs) {
   return lhs.params_ == rhs.params_;
 }
+
+template <typename... ParamsRaw>
+Constructor(ParamsRaw...) -> Constructor<ParamsRaw...>;
 
 //==============================================================================
 // Represents a constructor used at runtime and has index data about where it
@@ -2022,27 +2032,45 @@ struct Class<Extends_, std::tuple<Constructors_...>,
         static_(statik),
         methods_(methods...),
         fields_(fields...) {}
-
-  ////////////////////////////////////////////////////////////////////////////////
-  // Equality operators.
-  ////////////////////////////////////////////////////////////////////////////////
-  template <typename ParentClass, typename... Params, typename... Constructors,
-            typename... StaticMethods, typename... StaticFields,
-            typename... Fields, typename... Methods>
-  constexpr bool operator==(
-      const Class<ParentClass, std::tuple<Constructors...>,
-                  std::tuple<Static<std::tuple<StaticMethods...>,
-                                    std::tuple<StaticFields...>>>,
-                  std::tuple<Methods...>, std::tuple<Fields...>>& rhs) const {
-    // Don't compare the other parameters so classes can be used as parameters
-    // or return values before the class itself is defined.
-    return std::string_view(name_) == std::string_view(rhs.name_);
-  }
-
-  constexpr bool operator==(const NoClass&) const { return false; }
-  constexpr bool operator!=(const NoClass&) const { return false; }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Equality operators.
+////////////////////////////////////////////////////////////////////////////////
+template <typename LhsParentClass, typename... LhsParams,
+          typename... LhsConstructors, typename... LhsStaticMethods,
+          typename... LhsStaticFields, typename... LhsFields,
+          typename... LhsMethods, typename RhsParentClass,
+          typename... RhsParams, typename... RhsConstructors,
+          typename... RhsStaticMethods, typename... RhsStaticFields,
+          typename... RhsFields, typename... RhsMethods>
+constexpr bool operator==(
+    const Class<LhsParentClass, std::tuple<LhsConstructors...>,
+                std::tuple<Static<std::tuple<LhsStaticMethods...>,
+                                  std::tuple<LhsStaticFields...>>>,
+                std::tuple<LhsMethods...>, std::tuple<LhsFields...>>& lhs,
+    const Class<RhsParentClass, std::tuple<RhsConstructors...>,
+                std::tuple<Static<std::tuple<RhsStaticMethods...>,
+                                  std::tuple<RhsStaticFields...>>>,
+                std::tuple<RhsMethods...>, std::tuple<RhsFields...>>& rhs) {
+  // Don't compare the other parameters so classes can be used as parameters
+  // or return values before the class itself is defined.
+  return std::string_view(lhs.name_) == std::string_view(rhs.name_);
+}
+
+template <typename... Ts>
+constexpr bool operator==(const Class<Ts...>& lhs, const NoClass&) {
+  return false;
+}
+
+template <typename... Ts>
+constexpr bool operator!=(const Class<Ts...>& lhs, const NoClass&) {
+  return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// CTAD.
+////////////////////////////////////////////////////////////////////////////////
 template <typename... Params>
 Class(const char*, Params...)
     -> Class<metaprogramming::BaseFilterWithDefault_t<
@@ -2074,11 +2102,13 @@ struct Array;
 template <std::size_t kRank>
 struct Rank {};
 
+struct ArrayBase {};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Array Non-Object Implementation.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename RawType, std::size_t kRank>
-struct ArrayNonObjectTypeImpl {
+struct ArrayNonObjectTypeImpl : ArrayBase {
   RawType raw_;
 
   constexpr ArrayNonObjectTypeImpl(RawType raw) : raw_(raw) {}
@@ -2092,20 +2122,47 @@ struct ArrayNonObjectTypeImpl {
                   "JNI Error: Invalid array declaration, use Array { type{}, "
                   "Rank<kRank>{} }.");
   }
-
-  template <typename RawTypeRhs, std::size_t kRankRhs>
-  constexpr bool operator==(const Array<RawTypeRhs, kRankRhs>& rhs) const {
-    if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
-      return (raw_ == rhs.raw_);
-    }
-    return false;
-  }
-
-  template <typename RawTypeRhs, std::size_t kRankRhs>
-  constexpr bool operator!=(const Array<RawTypeRhs, kRankRhs>& rhs) const {
-    return !(*this == rhs);
-  }
 };
+
+template <typename T>
+struct ArrayComparisonHelper {};
+
+template <typename RawType, std::size_t kRank>
+struct ArrayComparisonHelper<Array<ArrayNonObjectTypeImpl<RawType, kRank>>> {
+  using type = RawType;
+};
+
+template <typename RawType, std::size_t kRank>
+struct ArrayComparisonHelper<Array<RawType, kRank>> {
+  using type = RawType;
+};
+
+template <typename T>
+using ArrayComparisonHelper_t = typename ArrayComparisonHelper<T>::type;
+
+template <typename T1, typename T2>
+static constexpr bool IsArrayComparable() {
+  return std::is_base_of_v<ArrayBase, T1> && std::is_base_of_v<ArrayBase, T2>;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Equality operators.
+////////////////////////////////////////////////////////////////////////////////
+template <typename T1, typename T2>
+constexpr std::enable_if_t<IsArrayComparable<T1, T2>(), bool> operator==(
+    const T1& lhs, const T2& rhs) {
+  if constexpr (std::is_same_v<ArrayComparisonHelper_t<T1>,
+                               ArrayComparisonHelper_t<T2>>) {
+    return (lhs.raw_ == rhs.raw_);
+  }
+  return false;
+}
+
+template <typename T1, typename T2>
+constexpr std::enable_if_t<IsArrayComparable<T1, T2>(), bool> operator!=(
+    const T1& lhs, const T2& rhs) {
+  return !(lhs == rhs);
+}
 
 // Primitive array implementaiton.
 template <typename T, std::size_t kRank, bool HoldsObject>
@@ -2119,27 +2176,32 @@ struct ArrayImpl : public ArrayNonObjectTypeImpl<T, kRank>,
 // Array Object Implementation.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename RawType, std::size_t kRank_>
-struct ArrayImpl<RawType, kRank_, true> : public ArrayTag<jobjectArray> {
+struct ArrayImpl<RawType, kRank_, true> : public ArrayTag<jobjectArray>,
+                                          ArrayBase {
   RawType raw_;
 
   constexpr ArrayImpl(RawType raw) : raw_(raw) {}
 
   template <std::size_t kRank>
   constexpr ArrayImpl(RawType raw, Rank<kRank>) : raw_(raw) {}
-
-  template <typename RawTypeRhs, std::size_t kRank>
-  constexpr bool operator==(const Array<RawTypeRhs, kRank>& rhs) const {
-    if constexpr (std::is_same_v<RawType, RawTypeRhs>) {
-      return (raw_ == rhs.raw_);
-    }
-    return false;
-  }
-
-  template <typename RawTypeRhs, std::size_t kRank>
-  constexpr bool operator!=(const Array<RawTypeRhs, kRank>& rhs) const {
-    return !(*this == rhs);
-  }
 };
+
+template <typename RawTypeLhs, std::size_t kRankLhs, typename RawTypeRhs,
+          std::size_t kRankRhs>
+constexpr bool operator==(const ArrayImpl<RawTypeLhs, kRankLhs, true>& lhs,
+                          const ArrayImpl<RawTypeRhs, kRankRhs, true>& rhs) {
+  if constexpr (std::is_same_v<RawTypeLhs, RawTypeRhs>) {
+    return (lhs.raw_ == rhs.raw_);
+  }
+  return false;
+}
+
+template <typename RawTypeLhs, std::size_t kRankLhs, typename RawTypeRhs,
+          std::size_t kRankRhs>
+constexpr bool operator!=(const ArrayImpl<RawTypeLhs, kRankLhs, true>& lhs,
+                          const Array<RawTypeRhs, kRankRhs>& rhs) {
+  return !(lhs == rhs);
+}
 
 // This type correlates to those used in declarations,
 //   e.g. Field { Array { Array { jint {} } } }.
@@ -2303,98 +2365,6 @@ using Increment_t = typename Increment<I>::template type<T>;
 
 }  // namespace jni::metaprogramming
 
-namespace jni {
-
-enum class LifecycleType {
-  LOCAL,
-  GLOBAL,
-  // WEAK, // not implemented yet.
-};
-
-template <typename Span, LifecycleType lifecycle_type>
-struct LifecycleHelper;
-
-// Shared implementation for local jobjects (jobject, jstring).
-template <typename Span>
-struct LifecycleLocalBase {
-  static inline void Delete(Span object) {
-    Trace(metaprogramming::LambdaToStr(STR("DeleteLocalRef")), object);
-
-#ifdef DRY_RUN
-#else
-    JniEnv::GetEnv()->DeleteLocalRef(object);
-#endif  // DRY_RUN
-  }
-
-  static inline Span NewReference(Span object) {
-    Trace(metaprogramming::LambdaToStr(STR("NewLocalRef")), object);
-
-#ifdef DRY_RUN
-    return Fake<Span>();
-#else
-    return static_cast<Span>(JniEnv::GetEnv()->NewLocalRef(object));
-#endif  // DRY_RUN
-  }
-};
-
-template <typename Span>
-struct LifecycleHelper<Span, LifecycleType::LOCAL>
-    : public LifecycleLocalBase<Span> {
-  using Base = LifecycleLocalBase<Span>;
-  using Base::Base;
-};
-
-// Shared implementation for global jobjects (jobject, jstring).
-template <typename Span>
-struct LifecycleGlobalBase {
-  static inline Span Promote(Span object) {
-    Trace(metaprogramming::LambdaToStr(STR("NewGlobalRef")), object);
-
-#ifdef DRY_RUN
-    jobject ret = Fake<jobject>();
-#else
-    jobject ret = JniEnv::GetEnv()->NewGlobalRef(object);
-#endif  // DRY_RUN
-
-    Trace(metaprogramming::LambdaToStr(STR("DeleteLocalRef")), object);
-
-#ifdef DRY_RUN
-#else
-    JniEnv::GetEnv()->DeleteLocalRef(object);
-#endif  // DRY_RUN
-
-    return static_cast<Span>(ret);
-  }
-
-  static inline void Delete(Span object) {
-    Trace(metaprogramming::LambdaToStr(STR("DeleteGlobalRef")), object);
-
-#ifdef DRY_RUN
-#else
-    JniEnv::GetEnv()->DeleteGlobalRef(object);
-#endif  // DRY_RUN
-  }
-
-  static inline Span NewReference(Span object) {
-    Trace(metaprogramming::LambdaToStr(STR("NewGlobalRef")), object);
-
-#ifdef DRY_RUN
-    return Fake<Span>();
-#else
-    return static_cast<Span>(JniEnv::GetEnv()->NewGlobalRef(object));
-#endif  // DRY_RUN
-  }
-};
-
-template <typename Span>
-struct LifecycleHelper<Span, LifecycleType::GLOBAL>
-    : public LifecycleLocalBase<Span> {
-  using Base = LifecycleGlobalBase<Span>;
-  using Base::Base;
-};
-
-}  // namespace jni
-
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
 #include <tuple>
@@ -2462,18 +2432,21 @@ class DefaultClassLoader {
   constexpr std::size_t IdxOfAncestor(std::size_t cur_idx = 0) const {
     return kClassNotInLoaderSetIdx;
   }
-
-  template <typename T>
-  bool constexpr operator==(const T& rhs) const {
-    return false;
-  }
-  bool constexpr operator==(const DefaultClassLoader&) const { return true; }
-
-  template <typename T>
-  bool constexpr operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
 };
+
+template <typename T>
+bool constexpr operator==(const DefaultClassLoader& lhs, const T& rhs) {
+  return false;
+}
+bool constexpr operator==(const DefaultClassLoader& lhs,
+                          const DefaultClassLoader& rhs) {
+  return true;
+}
+
+template <typename T>
+bool constexpr operator!=(const DefaultClassLoader& lhs, const T& rhs) {
+  return !(lhs == rhs);
+}
 
 // Class loader that cannot supply any classes. This should be the root loader
 // for most user defined classes.
@@ -2495,18 +2468,21 @@ class NullClassLoader {
   constexpr std::size_t IdxOfAncestor(std::size_t cur_idx = 0) const {
     return kClassNotInLoaderSetIdx;
   }
-
-  template <typename T>
-  bool constexpr operator==(const T& rhs) const {
-    return false;
-  }
-  bool constexpr operator==(const NullClassLoader&) const { return true; }
-
-  template <typename T>
-  bool constexpr operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
 };
+
+template <typename T>
+constexpr bool operator==(const NullClassLoader& lhs, const T& rhs) {
+  return false;
+}
+constexpr bool operator==(const NullClassLoader& lhs,
+                          const NullClassLoader& rhs) {
+  return true;
+}
+
+template <typename T>
+constexpr bool operator!=(const NullClassLoader& lhs, const T& rhs) {
+  return !(lhs == rhs);
+}
 
 static constexpr NullClassLoader kNullClassLoader;
 static constexpr DefaultClassLoader kDefaultClassLoader;
@@ -2740,101 +2716,93 @@ struct UserDefined;
 
 namespace jni {
 
-// jobject.
-template <>
-struct LifecycleHelper<jobject, LifecycleType::LOCAL>
-    : public LifecycleLocalBase<jobject> {
-  template <typename... CtorArgs>
-  static inline jobject Construct(jclass clazz, jmethodID ctor_method,
-                                  CtorArgs&&... ctor_args) {
-    Trace(metaprogramming::LambdaToStr(STR("NewObject")), clazz, ctor_method,
-          ctor_args...);
+enum class LifecycleType {
+  LOCAL,
+  GLOBAL,
+  // WEAK, // not implemented yet.
+};
+
+template <typename Span, LifecycleType lifecycle_type>
+struct LifecycleHelper;
+
+// Shared implementation for local jobjects (jobject, jstring).
+template <typename Span>
+struct LifecycleLocalBase {
+  static inline void Delete(Span object) {
+    Trace(metaprogramming::LambdaToStr(STR("DeleteLocalRef")), object);
 
 #ifdef DRY_RUN
-    return Fake<jobject>();
 #else
-    return JniEnv::GetEnv()->NewObject(clazz, ctor_method, ctor_args...);
+    JniEnv::GetEnv()->DeleteLocalRef(object);
+#endif  // DRY_RUN
+  }
+
+  static inline Span NewReference(Span object) {
+    Trace(metaprogramming::LambdaToStr(STR("NewLocalRef")), object);
+
+#ifdef DRY_RUN
+    return Fake<Span>();
+#else
+    return static_cast<Span>(JniEnv::GetEnv()->NewLocalRef(object));
 #endif  // DRY_RUN
   }
 };
 
-template <>
-struct LifecycleHelper<jobject, LifecycleType::GLOBAL>
-    : public LifecycleGlobalBase<jobject> {
-  template <typename... CtorArgs>
-  static inline jobject Construct(jclass clazz, jmethodID ctor_method,
-                                  CtorArgs&&... ctor_args) {
-    using Local = LifecycleHelper<jobject, LifecycleType::LOCAL>;
+template <typename Span>
+struct LifecycleHelper<Span, LifecycleType::LOCAL>
+    : public LifecycleLocalBase<Span> {
+  using Base = LifecycleLocalBase<Span>;
+  using Base::Base;
+};
 
-    jobject local_object = Local::Construct(
-        clazz, ctor_method, std::forward<CtorArgs&&>(ctor_args)...);
-    jobject global_object = Promote(local_object);
-    Local::Delete(local_object);
+// Shared implementation for global jobjects (jobject, jstring).
+template <typename Span>
+struct LifecycleGlobalBase {
+  static inline Span Promote(Span object) {
+    Trace(metaprogramming::LambdaToStr(STR("NewGlobalRef")), object);
 
-    return global_object;
+#ifdef DRY_RUN
+    jobject ret = Fake<jobject>();
+#else
+    jobject ret = JniEnv::GetEnv()->NewGlobalRef(object);
+#endif  // DRY_RUN
+
+    Trace(metaprogramming::LambdaToStr(STR("DeleteLocalRef")), object);
+
+#ifdef DRY_RUN
+#else
+    JniEnv::GetEnv()->DeleteLocalRef(object);
+#endif  // DRY_RUN
+
+    return static_cast<Span>(ret);
+  }
+
+  static inline void Delete(Span object) {
+    Trace(metaprogramming::LambdaToStr(STR("DeleteGlobalRef")), object);
+
+#ifdef DRY_RUN
+#else
+    JniEnv::GetEnv()->DeleteGlobalRef(object);
+#endif  // DRY_RUN
+  }
+
+  static inline Span NewReference(Span object) {
+    Trace(metaprogramming::LambdaToStr(STR("NewGlobalRef")), object);
+
+#ifdef DRY_RUN
+    return Fake<Span>();
+#else
+    return static_cast<Span>(JniEnv::GetEnv()->NewGlobalRef(object));
+#endif  // DRY_RUN
   }
 };
 
-// jclass.
-template <>
-struct LifecycleHelper<jclass, LifecycleType::LOCAL>
-    : public LifecycleLocalBase<jclass> {};
-
-template <>
-struct LifecycleHelper<jclass, LifecycleType::GLOBAL>
-    : public LifecycleGlobalBase<jclass> {};
-
-}  // namespace jni
-
-// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
-
-#include <cstddef>
-#include <tuple>
-#include <utility>
-
-namespace jni {
-
-template <typename... ClassLoaderTs>
-class Jvm {
- public:
-  const std::tuple<ClassLoaderTs...> class_loaders_;
-
-  constexpr Jvm(ClassLoaderTs... class_loaders)
-      : class_loaders_(class_loaders...) {}
-
-  template <const auto& class_loader_v, std::size_t... Is>
-  constexpr size_t IdxOfClassLoaderHelper(
-      std::integer_sequence<std::size_t, Is...>) const {
-    return metaprogramming::ModifiedMax(
-        {((std::get<Is>(class_loaders_) == class_loader_v) ? Is : -1)...});
-  }
-
-  // Returns the index for a given classloader within this set (any given class
-  // ref is defined by this index).
-  template <const auto& class_loader_v>
-  constexpr size_t IdxOfClassLoader() const {
-    return IdxOfClassLoaderHelper<class_loader_v>(
-        std::make_integer_sequence<std::size_t, sizeof...(ClassLoaderTs)>());
-  }
-
-  template <typename T>
-  bool constexpr operator==(const T& rhs) const {
-    return false;
-  }
-  bool constexpr operator==(const Jvm&) const { return true; }
-
-  template <typename T>
-  bool constexpr operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
+template <typename Span>
+struct LifecycleHelper<Span, LifecycleType::GLOBAL>
+    : public LifecycleLocalBase<Span> {
+  using Base = LifecycleGlobalBase<Span>;
+  using Base::Base;
 };
-
-template <typename... ClassLoaderTs>
-Jvm(ClassLoaderTs...) -> Jvm<ClassLoaderTs...>;
-
-// Convenience Jvm definition.
-// Compatible with default class loader or specified loaders.
-inline constexpr Jvm kDefaultJvm{kDefaultClassLoader};
 
 }  // namespace jni
 
@@ -2858,6 +2826,7 @@ enum class IdType {
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include <cstddef>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -2901,20 +2870,6 @@ class ClassLoader : public Object {
       : Object(class_loader_name),
         parent_loader_(parent_loader),
         supported_classes_(supported_class_set.supported_classes_) {}
-
-  bool constexpr operator==(
-      const ClassLoader<ParentLoader_, SupportedClasses_...>& rhs) const {
-    return (*this).parent_loader_ == rhs.parent_loader_ &&
-           (*this).supported_classes_ == rhs.supported_classes_;
-  }
-  template <typename T>
-  bool constexpr operator==(const T& rhs) const {
-    return false;
-  }
-  template <typename T>
-  bool constexpr operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
 
   template <const auto& class_v, std::size_t... Is>
   constexpr std::size_t IdxOfClassHelper(
@@ -2965,6 +2920,33 @@ class ClassLoader : public Object {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Equality operators.
+////////////////////////////////////////////////////////////////////////////////
+template <typename ParentLoader_, typename... SupportedClasses_>
+bool constexpr operator==(
+    const ClassLoader<ParentLoader_, SupportedClasses_...>& lhs,
+    const ClassLoader<ParentLoader_, SupportedClasses_...>& rhs) {
+  return lhs.parent_loader_ == rhs.parent_loader_ &&
+         lhs.supported_classes_ == rhs.supported_classes_;
+}
+
+template <typename ParentLoader_, typename... SupportedClasses_, typename T>
+bool constexpr operator==(
+    const ClassLoader<ParentLoader_, SupportedClasses_...>& lhs, const T& rhs) {
+  return false;
+}
+
+template <typename ParentLoader_, typename... SupportedClasses_, typename T>
+bool constexpr operator!=(
+    const ClassLoader<ParentLoader_, SupportedClasses_...>& lhs, const T& rhs) {
+  return !(lhs == rhs);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// CTAD.
+////////////////////////////////////////////////////////////////////////////////
+
 // Note: Null is chosen, not default, because LoadedBy requires a syntax like
 // LoadedBy{ClassLoader{"kClass"}} (using the CTAD loader type below), but
 // we want to prevent explicit usage of a default loader (as it makes no sense).
@@ -2980,6 +2962,9 @@ template <typename... SupportedClasses_>
 ClassLoader(SupportedClassSet<SupportedClasses_...>)
     -> ClassLoader<DefaultClassLoader, SupportedClasses_...>;
 
+////////////////////////////////////////////////////////////////////////////////
+// Ancestral lookups.
+////////////////////////////////////////////////////////////////////////////////
 template <typename T, std::size_t I>
 constexpr auto& GetAncestor(const T& loader) {
   if constexpr (I == 0) {
@@ -3456,13 +3441,13 @@ class RefBase : public RefBaseBase {
             typename = std::enable_if_t<std::is_same_v<T, StorageType>>>
   RefBase(RefBase<T>&& rhs) : object_ref_(rhs.Release()) {}
 
+  // Releases ownership of the underlying object, further use is undefined.
   StorageType Release() {
     StorageType return_value = object_ref_;
     object_ref_ = nullptr;
 
     return return_value;
   }
-
   explicit operator StorageType() const { return object_ref_; }
 
  protected:
@@ -3522,6 +3507,8 @@ static constexpr bool IsConvertibleKey_v =
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include <cstddef>
+
 namespace jni {
 
 // Use these pass through macros to avoid clang-tidy warnings.
@@ -3534,6 +3521,9 @@ namespace jni {
 
 // Provide this base tag to UserDefined to enable custom types.
 struct JniUserDefinedCorpusTag {};
+
+// ArrayViewHelperBase (shared by all `ArrayView`).
+struct ArrayViewHelperBase;
 
 // ArrayView Helper.
 template <typename T>
@@ -3982,6 +3972,63 @@ constexpr auto StripClassLoaderFromLoadedBy(T val) {
     return val;
   }
 }
+
+}  // namespace jni
+
+// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
+
+#include <cstddef>
+#include <tuple>
+#include <utility>
+
+namespace jni {
+
+template <typename... ClassLoaderTs>
+class Jvm {
+ public:
+  const std::tuple<ClassLoaderTs...> class_loaders_;
+
+  constexpr Jvm(ClassLoaderTs... class_loaders)
+      : class_loaders_(class_loaders...) {}
+
+  template <const auto& class_loader_v, std::size_t... Is>
+  constexpr size_t IdxOfClassLoaderHelper(
+      std::integer_sequence<std::size_t, Is...>) const {
+    return metaprogramming::ModifiedMax(
+        {((std::get<Is>(class_loaders_) == class_loader_v) ? Is : -1)...});
+  }
+
+  // Returns the index for a given classloader within this set (any given class
+  // ref is defined by this index).
+  template <const auto& class_loader_v>
+  constexpr size_t IdxOfClassLoader() const {
+    return IdxOfClassLoaderHelper<class_loader_v>(
+        std::make_integer_sequence<std::size_t, sizeof...(ClassLoaderTs)>());
+  }
+};
+
+template <typename... ClassLoaderTs, typename T>
+constexpr bool operator==(const Jvm<ClassLoaderTs...>& lhs, const T& rhs) {
+  return false;
+}
+
+template <typename... ClassLoaderLhsTs>
+constexpr bool operator==(const Jvm<ClassLoaderLhsTs...>& lhs,
+                          const Jvm<ClassLoaderLhsTs...>& rhs) {
+  return true;
+}
+
+template <typename... ClassLoaderTs, typename T>
+bool constexpr operator!=(const Jvm<ClassLoaderTs...>& lhs, const T& rhs) {
+  return !(lhs == rhs);
+}
+
+template <typename... ClassLoaderTs>
+Jvm(ClassLoaderTs...) -> Jvm<ClassLoaderTs...>;
+
+// Convenience Jvm definition.
+// Compatible with default class loader or specified loaders.
+inline constexpr Jvm kDefaultJvm{kDefaultClassLoader};
 
 }  // namespace jni
 
@@ -4439,67 +4486,53 @@ struct JniTSelector {
 
 }  // namespace jni
 
-#include <cstddef>
-#include <tuple>
-#include <utility>
+namespace jni {
 
-namespace jni::metaprogramming {
+// jobject.
+template <>
+struct LifecycleHelper<jobject, LifecycleType::LOCAL>
+    : public LifecycleLocalBase<jobject> {
+  template <typename... CtorArgs>
+  static inline jobject Construct(jclass clazz, jmethodID ctor_method,
+                                  CtorArgs&&... ctor_args) {
+    Trace(metaprogramming::LambdaToStr(STR("NewObject")), clazz, ctor_method,
+          ctor_args...);
 
-template <class T, std::size_t>
-using T_ = T;
-
-template <class DefaultType, std::size_t... Is>
-auto TupleFromSize(std::index_sequence<Is...>) {
-  return std::tuple<T_<DefaultType, Is>...>{};
-}
-
-// Takes a type and returns a std::tuple of DefaultValues.
-template <class DefaultType, std::size_t N>
-auto TupleFromSize() {
-  return TupleFromSize<DefaultType>(std::make_index_sequence<N>{});
-}
-
-template <class DefaultType, std::size_t N>
-using TupleFromSize_t = decltype(TupleFromSize<DefaultType, N>());
-
-}  // namespace jni::metaprogramming
-
-#include <cstddef>
-#include <tuple>
-#include <type_traits>
-#include <utility>
-
-namespace jni::metaprogramming {
-
-// Returns a null pointer of the type of the two input tuples interleaved.
-template <class Tuple1, class Tuple2, std::size_t... indices>
-auto Interleave(std::integer_sequence<std::size_t, indices...>)
-    -> decltype(std::tuple_cat(
-        std::make_tuple(std::get<indices>(std::declval<Tuple1>()),
-                        std::get<indices>(std::declval<Tuple2>()))...))* {
-  // This interleave is for *types only*, all values within the tuples are
-  // completely incidental.  In the event there is no default constructor, it
-  // won't be possible to return a value, so, instead, return a pointer (which
-  // won't be used) and infer the type by stripping the pointer.
-  return nullptr;
-}
-
-template <class Tuple1, class Tuple2>
-auto Interleave() {
-  return Interleave<Tuple1, Tuple2>(
-      std::make_index_sequence<std::tuple_size<Tuple1>::value>());
-}
-
-template <typename T0, typename T1>
-struct Interleaved;
-
-template <typename... T0, typename... T1>
-struct Interleaved<std::tuple<T0...>, std::tuple<T1...>> {
-  using type = std::remove_pointer_t<
-      decltype(Interleave<std::tuple<T0...>, std::tuple<T1...>>())>;
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
+    return JniEnv::GetEnv()->NewObject(clazz, ctor_method, ctor_args...);
+#endif  // DRY_RUN
+  }
 };
 
-}  // namespace jni::metaprogramming
+template <>
+struct LifecycleHelper<jobject, LifecycleType::GLOBAL>
+    : public LifecycleGlobalBase<jobject> {
+  template <typename... CtorArgs>
+  static inline jobject Construct(jclass clazz, jmethodID ctor_method,
+                                  CtorArgs&&... ctor_args) {
+    using Local = LifecycleHelper<jobject, LifecycleType::LOCAL>;
+
+    jobject local_object = Local::Construct(
+        clazz, ctor_method, std::forward<CtorArgs&&>(ctor_args)...);
+    jobject global_object = Promote(local_object);
+    Local::Delete(local_object);
+
+    return global_object;
+  }
+};
+
+// jclass.
+template <>
+struct LifecycleHelper<jclass, LifecycleType::LOCAL>
+    : public LifecycleLocalBase<jclass> {};
+
+template <>
+struct LifecycleHelper<jclass, LifecycleType::GLOBAL>
+    : public LifecycleGlobalBase<jclass> {};
+
+}  // namespace jni
 
 #include <cstddef>
 #include <type_traits>
@@ -5022,381 +5055,6 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, false> {
     return static_cast<jobjectArray>(jni::JniEnv::GetEnv()->CallObjectMethod(
         object, method_id, std::forward<Ts>(ts)...));
 #endif
-  }
-};
-
-}  // namespace jni
-
-#include <cstddef>
-#include <type_traits>
-
-namespace jni {
-
-template <typename Raw, std::size_t kRank = 0, bool kStatic = false,
-          typename Enable = void>
-struct FieldHelper {
-  static Raw GetValue(jobject object_ref, jfieldID field_ref_);
-
-  static void SetValue(jobject object_ref, jfieldID field_ref_, Raw&& value);
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank 0: Primitive types (e.g. int).
-////////////////////////////////////////////////////////////////////////////////
-template <>
-struct FieldHelper<jboolean, 0, false, void> {
-  static inline jboolean GetValue(const jobject object_ref,
-                                  const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jboolean>();
-#else
-    return jni::JniEnv::GetEnv()->GetBooleanField(object_ref, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jboolean&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetBooleanField(object_ref, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jbyte, 0, false, void> {
-  static inline jbyte GetValue(const jobject object_ref,
-                               const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetByteValue")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jbyte>();
-#else
-    return jni::JniEnv::GetEnv()->GetByteField(object_ref, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jbyte&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetByteValue")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetByteField(object_ref, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jchar, 0, false, void> {
-  static inline jchar GetValue(const jobject object_ref,
-                               const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetCharValue")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jchar>();
-#else
-    return jni::JniEnv::GetEnv()->GetCharField(object_ref, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jchar&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetCharValue")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetCharField(object_ref, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jshort, 0, false, void> {
-  static inline jshort GetValue(const jobject object_ref,
-                                const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetShortValue")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jshort>();
-#else
-    return jni::JniEnv::GetEnv()->GetShortField(object_ref, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jshort&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetShortValue")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetShortField(object_ref, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jint, 0, false, void> {
-  static inline jint GetValue(const jobject object_ref,
-                              const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetIntValue")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jint>();
-#else
-    return jni::JniEnv::GetEnv()->GetIntField(object_ref, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jint&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetIntValue")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetIntField(object_ref, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jlong, 0, false, void> {
-  static inline jlong GetValue(const jobject object_ref,
-                               const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetLongField")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jlong>();
-#else
-    return jni::JniEnv::GetEnv()->GetLongField(object_ref, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jlong&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetLongField")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetLongField(object_ref, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jfloat, 0, false, void> {
-  static inline jfloat GetValue(const jobject object_ref,
-                                const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetFloatField")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return 123.f;
-#else
-    return jni::JniEnv::GetEnv()->GetFloatField(object_ref, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jfloat&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetFloatField")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetFloatField(object_ref, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jdouble, 0, false, void> {
-  static inline jdouble GetValue(const jobject object_ref,
-                                 const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetDoubleField")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return 123.;
-#else
-    return jni::JniEnv::GetEnv()->GetDoubleField(object_ref, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jdouble&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetDoubleField")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetDoubleField(object_ref, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jobject, 0, false, void> {
-  static inline jobject GetValue(const jobject object_ref,
-                                 const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jobject>();
-#else
-    return jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jobject&& new_value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jstring, 0, false, void> {
-  static inline jstring GetValue(const jobject object_ref,
-                                 const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jstring>();
-#else
-    return reinterpret_cast<jstring>(
-        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jstring&& new_value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
-#endif  // DRY_RUN
-  }
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank 1: Single dimension arrays (e.g. int[]).
-////////////////////////////////////////////////////////////////////////////////
-template <typename ArrayType>
-struct BaseFieldArrayHelper {
-  static inline ArrayType GetValue(const jobject object_ref,
-                                   const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetObjectField, Rank 1")),
-          object_ref, field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<ArrayType>();
-#else
-    return static_cast<ArrayType>(
-        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, ArrayType&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, false, void>
-    : BaseFieldArrayHelper<jbooleanArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, false, void>
-    : BaseFieldArrayHelper<jbyteArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, false, void>
-    : BaseFieldArrayHelper<jcharArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, false, void>
-    : BaseFieldArrayHelper<jshortArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jint>, kRank, false, void>
-    : BaseFieldArrayHelper<jintArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, false, void>
-    : BaseFieldArrayHelper<jlongArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, false, void>
-    : BaseFieldArrayHelper<jfloatArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, false, void>
-    : BaseFieldArrayHelper<jdoubleArray> {};
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank 1: jobjects & jstrings.
-// Rank 2+: Multi-dimension arrays (e.g. int[][], int[][][]).
-////////////////////////////////////////////////////////////////////////////////
-template <typename T, std::size_t kRank>
-struct FieldHelper<
-    T, kRank, false,
-    std::enable_if_t<(std::is_same_v<jobject, T> ||
-                      std::is_same_v<jstring, T> || (kRank > 1))>> {
-  static inline jobjectArray GetValue(const jobject object_ref,
-                                      const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetObjectField, Rank >1")),
-          object_ref, field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jobjectArray>();
-#else
-    return static_cast<jobjectArray>(
-        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jobjectArray&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetObjectField, Rank >1")),
-          object_ref, field_ref_);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
-#endif  // DRY_RUN
   }
 };
 
@@ -6064,132 +5722,27 @@ static constexpr bool UnfurlDisjunction_v =
 }  // namespace jni::metaprogramming
 
 #include <cstddef>
-#include <string_view>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 
 namespace jni::metaprogramming {
 
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
-          typename IndexSequenceType>
-class QueryableMapBase {};
+template <class T, std::size_t>
+using T_ = T;
 
-// This is an interface that can be inherited from to expose an
-// operator["name"]. It provides compile time string index lookup with no macros
-// although it is dependent on a clang extension.
-//
-// To use this API, inherit from this class using template types as follows:
-//
-// |CrtpBase|: The name of the class inheriting from the map.  This class
-//   will inherit an operator[].  It must implement this exact signature:
-//
-//    template <std::size_t I>
-//    auto QueryableMapCall(const char* key);
-//
-// |tup_container_v| is a static instance of an object whose |nameable_member|
-//   contains a public field called name_.  It might seem strange not to
-//   directly pass a const auto&, however, this prevents accessing subobjects.
-//
-// The motivation for using inheritance as opposed to a simple member is that
-// the the const char cannot be propagated without losing its constexpr-ness,
-// and so the clang extension can no longer restrict function candidates.
-template <typename CrtpBase, const auto& tup_container_v,
-          std::size_t container_size, typename TupContainerT,
-          const auto TupContainerT::*nameable_member>
-class QueryableMap
-    : public QueryableMapBase<CrtpBase, tup_container_v, TupContainerT,
-                              nameable_member,
-                              std::make_index_sequence<container_size>> {};
+template <class DefaultType, std::size_t... Is>
+auto TupleFromSize(std::index_sequence<Is...>) {
+  return std::tuple<T_<DefaultType, Is>...>{};
+}
 
-template <typename CrtpBase, const auto& tup_container_v,
-          const auto std::decay_t<decltype(tup_container_v)>::*nameable_member>
-using QueryableMap_t =
-    QueryableMap<CrtpBase, tup_container_v,
-                 std::tuple_size_v<std::decay_t<decltype((tup_container_v.*
-                                                          nameable_member))>>,
-                 std::decay_t<decltype(tup_container_v)>, nameable_member>;
+// Takes a type and returns a std::tuple of DefaultValues.
+template <class DefaultType, std::size_t N>
+auto TupleFromSize() {
+  return TupleFromSize<DefaultType>(std::make_index_sequence<N>{});
+}
 
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
-          std::size_t I>
-class QueryableMapEntry;
-
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
-          std::size_t... idxs>
-class QueryableMapBase<CrtpBase, tup_container_v, TupContainerT,
-                       nameable_member, std::index_sequence<idxs...>>
-    : public QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                               nameable_member, idxs>... {
- public:
-  using QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                          nameable_member, idxs>::operator[]...;
-
-  using QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                          nameable_member, idxs>::Contains...;
-
-  // Will select subclass specialisations if present.
-  constexpr bool Contains(const char* key) { return false; }
-};
-
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
-          std::size_t I>
-class QueryableMapEntry {
- public:
-#if __clang__
-  // This function blurs the distinction between type and value space.  The
-  // clang extension allows the key to be wrapped in a constexpr way.  This
-  // allows for string to string comparison based on the static value the class
-  // is templated by.
-  //
-  // The reason the TypeMap interface requires inheritance as opposed to simply
-  // holding an instance of this map (like you would with a regular hash map) is
-  // the constexpr-ness of the string can't be propagated.  This essentially
-  // means you get one shot at defining the function.
-  constexpr auto operator[](const char* key) __attribute__((
-      enable_if(std::string_view(key) ==
-                    std::get<I>(tup_container_v.*nameable_member).name_,
-                ""))) {
-    static_assert(std::is_base_of_v<QueryableMapEntry, CrtpBase>,
-                  "You must derive from the invocable map.");
-
-    return (*static_cast<CrtpBase*>(this)).template QueryableMapCall<I>(key);
-  }
-
-  constexpr bool Contains(const char* key) __attribute__((
-      enable_if(std::string_view(key) ==
-                    std::get<I>(tup_container_v.*nameable_member).name_,
-                ""))) {
-    return true;
-  }
-#else
-  static_assert(false,
-                "This container requires clang for compile time strings.");
-#endif
-};
-
-}  // namespace jni::metaprogramming
-
-#include <optional>
-#include <tuple>
-
-namespace jni::metaprogramming {
-
-template <typename>
-struct OptionalTup {};
-
-// Takes a _tuple_ of types and returns a tuple with the same types except
-// wrapped in std::optional.
-template <typename... Ts>
-struct OptionalTup<std::tuple<Ts...>> {
-  using type = std::tuple<std::optional<Ts>...>;
-};
-
-template <typename... Ts>
-using OptionalTup_t = typename OptionalTup<Ts...>::type;
+template <class DefaultType, std::size_t N>
+using TupleFromSize_t = decltype(TupleFromSize<DefaultType, N>());
 
 }  // namespace jni::metaprogramming
 
@@ -6237,6 +5790,43 @@ static constexpr auto Min_v = Min_t<T1, T2>::val;
 
 }  // namespace jni::metaprogramming
 
+#include <cstddef>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+// Returns a null pointer of the type of the two input tuples interleaved.
+template <class Tuple1, class Tuple2, std::size_t... indices>
+auto Interleave(std::integer_sequence<std::size_t, indices...>)
+    -> decltype(std::tuple_cat(
+        std::make_tuple(std::get<indices>(std::declval<Tuple1>()),
+                        std::get<indices>(std::declval<Tuple2>()))...))* {
+  // This interleave is for *types only*, all values within the tuples are
+  // completely incidental.  In the event there is no default constructor, it
+  // won't be possible to return a value, so, instead, return a pointer (which
+  // won't be used) and infer the type by stripping the pointer.
+  return nullptr;
+}
+
+template <class Tuple1, class Tuple2>
+auto Interleave() {
+  return Interleave<Tuple1, Tuple2>(
+      std::make_index_sequence<std::tuple_size<Tuple1>::value>());
+}
+
+template <typename T0, typename T1>
+struct Interleaved;
+
+template <typename... T0, typename... T1>
+struct Interleaved<std::tuple<T0...>, std::tuple<T1...>> {
+  using type = std::remove_pointer_t<
+      decltype(Interleave<std::tuple<T0...>, std::tuple<T1...>>())>;
+};
+
+}  // namespace jni::metaprogramming
+
 #include <tuple>
 
 namespace jni::metaprogramming {
@@ -6267,273 +5857,287 @@ using Call_t = typename Call::type<T>;
 
 namespace jni {
 
+template <typename Raw, std::size_t kRank = 0, bool kStatic = false,
+          typename Enable = void>
+struct FieldHelper {
+  static Raw GetValue(jobject object_ref, jfieldID field_ref_);
+
+  static void SetValue(jobject object_ref, jfieldID field_ref_, Raw&& value);
+};
+
 ////////////////////////////////////////////////////////////////////////////////
-// Rank 0: Static primitive types (e.g. int).
+// Rank 0: Primitive types (e.g. int).
 ////////////////////////////////////////////////////////////////////////////////
 template <>
-struct FieldHelper<jboolean, 0, true, void> {
-  static inline jboolean GetValue(const jclass clazz,
+struct FieldHelper<jboolean, 0, false, void> {
+  static inline jboolean GetValue(const jobject object_ref,
                                   const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticBooleanField")), clazz,
+    Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
           field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jboolean>();
 #else
-    return jni::JniEnv::GetEnv()->GetStaticBooleanField(clazz, field_ref_);
+    return jni::JniEnv::GetEnv()->GetBooleanField(object_ref, field_ref_);
 #endif  // DRY_RUN
   }
 
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jboolean&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticBooleanField")), clazz,
-          field_ref_, value);
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jboolean&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
+          field_ref_);
 
 #ifdef DRY_RUN
 #else
-    jni::JniEnv::GetEnv()->SetStaticBooleanField(clazz, field_ref_, value);
+    jni::JniEnv::GetEnv()->SetBooleanField(object_ref, field_ref_, value);
 #endif  // DRY_RUN
   }
 };
 
 template <>
-struct FieldHelper<jbyte, 0, true, void> {
-  static inline jbyte GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticByteField")), clazz,
+struct FieldHelper<jbyte, 0, false, void> {
+  static inline jbyte GetValue(const jobject object_ref,
+                               const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetByteValue")), object_ref,
           field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jbyte>();
 #else
-    return jni::JniEnv::GetEnv()->GetStaticByteField(clazz, field_ref_);
+    return jni::JniEnv::GetEnv()->GetByteField(object_ref, field_ref_);
 #endif  // DRY_RUN
   }
 
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jbyte&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticByteField")), clazz,
-          field_ref_, value);
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jbyte&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetByteValue")), object_ref,
+          field_ref_);
 
 #ifdef DRY_RUN
 #else
-    return jni::JniEnv::GetEnv()->SetStaticByteField(clazz, field_ref_, value);
+    jni::JniEnv::GetEnv()->SetByteField(object_ref, field_ref_, value);
 #endif  // DRY_RUN
   }
 };
 
 template <>
-struct FieldHelper<jchar, 0, true, void> {
-  static inline jchar GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticCharField")), clazz,
+struct FieldHelper<jchar, 0, false, void> {
+  static inline jchar GetValue(const jobject object_ref,
+                               const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetCharValue")), object_ref,
           field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jchar>();
 #else
-    return jni::JniEnv::GetEnv()->GetStaticCharField(clazz, field_ref_);
+    return jni::JniEnv::GetEnv()->GetCharField(object_ref, field_ref_);
 #endif  // DRY_RUN
   }
 
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jchar&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticCharField")), clazz,
-          field_ref_, value);
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jchar&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetCharValue")), object_ref,
+          field_ref_);
 
 #ifdef DRY_RUN
 #else
-    jni::JniEnv::GetEnv()->SetStaticCharField(clazz, field_ref_, value);
+    jni::JniEnv::GetEnv()->SetCharField(object_ref, field_ref_, value);
 #endif  // DRY_RUN
   }
 };
 
 template <>
-struct FieldHelper<jshort, 0, true, void> {
-  static inline jshort GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticShortField")), clazz,
+struct FieldHelper<jshort, 0, false, void> {
+  static inline jshort GetValue(const jobject object_ref,
+                                const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetShortValue")), object_ref,
           field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jshort>();
 #else
-    return jni::JniEnv::GetEnv()->GetStaticShortField(clazz, field_ref_);
+    return jni::JniEnv::GetEnv()->GetShortField(object_ref, field_ref_);
 #endif  // DRY_RUN
   }
 
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jshort&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticShortField")), clazz,
-          field_ref_, value);
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jshort&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetShortValue")), object_ref,
+          field_ref_);
 
 #ifdef DRY_RUN
 #else
-    jni::JniEnv::GetEnv()->SetStaticShortField(clazz, field_ref_, value);
+    jni::JniEnv::GetEnv()->SetShortField(object_ref, field_ref_, value);
 #endif  // DRY_RUN
   }
 };
 
 template <>
-struct FieldHelper<jint, 0, true, void> {
-  static inline jint GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticIntField")), clazz,
+struct FieldHelper<jint, 0, false, void> {
+  static inline jint GetValue(const jobject object_ref,
+                              const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetIntValue")), object_ref,
           field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jint>();
 #else
-    return jni::JniEnv::GetEnv()->GetStaticIntField(clazz, field_ref_);
+    return jni::JniEnv::GetEnv()->GetIntField(object_ref, field_ref_);
 #endif  // DRY_RUN
   }
 
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jint&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticIntField")), clazz,
-          field_ref_, value);
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jint&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetIntValue")), object_ref,
+          field_ref_);
 
 #ifdef DRY_RUN
 #else
-    jni::JniEnv::GetEnv()->SetStaticIntField(clazz, field_ref_, value);
+    jni::JniEnv::GetEnv()->SetIntField(object_ref, field_ref_, value);
 #endif  // DRY_RUN
   }
 };
 
 template <>
-struct FieldHelper<jlong, 0, true, void> {
-  static inline jlong GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticLongField")), clazz,
+struct FieldHelper<jlong, 0, false, void> {
+  static inline jlong GetValue(const jobject object_ref,
+                               const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetLongField")), object_ref,
           field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jlong>();
 #else
-    return jni::JniEnv::GetEnv()->GetStaticLongField(clazz, field_ref_);
+    return jni::JniEnv::GetEnv()->GetLongField(object_ref, field_ref_);
 #endif  // DRY_RUN
   }
 
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jlong&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticLongField")), clazz,
-          field_ref_, value);
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jlong&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetLongField")), object_ref,
+          field_ref_);
 
 #ifdef DRY_RUN
 #else
-    jni::JniEnv::GetEnv()->SetStaticLongField(clazz, field_ref_, value);
+    jni::JniEnv::GetEnv()->SetLongField(object_ref, field_ref_, value);
 #endif  // DRY_RUN
   }
 };
 
 template <>
-struct FieldHelper<jfloat, 0, true, void> {
-  static inline jfloat GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticFloatField")), clazz,
+struct FieldHelper<jfloat, 0, false, void> {
+  static inline jfloat GetValue(const jobject object_ref,
+                                const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetFloatField")), object_ref,
           field_ref_);
 
 #ifdef DRY_RUN
     return 123.f;
 #else
-    return jni::JniEnv::GetEnv()->GetStaticFloatField(clazz, field_ref_);
+    return jni::JniEnv::GetEnv()->GetFloatField(object_ref, field_ref_);
 #endif  // DRY_RUN
   }
 
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jfloat&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticFloatField")), clazz,
-          field_ref_, value);
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jfloat&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetFloatField")), object_ref,
+          field_ref_);
 
 #ifdef DRY_RUN
 #else
-    jni::JniEnv::GetEnv()->SetStaticFloatField(clazz, field_ref_, value);
+    jni::JniEnv::GetEnv()->SetFloatField(object_ref, field_ref_, value);
 #endif  // DRY_RUN
   }
 };
 
 template <>
-struct FieldHelper<jdouble, 0, true, void> {
-  static inline jdouble GetValue(const jclass clazz,
+struct FieldHelper<jdouble, 0, false, void> {
+  static inline jdouble GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticDoubleField")), clazz,
+    Trace(metaprogramming::LambdaToStr(STR("GetDoubleField")), object_ref,
           field_ref_);
 
 #ifdef DRY_RUN
     return 123.;
 #else
-    return jni::JniEnv::GetEnv()->GetStaticDoubleField(clazz, field_ref_);
+    return jni::JniEnv::GetEnv()->GetDoubleField(object_ref, field_ref_);
 #endif  // DRY_RUN
   }
 
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jdouble&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticDoubleField")), clazz,
-          field_ref_, value);
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jdouble&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetDoubleField")), object_ref,
+          field_ref_);
 
 #ifdef DRY_RUN
 #else
-    jni::JniEnv::GetEnv()->SetStaticDoubleField(clazz, field_ref_, value);
+    jni::JniEnv::GetEnv()->SetDoubleField(object_ref, field_ref_, value);
 #endif  // DRY_RUN
   }
 };
 
 template <>
-struct FieldHelper<jobject, 0, true, void> {
-  static inline jobject GetValue(const jclass clazz,
+struct FieldHelper<jobject, 0, false, void> {
+  static inline jobject GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
           field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jobject>();
 #else
-    return jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_);
+    return jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_);
 #endif  // DRY_RUN
   }
 
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jobject&& new_value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
-          field_ref_, new_value);
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jobject&& new_value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
+          field_ref_);
 
 #ifdef DRY_RUN
 #else
-    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
 #endif  // DRY_RUN
   }
 };
 
 template <>
-struct FieldHelper<jstring, 0, true, void> {
-  static inline jstring GetValue(const jclass clazz,
+struct FieldHelper<jstring, 0, false, void> {
+  static inline jstring GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
           field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jstring>();
 #else
     return reinterpret_cast<jstring>(
-        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
 #endif  // DRY_RUN
   }
 
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jstring&& new_value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
-          field_ref_, new_value);
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jstring&& new_value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
+          field_ref_);
 
 #ifdef DRY_RUN
 #else
-    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, new_value);
 #endif  // DRY_RUN
   }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Rank 1: Static single dimension arrays (e.g. int[]).
+// Rank 1: Single dimension arrays (e.g. int[]).
 ////////////////////////////////////////////////////////////////////////////////
 template <typename ArrayType>
-struct StaticBaseFieldArrayHelper {
+struct BaseFieldArrayHelper {
   static inline ArrayType GetValue(const jobject object_ref,
                                    const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
-          field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField, Rank 1")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<ArrayType>();
@@ -6546,7 +6150,7 @@ struct StaticBaseFieldArrayHelper {
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, ArrayType&& value) {
     Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
-          field_ref_, value);
+          field_ref_);
 
 #ifdef DRY_RUN
 #else
@@ -6556,66 +6160,67 @@ struct StaticBaseFieldArrayHelper {
 };
 
 template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jbooleanArray> {};
+struct FieldHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, false, void>
+    : BaseFieldArrayHelper<jbooleanArray> {};
 
 template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jbyteArray> {};
+struct FieldHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, false, void>
+    : BaseFieldArrayHelper<jbyteArray> {};
 
 template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jcharArray> {};
+struct FieldHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, false, void>
+    : BaseFieldArrayHelper<jcharArray> {};
 
 template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jshortArray> {};
+struct FieldHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, false, void>
+    : BaseFieldArrayHelper<jshortArray> {};
 
 template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jint>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jintArray> {};
+struct FieldHelper<std::enable_if_t<(kRank == 1), jint>, kRank, false, void>
+    : BaseFieldArrayHelper<jintArray> {};
 
 template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jlongArray> {};
+struct FieldHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, false, void>
+    : BaseFieldArrayHelper<jlongArray> {};
 
 template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jfloatArray> {};
+struct FieldHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, false, void>
+    : BaseFieldArrayHelper<jfloatArray> {};
 
 template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jdoubleArray> {};
+struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, false, void>
+    : BaseFieldArrayHelper<jdoubleArray> {};
 
 ////////////////////////////////////////////////////////////////////////////////
-// Rank 1: Static jobjects.
-// Rank 2+: Static multi-dimension arrays (e.g. int[][], int[][][]).
+// Rank 1: jobjects & jstrings.
+// Rank 2+: Multi-dimension arrays (e.g. int[][], int[][][]).
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T, std::size_t kRank>
 struct FieldHelper<
-    T, kRank, true,
-    std::enable_if_t<(std::is_same_v<jobject, T> || (kRank > 1))>> {
-  static inline jobjectArray GetValue(const jclass clazz,
+    T, kRank, false,
+    std::enable_if_t<(std::is_same_v<jobject, T> ||
+                      std::is_same_v<jstring, T> || (kRank > 1))>> {
+  static inline jobjectArray GetValue(const jobject object_ref,
                                       const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField, Rank 1+")),
-          clazz, field_ref_);
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField, Rank >1")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jobjectArray>();
 #else
     return static_cast<jobjectArray>(
-        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
 #endif  // DRY_RUN
   }
 
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jobjectArray&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField, Rank 1+")),
-          clazz, field_ref_, value);
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, jobjectArray&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField, Rank >1")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else
-    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, value);
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
 #endif  // DRY_RUN
   }
 };
@@ -6723,6 +6328,526 @@ template <typename JniT, size_t field_idx_>
 struct FieldSelection {
   using IdT = Id<JniT, IdType::FIELD, field_idx_, kNoIdx, kNoIdx, 0>;
   static constexpr IdType kRetTypeId = IdType::FIELD;
+};
+
+}  // namespace jni
+
+#include <cstddef>
+#include <string_view>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+template <char sought>
+struct StringContains {
+  template <const std::string_view& str, typename IndexSequence>
+  struct Helper;
+
+  template <const std::string_view& str, std::size_t... Is>
+  struct Helper<str, std::index_sequence<Is...>> {
+    static constexpr bool val = ((str[Is] == sought) || ...);
+  };
+
+  template <const std::string_view& str>
+  static constexpr bool val =
+      Helper<str, std::make_index_sequence<str.length()>>::val;
+};
+
+template <const std::string_view& str, char sought>
+static constexpr bool StringContains_v =
+    StringContains<sought>::template val<str>;
+
+}  // namespace jni::metaprogramming
+
+#include <cstddef>
+#include <string_view>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::* nameable_member,
+          typename IndexSequenceType>
+class QueryableMapBase {};
+
+// This is an interface that can be inherited from to expose an
+// operator["name"]. It provides compile time string index lookup with no macros
+// although it is dependent on a clang extension.
+//
+// To use this API, inherit from this class using template types as follows:
+//
+// |CrtpBase|: The name of the class inheriting from the map.  This class
+//   will inherit an operator[].  It must implement this exact signature:
+//
+//    template <std::size_t I>
+//    auto QueryableMapCall(const char* key);
+//
+// |tup_container_v| is a static instance of an object whose |nameable_member|
+//   contains a public field called name_.  It might seem strange not to
+//   directly pass a const auto&, however, this prevents accessing subobjects.
+//
+// The motivation for using inheritance as opposed to a simple member is that
+// the the const char cannot be propagated without losing its constexpr-ness,
+// and so the clang extension can no longer restrict function candidates.
+template <typename CrtpBase, const auto& tup_container_v,
+          std::size_t container_size, typename TupContainerT,
+          const auto TupContainerT::* nameable_member>
+class QueryableMap
+    : public QueryableMapBase<CrtpBase, tup_container_v, TupContainerT,
+                              nameable_member,
+                              std::make_index_sequence<container_size>> {};
+
+template <typename CrtpBase, const auto& tup_container_v,
+          const auto std::decay_t<decltype(tup_container_v)>::* nameable_member>
+using QueryableMap_t =
+    QueryableMap<CrtpBase, tup_container_v,
+                 std::tuple_size_v<std::decay_t<decltype((tup_container_v.*
+                                                          nameable_member))>>,
+                 std::decay_t<decltype(tup_container_v)>, nameable_member>;
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::* nameable_member,
+          std::size_t I>
+class QueryableMapEntry;
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::* nameable_member,
+          std::size_t... idxs>
+class QueryableMapBase<CrtpBase, tup_container_v, TupContainerT,
+                       nameable_member, std::index_sequence<idxs...>>
+    : public QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
+                               nameable_member, idxs>... {
+ public:
+  using QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
+                          nameable_member, idxs>::operator[]...;
+
+  using QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
+                          nameable_member, idxs>::Contains...;
+
+  // Will select subclass specialisations if present.
+  constexpr bool Contains(const char* key) { return false; }
+};
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::* nameable_member,
+          std::size_t I>
+class QueryableMapEntry {
+ public:
+#if __clang__
+  // This function blurs the distinction between type and value space.  The
+  // clang extension allows the key to be wrapped in a constexpr way.  This
+  // allows for string to string comparison based on the static value the class
+  // is templated by.
+  //
+  // The reason the TypeMap interface requires inheritance as opposed to simply
+  // holding an instance of this map (like you would with a regular hash map) is
+  // the constexpr-ness of the string can't be propagated.  This essentially
+  // means you get one shot at defining the function.
+  constexpr auto operator[](const char* key) __attribute__((
+      enable_if(std::string_view(key) ==
+                    std::get<I>(tup_container_v.*nameable_member).name_,
+                ""))) {
+    static_assert(std::is_base_of_v<QueryableMapEntry, CrtpBase>,
+                  "You must derive from the invocable map.");
+
+    return (*static_cast<CrtpBase*>(this)).template QueryableMapCall<I>(key);
+  }
+
+  constexpr bool Contains(const char* key) __attribute__((
+      enable_if(std::string_view(key) ==
+                    std::get<I>(tup_container_v.*nameable_member).name_,
+                ""))) {
+    return true;
+  }
+#else
+  static_assert(false,
+                "This container requires clang for compile time strings.");
+#endif
+};
+
+}  // namespace jni::metaprogramming
+
+namespace jni::metaprogramming {
+
+enum class PackType {
+  NOT_CONTAINER,
+  TYPES,
+  AUTO,
+  AUTO_REF,
+  CONST_AUTO_REF,
+};
+
+// Metafunction to discrimate the underlying pack type of a Container.
+// Note: This interface is subject to change as the auto partial specialisations
+// cannot discriminate on void.
+struct PackDiscrimator {
+  template <typename T>
+  struct Helper {
+    static constexpr PackType val = PackType::NOT_CONTAINER;
+  };
+
+  template <template <typename...> class Container, typename... Ts>
+  struct Helper<Container<Ts...>> {
+    static constexpr PackType val = PackType::TYPES;
+  };
+
+  template <template <auto...> class Container, auto... Vs>
+  struct Helper<Container<Vs...>> {
+    static constexpr PackType val = PackType::AUTO;
+  };
+
+  template <template <auto&...> class Container, auto&... Vs>
+  struct Helper<Container<Vs...>> {
+    static constexpr PackType val = PackType::AUTO_REF;
+  };
+
+  template <template <const auto&...> class Container, const auto&... Vs>
+  struct Helper<Container<Vs...>> {
+    static constexpr PackType val = PackType::CONST_AUTO_REF;
+  };
+
+  template <typename T>
+  static constexpr PackType val = Helper<T>::val;
+};
+
+template <typename T>
+static constexpr PackType PackDiscriminator_e =
+    PackDiscrimator::template val<T>;
+
+// Metafunction to forward a containerized pack to a compatible container.
+template <
+    template <template <typename...> class> class TypesContainer,
+    template <template <auto...> class> class AutoContainer,
+    template <template <const auto&...> class> class ConstAutoRefContainer>
+struct PackDiscriminatedForward {
+  template <typename T>
+  struct Helper;
+
+  template <template <typename...> class Container, typename... Ts>
+  struct Helper<Container<Ts...>> {
+    using type =
+        typename TypesContainer<Container>::template type<Container<Ts...>>;
+  };
+
+  template <template <auto...> class Container, auto... vs>
+  struct Helper<Container<vs...>> {
+    using type =
+        typename AutoContainer<Container>::template type<Container<vs...>>;
+  };
+
+  template <template <const auto&...> class Container, const auto&... vs>
+  struct Helper<Container<vs...>> {
+    using type = typename ConstAutoRefContainer<Container>::template type<
+        Container<vs...>>;
+  };
+
+  template <typename T>
+  using type = typename Helper<T>::type;
+};
+
+}  // namespace jni::metaprogramming
+
+#include <cstddef>
+#include <string_view>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+namespace jni::metaprogramming {
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::* nameable_member>
+class InvocableMap;
+
+// This is an interface that can be inherited from to expose an operator(...).
+// It provides compile time string index lookup with no macros although it is
+// dependent on a clang extension.
+//
+// To use this API, inherit from this class using template types as follows:
+//
+// |CrtpBase|: The name of the class inheriting from the map.  This class
+//   will inherit an operator().  It must implement this exact signature:
+//
+//    template <std::size_t I, typename... Args>
+//    auto InvocableMapCall(const char* key, Args&&... args);
+//
+//   If i is the index where |tup_container_v.*nameable_member|.name_ == key,
+//     then InvocablemapCall will forward the args from operator() with the
+//     same args.  Static memory can be used in this function call and it will
+//     be unique because of the I non-type template parameter.
+//
+// |tup_container_v| is a static instance of an object whose |nameable_member|
+//   contains a public field called name_.  It might seem strange not to
+//   directly pass a const auto&, however, this prevents accessing subobjects.
+//
+// The motivation for using inheritance as opposed to a simple member is that
+// the the const char cannot be propagated without losing its constexpr-ness,
+// and so the clang extension can no longer restrict function candidates.
+template <typename CrtpBase, const auto& tup_container_v,
+          const auto std::decay_t<decltype(tup_container_v)>::* nameable_member>
+using InvocableMap_t =
+    InvocableMap<CrtpBase, tup_container_v,
+                 std::decay_t<decltype(tup_container_v)>, nameable_member>;
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::* nameable_member,
+          std::size_t I>
+class InvocableMapEntry;
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::* nameable_member,
+          typename IndexSequenceType>
+class InvocableMapBase {};
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::* nameable_member,
+          std::size_t... idxs>
+class InvocableMapBase<CrtpBase, tup_container_v, TupContainerT,
+                       nameable_member, std::index_sequence<idxs...>>
+    : public InvocableMapEntry<CrtpBase, tup_container_v, TupContainerT,
+                               nameable_member, idxs>... {
+ public:
+  using InvocableMapEntry<CrtpBase, tup_container_v, TupContainerT,
+                          nameable_member, idxs>::
+  operator()...;
+};
+
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::* nameable_member,
+          std::size_t I>
+class InvocableMapEntry {
+ public:
+#if __clang__
+  // This function blurs the distinction between type and value space.  The
+  // clang extension allows the key to be wrapped in a constexpr way.  This
+  // allows for string to string comparison based on the static value the class
+  // is templated by.
+  //
+  // The reason the TypeMap interface requires inheritance as opposed to simply
+  // holding an instance of this map (like you would with a regular hash map) is
+  // the constexpr-ness of the string can't be propagated.  This essentially
+  // means you get one shot at defining the function.
+  template <typename... Args>
+  constexpr auto operator()(const char* key, Args&&... args) __attribute__((
+      enable_if(std::string_view(key) ==
+                    std::get<I>(tup_container_v.*nameable_member).name_,
+                ""))) {
+    static_assert(std::is_base_of_v<InvocableMapEntry, CrtpBase>,
+                  "You must derive from the invocable map.");
+
+    return (*static_cast<CrtpBase*>(this))
+        .template InvocableMapCall<I, Args...>(key,
+                                               std::forward<Args>(args)...);
+  }
+#else
+  static_assert(false,
+                "This container requires clang for compile time strings.");
+#endif
+};
+
+//==============================================================================
+template <typename CrtpBase, const auto& tup_container_v,
+          typename TupContainerT, const auto TupContainerT::* nameable_member>
+class InvocableMap
+    : public InvocableMapBase<
+          CrtpBase, tup_container_v, TupContainerT, nameable_member,
+          std::make_index_sequence<std::tuple_size_v<
+              std::decay_t<decltype(tup_container_v.*nameable_member)>>>> {};
+
+}  // namespace jni::metaprogramming
+
+// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
+
+#include <cstddef>
+#include <type_traits>
+
+namespace jni {
+
+// Viablility helper for an exact parameter.
+template <std::size_t I, typename IdT, typename ValkReturnIDType,
+          typename... Ts>
+struct Viable {
+  static constexpr IdType kReturnIDType = ValkReturnIDType::val;
+  using IdTmp = typename IdT::template ChangeIdType<kReturnIDType>;
+  using IdTParamType = typename IdTmp::template ChangeIdx<2, I>;
+
+  static constexpr bool val =
+      Proxy_t<typename IdTParamType::UnstrippedRawVal>::template kViable<
+          IdTParamType,
+          metaprogramming::TypeOfNthElement_t<I, std::decay_t<Ts>...>>;
+};
+
+template <typename OverloadId, IdType kReturnIDType>
+struct ArgumentValidate {
+  // Helper to prevents instantiating mismatching size unrolls.
+  template <typename... Ts>
+  static constexpr bool ViableHelper() {
+    if constexpr (sizeof...(Ts) == OverloadId::kNumParams) {
+      return metaprogramming::UnfurlConjunction_v<
+          OverloadId::kNumParams, Viable, OverloadId,
+          metaprogramming::Val_t<kReturnIDType>, Ts...>;
+    } else {
+      return false;
+    }
+  }
+
+  template <typename... Ts>
+  static constexpr bool kValid = ViableHelper<Ts...>();
+};
+
+template <typename IdT_, IdType kReturnIDType>
+struct OverloadSelection {
+  using IdT = IdT_;
+
+  template <typename... Ts>
+  static constexpr bool OverloadViable() {
+    return ArgumentValidate<IdT, kReturnIDType>::template kValid<Ts...>;
+  }
+
+  template <typename... Ts>
+  static constexpr size_t OverloadIdxIfViable() {
+    return OverloadViable<Ts...>() ? IdT::kSecondaryIdx : kNoIdx;
+  }
+};
+
+template <typename IdT_, IdType kIDType = IdType::OVERLOAD,
+          IdType kReturnIDType = IdType::OVERLOAD_PARAM>
+struct MethodSelection {
+  using IdT = IdT_;
+  using JniT = typename IdT::JniT;
+
+  template <std::size_t I, typename... Ts>
+  struct Helper {
+    using type = metaprogramming::Val_t<OverloadSelection<
+        Id<JniT, kIDType, IdT::kIdx, I, kNoIdx, 0>,
+        kReturnIDType>::template OverloadIdxIfViable<Ts...>()>;
+  };
+
+  template <typename... Ts>
+  static constexpr std::size_t kIdxForTs = metaprogramming::ReduceAsPack_t<
+      metaprogramming::Min, metaprogramming::Call_t<metaprogramming::Unfurl_t<
+                                IdT::NumParams(), Helper, Ts...>>>::val;
+
+  template <typename... Ts>
+  using FindOverloadSelection = OverloadSelection<
+      Id<JniT, kIDType, IdT::kIdx, kIdxForTs<Ts...>, kNoIdx, 0>, kReturnIDType>;
+
+  template <typename... Ts>
+  static constexpr bool ArgSetViable() {
+    return kIdxForTs<Ts...> != kNoIdx;
+  }
+};
+
+template <typename IdT, IdType kIDType, IdType kReturnIDType, typename... Args>
+struct OverloadSelector {
+  using OverloadSelectionForArgs = typename MethodSelection<
+      IdT, kIDType, kReturnIDType>::template FindOverloadSelection<Args...>;
+
+  using OverloadRef =
+      OverloadRef<Id<typename IdT::JniT, kIDType, IdT::kIdx,
+                     OverloadSelectionForArgs::IdT::kSecondaryIdx, kNoIdx, 0>,
+                  kReturnIDType>;
+
+  static constexpr bool kIsValidArgSet =
+      MethodSelection<IdT, kIDType,
+                      kReturnIDType>::template ArgSetViable<Args...>();
+};
+
+}  // namespace jni
+
+// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
+
+#include <cstddef>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+namespace jni {
+
+// See JvmRef::~JvmRef.
+static inline auto& GetDefaultLoadedFieldList() {
+  static auto* ret_val =
+      new std::vector<metaprogramming::DoubleLockedValue<jfieldID>*>{};
+  return *ret_val;
+}
+
+// Represents a live instance of Field I's definition.
+//
+// Note, this class performs no cleanup on destruction.  jFieldIDs are static
+// throughout the duration of a JVM's life, see JvmRef for teardown.
+template <typename JniT, IdType field_type, std::size_t I>
+class FieldRef {
+ public:
+  using IdT = Id<JniT, field_type, I, kNoIdx, kNoIdx, 0>;
+  using FieldSelectionT = FieldSelection<JniT, I>;
+
+  using SelfIdT = typename IdT::template ChangeIdType<IdType::CLASS>;
+
+  explicit FieldRef(jclass class_ref, jobject object_ref)
+      : class_ref_(class_ref), object_ref_(object_ref) {}
+
+  FieldRef(const FieldRef&) = delete;
+  FieldRef(const FieldRef&&) = delete;
+  void operator=(const FieldRef&) = delete;
+
+  // This method is thread safe.
+  static jfieldID GetFieldID(jclass clazz) {
+    static jni::metaprogramming::DoubleLockedValue<jfieldID> return_value;
+
+    return return_value.LoadAndMaybeInit([=]() {
+      if constexpr (JniT::class_loader_v == kDefaultClassLoader) {
+        GetDefaultLoadedFieldList().push_back(&return_value);
+      }
+
+      if constexpr (IdT::kIsStatic) {
+        return jni::JniHelper::GetStaticFieldID(clazz, IdT::Name(),
+                                                Signature_v<IdT>.data());
+      } else {
+        return jni::JniHelper::GetFieldID(clazz, IdT::Name(),
+                                          Signature_v<IdT>.data());
+      }
+    });
+  }
+
+  using ReturnProxied =
+      std::conditional_t<IdT::kIsSelf,
+                         Return_t<typename SelfIdT::MaterializeCDeclT, SelfIdT>,
+                         Return_t<typename IdT::MaterializeCDeclT, IdT>>;
+
+  const auto& SelfVal() {
+    if constexpr (IdT::kIsStatic) {
+      return class_ref_;
+    } else {
+      return object_ref_;
+    }
+  }
+
+  ReturnProxied Get() {
+    if constexpr (std::is_base_of_v<RefBaseBase, ReturnProxied>) {
+      return {AdoptLocal{},
+              FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
+                          IdT::kIsStatic>::GetValue(SelfVal(),
+                                                    GetFieldID(class_ref_))};
+    } else {
+      return {FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
+                          IdT::kIsStatic>::GetValue(SelfVal(),
+                                                    GetFieldID(class_ref_))};
+    }
+  }
+
+  template <typename T>
+  void Set(T&& value) {
+    FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
+                IdT::kIsStatic>::SetValue(SelfVal(), GetFieldID(class_ref_),
+                                          Proxy_t<T>::ProxyAsArg(
+                                              std::forward<T>(value)));
+  }
+
+ private:
+  const jclass class_ref_;
+  const jobject object_ref_;
 };
 
 }  // namespace jni
@@ -6869,414 +6994,6 @@ static inline jclass LoadClassFromObject(const char* name, jobject object_ref) {
 
 template <typename JniT>
 using ClassRef_t = ClassRef<typename JniT::MinimallySpanningType>;
-
-}  // namespace jni
-
-#include <cstddef>
-#include <string_view>
-#include <utility>
-
-namespace jni::metaprogramming {
-
-template <char sought>
-struct StringContains {
-  template <const std::string_view& str, typename IndexSequence>
-  struct Helper;
-
-  template <const std::string_view& str, std::size_t... Is>
-  struct Helper<str, std::index_sequence<Is...>> {
-    static constexpr bool val = ((str[Is] == sought) || ...);
-  };
-
-  template <const std::string_view& str>
-  static constexpr bool val =
-      Helper<str, std::make_index_sequence<str.length()>>::val;
-};
-
-template <const std::string_view& str, char sought>
-static constexpr bool StringContains_v =
-    StringContains<sought>::template val<str>;
-
-}  // namespace jni::metaprogramming
-
-namespace jni::metaprogramming {
-
-enum class PackType {
-  NOT_CONTAINER,
-  TYPES,
-  AUTO,
-  AUTO_REF,
-  CONST_AUTO_REF,
-};
-
-// Metafunction to discrimate the underlying pack type of a Container.
-// Note: This interface is subject to change as the auto partial specialisations
-// cannot discriminate on void.
-struct PackDiscrimator {
-  template <typename T>
-  struct Helper {
-    static constexpr PackType val = PackType::NOT_CONTAINER;
-  };
-
-  template <template <typename...> class Container, typename... Ts>
-  struct Helper<Container<Ts...>> {
-    static constexpr PackType val = PackType::TYPES;
-  };
-
-  template <template <auto...> class Container, auto... Vs>
-  struct Helper<Container<Vs...>> {
-    static constexpr PackType val = PackType::AUTO;
-  };
-
-  template <template <auto&...> class Container, auto&... Vs>
-  struct Helper<Container<Vs...>> {
-    static constexpr PackType val = PackType::AUTO_REF;
-  };
-
-  template <template <const auto&...> class Container, const auto&... Vs>
-  struct Helper<Container<Vs...>> {
-    static constexpr PackType val = PackType::CONST_AUTO_REF;
-  };
-
-  template <typename T>
-  static constexpr PackType val = Helper<T>::val;
-};
-
-template <typename T>
-static constexpr PackType PackDiscriminator_e =
-    PackDiscrimator::template val<T>;
-
-// Metafunction to forward a containerized pack to a compatible container.
-template <template <template <typename...> class> class TypesContainer,
-          template <template <auto...> class> class AutoContainer,
-          template <template <const auto&...> class>
-          class ConstAutoRefContainer>
-struct PackDiscriminatedForward {
-  template <typename T>
-  struct Helper;
-
-  template <template <typename...> class Container, typename... Ts>
-  struct Helper<Container<Ts...>> {
-    using type =
-        typename TypesContainer<Container>::template type<Container<Ts...>>;
-  };
-
-  template <template <auto...> class Container, auto... vs>
-  struct Helper<Container<vs...>> {
-    using type =
-        typename AutoContainer<Container>::template type<Container<vs...>>;
-  };
-
-  template <template <const auto&...> class Container, const auto&... vs>
-  struct Helper<Container<vs...>> {
-    using type = typename ConstAutoRefContainer<Container>::template type<
-        Container<vs...>>;
-  };
-
-  template <typename T>
-  using type = typename Helper<T>::type;
-};
-
-}  // namespace jni::metaprogramming
-
-#include <cstddef>
-#include <string_view>
-#include <tuple>
-#include <type_traits>
-#include <utility>
-
-namespace jni::metaprogramming {
-
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member>
-class InvocableMap;
-
-// This is an interface that can be inherited from to expose an operator(...).
-// It provides compile time string index lookup with no macros although it is
-// dependent on a clang extension.
-//
-// To use this API, inherit from this class using template types as follows:
-//
-// |CrtpBase|: The name of the class inheriting from the map.  This class
-//   will inherit an operator().  It must implement this exact signature:
-//
-//    template <std::size_t I, typename... Args>
-//    auto InvocableMapCall(const char* key, Args&&... args);
-//
-//   If i is the index where |tup_container_v.*nameable_member|.name_ == key,
-//     then InvocablemapCall will forward the args from operator() with the
-//     same args.  Static memory can be used in this function call and it will
-//     be unique because of the I non-type template parameter.
-//
-// |tup_container_v| is a static instance of an object whose |nameable_member|
-//   contains a public field called name_.  It might seem strange not to
-//   directly pass a const auto&, however, this prevents accessing subobjects.
-//
-// The motivation for using inheritance as opposed to a simple member is that
-// the the const char cannot be propagated without losing its constexpr-ness,
-// and so the clang extension can no longer restrict function candidates.
-template <typename CrtpBase, const auto& tup_container_v,
-          const auto std::decay_t<decltype(tup_container_v)>::*nameable_member>
-using InvocableMap_t =
-    InvocableMap<CrtpBase, tup_container_v,
-                 std::decay_t<decltype(tup_container_v)>, nameable_member>;
-
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
-          std::size_t I>
-class InvocableMapEntry;
-
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
-          typename IndexSequenceType>
-class InvocableMapBase {};
-
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
-          std::size_t... idxs>
-class InvocableMapBase<CrtpBase, tup_container_v, TupContainerT,
-                       nameable_member, std::index_sequence<idxs...>>
-    : public InvocableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                               nameable_member, idxs>... {
- public:
-  using InvocableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                          nameable_member, idxs>::operator()...;
-};
-
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
-          std::size_t I>
-class InvocableMapEntry {
- public:
-#if __clang__
-  // This function blurs the distinction between type and value space.  The
-  // clang extension allows the key to be wrapped in a constexpr way.  This
-  // allows for string to string comparison based on the static value the class
-  // is templated by.
-  //
-  // The reason the TypeMap interface requires inheritance as opposed to simply
-  // holding an instance of this map (like you would with a regular hash map) is
-  // the constexpr-ness of the string can't be propagated.  This essentially
-  // means you get one shot at defining the function.
-  template <typename... Args>
-  constexpr auto operator()(const char* key, Args&&... args) __attribute__((
-      enable_if(std::string_view(key) ==
-                    std::get<I>(tup_container_v.*nameable_member).name_,
-                ""))) {
-    static_assert(std::is_base_of_v<InvocableMapEntry, CrtpBase>,
-                  "You must derive from the invocable map.");
-
-    return (*static_cast<CrtpBase*>(this))
-        .template InvocableMapCall<I, Args...>(key,
-                                               std::forward<Args>(args)...);
-  }
-#else
-  static_assert(false,
-                "This container requires clang for compile time strings.");
-#endif
-};
-
-//==============================================================================
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member>
-class InvocableMap
-    : public InvocableMapBase<
-          CrtpBase, tup_container_v, TupContainerT, nameable_member,
-          std::make_index_sequence<std::tuple_size_v<
-              std::decay_t<decltype(tup_container_v.*nameable_member)>>>> {};
-
-}  // namespace jni::metaprogramming
-
-// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
-
-#include <cstddef>
-#include <type_traits>
-
-namespace jni {
-
-// Viablility helper for an exact parameter.
-template <std::size_t I, typename IdT, typename ValkReturnIDType,
-          typename... Ts>
-struct Viable {
-  static constexpr IdType kReturnIDType = ValkReturnIDType::val;
-  using IdTmp = typename IdT::template ChangeIdType<kReturnIDType>;
-  using IdTParamType = typename IdTmp::template ChangeIdx<2, I>;
-
-  static constexpr bool val =
-      Proxy_t<typename IdTParamType::UnstrippedRawVal>::template kViable<
-          IdTParamType,
-          metaprogramming::TypeOfNthElement_t<I, std::decay_t<Ts>...>>;
-};
-
-template <typename OverloadId, IdType kReturnIDType>
-struct ArgumentValidate {
-  // Helper to prevents instantiating mismatching size unrolls.
-  template <typename... Ts>
-  static constexpr bool ViableHelper() {
-    if constexpr (sizeof...(Ts) == OverloadId::kNumParams) {
-      return metaprogramming::UnfurlConjunction_v<
-          OverloadId::kNumParams, Viable, OverloadId,
-          metaprogramming::Val_t<kReturnIDType>, Ts...>;
-    } else {
-      return false;
-    }
-  }
-
-  template <typename... Ts>
-  static constexpr bool kValid = ViableHelper<Ts...>();
-};
-
-template <typename IdT_, IdType kReturnIDType>
-struct OverloadSelection {
-  using IdT = IdT_;
-
-  template <typename... Ts>
-  static constexpr bool OverloadViable() {
-    return ArgumentValidate<IdT, kReturnIDType>::template kValid<Ts...>;
-  }
-
-  template <typename... Ts>
-  static constexpr size_t OverloadIdxIfViable() {
-    return OverloadViable<Ts...>() ? IdT::kSecondaryIdx : kNoIdx;
-  }
-};
-
-template <typename IdT_, IdType kIDType = IdType::OVERLOAD,
-          IdType kReturnIDType = IdType::OVERLOAD_PARAM>
-struct MethodSelection {
-  using IdT = IdT_;
-  using JniT = typename IdT::JniT;
-
-  template <std::size_t I, typename... Ts>
-  struct Helper {
-    using type = metaprogramming::Val_t<OverloadSelection<
-        Id<JniT, kIDType, IdT::kIdx, I, kNoIdx, 0>,
-        kReturnIDType>::template OverloadIdxIfViable<Ts...>()>;
-  };
-
-  template <typename... Ts>
-  static constexpr std::size_t kIdxForTs = metaprogramming::ReduceAsPack_t<
-      metaprogramming::Min, metaprogramming::Call_t<metaprogramming::Unfurl_t<
-                                IdT::NumParams(), Helper, Ts...>>>::val;
-
-  template <typename... Ts>
-  using FindOverloadSelection = OverloadSelection<
-      Id<JniT, kIDType, IdT::kIdx, kIdxForTs<Ts...>, kNoIdx, 0>, kReturnIDType>;
-
-  template <typename... Ts>
-  static constexpr bool ArgSetViable() {
-    return kIdxForTs<Ts...> != kNoIdx;
-  }
-};
-
-template <typename IdT, IdType kIDType, IdType kReturnIDType, typename... Args>
-struct OverloadSelector {
-  using OverloadSelectionForArgs = typename MethodSelection<
-      IdT, kIDType, kReturnIDType>::template FindOverloadSelection<Args...>;
-
-  using OverloadRef =
-      OverloadRef<Id<typename IdT::JniT, kIDType, IdT::kIdx,
-                     OverloadSelectionForArgs::IdT::kSecondaryIdx, kNoIdx, 0>,
-                  kReturnIDType>;
-
-  static constexpr bool kIsValidArgSet =
-      MethodSelection<IdT, kIDType,
-                      kReturnIDType>::template ArgSetViable<Args...>();
-};
-
-}  // namespace jni
-
-// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
-
-#include <type_traits>
-#include <utility>
-#include <vector>
-
-namespace jni {
-
-// See JvmRef::~JvmRef.
-static inline auto& GetDefaultLoadedFieldList() {
-  static auto* ret_val =
-      new std::vector<metaprogramming::DoubleLockedValue<jfieldID>*>{};
-  return *ret_val;
-}
-
-// Represents a live instance of Field I's definition.
-//
-// Note, this class performs no cleanup on destruction.  jFieldIDs are static
-// throughout the duration of a JVM's life, see JvmRef for teardown.
-template <typename JniT, IdType field_type, std::size_t I>
-class FieldRef {
- public:
-  using IdT = Id<JniT, field_type, I, kNoIdx, kNoIdx, 0>;
-  using FieldSelectionT = FieldSelection<JniT, I>;
-
-  using SelfIdT = typename IdT::template ChangeIdType<IdType::CLASS>;
-
-  explicit FieldRef(jclass class_ref, jobject object_ref)
-      : class_ref_(class_ref), object_ref_(object_ref) {}
-
-  FieldRef(const FieldRef&) = delete;
-  FieldRef(const FieldRef&&) = delete;
-  void operator=(const FieldRef&) = delete;
-
-  // This method is thread safe.
-  static jfieldID GetFieldID(jclass clazz) {
-    static jni::metaprogramming::DoubleLockedValue<jfieldID> return_value;
-
-    return return_value.LoadAndMaybeInit([=]() {
-      if constexpr (JniT::class_loader_v == kDefaultClassLoader) {
-        GetDefaultLoadedFieldList().push_back(&return_value);
-      }
-
-      if constexpr (IdT::kIsStatic) {
-        return jni::JniHelper::GetStaticFieldID(clazz, IdT::Name(),
-                                                Signature_v<IdT>.data());
-      } else {
-        return jni::JniHelper::GetFieldID(clazz, IdT::Name(),
-                                          Signature_v<IdT>.data());
-      }
-    });
-  }
-
-  using ReturnProxied =
-      std::conditional_t<IdT::kIsSelf,
-                         Return_t<typename SelfIdT::MaterializeCDeclT, SelfIdT>,
-                         Return_t<typename IdT::MaterializeCDeclT, IdT>>;
-
-  const auto& SelfVal() {
-    if constexpr (IdT::kIsStatic) {
-      return class_ref_;
-    } else {
-      return object_ref_;
-    }
-  }
-
-  ReturnProxied Get() {
-    if constexpr (std::is_base_of_v<RefBaseBase, ReturnProxied>) {
-      return {AdoptLocal{},
-              FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
-                          IdT::kIsStatic>::GetValue(SelfVal(),
-                                                    GetFieldID(class_ref_))};
-    } else {
-      return {FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
-                          IdT::kIsStatic>::GetValue(SelfVal(),
-                                                    GetFieldID(class_ref_))};
-    }
-  }
-
-  template <typename T>
-  void Set(T&& value) {
-    FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
-                IdT::kIsStatic>::SetValue(SelfVal(), GetFieldID(class_ref_),
-                                          Proxy_t<T>::ProxyAsArg(
-                                              std::forward<T>(value)));
-  }
-
- private:
-  const jclass class_ref_;
-  const jobject object_ref_;
-};
 
 }  // namespace jni
 
@@ -7537,27 +7254,47 @@ struct EntryBase : public Base {
                             LifecycleHelper<Span, lifecycleType>::NewReference(
                                 static_cast<Span>(object)))
                       : nullptr) {}
-
-  // Comparison operator for pinned Scoped type (not deep equality).
-  template <typename T,
-            typename = std::enable_if_t<(std::is_base_of_v<RefBase<Span>, T> ||
-                                         std::is_same_v<T, ViableSpan>)>>
-  bool operator==(const T& rhs) const {
-    if constexpr (std::is_base_of_v<RefBase<Span>, T>) {
-      return static_cast<Span>(rhs.object_ref_) == Base::object_ref_;
-    } else if constexpr (std::is_same_v<T, ViableSpan>) {
-      return rhs == Base::object_ref_;
-    }
-  }
-
-  // Comparison inequality operator for pinned Scoped type (not deep equality).
-  template <typename T,
-            typename = std::enable_if_t<(std::is_base_of_v<RefBase<Span>, T> ||
-                                         std::is_same_v<T, ViableSpan>)>>
-  bool operator!=(const T& rhs) const {
-    return !(*this == rhs);
-  }
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// Equality operators.
+// Note: Post C++20 these [in]equality operators are required to be reversable.
+////////////////////////////////////////////////////////////////////////////////
+template <typename T, typename Enable = void>
+struct IsComparableHelper {
+  using type = T;
+};
+
+template <typename T>
+struct IsComparableHelper<T, std::void_t<typename T::SpanType>> {
+  using type = typename T::SpanType;
+};
+
+template <typename T>
+using IsComparableHelper_t = typename IsComparableHelper<T>::type;
+
+// Returns if the two types are "JNI Bind" comparable. e.g.
+// jobject == LocalObject or LocalObject == jobject.
+template <typename T1, typename T2>
+constexpr bool IsJniBindComparable() {
+  return std::is_same_v<IsComparableHelper_t<T1>, IsComparableHelper_t<T2>> &&
+         (std::is_base_of_v<RefBaseBase, T1> ||
+          std::is_base_of_v<RefBaseBase, T2>);
+}
+
+template <typename T1, typename T2>
+constexpr std::enable_if_t<IsJniBindComparable<T1, T2>(), bool> operator==(
+    const T1& lhs, const T2& rhs) {
+  return static_cast<IsComparableHelper_t<T1>>(lhs) ==
+         static_cast<IsComparableHelper_t<T2>>(rhs);
+}
+
+template <typename T1, typename T2>
+constexpr std::enable_if_t<IsJniBindComparable<T1, T2>(), bool> operator!=(
+    const T1& lhs, const T2& rhs) {
+  return static_cast<IsComparableHelper_t<T1>>(lhs) !=
+         static_cast<IsComparableHelper_t<T2>>(rhs);
+}
 
 // Local scoped entry augmentation.
 template <LifecycleType lifecycleType, typename JniT, typename ViableSpan,
@@ -8138,6 +7875,7 @@ class LocalObject : public LocalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
  public:
   using Base = LocalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
   using Base::Base;
+  using SpanType = jobject;
 
   template <typename T>
   LocalObject(ArrayViewHelper<T> array_view_helper)
@@ -8151,18 +7889,6 @@ class LocalObject : public LocalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 LocalObject(LocalObject<class_v_, class_loader_v_, jvm_v_>&&)
     -> LocalObject<class_v_, class_loader_v_, jvm_v_>;
-
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-bool operator==(const jobject& lhs,
-                const LocalObject<class_v_, class_loader_v_, jvm_v_>& rhs) {
-  return lhs == static_cast<jobject>(rhs);
-}
-
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-bool operator!=(const jobject& lhs,
-                const LocalObject<class_v_, class_loader_v_, jvm_v_>& rhs) {
-  return !(lhs == rhs);
-}
 
 }  // namespace jni
 
@@ -8183,6 +7909,7 @@ class GlobalObject
  public:
   using Base = GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
   using Base::Base;
+  using SpanType = jobject;
   using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
@@ -8222,11 +7949,15 @@ GlobalObject(LocalObject<class_v, class_loader_v, jvm_v>&&)
 
 #include <cstddef>
 #include <iterator>
+#include <type_traits>
 
 namespace jni {
 
+struct ArrayViewHelperBase {};
+
 template <typename T>
-struct ArrayViewHelper {
+struct ArrayViewHelper : ArrayViewHelperBase {
+  using SpanType = T;
   const T val_;
   operator T() const { return val_; }
 
@@ -8234,9 +7965,11 @@ struct ArrayViewHelper {
 };
 
 // Primitive Rank 1 Arrays.
-template <typename SpanType, std::size_t kRank = 1, typename Enable = void>
+template <typename SpanType_, std::size_t kRank = 1, typename Enable = void>
 class ArrayView {
  public:
+  using SpanType = SpanType_;
+
   struct Iterator {
     using iterator_category = std::random_access_iterator_tag;
     using difference_type = std::size_t;
@@ -8311,12 +8044,14 @@ class ArrayView {
 };
 
 // Object arrays, or arrays with rank > 1 (which are object arrays), or strings.
-template <typename SpanType, std::size_t kRank>
+template <typename SpanType_, std::size_t kRank>
 class ArrayView<
-    SpanType, kRank,
-    std::enable_if_t<(kRank > 1) || std::is_same_v<SpanType, jobject> ||
-                     std::is_same_v<SpanType, jstring>>> {
+    SpanType_, kRank,
+    std::enable_if_t<(kRank > 1) || std::is_same_v<SpanType_, jobject> ||
+                     std::is_same_v<SpanType_, jstring>>> {
  public:
+  using SpanType = SpanType_;
+
   // Metafunction that returns the type after a single dereference.
   template <std::size_t>
   struct PinHelper {
@@ -8734,9 +8469,9 @@ class ArrayRef<
   // e.g.
   //  LocalArray arr { 5, LocalObject<kClass> {args...} };
   //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
-  template <template <const auto&, const auto&, const auto&>
-            class ObjectContainer,
-            const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  template <
+      template <const auto&, const auto&, const auto&> class ObjectContainer,
+      const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   ArrayRef(std::size_t size,
            const ObjectContainer<class_v, class_loader_v, jvm_v>& obj)
       : ArrayRef(size, static_cast<jobject>(obj)) {}
@@ -9494,16 +9229,17 @@ namespace jni {
 // Currently GlobalArrays do not exist, as reasoning about the lifecycles of the
 // underlying objects is non-trivial, e.g. a GlobalArray taking a local object
 // would result in a possibly unexpected extension of lifetime.
-template <typename SpanType, std::size_t kRank_ = 1,
+template <typename SpanType_, std::size_t kRank_ = 1,
           const auto& class_v_ = kNoClassSpecified,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 class LocalArray
     : public ArrayRef<
-          JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>> {
+          JniT<SpanType_, class_v_, class_loader_v_, jvm_v_, kRank_>> {
  public:
   static constexpr Class kClass{class_v_.name_};
   static constexpr std::size_t kRank = kRank_;
+  using SpanType = SpanType_;
 
   using RawValT = std::conditional_t<std::is_same_v<jobject, SpanType>,
                                      std::decay_t<decltype(kClass)>, SpanType>;
@@ -9533,11 +9269,12 @@ class LocalArray
       : Base(AdoptLocal{}, rhs.Release()) {}
 
   // Rvalue ctor.
-  template <typename SpanType_, std::size_t kRank, const auto& class_v,
+  template <typename SpanTypeRhs_, std::size_t kRank, const auto& class_v,
             const auto& class_loader_v, const auto& jvm_v>
-  LocalArray(LocalArray<SpanType_, kRank, class_v, class_loader_v, jvm_v>&& rhs)
+  LocalArray(
+      LocalArray<SpanTypeRhs_, kRank, class_v, class_loader_v, jvm_v>&& rhs)
       : Base(AdoptLocal{}, rhs.Release()) {
-    static_assert(std::is_same_v<SpanType, SpanType_> && kRank == kRank_ &&
+    static_assert(std::is_same_v<SpanType, SpanTypeRhs_> && kRank == kRank_ &&
                   class_v == class_v_ && class_loader_v == class_loader_v_);
   }
 
@@ -9546,9 +9283,9 @@ class LocalArray
   // e.g.
   //  LocalArray arr { 5, LocalObject<kClass> {args...} };
   //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
-  template <template <const auto&, const auto&, const auto&>
-            class ObjectContainer,
-            const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  template <
+      template <const auto&, const auto&, const auto&> class ObjectContainer,
+      const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   LocalArray(
       std::size_t size,
       const ObjectContainer<class_v, class_loader_v, jvm_v>& local_object)
@@ -9561,9 +9298,9 @@ class LocalArray
   operator jobject() { return static_cast<jobject>(Base::object_ref_); }
 };
 
-template <template <const auto&, const auto&, const auto&>
-          class ObjectContainer,
-          const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+template <
+    template <const auto&, const auto&, const auto&> class ObjectContainer,
+    const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 LocalArray(std::size_t,
            const ObjectContainer<class_v_, class_loader_v_, jvm_v_>&)
     -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
@@ -9576,9 +9313,9 @@ LocalArray(
     -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
 
 template <typename SpanType>
-LocalArray(std::size_t,
-           SpanType) -> LocalArray<SpanType, 1, kNoClassSpecified,
-                                   kDefaultClassLoader, kDefaultJvm>;
+LocalArray(std::size_t, SpanType)
+    -> LocalArray<SpanType, 1, kNoClassSpecified, kDefaultClassLoader,
+                  kDefaultJvm>;
 
 template <typename SpanType, std::size_t kRank_minus_1>
 LocalArray(std::size_t, LocalArray<SpanType, kRank_minus_1>)
@@ -9610,6 +9347,7 @@ class GlobalClassLoader
  public:
   using Base = ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_>;
   using Base::Base;
+  using SpanType = jobject;
 
   template <const auto& class_loader_v, const auto& jvm_v>
   GlobalClassLoader(GlobalClassLoader<class_loader_v, jvm_v>&& rhs)
@@ -9627,6 +9365,366 @@ static constexpr Class kJavaLangThrowable{
     Constructor{jstring{}, Self{}},
     Constructor{jstring{}, Self{}, jboolean{}, jboolean{}},
     Constructor{Self{}}};
+
+}  // namespace jni
+
+#include <cstddef>
+#include <type_traits>
+
+namespace jni {
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 0: Static primitive types (e.g. int).
+////////////////////////////////////////////////////////////////////////////////
+template <>
+struct FieldHelper<jboolean, 0, true, void> {
+  static inline jboolean GetValue(const jclass clazz,
+                                  const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticBooleanField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jboolean>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticBooleanField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jboolean&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticBooleanField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticBooleanField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jbyte, 0, true, void> {
+  static inline jbyte GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticByteField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jbyte>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticByteField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jbyte&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticByteField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    return jni::JniEnv::GetEnv()->SetStaticByteField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jchar, 0, true, void> {
+  static inline jchar GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticCharField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jchar>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticCharField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jchar&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticCharField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticCharField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jshort, 0, true, void> {
+  static inline jshort GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticShortField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jshort>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticShortField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jshort&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticShortField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticShortField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jint, 0, true, void> {
+  static inline jint GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticIntField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jint>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticIntField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jint&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticIntField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticIntField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jlong, 0, true, void> {
+  static inline jlong GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticLongField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jlong>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticLongField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jlong&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticLongField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticLongField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jfloat, 0, true, void> {
+  static inline jfloat GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticFloatField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return 123.f;
+#else
+    return jni::JniEnv::GetEnv()->GetStaticFloatField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jfloat&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticFloatField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticFloatField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jdouble, 0, true, void> {
+  static inline jdouble GetValue(const jclass clazz,
+                                 const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticDoubleField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return 123.;
+#else
+    return jni::JniEnv::GetEnv()->GetStaticDoubleField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jdouble&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticDoubleField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticDoubleField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jobject, 0, true, void> {
+  static inline jobject GetValue(const jclass clazz,
+                                 const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jobject&& new_value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
+          field_ref_, new_value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jstring, 0, true, void> {
+  static inline jstring GetValue(const jclass clazz,
+                                 const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jstring>();
+#else
+    return reinterpret_cast<jstring>(
+        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jstring&& new_value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
+          field_ref_, new_value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+#endif  // DRY_RUN
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1: Static single dimension arrays (e.g. int[]).
+////////////////////////////////////////////////////////////////////////////////
+template <typename ArrayType>
+struct StaticBaseFieldArrayHelper {
+  static inline ArrayType GetValue(const jobject object_ref,
+                                   const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<ArrayType>();
+#else
+    return static_cast<ArrayType>(
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, ArrayType&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jbooleanArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jbyteArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jcharArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jshortArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jint>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jintArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jlongArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jfloatArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jdoubleArray> {};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1: Static jobjects.
+// Rank 2+: Static multi-dimension arrays (e.g. int[][], int[][][]).
+////////////////////////////////////////////////////////////////////////////////
+template <typename T, std::size_t kRank>
+struct FieldHelper<
+    T, kRank, true,
+    std::enable_if_t<(std::is_same_v<jobject, T> || (kRank > 1))>> {
+  static inline jobjectArray GetValue(const jclass clazz,
+                                      const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField, Rank 1+")),
+          clazz, field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
+    return static_cast<jobjectArray>(
+        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jobjectArray&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField, Rank 1+")),
+          clazz, field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
 
 }  // namespace jni
 
@@ -9708,6 +9806,7 @@ class LocalClassLoader
  public:
   using Base = ClassLoaderRef<LifecycleType::LOCAL, class_loader_v_, jvm_v_>;
   using Base::Base;
+  using SpanType = jobject;
 
   template <const auto& class_loader_v, const auto& jvm_v>
   explicit LocalClassLoader(LocalClassLoader<class_loader_v, jvm_v>&& lhs)
