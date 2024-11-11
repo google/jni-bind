@@ -72,7 +72,7 @@ class ClassLoaderRef : public ClassLoaderImpl<lifecycleType> {
     if constexpr (ParentLoaderForClass<class_loader_v_, class_v>() !=
                   kDefaultClassLoader) {
       ClassRef_t<JniT<jobject, class_v, class_loader_v_, jvm_v_,
-                      0>>::PrimeJClassFromClassLoader([=]() {
+                      0>>::PrimeJClassFromClassLoader([&]() {
         // Prevent the object (which is a runtime instance of a class) from
         // falling out of scope so it is not released.
         LocalObject loaded_class =
