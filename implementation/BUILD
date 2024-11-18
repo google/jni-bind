@@ -391,6 +391,10 @@ cc_library(
 cc_library(
     name = "global_object",
     hdrs = ["global_object.h"],
+    visibility = [
+        "//third_party/arcore/javatests/com/google/ar/infrastructure/nativedatasource/imagesubsystem:__pkg__",
+        "//third_party/jni_wrapper:__subpackages__",
+    ],
     deps = [
         ":default_class_loader",
         ":forward_declarations",
