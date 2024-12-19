@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <utility>
+
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
 

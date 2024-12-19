@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <thread>  // NOLINT
+#include <utility>
 
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
