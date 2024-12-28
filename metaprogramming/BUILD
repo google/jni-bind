@@ -605,6 +605,32 @@ cc_test(
     ],
 )
 
+
+################################################################################
+# Invocable Map 20.
+################################################################################
+cc_library(
+    name = "invocable_map_20",
+    hdrs = ["invocable_map_20.h"],
+    deps = [
+        ":interleave",
+        ":tuple_from_size",
+        ":tuple_manipulation",
+        ":type_of_nth_element",
+        ":modified_max",
+    ],
+)
+
+cc_test(
+    name = "invocable_map_test_20",
+    srcs = ["invocable_map_test_20.cc"],
+    deps = [
+        ":invocable_map_20",
+        ":string_literal",
+        "@googletest//:gtest_main",
+    ],
+)
+
 ################################################################################
 # Invoke.
 ################################################################################
