@@ -58,9 +58,9 @@ struct StringLiteral {
 template <size_t N>
 StringLiteral(const char (&str)[N]) -> StringLiteral<N>;
 
+}  // namespace jni::metaprogramming
+
 #endif  // __cplusplus >= 202002L
 #endif  // __cplusplus
-
-}  // namespace jni::metaprogramming
 
 #endif  // JNI_BIND_METAPROGRAMMING_STRING_LITERAL_H_
