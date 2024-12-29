@@ -42,7 +42,7 @@ class InvocableMap;
 //    auto InvocableMapCall(const char* key, Args&&... args);
 //
 //   If i is the index where |tup_container_v.*nameable_member|.name_ == key,
-//     then InvocablemapCall will forward the args from operator() with the
+//     then InvocableMapCall will forward the args from operator() with the
 //     same args.  Static memory can be used in this function call and it will
 //     be unique because of the I non-type template parameter.
 //
@@ -121,7 +121,9 @@ class InvocableMap
     : public InvocableMapBase<
           CrtpBase, tup_container_v, TupContainerT, nameable_member,
           std::make_index_sequence<std::tuple_size_v<
-              std::decay_t<decltype(tup_container_v.*nameable_member)>>>> {};
+              std::decay_t<decltype(tup_container_v.*nameable_member)>>>> {
+              
+              };
 
 }  // namespace jni::metaprogramming
 

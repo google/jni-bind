@@ -164,7 +164,7 @@ TEST_F(JniTest, LocalObject_ValuesWorkAfterMoveConstructor) {
   EXPECT_CALL(*env_, SetIntField).Times(4);
 
   LocalObject<kClass> obj_1{Fake<jobject>()};
-  obj_1("Foo", 1);
+  obj_1.Call<"Foo">(1);
   obj_1("Foo", 2);
   obj_1["BarField"].Set(1);
 

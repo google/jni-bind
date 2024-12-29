@@ -30,11 +30,14 @@
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_type.h"
 #include "implementation/method_selection.h"
+#include "jni_dep.h"
 #include "implementation/no_idx.h"
 #include "implementation/ref_base.h"
-#include "jni_dep.h"
 #include "metaprogramming/invocable_map.h"
+#include "metaprogramming/invocable_map_20.h"
 #include "metaprogramming/queryable_map.h"
+#include "metaprogramming/queryable_map_20.h"
+#include "metaprogramming/string_literal.h"
 #include "metaprogramming/string_contains.h"
 
 namespace jni {
@@ -47,10 +50,16 @@ namespace jni {
 // operator[].
 template <typename JniT>
 class ObjectRef
+    // C++17 augmentations.
     : public metaprogramming::InvocableMap<
           ObjectRef<JniT>, JniT::stripped_class_v, typename JniT::ClassT,
           &JniT::ClassT::methods_>,
       public metaprogramming::QueryableMap_t<
+          ObjectRef<JniT>, JniT::stripped_class_v, &JniT::ClassT::fields_>,
+      // C++ 20 augmentations.
+      public metaprogramming::InvocableMap20_t<
+          ObjectRef<JniT>, JniT::stripped_class_v, &JniT::ClassT::methods_>,
+      public metaprogramming::QueryableMap20_t<
           ObjectRef<JniT>, JniT::stripped_class_v, &JniT::ClassT::fields_>,
       public RefBase<typename JniT::StorageType> {
  protected:
@@ -83,6 +92,12 @@ class ObjectRef
 
   explicit ObjectRef(RefBaseT&& rhs) : RefBaseT(std::move(rhs)) {}
 
+  ////////////////////////////////////////////////////////////////////////////////
+  // Implementation: C++17 + clang
+  // Supports syntax like: "obj("foo", 123, args)", "obj["foo"].Get()"
+  // This syntax is less portable and may be removed in a major future release.
+  ////////////////////////////////////////////////////////////////////////////////
+#if __clang__
   // Invoked through CRTP from InvocableMap.
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
@@ -103,6 +118,41 @@ class ObjectRef
   auto QueryableMapCall(const char* key) const {
     return FieldRef<JniT, IdType::FIELD, I>{GetJClass(), RefBaseT::object_ref_};
   }
+#endif // __clang__
+
+////////////////////////////////////////////////////////////////////////////////
+// C++20 Implementation (will only be concluded if supported).
+// Supports syntax like: "obj.Call<"foo">(123, args)", "obj.Access<"foo">().Get()"
+// Prefer using this syntax as they are more portable.
+////////////////////////////////////////////////////////////////////////////////
+#ifdef __cplusplus
+#if __cplusplus >= 202002L
+
+// Invoked through CRTP from InvocableMap, C++20 only.
+template <size_t I, metaprogramming::StringLiteral key_literal, typename... Args>
+auto InvocableMap20Call(Args&&... args) const {
+  using IdT = Id<JniT, IdType::OVERLOAD_SET, I, kNoIdx, kNoIdx, 0>;
+  using MethodSelectionForArgs =
+      OverloadSelector<IdT, IdType::OVERLOAD, IdType::OVERLOAD_PARAM,
+                        Args...>;
+
+  static_assert(MethodSelectionForArgs::kIsValidArgSet,
+                "JNI Error: Invalid argument set.");
+
+  return MethodSelectionForArgs::OverloadRef::Invoke(
+      GetJClass(), RefBaseT::object_ref_, std::forward<Args>(args)...);
+}
+
+
+// Invoked through CRTP from QueryableMap20, C++20 only.
+template <size_t I, metaprogramming::StringLiteral key_literal>
+auto QueryableMap20Call() const {
+  return FieldRef<JniT, IdType::FIELD, I>{GetJClass(), RefBaseT::object_ref_};
+}
+
+#endif  // __cplusplus >= 202002L
+#endif  // __cplusplus
+
 };
 
 // Imbues constructors for ObjectRefs and handles calling the correct

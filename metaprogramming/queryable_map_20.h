@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef JNI_BIND_METAPROGRAMMING_INVOCABLE_MAP_20_H
-#define JNI_BIND_METAPROGRAMMING_INVOCABLE_MAP_20_H
+#ifndef JNI_BIND_METAPROGRAMMING_QUERYABLE_MAP_20_H
+#define JNI_BIND_METAPROGRAMMING_QUERYABLE_MAP_20_H
 
 #include <cstddef>
 #include <string_view>
@@ -28,24 +28,17 @@
 
 namespace jni::metaprogramming {
 
-// This class enables compile time lookup that perfectly forward arguments
-// to a method named `Call`.  This is a C++ 20 version of InvocableMap.
-//
-// This is an interface that can be inherited from to expose a method named
-// `Call`.  It provides compile time string index lookup with no macros.
+// This is an interface that can be inherited from to expose an
+// operator.Access<"name">(). It provides compile time string index lookup with
+// no macros although it is dependent on a clang extension.
 //
 // To use this API, inherit from this class using template types as follows:
 //
 // |CrtpBase|: The name of the class inheriting from the map.  This class
-//   will inherit an operator().  It must implement this exact signature:
+//   will inherit an operator[].  It must implement this exact signature:
 //
-//    template <std::size_t I,  StringLiteral key_literal, typename... Args>
-//    auto InvocableMap20Call(Args&&... args);
-//
-//   If i is the index where |tup_container_v.*nameable_member|.name_ == key,
-//     then InvocableMap20Call will forward the args from operator() with the
-//     same args.  Static memory can be used in this function call and it will
-//     be unique because of the I non-type template parameter.
+//    template <std::size_t I, StringLiteral key_literal>
+//    auto QueryableMap20Call();
 //
 // |tup_container_v| is a static instance of an object whose |nameable_member|
 //   contains a public field called name_.  It might seem strange not to
@@ -56,13 +49,13 @@ namespace jni::metaprogramming {
 // and so the clang extension can no longer restrict function candidates.
 template <typename CrtpBase, const auto& tup_container_v,
           typename TupContainerT, const auto TupContainerT::* nameable_member>
-class InvocableMap20 {
- public:
-  template <StringLiteral key_literal, std::size_t Idx, typename... Args>
-  constexpr auto Do(Args&&... args) {
+class QueryableMap20 {
+#if __cplusplus >= 202002L
+  private:
+  template <StringLiteral string_literal, std::size_t Idx>
+  constexpr auto Do() {
     return (*static_cast<CrtpBase*>(this))
-        .template InvocableMap20Call<Idx, key_literal, Args...>(
-                                                 std::forward<Args>(args)...);
+        .template QueryableMap20Call<Idx, string_literal>();
   }
 
   template <std::size_t N, std::size_t... Is>
@@ -76,23 +69,24 @@ class InvocableMap20 {
          kNegativeOne});
   }
 
-  template <StringLiteral string_literal, typename... Args>
-  constexpr auto Call(Args&&... args) {
+ public:
+  template <StringLiteral string_literal>
+  constexpr auto Access() {
     return Do<string_literal,
               SelectCandidate(
                   string_literal,
                   std::make_index_sequence<std::tuple_size_v<std::decay_t<
-                      decltype(tup_container_v.*nameable_member)>>>())>(
-        std::forward<Args>(args)...);
+                      decltype(tup_container_v.*nameable_member)>>>())>();
   }
+#endif  // __cplusplus >= 202002L
 };
 
 template <typename CrtpBase, const auto& tup_container_v,
           const auto std::decay_t<decltype(tup_container_v)>::* nameable_member>
-using InvocableMap20_t =
-    InvocableMap20<CrtpBase, tup_container_v,
+using QueryableMap20_t =
+    QueryableMap20<CrtpBase, tup_container_v,
                    std::decay_t<decltype(tup_container_v)>, nameable_member>;
 
 }  // namespace jni::metaprogramming
 
-#endif  // JNI_BIND_METAPROGRAMMING_INVOCABLE_MAP_20_H
+#endif  // JNI_BIND_METAPROGRAMMING_QUERYABLE_MAP_20_H

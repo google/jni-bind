@@ -17,7 +17,6 @@
 #ifndef JNI_BIND_METAPROGRAMMING_STRING_LITERAL_H_
 #define JNI_BIND_METAPROGRAMMING_STRING_LITERAL_H_
 
-#ifdef __cplusplus
 #if __cplusplus >= 202002L
 
 #include <algorithm>
@@ -61,6 +60,5 @@ StringLiteral(const char (&str)[N]) -> StringLiteral<N>;
 }  // namespace jni::metaprogramming
 
 #endif  // __cplusplus >= 202002L
-#endif  // __cplusplus
 
 #endif  // JNI_BIND_METAPROGRAMMING_STRING_LITERAL_H_

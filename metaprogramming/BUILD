@@ -620,6 +620,7 @@ cc_library(
 cc_test(
     name = "invocable_map_test_20",
     srcs = ["invocable_map_20_test.cc"],
+    tags = ["cpp20"],
     deps = [
         ":invocable_map_20",
         ":modified_max",
@@ -980,6 +981,33 @@ cc_test(
     deps = [
         ":lambda_string",
         ":queryable_map",
+        "@googletest//:gtest_main",
+    ],
+)
+
+################################################################################
+# Queryable Map 20.
+################################################################################
+cc_library(
+    name = "queryable_map_20",
+    hdrs = ["queryable_map_20.h"],
+    deps = [
+        ":interleave",
+        ":tuple_from_size",
+        ":tuple_manipulation",
+        ":type_of_nth_element",
+        ":lambda_string",
+        ":modified_max",
+        ":string_literal",
+    ],
+)
+
+cc_test(
+    name = "queryable_map_20_test",
+    srcs = ["queryable_map_20_test.cc"],
+    tags = ["cpp20"],
+    deps = [
+        ":queryable_map_20",
         "@googletest//:gtest_main",
     ],
 )

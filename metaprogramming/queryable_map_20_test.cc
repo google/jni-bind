@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-#include "invocable_map_20.h"
+#include "queryable_map_20.h"
 
 #include <string_view>
 #include <tuple>
 #include <type_traits>
 
-#include "invocable_map_20.h"
+#include "queryable_map_20.h"
 #include "modified_max.h"
 #include "string_literal.h"
 #include <gtest/gtest.h>
 
-using jni::metaprogramming::InvocableMap20_t;
+using jni::metaprogramming::QueryableMap20_t;
 using jni::metaprogramming::StringLiteral;
 
 struct Str {
@@ -45,36 +45,31 @@ constexpr NameContainer name_container{
 
 ////////////////////////////////////////////////////////////////////////////////
 class SampleClassNowExposingCallOperator1
-    : public InvocableMap20_t<SampleClassNowExposingCallOperator1,
+    : public QueryableMap20_t<SampleClassNowExposingCallOperator1,
                               name_container, &NameContainer::container1_> {
  protected:
-  friend InvocableMap20_t<SampleClassNowExposingCallOperator1, name_container,
+  friend QueryableMap20_t<SampleClassNowExposingCallOperator1, name_container,
                           &NameContainer::container1_>;
 
-  template <size_t I, StringLiteral key_literal, typename... Args>
-  auto InvocableMap20Call(Args&&... ts) {
-    if ( std::string_view(key_literal.value) == "Foo") {
+  template <size_t I, StringLiteral key_literal>
+  auto QueryableMap20Call() {
+    if (std::string_view(key_literal.value) == "Foo") {
       EXPECT_TRUE(I == 0);
-      EXPECT_TRUE((std::is_same_v<std::tuple<Args...>, std::tuple<int>>));
-    } else if ( std::string_view(key_literal.value) == "Bar") {
+    } else if (std::string_view(key_literal.value) == "Bar") {
       EXPECT_TRUE(I == 1);
-      EXPECT_TRUE(
-          (std::is_same_v<std::tuple<Args...>, std::tuple<float, float>>));
-    } else if ( std::string_view(key_literal.value) == "Baz") {
+    } else if (std::string_view(key_literal.value) == "Baz") {
       EXPECT_TRUE(I == 2);
-      EXPECT_TRUE((
-          std::is_same_v<std::tuple<Args...>, std::tuple<int, float, double>>));
     } else {
       FAIL();
     }
   }
 };
 
-TEST(InvocableMapTest1, HasCorrectTypesAndForwardsCalls) {
+TEST(QueryableMap20Test1, HasCorrectTypesAndForwardsCalls) {
   SampleClassNowExposingCallOperator1 val;
-  val.Call<"Foo">(1);
-  val.Call<"Bar">(2.f, 3.f);
-  val.Call<"Baz">(4, 5.f, double{6});
+  val.Access<"Foo">();
+  val.Access<"Bar">();
+  val.Access<"Baz">();
 
   // By design, doesn't compile.
   // val("BazNar", 7, 8, 9);

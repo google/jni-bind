@@ -924,7 +924,10 @@ cc_library(
         "//implementation/jni_helper:lifecycle",
         "//metaprogramming:invocable_map",
         "//metaprogramming:queryable_map",
+        "//metaprogramming:invocable_map_20",
+        "//metaprogramming:queryable_map_20",
         "//metaprogramming:string_contains",
+        "//metaprogramming:string_literal",
     ],
 )
 
