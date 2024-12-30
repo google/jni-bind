@@ -124,9 +124,9 @@ TEST_F(JniTest, LocalObject_ObjectReturnsInstanceMethods) {
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>())).Times(1);
 
   LocalObject<kClass> obj{};
-  obj("Foo", 12345);
-  obj("Baz", 12345.f);
-  obj("AMethodWithAReallyLongNameThatWouldPossiblyBeHardForTemplatesToHandle",
+  obj.Call<"Foo">( 12345);
+  obj.Call<"Baz">( 12345.f);
+  obj.Call<"AMethodWithAReallyLongNameThatWouldPossiblyBeHardForTemplatesToHandle">(
       12345, 12345.f, 12345, 12345.f, jdouble{12345});
 }
 
@@ -164,9 +164,9 @@ TEST_F(JniTest, LocalObject_ValuesWorkAfterMoveConstructor) {
   EXPECT_CALL(*env_, SetIntField).Times(4);
 
   LocalObject<kClass> obj_1{Fake<jobject>()};
-  obj_1.Call<"Foo">(1);
-  obj_1("Foo", 2);
-  obj_1["BarField"].Set(1);
+  obj_1.Call<"Foo">( 1);
+  obj_1.Call<"Foo">( 2);
+  obj_1.Access<"BarField">().Set(1);
 
   LocalObject<kClass> obj_2{std::move(obj_1)};
   obj_2("Foo", 3);
@@ -249,7 +249,7 @@ TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnLvalue) {
 
   LocalObject<kClass> a{};
   LocalObject<kClass2> b{};
-  b("Foo", a);
+  b.Call<"Foo">( a);
 }
 
 TEST_F(JniTest, LocalObject_SupportsReturningAClass) {
@@ -257,7 +257,7 @@ TEST_F(JniTest, LocalObject_SupportsReturningAClass) {
       "Class1", Method{"Foo", jni::Return{kClass2}, jni::Params{}}};
 
   LocalObject<kClass> a{};
-  a("Foo");
+  a.Call<"Foo">();
 }
 
 TEST_F(JniTest, LocalObject_SupportsReturningAString) {
@@ -265,7 +265,7 @@ TEST_F(JniTest, LocalObject_SupportsReturningAString) {
       "Class1", Method{"Foo", jni::Return<jstring>{}, jni::Params{}}};
 
   LocalObject<kClass> a{};
-  a("Foo");
+  a.Call<"Foo">( );
 }
 
 jobject ReturnOutputOfMethod() {
@@ -284,7 +284,7 @@ TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnPrvalue) {
 
   LocalObject<kClass> a{};
   LocalObject<kClass2> b{};
-  b("Foo", std::move(a));
+  b.Call<"Foo">( std::move(a));
 }
 
 TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnXvalue) {
@@ -292,7 +292,7 @@ TEST_F(JniTest, LocalObject_SupportsPassingAnObjectAsAnXvalue) {
       "Class2", Method{"Foo", jni::Return{}, jni::Params{kClass}}};
 
   LocalObject<kClass2> b{};
-  b("Foo", LocalObject<kClass>{});
+  b.Call<"Foo">( LocalObject<kClass>{});
 }
 
 TEST_F(JniTest, LocalObject_MovesInContainerStruct) {
@@ -320,8 +320,8 @@ TEST_F(JniTest, LocalObject_DoesntCrossTalkOverClassMethodIds) {
   LocalObject<kClass2> obj_2{Fake<jobject>(2)};
 
   // These are different method IDs (they are different classes).
-  obj_1("Foo", 1);
-  obj_2("Foo", 1);
+  obj_1.Call<"Foo">( 1);
+  obj_2.Call<"Foo">( 1);
 }
 
 }  // namespace
