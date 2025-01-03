@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include <algorithm>
+#include <array>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -50,51 +51,43 @@ TEST_F(JniTest, ArrayView_CallsLengthProperly) {
 TEST_F(JniTest, ArrayView_GetsAndReleaseArrayBuffer) {
   EXPECT_CALL(*env_, GetBooleanArrayElements(Eq(Fake<jbooleanArray>()), _))
       .WillOnce(::testing::Return(Fake<jboolean*>()));
-  EXPECT_CALL(*env_, ReleaseBooleanArrayElements(
-                         Eq(Fake<jbooleanArray>()),
-                         Eq(Fake<jboolean*>()), 0));
+  EXPECT_CALL(*env_, ReleaseBooleanArrayElements(Eq(Fake<jbooleanArray>()),
+                                                 Eq(Fake<jboolean*>()), 0));
 
   EXPECT_CALL(*env_, GetByteArrayElements(Eq(Fake<jbyteArray>()), _))
       .WillOnce(::testing::Return(Fake<jbyte*>()));
-  EXPECT_CALL(*env_,
-              ReleaseByteArrayElements(Eq(Fake<jbyteArray>()),
-                                       Eq(Fake<jbyte*>()), 0));
+  EXPECT_CALL(*env_, ReleaseByteArrayElements(Eq(Fake<jbyteArray>()),
+                                              Eq(Fake<jbyte*>()), 0));
 
   EXPECT_CALL(*env_, GetCharArrayElements(Eq(Fake<jcharArray>()), _))
       .WillOnce(::testing::Return(Fake<jchar*>()));
-  EXPECT_CALL(*env_,
-              ReleaseCharArrayElements(Eq(Fake<jcharArray>()),
-                                       Eq(Fake<jchar*>()), 0));
+  EXPECT_CALL(*env_, ReleaseCharArrayElements(Eq(Fake<jcharArray>()),
+                                              Eq(Fake<jchar*>()), 0));
 
   EXPECT_CALL(*env_, GetShortArrayElements(Eq(Fake<jshortArray>()), _))
       .WillOnce(::testing::Return(Fake<jshort*>()));
-  EXPECT_CALL(
-      *env_, ReleaseShortArrayElements(Eq(Fake<jshortArray>()),
-                                       Eq(Fake<jshort*>()), 0));
+  EXPECT_CALL(*env_, ReleaseShortArrayElements(Eq(Fake<jshortArray>()),
+                                               Eq(Fake<jshort*>()), 0));
 
   EXPECT_CALL(*env_, GetIntArrayElements(Eq(Fake<jintArray>()), _))
       .WillOnce(::testing::Return(Fake<jint*>()));
-  EXPECT_CALL(*env_,
-              ReleaseIntArrayElements(Eq(Fake<jintArray>()),
-                                      Eq(Fake<jint*>()), 0));
+  EXPECT_CALL(*env_, ReleaseIntArrayElements(Eq(Fake<jintArray>()),
+                                             Eq(Fake<jint*>()), 0));
 
   EXPECT_CALL(*env_, GetLongArrayElements(Eq(Fake<jlongArray>()), _))
       .WillOnce(::testing::Return(Fake<jlong*>()));
-  EXPECT_CALL(*env_,
-              ReleaseLongArrayElements(Eq(Fake<jlongArray>()),
-                                       Eq(Fake<jlong*>()), 0));
+  EXPECT_CALL(*env_, ReleaseLongArrayElements(Eq(Fake<jlongArray>()),
+                                              Eq(Fake<jlong*>()), 0));
 
   EXPECT_CALL(*env_, GetFloatArrayElements(Eq(Fake<jfloatArray>()), _))
       .WillOnce(::testing::Return(Fake<jfloat*>()));
-  EXPECT_CALL(
-      *env_, ReleaseFloatArrayElements(Eq(Fake<jfloatArray>()),
-                                       Eq(Fake<jfloat*>()), 0));
+  EXPECT_CALL(*env_, ReleaseFloatArrayElements(Eq(Fake<jfloatArray>()),
+                                               Eq(Fake<jfloat*>()), 0));
 
   EXPECT_CALL(*env_, GetDoubleArrayElements(Eq(Fake<jdoubleArray>()), _))
       .WillOnce(::testing::Return(Fake<jdouble*>()));
-  EXPECT_CALL(*env_, ReleaseDoubleArrayElements(
-                         Eq(Fake<jdoubleArray>()),
-                         Eq(Fake<jdouble*>()), 0));
+  EXPECT_CALL(*env_, ReleaseDoubleArrayElements(Eq(Fake<jdoubleArray>()),
+                                                Eq(Fake<jdouble*>()), 0));
 
   LocalArray<jboolean> boolean_array{AdoptLocal{}, Fake<jbooleanArray>()};
   LocalArray<jbyte> byte_array{AdoptLocal{}, Fake<jbyteArray>()};
@@ -118,9 +111,8 @@ TEST_F(JniTest, ArrayView_GetsAndReleaseArrayBuffer) {
 TEST_F(JniTest, LocalArrayView_AllowsCTAD) {
   EXPECT_CALL(*env_, GetBooleanArrayElements(Eq(Fake<jbooleanArray>()), _))
       .WillOnce(::testing::Return(Fake<jboolean*>()));
-  EXPECT_CALL(*env_, ReleaseBooleanArrayElements(
-                         Eq(Fake<jbooleanArray>()),
-                         Eq(Fake<jboolean*>()), 0));
+  EXPECT_CALL(*env_, ReleaseBooleanArrayElements(Eq(Fake<jbooleanArray>()),
+                                                 Eq(Fake<jboolean*>()), 0));
 
   LocalArray<jboolean> boolean_array{AdoptLocal{}, Fake<jbooleanArray>()};
   ArrayView ctad_array_view{boolean_array.Pin()};
@@ -326,7 +318,7 @@ TEST_F(JniTest, ArrayView_RichObjectsAreIterable) {
   int fake_result = 123;
   for (LocalObject<kClass> obj : obj_view) {
     EXPECT_CALL(*env_, CallIntMethodV).WillOnce(::testing::Return(fake_result));
-    EXPECT_EQ(obj("Foo"), fake_result);
+    EXPECT_EQ(obj.Call<"Foo">(), fake_result);
     fake_result++;
   }
 }

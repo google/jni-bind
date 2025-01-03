@@ -73,49 +73,49 @@ Java_com_jnibind_test_StaticTest_jniTearDown(JavaVM* pjvm, void* reserved) {
 ////////////////////////////////////////////////////////////////////////////////
 JNIEXPORT void JNICALL Java_com_jnibind_test_StaticTest_voidMethodTestNative(
     JavaVM* pjvm, void* reserved) {
-  StaticRef<kClass>{}("voidFunc");
+  StaticRef<kClass>{}.Call<"voidFunc">();
 }
 
 JNIEXPORT jbyte JNICALL Java_com_jnibind_test_StaticTest_byteMethodTestNative(
     JavaVM* pjvm, void* reserved) {
-  return StaticRef<kClass>{}("byteFunc");
+  return StaticRef<kClass>{}.Call<"byteFunc">();
 }
 
 JNIEXPORT jchar JNICALL Java_com_jnibind_test_StaticTest_charMethodTestNative(
     JavaVM* pjvm, void* reserved) {
-  return StaticRef<kClass>{}("charFunc");
+  return StaticRef<kClass>{}.Call<"charFunc">();
 }
 
 JNIEXPORT jshort JNICALL Java_com_jnibind_test_StaticTest_shortMethodTestNative(
     JavaVM* pjvm, void* reserved) {
-  return StaticRef<kClass>{}("shortFunc");
+  return StaticRef<kClass>{}.Call<"shortFunc">();
 }
 
 JNIEXPORT jint JNICALL Java_com_jnibind_test_StaticTest_intMethodTestNative(
     JavaVM* pjvm, void* reserved) {
-  return StaticRef<kClass>{}("intFunc");
+  return StaticRef<kClass>{}.Call<"intFunc">();
 }
 
 JNIEXPORT jlong JNICALL Java_com_jnibind_test_StaticTest_longMethodTestNative(
     JavaVM* pjvm, void* reserved) {
-  return StaticRef<kClass>{}("longFunc");
+  return StaticRef<kClass>{}.Call<"longFunc">();
 }
 
 JNIEXPORT jfloat JNICALL Java_com_jnibind_test_StaticTest_floatMethodTestNative(
     JavaVM* pjvm, void* reserved) {
-  return StaticRef<kClass>{}("floatFunc");
+  return StaticRef<kClass>{}.Call<"floatFunc">();
 }
 
 JNIEXPORT jdouble JNICALL
 Java_com_jnibind_test_StaticTest_doubleMethodTestNative(JavaVM* pjvm,
                                                         void* reserved) {
-  return StaticRef<kClass>{}("doubleFunc");
+  return StaticRef<kClass>{}.Call<"doubleFunc">();
 }
 
 JNIEXPORT jobject JNICALL
 Java_com_jnibind_test_StaticTest_objectMethodTestNative(JavaVM* pjvm,
                                                         void* reserved) {
-  return StaticRef<kClass>{}("objectFunc").Release();
+  return StaticRef<kClass>{}.Call<"objectFunc">().Release();
 }
 
 JNIEXPORT jstring JNICALL
@@ -123,7 +123,7 @@ Java_com_jnibind_test_StaticTest_complexMethodTestNative(JavaVM* pjvm,
                                                          void* reserved, jint a,
                                                          jfloat b, jstring c,
                                                          jobjectArray d) {
-  return StaticRef<kClass>{}("complexFunc", a, b, c, d).Release();
+  return StaticRef<kClass>{}.Call<"complexFunc">(a, b, c, d).Release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,57 +131,57 @@ Java_com_jnibind_test_StaticTest_complexMethodTestNative(JavaVM* pjvm,
 ////////////////////////////////////////////////////////////////////////////////
 JNIEXPORT bool JNICALL Java_com_jnibind_test_StaticTest_booleanFieldTestNative(
     JavaVM* pjvm, void* reserved, bool val) {
-  StaticRef<kClass>{}["booleanField"].Set(val);
-  return StaticRef<kClass>{}["booleanField"].Get();
+  StaticRef<kClass>{}.Access<"booleanField">().Set(val);
+  return StaticRef<kClass>{}.Access<"booleanField">().Get();
 }
 
 JNIEXPORT jbyte JNICALL Java_com_jnibind_test_StaticTest_byteFieldTestNative(
     JavaVM* pjvm, void* reserved, jbyte val) {
-  StaticRef<kClass>{}["byteField"].Set(val);
-  return StaticRef<kClass>{}["byteField"].Get();
+  StaticRef<kClass>{}.Access<"byteField">().Set(val);
+  return StaticRef<kClass>{}.Access<"byteField">().Get();
 }
 
 JNIEXPORT char JNICALL Java_com_jnibind_test_StaticTest_charFieldTestNative(
     JavaVM* pjvm, void* reserved, jchar val) {
-  StaticRef<kClass>{}["charField"].Set(val);
-  return StaticRef<kClass>{}["charField"].Get();
+  StaticRef<kClass>{}.Access<"charField">().Set(val);
+  return StaticRef<kClass>{}.Access<"charField">().Get();
 }
 
 JNIEXPORT short JNICALL Java_com_jnibind_test_StaticTest_shortFieldTestNative(
     JavaVM* pjvm, void* reserved, jshort val) {
-  StaticRef<kClass>{}["shortField"].Set(val);
-  return StaticRef<kClass>{}["shortField"].Get();
+  StaticRef<kClass>{}.Access<"shortField">().Set(val);
+  return StaticRef<kClass>{}.Access<"shortField">().Get();
 }
 
 JNIEXPORT int JNICALL Java_com_jnibind_test_StaticTest_intFieldTestNative(
     JavaVM* pjvm, void* reserved, jint val) {
-  StaticRef<kClass>{}["intField"].Set(val);
-  return StaticRef<kClass>{}["intField"].Get();
+  StaticRef<kClass>{}.Access<"intField">().Set(val);
+  return StaticRef<kClass>{}.Access<"intField">().Get();
 }
 
 JNIEXPORT long JNICALL Java_com_jnibind_test_StaticTest_longFieldTestNative(
     JavaVM* pjvm, void* reserved, jlong val) {
-  StaticRef<kClass>{}["longField"].Set(val);
-  return StaticRef<kClass>{}["longField"].Get();
+  StaticRef<kClass>{}.Access<"longField">().Set(val);
+  return StaticRef<kClass>{}.Access<"longField">().Get();
 }
 
 JNIEXPORT float JNICALL Java_com_jnibind_test_StaticTest_floatFieldTestNative(
     JavaVM* pjvm, void* reserved, jfloat val) {
-  StaticRef<kClass>{}["floatField"].Set(val);
-  return StaticRef<kClass>{}["floatField"].Get();
+  StaticRef<kClass>{}.Access<"floatField">().Set(val);
+  return StaticRef<kClass>{}.Access<"floatField">().Get();
 }
 
 JNIEXPORT double JNICALL Java_com_jnibind_test_StaticTest_doubleFieldTestNative(
     JavaVM* pjvm, void* reserved, jdouble val) {
-  StaticRef<kClass>{}["doubleField"].Set(val);
-  return StaticRef<kClass>{}["doubleField"].Get();
+  StaticRef<kClass>{}.Access<"doubleField">().Set(val);
+  return StaticRef<kClass>{}.Access<"doubleField">().Get();
 }
 
 JNIEXPORT jobject JNICALL
 Java_com_jnibind_test_StaticTest_objectFieldTestNative(JavaVM* pjvm,
                                                        void* reserved,
                                                        jobject val) {
-  StaticRef<kClass>{}["objectField"].Set(val);
-  return StaticRef<kClass>{}["objectField"].Get().Release();
+  StaticRef<kClass>{}.Access<"objectField">().Set(val);
+  return StaticRef<kClass>{}.Access<"objectField">().Get().Release();
 }
 }

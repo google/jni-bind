@@ -923,8 +923,11 @@ cc_library(
         "//:jni_dep",
         "//implementation/jni_helper:lifecycle",
         "//metaprogramming:invocable_map",
+        "//metaprogramming:invocable_map_20",
         "//metaprogramming:queryable_map",
+        "//metaprogramming:queryable_map_20",
         "//metaprogramming:string_contains",
+        "//metaprogramming:string_literal",
     ],
 )
 
@@ -1071,7 +1074,7 @@ cc_test(
     deps = [
         "//:jni_bind",
         "//:jni_test",
-        "//metaprogramming:concatenate",
+        "//metaprogramming:type_to_type_map",
         "@googletest//:gtest_main",
     ],
 )
@@ -1237,9 +1240,11 @@ cc_library(
         ":method_selection",
         ":no_idx",
         "//:jni_dep",
-        "//implementation/jni_helper:invoke_static",
         "//metaprogramming:invocable_map",
+        "//metaprogramming:invocable_map_20",
         "//metaprogramming:queryable_map",
+        "//metaprogramming:queryable_map_20",
+        "//metaprogramming:string_literal",
     ],
 )
 

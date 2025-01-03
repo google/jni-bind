@@ -71,15 +71,15 @@ Java_com_jnibind_test_StringTest_jniPassesStringsInManyWays(
   LocalString string_lval{input};
 
   const char* kSimpleTestString{"SimpleTestString"};
-  fixture("voidMethodTakesString", "SimpleTestString");
-  fixture("voidMethodTakesString", kSimpleTestString);
-  fixture("voidMethodTakesString", std::string_view{"SimpleTestString"});
-  fixture("voidMethodTakesString", std::string{"SimpleTestString"});
-  fixture("voidMethodTakesString", input);
-  fixture("voidMethodTakesString", string_lval);
-  fixture("voidMethodTakesString", global_string_lval);
-  fixture("voidMethodTakesString", LocalString{input});
-  fixture("voidMethodTakesString", GlobalString{PromoteToGlobal{}, input});
+  fixture.Call<"voidMethodTakesString">("SimpleTestString");
+  fixture.Call<"voidMethodTakesString">(kSimpleTestString);
+  fixture.Call<"voidMethodTakesString">(std::string_view{"SimpleTestString"});
+  fixture.Call<"voidMethodTakesString">(std::string{"SimpleTestString"});
+  fixture.Call<"voidMethodTakesString">(input);
+  fixture.Call<"voidMethodTakesString">(string_lval);
+  fixture.Call<"voidMethodTakesString">(global_string_lval);
+  fixture.Call<"voidMethodTakesString">(LocalString{input});
+  fixture.Call<"voidMethodTakesString">(GlobalString{PromoteToGlobal{}, input});
 }
 
 /** Void return type tests. */
@@ -89,15 +89,15 @@ Java_com_jnibind_test_StringTest_jniVoidMethodTakesString(JNIEnv* env, jclass,
                                                           jstring string) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
   LocalString lValue{string};
-  r_jni_string_test_helper("voidMethodTakesString", LocalString{string});
+  r_jni_string_test_helper.Call<"voidMethodTakesString">(LocalString{string});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_StringTest_jniVoidMethodTakesTwoStrings(
     JNIEnv* env, jclass, jobject object, jstring s1, jstring s2) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
-  r_jni_string_test_helper("voidMethodTakesTwoStrings", LocalString{s1},
-                           LocalString{s2});
+  r_jni_string_test_helper.Call<"voidMethodTakesTwoStrings">(LocalString{s1},
+                                                             LocalString{s2});
 }
 
 JNIEXPORT void JNICALL
@@ -107,9 +107,9 @@ Java_com_jnibind_test_StringTest_jniVoidMethodTakesFiveStrings(
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
   std::string s4_string{LocalString{s4}.Pin().ToString()};
 
-  r_jni_string_test_helper("voidMethodTakesFiveStrings",
-                           LocalString{s1}.Pin().ToString(), LocalString{s2},
-                           s3, s4_string, LocalString{s5}.Pin().ToString());
+  r_jni_string_test_helper.Call<"voidMethodTakesFiveStrings">(
+      LocalString{s1}.Pin().ToString(), LocalString{s2}, s3, s4_string,
+      LocalString{s5}.Pin().ToString());
 }
 
 /** String return type tests. */
@@ -118,8 +118,8 @@ Java_com_jnibind_test_StringTest_jniStringMethodTakesString(JNIEnv* env, jclass,
                                                             jobject object,
                                                             jstring string) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
-  return r_jni_string_test_helper("stringMethodTakesString",
-                                  LocalString{string})
+  return r_jni_string_test_helper
+      .Call<"stringMethodTakesString">(LocalString{string})
       .Release();
 }
 
@@ -128,8 +128,8 @@ Java_com_jnibind_test_StringTest_jniStringMethodTakesTwoStrings(
     JNIEnv* env, jclass, jobject object, jstring s1, jstring s2) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
   return LocalString{
-      r_jni_string_test_helper("stringMethodTakesTwoStrings", LocalString{s1},
-                               std::string{LocalString{s2}.Pin().ToString()})}
+      r_jni_string_test_helper.Call<"stringMethodTakesTwoStrings">(
+          LocalString{s1}, std::string{LocalString{s2}.Pin().ToString()})}
       .Release();
 }
 
@@ -138,10 +138,10 @@ Java_com_jnibind_test_StringTest_jniStringMethodTakesFiveStrings(
     JNIEnv* env, jclass, jobject object, jstring s1, jstring s2, jstring s3,
     jstring s4, jstring s5) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
-  return LocalString{r_jni_string_test_helper("stringMethodTakesFiveStrings",
-                                              LocalString{s1}, LocalString{s2},
-                                              LocalString{s3}, LocalString{s4},
-                                              LocalString{s5})}
+  return LocalString{
+      r_jni_string_test_helper.Call<"stringMethodTakesFiveStrings">(
+          LocalString{s1}, LocalString{s2}, LocalString{s3}, LocalString{s4},
+          LocalString{s5})}
       .Release();
 }
 

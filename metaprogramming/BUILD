@@ -231,29 +231,6 @@ cc_test(
 )
 
 ################################################################################
-# Conjunction.
-################################################################################
-cc_library(
-    name = "conjunction",
-    hdrs = ["conjunction.h"],
-    deps = [
-        ":invoke",
-        ":next",
-    ],
-)
-
-cc_test(
-    name = "conjunction_test",
-    srcs = ["conjunction_test.cc"],
-    deps = [
-        ":conjunction",
-        ":invoke",
-        ":next",
-        "@googletest//:gtest_main",
-    ],
-)
-
-################################################################################
 # Contains.
 ################################################################################
 cc_library(
@@ -345,27 +322,8 @@ cc_test(
 )
 
 ################################################################################
-# Deep Equal.
+# Deep Equal Diminished.
 ################################################################################
-cc_library(
-    name = "deep_equal",
-    hdrs = ["deep_equal.h"],
-    deps = [
-        ":pack_discriminator",
-        ":vals_equal",
-    ],
-)
-
-cc_test(
-    name = "deep_equal_test",
-    srcs = ["deep_equal_test.cc"],
-    deps = [
-        ":deep_equal",
-        ":pack_discriminator",
-        "@googletest//:gtest_main",
-    ],
-)
-
 cc_library(
     name = "deep_equal_diminished",
     hdrs = ["deep_equal_diminished.h"],
@@ -606,6 +564,30 @@ cc_test(
 )
 
 ################################################################################
+# Invocable Map 20.
+################################################################################
+cc_library(
+    name = "invocable_map_20",
+    hdrs = ["invocable_map_20.h"],
+    deps = [
+        ":modified_max",
+        ":string_literal",
+    ],
+)
+
+cc_test(
+    name = "invocable_map_test_20",
+    srcs = ["invocable_map_20_test.cc"],
+    tags = ["cpp20"],
+    deps = [
+        ":invocable_map_20",
+        ":modified_max",
+        ":string_literal",
+        "@googletest//:gtest_main",
+    ],
+)
+
+################################################################################
 # Invoke.
 ################################################################################
 cc_library(
@@ -626,30 +608,6 @@ cc_test(
         ":invoke",
         ":per_element",
         ":same",
-        "@googletest//:gtest_main",
-    ],
-)
-
-################################################################################
-# Lambda Compatible.
-################################################################################
-cc_library(
-    name = "lambda_compatible",
-    hdrs = ["lambda_compatible.h"],
-    deps = [
-        ":deep_equal",
-        ":tuple_manipulation",
-        ":type_of_nth_element",
-    ],
-)
-
-cc_test(
-    name = "lambda_compatible_test",
-    srcs = ["lambda_compatible_test.cc"],
-    deps = [
-        ":deep_equal",
-        ":lambda_compatible",
-        ":vals",
         "@googletest//:gtest_main",
     ],
 )
@@ -957,6 +915,35 @@ cc_test(
     deps = [
         ":lambda_string",
         ":queryable_map",
+        "@googletest//:gtest_main",
+    ],
+)
+
+################################################################################
+# Queryable Map 20.
+################################################################################
+cc_library(
+    name = "queryable_map_20",
+    hdrs = ["queryable_map_20.h"],
+    deps = [
+        ":interleave",
+        ":lambda_string",
+        ":modified_max",
+        ":string_literal",
+        ":tuple_from_size",
+        ":tuple_manipulation",
+        ":type_of_nth_element",
+    ],
+)
+
+cc_test(
+    name = "queryable_map_20_test",
+    srcs = ["queryable_map_20_test.cc"],
+    tags = ["cpp20"],
+    deps = [
+        ":modified_max",
+        ":queryable_map_20",
+        ":string_literal",
         "@googletest//:gtest_main",
     ],
 )

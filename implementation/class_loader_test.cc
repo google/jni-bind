@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <gtest/gtest.h>
 #include "jni_bind.h"
-#include "jni_test.h"
 
 namespace {
 

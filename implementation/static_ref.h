@@ -32,7 +32,10 @@
 #include "implementation/no_idx.h"
 #include "jni_dep.h"
 #include "metaprogramming/invocable_map.h"
+#include "metaprogramming/invocable_map_20.h"
 #include "metaprogramming/queryable_map.h"
+#include "metaprogramming/queryable_map_20.h"
+#include "metaprogramming/string_literal.h"
 
 namespace jni {
 
@@ -41,13 +44,23 @@ template <typename CrtpBase_, const auto& class_v_, const auto& class_loader_v_,
 struct StaticRefHelper {
   using JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
 
+  // C++17 augmentations.
   using MethodMapT = metaprogramming::InvocableMap<CrtpBase_, JniT::static_v,
                                                    typename JniT::StaticT,
                                                    &JniT::StaticT::methods_>;
   using FieldMapT = metaprogramming::QueryableMap_t<CrtpBase_, JniT::static_v,
                                                     &JniT::StaticT::fields_>;
+
+  // C++ 20 augmentations.
+  using MethodMap20T =
+      metaprogramming::InvocableMap20_t<CrtpBase_, JniT::static_v,
+                                        &JniT::StaticT::methods_>;
+  using FieldMap20T =
+      metaprogramming::QueryableMap20_t<CrtpBase_, JniT::static_v,
+                                        &JniT::StaticT::fields_>;
 };
 
+// C++17 augmentations.
 template <typename CrtpBase_, const auto& class_v_, const auto& class_loader_v_,
           const auto& jvm_v_>
 using StaticRefHelperMethodMap_t =
@@ -60,21 +73,45 @@ using StaticRefHelperFieldMap_t =
     typename StaticRefHelper<CrtpBase_, class_v_, class_loader_v_,
                              jvm_v_>::FieldMapT;
 
+// C++20 augmentations.
+template <typename CrtpBase_, const auto& class_v_, const auto& class_loader_v_,
+          const auto& jvm_v_>
+using StaticRefHelperMethodMap20_t =
+    typename StaticRefHelper<CrtpBase_, class_v_, class_loader_v_,
+                             jvm_v_>::MethodMap20T;
+template <typename CrtpBase_, const auto& class_v_, const auto& class_loader_v_,
+          const auto& jvm_v_>
+using StaticRefHelperFieldMap20_t =
+    typename StaticRefHelper<CrtpBase_, class_v_, class_loader_v_,
+                             jvm_v_>::FieldMap20T;
+
 template <const auto& class_v_,
           const auto& class_loader_v_ = kDefaultClassLoader,
           const auto& jvm_v_ = kDefaultJvm>
 struct StaticRef
-    : public StaticRefHelperMethodMap_t<
-          StaticRef<class_v_, class_loader_v_, jvm_v_>, class_v_,
-          class_loader_v_, jvm_v_>,
+    : public
+      // C++17 augmentations.
+      StaticRefHelperMethodMap_t<StaticRef<class_v_, class_loader_v_, jvm_v_>,
+                                 class_v_, class_loader_v_, jvm_v_>,
       StaticRefHelperFieldMap_t<StaticRef<class_v_, class_loader_v_, jvm_v_>,
-                                class_v_, class_loader_v_, jvm_v_> {
+                                class_v_, class_loader_v_, jvm_v_>,
+      // C++ 20 augmentations.
+      StaticRefHelperMethodMap20_t<StaticRef<class_v_, class_loader_v_, jvm_v_>,
+                                   class_v_, class_loader_v_, jvm_v_>,
+      StaticRefHelperFieldMap20_t<StaticRef<class_v_, class_loader_v_, jvm_v_>,
+                                  class_v_, class_loader_v_, jvm_v_> {
   using JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
 
   jclass GetJClass() const {
     return ClassRef_t<JniT>::GetAndMaybeLoadClassRef(nullptr);
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+  // Implementation: C++17 + clang
+  // Supports syntax like: "obj("foo", 123, args)", "obj["foo"].Get()"
+  // This syntax is less portable and may be removed in a major future release.
+  ////////////////////////////////////////////////////////////////////////////////
+#if __clang__
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {
     using IdT = Id<JniT, IdType::STATIC_OVERLOAD_SET, I, kNoIdx, kNoIdx, 0>;
@@ -93,6 +130,31 @@ struct StaticRef
   auto QueryableMapCall(const char* key) const {
     return FieldRef<JniT, IdType::STATIC_FIELD, I>{GetJClass(), nullptr};
   }
+#endif  // __clang__
+
+#if __cplusplus >= 202002L
+  // Invoked through CRTP from InvocableMap, C++20 only.
+  template <size_t I, metaprogramming::StringLiteral key_literal,
+            typename... Args>
+  auto InvocableMap20Call(Args&&... args) const {
+    using IdT = Id<JniT, IdType::STATIC_OVERLOAD_SET, I, kNoIdx, kNoIdx, 0>;
+    using MethodSelectionForArgs =
+        OverloadSelector<IdT, IdType::STATIC_OVERLOAD,
+                         IdType::STATIC_OVERLOAD_PARAM, Args...>;
+
+    static_assert(MethodSelectionForArgs::kIsValidArgSet,
+                  "JNI Error: Invalid argument set.");
+
+    return MethodSelectionForArgs::OverloadRef::Invoke(
+        GetJClass(), nullptr, std::forward<Args>(args)...);
+  }
+
+  // Invoked through CRTP from QueryableMap20, C++20 only.
+  template <size_t I, metaprogramming::StringLiteral key_literal>
+  auto QueryableMap20Call() const {
+    return FieldRef<JniT, IdType::STATIC_FIELD, I>{GetJClass(), nullptr};
+  }
+#endif  // __cplusplus >= 202002L
 };
 
 }  // namespace jni

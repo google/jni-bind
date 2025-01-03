@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: test
-      run: bazel query --output=label 'kind("...", //...) except attr("tags", "cpp20", "//...")' | xargs bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors 
+      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors //implementation/legacy/...
 
   ubuntu-latest-cpp20:
     runs-on: ubuntu-latest
@@ -29,7 +29,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: test
-      run: bazel query --output=label 'kind("...", //...) except attr(tags, "cpp20", //...)' | xargs bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors 
+      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors //implementation/legacy/...
 
   macos-latest-cpp20:
     runs-on: macos-latest

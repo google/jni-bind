@@ -44,7 +44,7 @@ TEST_F(JniTest, SelfCanBeUsedAsAReturnValue) {
                                  StrEq("()LBuilder;")));
 
   LocalObject<kClass> obj{Fake<jobject>()};
-  obj("build");
+  obj.Call<"build">();
 }
 
 TEST_F(JniTest, SelfCanBeUsedAsAReturnValueAndMaintainsRichDecoration) {
@@ -52,7 +52,7 @@ TEST_F(JniTest, SelfCanBeUsedAsAReturnValueAndMaintainsRichDecoration) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("build"), StrEq("()LBuilder;")));
 
   LocalObject<kClass> obj{Fake<jobject>()};
-  obj("build")("build")("build");
+  obj.Call<"build">().Call<"build">().Call<"build">();
 }
 
 TEST_F(JniTest, SelfCanBeUsedAsParam) {
@@ -62,7 +62,7 @@ TEST_F(JniTest, SelfCanBeUsedAsParam) {
   LocalObject<kClass> obj_1{Fake<jobject>(1)};
   LocalObject<kClass> obj_2{Fake<jobject>(2)};
 
-  obj_1("takesBuilder", obj_2);
+  obj_1.Call<"takesBuilder">(obj_2);
 }
 
 }  // namespace

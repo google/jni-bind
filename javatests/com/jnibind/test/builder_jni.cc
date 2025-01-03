@@ -56,8 +56,11 @@ JNI_BIND_EXPORT jint JNI_BIND_CALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
 JNI_MTHD(void, nativeJniTeardown) { jvm = nullptr; }
 
 JNI_MTHD(jobject, useBuilderToCreateObject) {
-  return LocalObject<kBuilder>{}("setOne", 111)("setTwo", 222)("setThree",
-                                                               333)("build")
+  return LocalObject<kBuilder>{}
+      .Call<"setOne">(111)
+      .Call<"setTwo">(222)
+      .Call<"setThree">(333)
+      .Call<"build">()
       .Release();
 }
 

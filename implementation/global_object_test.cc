@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <optional>
+#include <tuple>
 #include <utility>
 
 #include <gmock/gmock.h>
@@ -200,15 +200,15 @@ TEST_F(JniTest, GlobalObject_ValuesWorkAfterMoveConstructor) {
       Method{"Foo", jni::Return<jint>{}, Params<jint>{}},
       Field{"BarField", jint{}}};
   GlobalObject<kClass> global_object_1{AdoptGlobal{}, Fake<jobject>(1)};
-  global_object_1("Foo", 1);
-  global_object_1("Foo", 2);
-  global_object_1["BarField"].Set(1);
+  global_object_1.Call<"Foo">(1);
+  global_object_1.Call<"Foo">(2);
+  global_object_1.Access<"BarField">().Set(1);
 
   GlobalObject<kClass> global_object_2{std::move(global_object_1)};
-  global_object_2("Foo", 3);
-  global_object_2["BarField"].Set(2);
-  global_object_2["BarField"].Set(3);
-  global_object_2["BarField"].Set(4);
+  global_object_2.Call<"Foo">(3);
+  global_object_2.Access<"BarField">().Set(2);
+  global_object_2.Access<"BarField">().Set(3);
+  global_object_2.Access<"BarField">().Set(4);
 
   GlobalObject<kClass> global_object_3{AdoptGlobal{}, Fake<jobject>(1)};
 }
@@ -245,10 +245,10 @@ TEST_F(JniTest, GlobalObject_ObjectReturnsInstanceMethods) {
              Params<jint, jfloat, jint, jfloat, jdouble>{}}};
 
   GlobalObject<java_class_under_test> global_object{};
-  global_object("Foo", 1);
-  global_object("Baz", 2.f);
-  global_object(
-      "AMethodWithAReallyLongNameThatWouldPossiblyBeHardForTemplatesToHandle",
+  global_object.Call<"Foo">(1);
+  global_object.Call<"Baz">(2.f);
+  global_object.Call<
+      "AMethodWithAReallyLongNameThatWouldPossiblyBeHardForTemplatesToHandle">(
       int{}, float{}, int{}, float{}, double{});
 }
 
@@ -268,7 +268,7 @@ TEST_F(JniTest, GlobalObject_SupportsPassingAPrvalue) {
 
   GlobalObject<kTestClass1> a{};
   GlobalObject<kTestClass2> b{};
-  b("Foo", std::move(a));
+  b.Call<"Foo">(std::move(a));
 }
 
 TEST_F(JniTest, GlobalObjects_PromoteRValuesFromEmittedLValues) {
@@ -277,9 +277,9 @@ TEST_F(JniTest, GlobalObjects_PromoteRValuesFromEmittedLValues) {
       "TestClass2", Method{"Foo", jni::Return{kClass1}, jni::Params{}}};
 
   LocalObject<kClass2> b{};
-  GlobalObject<kClass1> a{b("Foo")};
+  GlobalObject<kClass1> a{b.Call<"Foo">()};
 
-  a = b("Foo");
+  a = b.Call<"Foo">();
 }
 
 }  // namespace

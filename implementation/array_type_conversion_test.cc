@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <type_traits>
+
 #include "jni_bind.h"
 
 namespace {

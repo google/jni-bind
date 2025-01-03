@@ -71,13 +71,13 @@ TEST_F(JniTest, MultiTypeTest_SimpleSmokeTestForSingleObject) {
   EXPECT_CALL(*env_, DeleteGlobalRef(Fake<jclass>(2))).Times(1);
 
   jni::GlobalObject<object> obj{};
-  obj("Foo", 1, 2.f);
-  obj("Baz", 1.f);
-  obj("Baz", 1.f);
-  obj("Baz", 2.f);
-  obj("Baz", 3.f);
-  obj("Bar");
-  obj["SomeField"].Get();
+  obj.Call<"Foo">(1, 2.f);
+  obj.Call<"Baz">(1.f);
+  obj.Call<"Baz">(1.f);
+  obj.Call<"Baz">(2.f);
+  obj.Call<"Baz">(3.f);
+  obj.Call<"Bar">();
+  obj.Access<"SomeField">().Get();
 }
 
 TEST_F(JniTest, MultiTypeTest_MethodsOfSameNameButDifferentClassAreUnique) {
@@ -94,21 +94,21 @@ TEST_F(JniTest, MultiTypeTest_MethodsOfSameNameButDifferentClassAreUnique) {
 
   jni::LocalObject<c1> obj1{Fake<jobject>(1)};
   jni::LocalObject<c2> obj2{Fake<jobject>(2)};
-  obj1("Foo", 12345);
-  obj2("Foo", 12345);
+  obj1.Call<"Foo">(12345);
+  obj2.Call<"Foo">(12345);
 
   // All of these calls ought not query for a method ID again.
-  obj1("Foo", 12345);
-  obj1("Foo", 12345);
-  obj1("Foo", 12345);
-  obj1("Foo", 12345);
-  obj2("Foo", 12345);
-  obj2("Foo", 12345);
-  obj2("Foo", 12345);
+  obj1.Call<"Foo">(12345);
+  obj1.Call<"Foo">(12345);
+  obj1.Call<"Foo">(12345);
+  obj1.Call<"Foo">(12345);
+  obj2.Call<"Foo">(12345);
+  obj2.Call<"Foo">(12345);
+  obj2.Call<"Foo">(12345);
 
   jni::LocalObject<c1> obj3{Fake<jobject>(3)};
-  obj3("Foo", 12345);
-  obj3("Foo", 12345);
+  obj3.Call<"Foo">(12345);
+  obj3.Call<"Foo">(12345);
 }
 
 }  // namespace

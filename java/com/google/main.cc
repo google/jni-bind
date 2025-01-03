@@ -46,7 +46,7 @@ void RunIterationsToCompletion(jni::JvmRef<jni::kDefaultJvm> *jvm_ref) {
 
   for (int i = 0; i < kNumIterations; ++i) {
     printf("Iteration %i: %s\n", i,
-           random_string("format").Pin().ToString().data());
+           random_string.Call<"format">().Pin().ToString().data());
   }
 }
 

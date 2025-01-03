@@ -72,23 +72,23 @@ TEST_F(JniTest, LocalArrayField_Rank2) {
 
   LocalObject<kRank2> obj{AdoptLocal{}, Fake<jobject>()};
 
-  EXPECT_EQ(static_cast<jobjectArray>(obj["BooleanArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"BooleanArray">().Get()),
             Fake<jobjectArray>(1));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["ByteArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"ByteArray">().Get()),
             Fake<jobjectArray>(2));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["CharArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"CharArray">().Get()),
             Fake<jobjectArray>(3));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["ShortArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"ShortArray">().Get()),
             Fake<jobjectArray>(4));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["IntArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"IntArray">().Get()),
             Fake<jobjectArray>(5));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["FloatArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"FloatArray">().Get()),
             Fake<jobjectArray>(6));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["DoubleArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"DoubleArray">().Get()),
             Fake<jobjectArray>(7));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["LongArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"LongArray">().Get()),
             Fake<jobjectArray>(8));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["ObjectArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"ObjectArray">().Get()),
             Fake<jobjectArray>(9));
 }
 
@@ -129,23 +129,23 @@ TEST_F(JniTest, LocalArrayField_Rank3) {
 
   LocalObject<kRank3> obj{AdoptLocal{}, Fake<jobject>()};
 
-  EXPECT_EQ(static_cast<jobjectArray>(obj["BooleanArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"BooleanArray">().Get()),
             Fake<jobjectArray>(1));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["ByteArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"ByteArray">().Get()),
             Fake<jobjectArray>(2));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["CharArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"CharArray">().Get()),
             Fake<jobjectArray>(3));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["ShortArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"ShortArray">().Get()),
             Fake<jobjectArray>(4));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["IntArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"IntArray">().Get()),
             Fake<jobjectArray>(5));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["FloatArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"FloatArray">().Get()),
             Fake<jobjectArray>(6));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["DoubleArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"DoubleArray">().Get()),
             Fake<jobjectArray>(7));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["LongArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"LongArray">().Get()),
             Fake<jobjectArray>(8));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["ObjectArray"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"ObjectArray">().Get()),
             Fake<jobjectArray>(9));
 }
 

@@ -23,13 +23,13 @@ TEST_F(JniTest, SmokeTest_SimplyRun) {
   };
 
   jni::GlobalObject<object> obj{};
-  obj("Foo", 1, 2.f);
-  obj("Baz", 1.f);
-  obj("Baz", 1.f);
-  obj("Baz", 2.f);
-  obj("Baz", 3.f);
-  obj("Bar");
-  obj["SomeField"].Get();
+  obj.Call<"Foo">(1, 2.f);
+  obj.Call<"Baz">(1.f);
+  obj.Call<"Baz">(1.f);
+  obj.Call<"Baz">(2.f);
+  obj.Call<"Baz">(3.f);
+  obj.Call<"Bar">();
+  obj.Access<"SomeField">().Get();
 }
 
 }  // namespace

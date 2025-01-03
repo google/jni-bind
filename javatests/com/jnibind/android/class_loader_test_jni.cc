@@ -74,8 +74,8 @@ Java_com_jnibind_android_ClassLoaderTest_jniBuildNewObjectsFromClassLoader(
   LocalObject helper_obj =
       class_loader.BuildLocalObject<kObjectTestHelperClass>(1, 2, 3);
   return LocalObject<kClassLoaderTestClass, kTestClassLoader,
-                     kJvmWithCustomClassLoaderSupport>{jtest_obj}(
-             "methodTakesLocalObjectReturnsNewObject", helper_obj)
+                     kJvmWithCustomClassLoaderSupport>{jtest_obj}
+      .Call<"methodTakesLocalObjectReturnsNewObject">(helper_obj)
       .Release();
 }
 
@@ -85,8 +85,8 @@ Java_com_jnibind_android_ClassLoaderTest_jniBuildNewObjectsFromDefaultClassLoade
   GlobalClassLoader<kLiteTestClassLoader, kJvmWithCustomClassLoaderSupport>
       class_loader{PromoteToGlobal{}, jclass_loader_obj};
   LocalObject<kObjectTestHelperClass> helper_obj{2, 3, 4};
-  return LocalObject<kClassLoaderTestClass>{jtest_obj}(
-             "methodTakesLocalObjectReturnsNewObject", helper_obj)
+  return LocalObject<kClassLoaderTestClass>{jtest_obj}
+      .Call<"methodTakesLocalObjectReturnsNewObject">(helper_obj)
       .Release();
 }
 
@@ -101,9 +101,9 @@ Java_com_jnibind_android_ClassLoaderTest_jniBuildsRemoteSubclassFromClassLoader(
           jint{value});
   LocalObject<kClassLoaderHelperClass, kCustomClassLoader,
               kJvmWithCustomClassLoaderSupport>
-      parent_obj{helper_obj("castToParent")};
+      parent_obj{helper_obj.Call<"castToParent">()};
 
-  return parent_obj("getValue");
+  return parent_obj.Call<"getValue">();
 }
 
 JNIEXPORT jint JNICALL
@@ -116,7 +116,7 @@ Java_com_jnibind_android_ClassLoaderTest_jniBuildsRemoteClassFromClassLoader(
       helper_obj =
           class_loader.BuildLocalObject<kClassLoaderHelperClass>(jint{value});
 
-  return helper_obj("getValue");
+  return helper_obj.Call<"getValue">();
 }
 
 }  // extern "C"

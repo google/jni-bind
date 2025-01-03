@@ -193,7 +193,7 @@ TEST_F(JniTest, MethodRef_ReturnsObjects) {
   EXPECT_CALL(*env_, NewObjectV).WillOnce(testing::Return(Fake<jobject>()));
 
   GlobalObject<kClass> global_object{};
-  LocalObject<c1> new_obj{global_object("Foo", 5)};
+  LocalObject<c1> new_obj{global_object.Call<"Foo">(5)};
 }
 
 TEST_F(JniTest, MethodRef_PassesObjects) {
@@ -209,7 +209,7 @@ TEST_F(JniTest, MethodRef_PassesObjects) {
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("Foo"), StrEq("(Lcom/google/Bazz;)I")));
 
-  global_object("Foo", local_object);
+  global_object.Call<"Foo">(local_object);
 }
 
 TEST_F(JniTest, MethodRef_PassesAndReturnsMultipleObjects) {
@@ -229,7 +229,7 @@ TEST_F(JniTest, MethodRef_PassesAndReturnsMultipleObjects) {
   LocalObject<c4> obj4{Fake<jobject>(4)};
   LocalObject<class_under_test> object_under_test{Fake<jobject>(5)};
 
-  LocalObject<c1> obj5{object_under_test("Foo", obj1, obj2, obj3, obj4)};
+  LocalObject<c1> obj5{object_under_test.Call<"Foo">(obj1, obj2, obj3, obj4)};
 }
 
 TEST_F(JniTest, MethodRef_SupportsForwardDefines) {
@@ -255,20 +255,21 @@ TEST_F(JniTest, MethodRef_SupportsForwardDefines) {
   LocalObject<kClass2> c2_obj1{Fake<jobject>(3)};
   LocalObject<kClass2> c2_obj2{Fake<jobject>(4)};
 
-  c1_obj1("m1", c1_obj1);
-  c1_obj1("m2", c2_obj1);
-  c1_obj1("m1", c1_obj1("m3"));
-  c1_obj1("m2", c1_obj1("m4"));
+  c1_obj1.Call<"m1">(c1_obj1);
+  c1_obj1.Call<"m2">(c2_obj1);
+  c1_obj1.Call<"m1">(c1_obj1.Call<"m3">());
+  c1_obj1.Call<"m2">(c1_obj1.Call<"m4">());
 
-  c2_obj1("m1", c1_obj1);
-  c2_obj1("m2", c2_obj2);
-  c2_obj1("m2", std::move(std::move(c2_obj2)));
+  c2_obj1.Call<"m1">(c1_obj1);
+  c2_obj1.Call<"m2">(c2_obj2);
+  c2_obj1.Call<"m2">(std::move(std::move(c2_obj2)));
 
-  c1_obj1("m2", std::move(c2_obj1));
+  c1_obj1.Call<"m2">(std::move(c2_obj1));
 
-  // c2_obj1("m1", c1_obj1); // illegal! triggers warnings (post move read).
-  // c2_obj1("m2", c2_obj2); // illegal! triggers warnings (post move read).
-  // c2_obj1("m2", std::move(c2_obj2));  // illegal! triggers warnings (post
+  // c2_obj1.Call<"m1">(c1_obj1); // illegal! triggers warnings (post move
+  // read). c2_obj1.Call<"m2">(c2_obj2); // illegal! triggers warnings (post
+  // move read). c2_obj1.Call<"m2">(std::move(c2_obj2));  // illegal! triggers
+  // warnings (post
   // move read).
 }
 
@@ -281,9 +282,9 @@ TEST_F(JniTest, MethodRef_SupportsStrings) {
   };
 
   LocalObject<class_under_test> obj1{Fake<jobject>()};
-  obj1("Foo", "This is a method.");
-  obj1("Bar", "This is a method.", "It takes strings");
-  obj1("Baz");
+  obj1.Call<"Foo">("This is a method.");
+  obj1.Call<"Bar">("This is a method.", "It takes strings");
+  obj1.Call<"Baz">();
 }
 
 TEST_F(JniTest, MethodRef_SupportsArrays) {
@@ -295,7 +296,7 @@ TEST_F(JniTest, MethodRef_SupportsArrays) {
 
   LocalArray<jobject, 1, kClass> local_array{nullptr};
   LocalObject<class_under_test> obj1{Fake<jobject>()};
-  obj1("Foo", local_array);
+  obj1.Call<"Foo">(local_array);
 }
 
 }  // namespace

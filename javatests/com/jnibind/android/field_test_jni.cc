@@ -42,22 +42,22 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
 JNIEXPORT jint JNICALL Java_com_jnibind_android_FieldTest_jniIntField(
     JNIEnv* env, jclass, jobject object, jint val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
-  rjni_test_helper["intField"].Set(jint{val});
-  return rjni_test_helper["intField"].Get();
+  rjni_test_helper.Access<"intField">().Set(jint{val});
+  return rjni_test_helper.Access<"intField">().Get();
 }
 
 JNIEXPORT jfloat JNICALL Java_com_jnibind_android_FieldTest_jniFloatField(
     JNIEnv* env, jclass, jobject object, jfloat val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
-  rjni_test_helper["floatField"].Set(jfloat{val});
-  return rjni_test_helper["floatField"].Get();
+  rjni_test_helper.Access<"floatField">().Set(jfloat{val});
+  return rjni_test_helper.Access<"floatField">().Get();
 }
 
 JNIEXPORT jdouble JNICALL Java_com_jnibind_android_FieldTest_jniDoubleField(
     JNIEnv* env, jclass, jobject object, jdouble val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
-  rjni_test_helper["doubleField"].Set(jdouble{val});
-  return rjni_test_helper["doubleField"].Get();
+  rjni_test_helper.Access<"doubleField">().Set(jdouble{val});
+  return rjni_test_helper.Access<"doubleField">().Get();
 }
 
 }  // extern "C"

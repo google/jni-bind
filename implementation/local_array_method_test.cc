@@ -78,31 +78,31 @@ TEST_F(JniTest, ReturnSmokeTest) {
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("ObjectArray"), StrEq("()[LkClass2;")));
 
-  LocalArray<jboolean> bool_array{obj("BooleanArray")};
+  LocalArray<jboolean> bool_array{obj.Call<"BooleanArray">()};
   EXPECT_EQ((static_cast<jbooleanArray>(bool_array)), (Fake<jbooleanArray>()));
 
-  LocalArray<jbyte> byte_array{obj("ByteArray")};
+  LocalArray<jbyte> byte_array{obj.Call<"ByteArray">()};
   EXPECT_EQ((static_cast<jbyteArray>(byte_array)), (Fake<jbyteArray>()));
 
-  LocalArray<jchar> char_array{obj("CharArray")};
+  LocalArray<jchar> char_array{obj.Call<"CharArray">()};
   EXPECT_EQ((static_cast<jcharArray>(char_array)), (Fake<jcharArray>()));
 
-  LocalArray<jshort> short_array{obj("ShortArray")};
+  LocalArray<jshort> short_array{obj.Call<"ShortArray">()};
   EXPECT_EQ((static_cast<jshortArray>(short_array)), (Fake<jshortArray>()));
 
-  LocalArray<jint> int_array{obj("IntArray")};
+  LocalArray<jint> int_array{obj.Call<"IntArray">()};
   EXPECT_EQ((static_cast<jintArray>(int_array)), (Fake<jintArray>()));
 
-  LocalArray<jlong> long_array{obj("LongArray")};
+  LocalArray<jlong> long_array{obj.Call<"LongArray">()};
   EXPECT_EQ((static_cast<jlongArray>(long_array)), (Fake<jlongArray>()));
 
-  LocalArray<jfloat> float_array{obj("FloatArray")};
+  LocalArray<jfloat> float_array{obj.Call<"FloatArray">()};
   EXPECT_EQ((static_cast<jfloatArray>(float_array)), (Fake<jfloatArray>()));
 
-  LocalArray<jdouble> double_array{obj("DoubleArray")};
+  LocalArray<jdouble> double_array{obj.Call<"DoubleArray">()};
   EXPECT_EQ((static_cast<jdoubleArray>(double_array)), (Fake<jdoubleArray>()));
 
-  LocalArray<jobject, 1, kClass2> object_array{obj("ObjectArray")};
+  LocalArray<jobject, 1, kClass2> object_array{obj.Call<"ObjectArray">()};
   EXPECT_EQ((static_cast<jobjectArray>(object_array)), (Fake<jobjectArray>()));
 }
 
@@ -135,15 +135,16 @@ TEST_F(JniTest, ParamsSmokeTest) {
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("ObjectArray"), StrEq("([LkClass2;)V")));
 
-  obj("BooleanArray", LocalArray<jboolean>{Fake<jbooleanArray>()});
-  obj("ByteArray", LocalArray<jbyte>{Fake<jbyteArray>()});
-  obj("CharArray", LocalArray<jchar>{Fake<jcharArray>()});
-  obj("ShortArray", LocalArray<jshort>{Fake<jshortArray>()});
-  obj("IntArray", LocalArray<jint>{Fake<jintArray>()});
-  obj("FloatArray", LocalArray<jfloat>{Fake<jfloatArray>()});
-  obj("DoubleArray", LocalArray<jdouble>{Fake<jdoubleArray>()});
-  obj("LongArray", LocalArray<jlong>{Fake<jlongArray>()});
-  obj("ObjectArray", LocalArray<jobject, 1, kClass2>{Fake<jobjectArray>()});
+  obj.Call<"BooleanArray">(LocalArray<jboolean>{Fake<jbooleanArray>()});
+  obj.Call<"ByteArray">(LocalArray<jbyte>{Fake<jbyteArray>()});
+  obj.Call<"CharArray">(LocalArray<jchar>{Fake<jcharArray>()});
+  obj.Call<"ShortArray">(LocalArray<jshort>{Fake<jshortArray>()});
+  obj.Call<"IntArray">(LocalArray<jint>{Fake<jintArray>()});
+  obj.Call<"FloatArray">(LocalArray<jfloat>{Fake<jfloatArray>()});
+  obj.Call<"DoubleArray">(LocalArray<jdouble>{Fake<jdoubleArray>()});
+  obj.Call<"LongArray">(LocalArray<jlong>{Fake<jlongArray>()});
+  obj.Call<"ObjectArray">(
+      LocalArray<jobject, 1, kClass2>{Fake<jobjectArray>()});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,39 +190,39 @@ TEST_F(JniTest, ComplexSmokeTest) {
                                  StrEq("([LkClass2;)[LkClass2;")));
 
   LocalArray<jboolean> bool_array{
-      obj("BooleanArray", LocalArray<jboolean>{Fake<jbooleanArray>()})};
+      obj.Call<"BooleanArray">(LocalArray<jboolean>{Fake<jbooleanArray>()})};
   EXPECT_EQ((static_cast<jbooleanArray>(bool_array)), (Fake<jbooleanArray>()));
 
   LocalArray<jbyte> byte_array{
-      obj("ByteArray", LocalArray<jbyte>{Fake<jbyteArray>()})};
+      obj.Call<"ByteArray">(LocalArray<jbyte>{Fake<jbyteArray>()})};
   EXPECT_EQ((static_cast<jbyteArray>(byte_array)), (Fake<jbyteArray>()));
 
   LocalArray<jchar> char_array{
-      obj("CharArray", LocalArray<jchar>{Fake<jcharArray>()})};
+      obj.Call<"CharArray">(LocalArray<jchar>{Fake<jcharArray>()})};
   EXPECT_EQ((static_cast<jcharArray>(char_array)), (Fake<jcharArray>()));
 
   LocalArray<jshort> short_array{
-      obj("ShortArray", LocalArray<jshort>{Fake<jshortArray>()})};
+      obj.Call<"ShortArray">(LocalArray<jshort>{Fake<jshortArray>()})};
   EXPECT_EQ((static_cast<jshortArray>(short_array)), (Fake<jshortArray>()));
 
   LocalArray<jint> int_array{
-      obj("IntArray", LocalArray<jint>{Fake<jintArray>()})};
+      obj.Call<"IntArray">(LocalArray<jint>{Fake<jintArray>()})};
   EXPECT_EQ((static_cast<jintArray>(int_array)), (Fake<jintArray>()));
 
   LocalArray<jfloat> float_array{
-      obj("FloatArray", LocalArray<jfloat>{Fake<jfloatArray>()})};
+      obj.Call<"FloatArray">(LocalArray<jfloat>{Fake<jfloatArray>()})};
   EXPECT_EQ((static_cast<jfloatArray>(float_array)), (Fake<jfloatArray>()));
 
   LocalArray<jdouble> double_array{
-      obj("DoubleArray", LocalArray<jdouble>{Fake<jdoubleArray>()})};
+      obj.Call<"DoubleArray">(LocalArray<jdouble>{Fake<jdoubleArray>()})};
   EXPECT_EQ((static_cast<jdoubleArray>(double_array)), (Fake<jdoubleArray>()));
 
   LocalArray<jlong> long_array{
-      obj("LongArray", LocalArray<jlong>{Fake<jlongArray>()})};
+      obj.Call<"LongArray">(LocalArray<jlong>{Fake<jlongArray>()})};
   EXPECT_EQ((static_cast<jlongArray>(long_array)), (Fake<jlongArray>()));
 
-  LocalArray<jobject, 1, kClass2> object_array{obj(
-      "ObjectArray", LocalArray<jobject, 1, kClass2>{Fake<jobjectArray>()})};
+  LocalArray<jobject, 1, kClass2> object_array{obj.Call<"ObjectArray">(
+      LocalArray<jobject, 1, kClass2>{Fake<jobjectArray>()})};
   EXPECT_EQ((static_cast<jobjectArray>(object_array)), (Fake<jobjectArray>()));
 }
 

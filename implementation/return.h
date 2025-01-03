@@ -31,7 +31,7 @@ struct Return : ReturnBase {
 
   using Raw = Raw_;
 
-  constexpr Return() = default;
+  constexpr Return() {}
 
   template <typename Raw>
   constexpr explicit Return(Raw raw) : raw_(raw) {}
@@ -42,7 +42,7 @@ struct Return<void> : ReturnBase {
   using Raw = void;
   const Void raw_{};
 
-  constexpr Return() = default;
+  constexpr Return() {}
 };
 
 Return() -> Return<void>;

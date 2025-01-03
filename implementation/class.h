@@ -36,7 +36,10 @@ namespace jni {
 
 template <typename Extends_, typename Constructors_, typename Static_,
           typename Methods_, typename Fields_>
-struct Class {};
+struct Class {
+  constexpr Class() = default;
+  constexpr Class(const char* name) {}
+};
 
 template <typename Extends_, typename... Constructors_,
           typename... StaticMethods_, typename... StaticFields_,
@@ -69,6 +72,14 @@ struct Class<Extends_, std::tuple<Constructors_...>,
   // For types that are not packs (e.g. Statics), they must have permutations
   // provided where they are and aren't present.
   ////////////////////////////////////////////////////////////////////////////////
+
+  // To stifle a test failure.
+  constexpr Class()
+      : Object("__JNI_BIND__NO_CLASS__"),
+        constructors_(Constructor<>{}),
+        static_(),
+        methods_(),
+        fields_() {}
 
   // Methods + Fields.
   explicit constexpr Class(const char* class_name, Methods_... methods,
