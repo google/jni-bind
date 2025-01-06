@@ -26,7 +26,7 @@
 namespace jni::metaprogramming {
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member>
+          typename TupContainerT, const auto TupContainerT::* nameable_member>
 class InvocableMap;
 
 // This is an interface that can be inherited from to expose an operator(...).
@@ -42,7 +42,7 @@ class InvocableMap;
 //    auto InvocableMapCall(const char* key, Args&&... args);
 //
 //   If i is the index where |tup_container_v.*nameable_member|.name_ == key,
-//     then InvocablemapCall will forward the args from operator() with the
+//     then InvocableMapCall will forward the args from operator() with the
 //     same args.  Static memory can be used in this function call and it will
 //     be unique because of the I non-type template parameter.
 //
@@ -54,23 +54,23 @@ class InvocableMap;
 // the the const char cannot be propagated without losing its constexpr-ness,
 // and so the clang extension can no longer restrict function candidates.
 template <typename CrtpBase, const auto& tup_container_v,
-          const auto std::decay_t<decltype(tup_container_v)>::*nameable_member>
+          const auto std::decay_t<decltype(tup_container_v)>::* nameable_member>
 using InvocableMap_t =
     InvocableMap<CrtpBase, tup_container_v,
                  std::decay_t<decltype(tup_container_v)>, nameable_member>;
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
+          typename TupContainerT, const auto TupContainerT::* nameable_member,
           std::size_t I>
 class InvocableMapEntry;
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
+          typename TupContainerT, const auto TupContainerT::* nameable_member,
           typename IndexSequenceType>
 class InvocableMapBase {};
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
+          typename TupContainerT, const auto TupContainerT::* nameable_member,
           std::size_t... idxs>
 class InvocableMapBase<CrtpBase, tup_container_v, TupContainerT,
                        nameable_member, std::index_sequence<idxs...>>
@@ -78,11 +78,12 @@ class InvocableMapBase<CrtpBase, tup_container_v, TupContainerT,
                                nameable_member, idxs>... {
  public:
   using InvocableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                          nameable_member, idxs>::operator()...;
+                          nameable_member, idxs>::
+  operator()...;
 };
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
+          typename TupContainerT, const auto TupContainerT::* nameable_member,
           std::size_t I>
 class InvocableMapEntry {
  public:
@@ -116,7 +117,7 @@ class InvocableMapEntry {
 
 //==============================================================================
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member>
+          typename TupContainerT, const auto TupContainerT::* nameable_member>
 class InvocableMap
     : public InvocableMapBase<
           CrtpBase, tup_container_v, TupContainerT, nameable_member,

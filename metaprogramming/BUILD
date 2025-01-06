@@ -606,6 +606,30 @@ cc_test(
 )
 
 ################################################################################
+# Invocable Map 20.
+################################################################################
+cc_library(
+    name = "invocable_map_20",
+    hdrs = ["invocable_map_20.h"],
+    deps = [
+        ":modified_max",
+        ":string_literal",
+    ],
+)
+
+cc_test(
+    name = "invocable_map_test_20",
+    srcs = ["invocable_map_20_test.cc"],
+    tags = ["cpp20"],
+    deps = [
+        ":invocable_map_20",
+        ":modified_max",
+        ":string_literal",
+        "@googletest//:gtest_main",
+    ],
+)
+
+################################################################################
 # Invoke.
 ################################################################################
 cc_library(
@@ -957,6 +981,35 @@ cc_test(
     deps = [
         ":lambda_string",
         ":queryable_map",
+        "@googletest//:gtest_main",
+    ],
+)
+
+################################################################################
+# Queryable Map 20.
+################################################################################
+cc_library(
+    name = "queryable_map_20",
+    hdrs = ["queryable_map_20.h"],
+    deps = [
+        ":interleave",
+        ":lambda_string",
+        ":modified_max",
+        ":string_literal",
+        ":tuple_from_size",
+        ":tuple_manipulation",
+        ":type_of_nth_element",
+    ],
+)
+
+cc_test(
+    name = "queryable_map_20_test",
+    srcs = ["queryable_map_20_test.cc"],
+    tags = ["cpp20"],
+    deps = [
+        ":modified_max",
+        ":queryable_map_20",
+        ":string_literal",
         "@googletest//:gtest_main",
     ],
 )
