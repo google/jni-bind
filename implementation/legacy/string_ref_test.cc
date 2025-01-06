@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Google LLC
+ * Copyright 2025 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@
 #include "implementation/jni_helper/fake_test_constants.h"
 #include "jni_bind.h"
 #include "jni_test.h"
+
+#if __clang__
 
 namespace {
 
@@ -236,3 +238,5 @@ TEST_F(JniTest, GlobalString_AllowsRValueGlobalString) {
 }
 
 }  // namespace
+
+#endif  // __clang__

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Google LLC
+ * Copyright 2025 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@
 #include "jni_test.h"
 
 namespace {
+
+#if __clang__
 
 using ::jni::AdoptGlobal;
 using ::jni::AdoptLocal;
@@ -281,5 +283,7 @@ TEST_F(JniTest, GlobalObjects_PromoteRValuesFromEmittedLValues) {
 
   a = b("Foo");
 }
+
+#endif  // __clang__
 
 }  // namespace

@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 #include "jni_bind.h"
 #include "jni_test.h"
+#include "metaprogramming/type_to_type_map.h"
 
 using ::jni::AsDecl_t;
 using ::jni::Class;

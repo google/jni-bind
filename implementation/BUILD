@@ -1074,7 +1074,7 @@ cc_test(
     deps = [
         "//:jni_bind",
         "//:jni_test",
-        "//metaprogramming:concatenate",
+        "//metaprogramming:type_to_type_map",
         "@googletest//:gtest_main",
     ],
 )

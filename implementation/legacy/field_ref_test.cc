@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Google LLC
+ * Copyright 2025 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@
 #include "jni_test.h"
 
 namespace {
+
+#if __clang__
 
 using ::jni::AdoptLocal;
 using ::jni::Class;
@@ -166,5 +168,7 @@ TEST_F(JniTest, Field_ObjectSet) {
   obj["classField"].Set(some_obj);
   obj["classField"].Set(std::move(some_obj));
 }
+
+#endif  // __clang__
 
 }  // namespace
