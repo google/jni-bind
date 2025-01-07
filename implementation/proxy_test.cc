@@ -191,28 +191,28 @@ TEST_F(JniTest, MaterializationTests) {
 
   // Objects can be rvalues (here an x-value).
   LocalObject<kClass2> generator_obj{};
-  LocalObject<kClass> local_1{generator_obj("ReturnsObj")};
+  LocalObject<kClass> local_1{generator_obj.Call<"ReturnsObj">()};
 
   // Objects can also be described with no actual class definition.
   // These objects won't be usable, but they are "name-safe".
-  LocalObject local_2{generator_obj("ReturnsObj")};
+  LocalObject local_2{generator_obj.Call<"ReturnsObj">()};
 
   // doesn't compile because of invalid class (good).
-  // LocalObject<kClass2> local_3 { generator_obj("ReturnsObj") }; }
+  // LocalObject<kClass2> local_3 { generator_obj.Call<"ReturnsObj">() }; }
 
   // Globals can be built from locals.
-  GlobalObject<kClass> global_1{generator_obj("ReturnsObj")};
-  global_1("Bar");
+  GlobalObject<kClass> global_1{generator_obj.Call<"ReturnsObj">()};
+  global_1.Call<"Bar">();
 
   // Globals can be built from expiring locals without a full type.
-  GlobalObject global_2{generator_obj("ReturnsObj")};
+  GlobalObject global_2{generator_obj.Call<"ReturnsObj">()};
 
   // But they lack sufficient definition to have any invocation!
-  // global_2("Bar");
+  // global_2.Call<"Bar">();
 
   // They can be promoted however, and thus restore their type info.
   GlobalObject<kClass> global_3{std::move(global_2)};
-  global_3("Bar");
+  global_3.Call<"Bar">();
 }
 
 }  // namespace jni

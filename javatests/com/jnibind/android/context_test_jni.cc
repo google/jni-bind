@@ -39,15 +39,16 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_android_ContextTest_DoSetup(JNIEnv* env,
-                                                                 jclass) {
+                                                                    jclass) {
   jvm.reset(new jni::JvmRef<jni::kDefaultJvm>{env});
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_jnibind_android_ContextTest_CreateNativeContextObject(JNIEnv* env, jclass,
-                                                            jint val) {
+Java_com_jnibind_android_ContextTest_CreateNativeContextObject(JNIEnv* env,
+                                                               jclass,
+                                                               jint val) {
   auto* ctx_struct = new ContextStruct{GlobalObject<kObjectTestHelperClass>{}};
-  ctx_struct->obj["intVal1"].Set(jint{val});
+  ctx_struct->obj.Access<"intVal1">().Set(jint{val});
 
   return reinterpret_cast<jlong>(ctx_struct);
 }
@@ -57,25 +58,28 @@ Java_com_jnibind_android_ContextTest_CreateNativeContextObjectSetValToSum(
     JNIEnv* env, jclass, jint val1, jint val2) {
   // Creates a temporary test helper, calls its member method, and releases the
   // returned object across the C API boundary (then destroys the temporary).
-  return jni::LocalObject<kObjectTestHelperClass>{}(
-             "returnNewObjectWithFieldSetToSum", val1, val2)
+  return jni::LocalObject<kObjectTestHelperClass>{}
+      .Call<"returnNewObjectWithFieldSetToSum">(val1, val2)
       .Release();
 }
 
-JNIEXPORT jobject JNICALL Java_com_jnibind_android_ContextTest_QueryNativeObject(
-    JNIEnv* env, jclass, void* ctx_void_ptr) {
+JNIEXPORT jobject JNICALL
+Java_com_jnibind_android_ContextTest_QueryNativeObject(JNIEnv* env, jclass,
+                                                       void* ctx_void_ptr) {
   ContextStruct* ctx_struct = static_cast<ContextStruct*>(ctx_void_ptr);
   return jobject{ctx_struct->obj};
 }
 
-JNIEXPORT jobject JNICALL Java_com_jnibind_android_ContextTest_ExtractNativeObject(
-    JNIEnv* env, jclass, void* ctx_void_ptr) {
+JNIEXPORT jobject JNICALL
+Java_com_jnibind_android_ContextTest_ExtractNativeObject(JNIEnv* env, jclass,
+                                                         void* ctx_void_ptr) {
   ContextStruct* ctx_struct = static_cast<ContextStruct*>(ctx_void_ptr);
   return ctx_struct->obj.Release();
 }
 
-JNIEXPORT void JNICALL Java_com_jnibind_android_ContextTest_DestroyNativeContext(
-    JNIEnv* env, jclass, void* ctx_void_ptr) {
+JNIEXPORT void JNICALL
+Java_com_jnibind_android_ContextTest_DestroyNativeContext(JNIEnv* env, jclass,
+                                                          void* ctx_void_ptr) {
   delete static_cast<ContextStruct*>(ctx_void_ptr);
 }
 

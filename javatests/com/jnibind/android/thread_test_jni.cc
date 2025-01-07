@@ -62,7 +62,7 @@ Java_com_jnibind_android_ThreadTest_runsThreadedWorkOnObject(JNIEnv* env,
     ThreadGuard thread_guard{};
 
     // This will crash without fallback loader (`jclass` will be unknown).
-    fixture["objectTestHelper"].Get()("foo");
+    fixture.Access<"objectTestHelper">().Get().Call<"foo">();
   }};
 
   worker.join();

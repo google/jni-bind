@@ -50,6 +50,7 @@ static constexpr Configuration kConfig{
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/static_field_value.h"
+#include "metaprogramming/string_literal.h"
 
 // Headers for static definitions.
 #include "implementation/array.h"

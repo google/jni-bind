@@ -40,7 +40,7 @@ TEST_F(JniTest, MethodRef_AsksForCorrectMethods1) {
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("Foo"), StrEq("(Ljava/lang/String;)V")));
 
-  obj("Foo", "test");
+  obj.Call<"Foo">("test");
 }
 
 TEST_F(JniTest, MethodRef_AsksForCorrectMethods2) {
@@ -54,9 +54,9 @@ TEST_F(JniTest, MethodRef_AsksForCorrectMethods2) {
   EXPECT_CALL(*env_,
               GetMethodID(_, StrEq("Foo"), StrEq("(Ljava/lang/String;)V")));
 
-  obj("Foo", 1);
-  // obj("Foo", 2.f); doesn't compile (good).
-  obj("Foo", "test");
+  obj.Call<"Foo">(1);
+  // obj.Call<"Foo">(2.f); doesn't compile (good).
+  obj.Call<"Foo">("test");
 }
 
 TEST_F(JniTest, MethodRef_AsksForCorrectMethods3) {
@@ -77,11 +77,11 @@ TEST_F(JniTest, MethodRef_AsksForCorrectMethods3) {
               GetMethodID(_, StrEq("Foo"),
                           StrEq("(Ljava/lang/String;Ljava/lang/String;)V")));
 
-  obj("Foo", 1);
-  // obj("Foo", 2.f); // doesn't compile (good).
-  obj("Foo", "test");
-  obj("Foo", "test1", "test2");
-  obj("Foo", "this_doesnt", "trigger_method_lookup");
+  obj.Call<"Foo">(1);
+  // obj.Call<"Foo">(2.f); // doesn't compile (good).
+  obj.Call<"Foo">("test");
+  obj.Call<"Foo">("test1", "test2");
+  obj.Call<"Foo">("this_doesnt", "trigger_method_lookup");
 }
 
 TEST_F(JniTest, MethodRef_AsksForCorrectMethodsWhenMultiplePresent4) {
@@ -113,14 +113,14 @@ TEST_F(JniTest, MethodRef_AsksForCorrectMethodsWhenMultiplePresent4) {
                           StrEq("(Ljava/lang/String;Ljava/lang/String;)V")));
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Baz"), StrEq("(FF)V")));
 
-  obj("Foo", 1);
-  // obj("Foo", 2.f); // doesn't compile (good).
-  obj("Foo", "test");
-  obj("Foo", "test1", "test2");
-  obj("Foo", "this_doesnt", "trigger_method_lookup");
-  obj("Baz", 1);
-  obj("Baz", "test3", "test4");
-  obj("Baz", 1234.f, 5678.f);
+  obj.Call<"Foo">(1);
+  // obj.Call<"Foo">(2.f); // doesn't compile (good).
+  obj.Call<"Foo">("test");
+  obj.Call<"Foo">("test1", "test2");
+  obj.Call<"Foo">("this_doesnt", "trigger_method_lookup");
+  obj.Call<"Baz">(1);
+  obj.Call<"Baz">("test3", "test4");
+  obj.Call<"Baz">(1234.f, 5678.f);
 }
 
 }  // namespace

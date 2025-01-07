@@ -163,8 +163,17 @@ class JvmRef : public JvmRefBase {
   // Sets a "fallback" loader for use when default Jvm classes fail to load.
   // `host_object *must* be local and will *not* be released.
   void SetFallbackClassLoaderFromJObject(jobject host_object) {
+#if __cplusplus >= 202002L
+    SetFallbackClassLoader(LocalObject<kJavaLangObject>{host_object}
+                               .Call<"getClass">()
+                               .Call<"getClassLoader">());
+#elif __clang__
     SetFallbackClassLoader(LocalObject<kJavaLangObject>{host_object}(
         "getClass")("getClassLoader"));
+#else
+    static_assert(false,
+                  "JNI Bind requires C++20 (or later) or C++17 with clang.");
+#endif
   }
 
  private:

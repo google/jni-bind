@@ -91,7 +91,7 @@ TEST_F(JniTest, LocalString_CopiesFromJString) {
 
 TEST_F(JniTest, LocalString_ConstructsFromOutputOfMethod) {
   LocalObject<kClass> obj{};
-  LocalString str{obj("Foo")};
+  LocalString str{obj.Call<"Foo">()};
 }
 
 TEST_F(JniTest, LocalString_ConstructsFromByteArray) {
@@ -151,12 +151,12 @@ TEST_F(JniTest, LocalString_PinsAndUnpinsMemoryForLocals) {
 TEST_F(JniTest, LocalString_AllowsLValueLocalString) {
   LocalObject<kClass> obj{};
   LocalString local_string{"abcde"};
-  obj("TakesStrParam", local_string);
+  obj.Call<"TakesStrParam">(local_string);
 }
 
 TEST_F(JniTest, LocalString_AllowsRValueLocalString) {
   LocalObject<kClass> obj{};
-  obj("TakesStrParam", LocalString{"abcde"});
+  obj.Call<"TakesStrParam">(LocalString{"abcde"});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -180,7 +180,7 @@ TEST_F(JniTest, GlobalString_GlobalsReleaseWithGlobalMechanism) {
 
 TEST_F(JniTest, GlobalString_ConstructsFromOutputOfMethod) {
   LocalObject<kClass> obj{};
-  GlobalString str{obj("Foo")};
+  GlobalString str{obj.Call<"Foo">()};
 }
 
 TEST_F(JniTest, GlobalString_ConstructsFromByteArray) {
@@ -227,12 +227,12 @@ TEST_F(JniTest, GlobalString_PinsAndUnpinsMemoryForLocals) {
 TEST_F(JniTest, GlobalString_AllowsLValueGlobalString) {
   LocalObject<kClass> obj{};
   GlobalString global_string{"abcde"};
-  obj("TakesStrParam", global_string);
+  obj.Call<"TakesStrParam">(global_string);
 }
 
 TEST_F(JniTest, GlobalString_AllowsRValueGlobalString) {
   LocalObject<kClass> obj{};
-  obj("TakesStrParam", GlobalString{"abcde"});
+  obj.Call<"TakesStrParam">(GlobalString{"abcde"});
 }
 
 }  // namespace

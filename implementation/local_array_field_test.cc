@@ -69,7 +69,7 @@ TEST_F(JniTest, ArrayField_Object_Iteration_Rank_1) {
 
   int i = 100;
   LocalObject<kFieldClass> obj{Fake<jobject>()};
-  for (LocalObject<kClass2> a : obj["ObjectArrayRank1"].Get().Pin()) {
+  for (LocalObject<kClass2> a : obj.Access<"ObjectArrayRank1">().Get().Pin()) {
     EXPECT_EQ(static_cast<jobject>(a), Fake<jobject>(i));
     i++;
   }
@@ -87,7 +87,7 @@ TEST_F(JniTest, ArrayField_Object_Iteration_Rank_2) {
   int i = 100;
   LocalObject<kFieldClass> obj{Fake<jobject>(1)};
   for (LocalArray<jobject, 1, kClass2> a :
-       obj["ObjectArrayRank2"].Get().Pin()) {
+       obj.Access<"ObjectArrayRank2">().Get().Pin()) {
     EXPECT_EQ(static_cast<jobject>(a), Fake<jobject>(i));
     i++;
   }
@@ -124,26 +124,27 @@ TEST_F(JniTest, Array_FieldTests) {
 
   LocalObject<kFieldClass> obj{AdoptLocal{}, Fake<jobject>()};
 
-  EXPECT_EQ(static_cast<jbooleanArray>(obj["BooleanArray"].Get()),
+  EXPECT_EQ(static_cast<jbooleanArray>(obj.Access<"BooleanArray">().Get()),
             Fake<jbooleanArray>());
-  EXPECT_EQ(static_cast<jbyteArray>(obj["ByteArray"].Get()),
+  EXPECT_EQ(static_cast<jbyteArray>(obj.Access<"ByteArray">().Get()),
             Fake<jbyteArray>());
-  EXPECT_EQ(static_cast<jcharArray>(obj["CharArray"].Get()),
+  EXPECT_EQ(static_cast<jcharArray>(obj.Access<"CharArray">().Get()),
             Fake<jcharArray>());
-  EXPECT_EQ(static_cast<jshortArray>(obj["ShortArray"].Get()),
+  EXPECT_EQ(static_cast<jshortArray>(obj.Access<"ShortArray">().Get()),
             Fake<jshortArray>());
-  EXPECT_EQ(static_cast<jintArray>(obj["IntArray"].Get()), Fake<jintArray>());
-  EXPECT_EQ(static_cast<jfloatArray>(obj["FloatArray"].Get()),
+  EXPECT_EQ(static_cast<jintArray>(obj.Access<"IntArray">().Get()),
+            Fake<jintArray>());
+  EXPECT_EQ(static_cast<jfloatArray>(obj.Access<"FloatArray">().Get()),
             Fake<jfloatArray>());
-  EXPECT_EQ(static_cast<jdoubleArray>(obj["DoubleArray"].Get()),
+  EXPECT_EQ(static_cast<jdoubleArray>(obj.Access<"DoubleArray">().Get()),
             Fake<jdoubleArray>());
-  EXPECT_EQ(static_cast<jlongArray>(obj["LongArray"].Get()),
+  EXPECT_EQ(static_cast<jlongArray>(obj.Access<"LongArray">().Get()),
             Fake<jlongArray>());
-  EXPECT_EQ(static_cast<jobjectArray>(obj["ObjectArrayRank1"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"ObjectArrayRank1">().Get()),
             Fake<jobjectArray>(1));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["ObjectArrayRank2"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"ObjectArrayRank2">().Get()),
             Fake<jobjectArray>(2));
-  EXPECT_EQ(static_cast<jobjectArray>(obj["ObjectArrayRank3"].Get()),
+  EXPECT_EQ(static_cast<jobjectArray>(obj.Access<"ObjectArrayRank3">().Get()),
             Fake<jobjectArray>(3));
 }
 
@@ -166,16 +167,18 @@ TEST_F(JniTest, Array_Field_Boolean_Test) {
                                           fake_storage_ptr.get(), JNI_ABORT));
 
   LocalObject<kFieldClass> obj{AdoptLocal{}, Fake<jobject>()};
-  LocalArray<jboolean> arr{obj["BooleanArray"].Get()};
+  LocalArray<jboolean> arr{obj.Access<"BooleanArray">().Get()};
   LocalArray<jboolean> arr2{AdoptLocal{}, Fake<jbooleanArray>()};
-  obj["BooleanArray"].Set(Fake<jbooleanArray>());
-  obj["BooleanArray"].Set(
+  obj.Access<"BooleanArray">().Set(Fake<jbooleanArray>());
+  obj.Access<"BooleanArray">().Set(
       LocalArray<jboolean>{AdoptLocal{}, Fake<jbooleanArray>()});
-  obj["BooleanArray"].Set(arr2);
-  obj["BooleanArray"].Set(obj["BooleanArray"].Get());
+  obj.Access<"BooleanArray">().Set(arr2);
+  obj.Access<"BooleanArray">().Set(obj.Access<"BooleanArray">().Get());
 
-  EXPECT_EQ(obj["BooleanArray"].Get().Pin().ptr(), fake_storage_ptr.get());
-  EXPECT_EQ(obj["BooleanArray"].Get().Pin(false).ptr(), fake_storage_ptr.get());
+  EXPECT_EQ(obj.Access<"BooleanArray">().Get().Pin().ptr(),
+            fake_storage_ptr.get());
+  EXPECT_EQ(obj.Access<"BooleanArray">().Get().Pin(false).ptr(),
+            fake_storage_ptr.get());
 }
 
 TEST_F(JniTest, Array_Field_Byte_Test) {
@@ -197,14 +200,17 @@ TEST_F(JniTest, Array_Field_Byte_Test) {
                                        fake_storage_ptr.get(), JNI_ABORT));
 
   LocalObject<kFieldClass> obj{AdoptLocal{}, Fake<jobject>()};
-  LocalArray<jbyte> arr{obj["ByteArray"].Get()};
+  LocalArray<jbyte> arr{obj.Access<"ByteArray">().Get()};
   LocalArray<jbyte> arr2{AdoptLocal{}, Fake<jbyteArray>()};
-  obj["ByteArray"].Set(Fake<jbyteArray>());
-  obj["ByteArray"].Set(LocalArray<jbyte>{AdoptLocal{}, Fake<jbyteArray>()});
-  obj["ByteArray"].Set(arr2);
-  obj["ByteArray"].Set(obj["ByteArray"].Get());
-  EXPECT_EQ(obj["ByteArray"].Get().Pin().ptr(), fake_storage_ptr.get());
-  EXPECT_EQ(obj["ByteArray"].Get().Pin(false).ptr(), fake_storage_ptr.get());
+  obj.Access<"ByteArray">().Set(Fake<jbyteArray>());
+  obj.Access<"ByteArray">().Set(
+      LocalArray<jbyte>{AdoptLocal{}, Fake<jbyteArray>()});
+  obj.Access<"ByteArray">().Set(arr2);
+  obj.Access<"ByteArray">().Set(obj.Access<"ByteArray">().Get());
+  EXPECT_EQ(obj.Access<"ByteArray">().Get().Pin().ptr(),
+            fake_storage_ptr.get());
+  EXPECT_EQ(obj.Access<"ByteArray">().Get().Pin(false).ptr(),
+            fake_storage_ptr.get());
 }
 
 TEST_F(JniTest, Array_Field_Char_Test) {
@@ -226,14 +232,17 @@ TEST_F(JniTest, Array_Field_Char_Test) {
                                        fake_storage_ptr.get(), JNI_ABORT));
 
   LocalObject<kFieldClass> obj{AdoptLocal{}, Fake<jobject>()};
-  LocalArray<jchar> arr{obj["CharArray"].Get()};
+  LocalArray<jchar> arr{obj.Access<"CharArray">().Get()};
   LocalArray<jchar> arr2{AdoptLocal{}, Fake<jcharArray>()};
-  obj["CharArray"].Set(Fake<jcharArray>());
-  obj["CharArray"].Set(LocalArray<jchar>{AdoptLocal{}, Fake<jcharArray>()});
-  obj["CharArray"].Set(arr2);
-  obj["CharArray"].Set(obj["CharArray"].Get());
-  EXPECT_EQ(obj["CharArray"].Get().Pin().ptr(), fake_storage_ptr.get());
-  EXPECT_EQ(obj["CharArray"].Get().Pin(false).ptr(), fake_storage_ptr.get());
+  obj.Access<"CharArray">().Set(Fake<jcharArray>());
+  obj.Access<"CharArray">().Set(
+      LocalArray<jchar>{AdoptLocal{}, Fake<jcharArray>()});
+  obj.Access<"CharArray">().Set(arr2);
+  obj.Access<"CharArray">().Set(obj.Access<"CharArray">().Get());
+  EXPECT_EQ(obj.Access<"CharArray">().Get().Pin().ptr(),
+            fake_storage_ptr.get());
+  EXPECT_EQ(obj.Access<"CharArray">().Get().Pin(false).ptr(),
+            fake_storage_ptr.get());
 }
 
 TEST_F(JniTest, Array_Field_Short_Test) {
@@ -255,14 +264,17 @@ TEST_F(JniTest, Array_Field_Short_Test) {
                                         fake_storage_ptr.get(), JNI_ABORT));
 
   LocalObject<kFieldClass> obj{AdoptLocal{}, Fake<jobject>()};
-  LocalArray<jshort> arr{obj["ShortArray"].Get()};
+  LocalArray<jshort> arr{obj.Access<"ShortArray">().Get()};
   LocalArray<jshort> arr2{AdoptLocal{}, Fake<jshortArray>()};
-  obj["ShortArray"].Set(Fake<jshortArray>());
-  obj["ShortArray"].Set(LocalArray<jshort>{AdoptLocal{}, Fake<jshortArray>()});
-  obj["ShortArray"].Set(arr2);
-  obj["ShortArray"].Set(obj["ShortArray"].Get());
-  EXPECT_EQ(obj["ShortArray"].Get().Pin().ptr(), fake_storage_ptr.get());
-  EXPECT_EQ(obj["ShortArray"].Get().Pin(false).ptr(), fake_storage_ptr.get());
+  obj.Access<"ShortArray">().Set(Fake<jshortArray>());
+  obj.Access<"ShortArray">().Set(
+      LocalArray<jshort>{AdoptLocal{}, Fake<jshortArray>()});
+  obj.Access<"ShortArray">().Set(arr2);
+  obj.Access<"ShortArray">().Set(obj.Access<"ShortArray">().Get());
+  EXPECT_EQ(obj.Access<"ShortArray">().Get().Pin().ptr(),
+            fake_storage_ptr.get());
+  EXPECT_EQ(obj.Access<"ShortArray">().Get().Pin(false).ptr(),
+            fake_storage_ptr.get());
 }
 
 TEST_F(JniTest, Array_Field_Int_Test) {
@@ -283,14 +295,16 @@ TEST_F(JniTest, Array_Field_Int_Test) {
                          Fake<jintArray>(), fake_storage_ptr.get(), JNI_ABORT));
 
   LocalObject<kFieldClass> obj{AdoptLocal{}, Fake<jobject>()};
-  LocalArray<jint> arr{obj["IntArray"].Get()};
+  LocalArray<jint> arr{obj.Access<"IntArray">().Get()};
   LocalArray<jint> arr2{AdoptLocal{}, Fake<jintArray>()};
-  obj["IntArray"].Set(Fake<jintArray>());
-  obj["IntArray"].Set(LocalArray<jint>{AdoptLocal{}, Fake<jintArray>()});
-  obj["IntArray"].Set(arr2);
-  obj["IntArray"].Set(obj["IntArray"].Get());
-  EXPECT_EQ(obj["IntArray"].Get().Pin().ptr(), fake_storage_ptr.get());
-  EXPECT_EQ(obj["IntArray"].Get().Pin(false).ptr(), fake_storage_ptr.get());
+  obj.Access<"IntArray">().Set(Fake<jintArray>());
+  obj.Access<"IntArray">().Set(
+      LocalArray<jint>{AdoptLocal{}, Fake<jintArray>()});
+  obj.Access<"IntArray">().Set(arr2);
+  obj.Access<"IntArray">().Set(obj.Access<"IntArray">().Get());
+  EXPECT_EQ(obj.Access<"IntArray">().Get().Pin().ptr(), fake_storage_ptr.get());
+  EXPECT_EQ(obj.Access<"IntArray">().Get().Pin(false).ptr(),
+            fake_storage_ptr.get());
 }
 
 TEST_F(JniTest, Array_Field_Float_Test) {
@@ -312,14 +326,17 @@ TEST_F(JniTest, Array_Field_Float_Test) {
                                         fake_storage_ptr.get(), JNI_ABORT));
 
   LocalObject<kFieldClass> obj{AdoptLocal{}, Fake<jobject>()};
-  LocalArray<jfloat> arr{obj["FloatArray"].Get()};
+  LocalArray<jfloat> arr{obj.Access<"FloatArray">().Get()};
   LocalArray<jfloat> arr2{AdoptLocal{}, Fake<jfloatArray>()};
-  obj["FloatArray"].Set(Fake<jfloatArray>());
-  obj["FloatArray"].Set(LocalArray<jfloat>{AdoptLocal{}, Fake<jfloatArray>()});
-  obj["FloatArray"].Set(arr2);
-  obj["FloatArray"].Set(obj["FloatArray"].Get());
-  EXPECT_EQ(obj["FloatArray"].Get().Pin().ptr(), fake_storage_ptr.get());
-  EXPECT_EQ(obj["FloatArray"].Get().Pin(false).ptr(), fake_storage_ptr.get());
+  obj.Access<"FloatArray">().Set(Fake<jfloatArray>());
+  obj.Access<"FloatArray">().Set(
+      LocalArray<jfloat>{AdoptLocal{}, Fake<jfloatArray>()});
+  obj.Access<"FloatArray">().Set(arr2);
+  obj.Access<"FloatArray">().Set(obj.Access<"FloatArray">().Get());
+  EXPECT_EQ(obj.Access<"FloatArray">().Get().Pin().ptr(),
+            fake_storage_ptr.get());
+  EXPECT_EQ(obj.Access<"FloatArray">().Get().Pin(false).ptr(),
+            fake_storage_ptr.get());
 }
 
 TEST_F(JniTest, Array_Field_Double_Test) {
@@ -341,15 +358,17 @@ TEST_F(JniTest, Array_Field_Double_Test) {
                                          fake_storage_ptr.get(), JNI_ABORT));
 
   LocalObject<kFieldClass> obj{AdoptLocal{}, Fake<jobject>()};
-  LocalArray<jdouble> arr{obj["DoubleArray"].Get()};
+  LocalArray<jdouble> arr{obj.Access<"DoubleArray">().Get()};
   LocalArray<jdouble> arr2{AdoptLocal{}, Fake<jdoubleArray>()};
-  obj["DoubleArray"].Set(Fake<jdoubleArray>());
-  obj["DoubleArray"].Set(
+  obj.Access<"DoubleArray">().Set(Fake<jdoubleArray>());
+  obj.Access<"DoubleArray">().Set(
       LocalArray<jdouble>{AdoptLocal{}, Fake<jdoubleArray>()});
-  obj["DoubleArray"].Set(arr2);
-  obj["DoubleArray"].Set(obj["DoubleArray"].Get());
-  EXPECT_EQ(obj["DoubleArray"].Get().Pin().ptr(), fake_storage_ptr.get());
-  EXPECT_EQ(obj["DoubleArray"].Get().Pin(false).ptr(), fake_storage_ptr.get());
+  obj.Access<"DoubleArray">().Set(arr2);
+  obj.Access<"DoubleArray">().Set(obj.Access<"DoubleArray">().Get());
+  EXPECT_EQ(obj.Access<"DoubleArray">().Get().Pin().ptr(),
+            fake_storage_ptr.get());
+  EXPECT_EQ(obj.Access<"DoubleArray">().Get().Pin(false).ptr(),
+            fake_storage_ptr.get());
 }
 
 TEST_F(JniTest, Array_Field_Long_Test) {
@@ -371,14 +390,17 @@ TEST_F(JniTest, Array_Field_Long_Test) {
                                        fake_storage_ptr.get(), JNI_ABORT));
 
   LocalObject<kFieldClass> obj{AdoptLocal{}, Fake<jobject>()};
-  LocalArray<jlong> arr{obj["LongArray"].Get()};
+  LocalArray<jlong> arr{obj.Access<"LongArray">().Get()};
   LocalArray<jlong> arr2{AdoptLocal{}, Fake<jlongArray>()};
-  obj["LongArray"].Set(Fake<jlongArray>());
-  obj["LongArray"].Set(LocalArray<jlong>{AdoptLocal{}, Fake<jlongArray>()});
-  obj["LongArray"].Set(arr2);
-  obj["LongArray"].Set(obj["LongArray"].Get());
-  EXPECT_EQ(obj["LongArray"].Get().Pin().ptr(), fake_storage_ptr.get());
-  EXPECT_EQ(obj["LongArray"].Get().Pin(false).ptr(), fake_storage_ptr.get());
+  obj.Access<"LongArray">().Set(Fake<jlongArray>());
+  obj.Access<"LongArray">().Set(
+      LocalArray<jlong>{AdoptLocal{}, Fake<jlongArray>()});
+  obj.Access<"LongArray">().Set(arr2);
+  obj.Access<"LongArray">().Set(obj.Access<"LongArray">().Get());
+  EXPECT_EQ(obj.Access<"LongArray">().Get().Pin().ptr(),
+            fake_storage_ptr.get());
+  EXPECT_EQ(obj.Access<"LongArray">().Get().Pin(false).ptr(),
+            fake_storage_ptr.get());
 }
 
 TEST_F(JniTest, Array_Field_Object_Test) {
@@ -394,13 +416,13 @@ TEST_F(JniTest, Array_Field_Object_Test) {
 
   LocalObject<kFieldClass> obj{AdoptLocal{}, Fake<jobject>()};
   LocalArray<jobject, 1, kClass2> arr2{AdoptLocal{}, Fake<jobjectArray>()};
-  LocalArray<jobject, 1, kClass2> arr{obj["ObjectArrayRank1"].Get()};
-  obj["ObjectArrayRank1"].Set(Fake<jobjectArray>());
-  obj["ObjectArrayRank1"].Set(
+  LocalArray<jobject, 1, kClass2> arr{obj.Access<"ObjectArrayRank1">().Get()};
+  obj.Access<"ObjectArrayRank1">().Set(Fake<jobjectArray>());
+  obj.Access<"ObjectArrayRank1">().Set(
       LocalArray<jobject, 1, kClass2>{AdoptLocal{}, Fake<jobjectArray>()});
-  obj["ObjectArrayRank1"].Set(arr2);
-  obj["ObjectArrayRank1"].Set(obj["ObjectArrayRank1"].Get());
-  obj["ObjectArrayRank1"].Get().Get(2);
+  obj.Access<"ObjectArrayRank1">().Set(arr2);
+  obj.Access<"ObjectArrayRank1">().Set(obj.Access<"ObjectArrayRank1">().Get());
+  obj.Access<"ObjectArrayRank1">().Get().Get(2);
 }
 
 TEST_F(JniTest, Array_Field_HandlesLValueLocalObject_Rank_1) {
@@ -414,7 +436,7 @@ TEST_F(JniTest, Array_Field_HandlesLValueLocalObject_Rank_1) {
   EXPECT_CALL(*env_, GetFieldID(_, StrEq("Foo"), StrEq("[LkClass2;")));
 
   LocalObject<kClass> obj{Fake<jobject>()};
-  LocalArray<jobject, 1, kClass2>{obj["Foo"].Get()};
+  LocalArray<jobject, 1, kClass2>{obj.Access<"Foo">().Get()};
 }
 
 TEST_F(JniTest, Array_Field_HandlesLValueLocalObject_Rank_2) {
@@ -428,7 +450,7 @@ TEST_F(JniTest, Array_Field_HandlesLValueLocalObject_Rank_2) {
   EXPECT_CALL(*env_, GetFieldID(_, StrEq("Foo"), StrEq("[[LkClass2;")));
 
   LocalObject<kClass> obj{Fake<jobject>()};
-  LocalArray<jobject, 2, kClass2> arr_from_field{obj["Foo"].Get()};
+  LocalArray<jobject, 2, kClass2> arr_from_field{obj.Access<"Foo">().Get()};
 }
 
 TEST_F(JniTest, Array_Field_HandlesLValueLocalObject_Rank_2_Iteration) {
@@ -471,7 +493,7 @@ TEST_F(JniTest, Array_Field_HandlesLValueLocalObject_Rank_2_Iteration) {
 
   LocalObject<kClass> obj{AdoptLocal{}, Fake<jobject>(1)};
   int i = 100;
-  for (LocalArray<jobject> obj : obj["Foo"].Get().Pin()) {
+  for (LocalArray<jobject> obj : obj.Access<"Foo">().Get().Pin()) {
     EXPECT_EQ(static_cast<jobject>(obj), Fake<jobject>(i));
     i++;
   }

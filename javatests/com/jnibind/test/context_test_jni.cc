@@ -55,7 +55,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ContextTest_DoSetup(JNIEnv* env,
 JNIEXPORT jlong JNICALL Java_com_jnibind_test_ContextTest_nativeCreateContext(
     JNIEnv* env, jclass, jint val) {
   auto* ctx_struct = new ContextStruct{GlobalObject<kObjectTestHelperClass>{}};
-  ctx_struct->obj["intVal1"].Set(jint{val});
+  ctx_struct->obj.Access<"intVal1">().Set(jint{val});
 
   return reinterpret_cast<jlong>(ctx_struct);
 }
@@ -82,8 +82,8 @@ Java_com_jnibind_test_ContextTest_nativeCreateContextSetValToSum(JNIEnv* env,
                                                                  jint val2) {
   // Creates a temporary test helper, calls its member method, and releases the
   // returned object across the C API boundary (then destroys the temporary).
-  return jni::LocalObject<kObjectTestHelperClass>{}(
-             "returnNewObjectWithFieldSetToSum", val1, val2)
+  return jni::LocalObject<kObjectTestHelperClass>{}
+      .Call<"returnNewObjectWithFieldSetToSum">(val1, val2)
       .Release();
 }
 

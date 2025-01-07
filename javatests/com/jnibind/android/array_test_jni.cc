@@ -55,11 +55,11 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeBooleanTests(
 
   // Simple lvalue pass through works as expected.
   LocalArray<jboolean> local_arr{boolean_array};
-  rjni_test_helper("rJniBooleanArray", false, local_arr);
+  rjni_test_helper.Call<"rJniBooleanArray">(false, local_arr);
 
   // Simple rvalue pass through works as expected.
-  rjni_test_helper("rJniBooleanArray", false,
-                   LocalArray<jboolean>{boolean_array});
+  rjni_test_helper.Call<"rJniBooleanArray">(
+      false, LocalArray<jboolean>{boolean_array});
 
   // Building a new array, and setting all the values by hand works.
   LocalArray<jboolean> new_array{8};
@@ -69,7 +69,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeBooleanTests(
       array_view.ptr()[i] = true;
     }
   }
-  rjni_test_helper("rJniBooleanArray", true, new_array);
+  rjni_test_helper.Call<"rJniBooleanArray">(true, new_array);
 
   // You can pull the view multiple times.
   {
@@ -78,7 +78,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeBooleanTests(
       array_view.ptr()[i] = true;
     }
   }
-  rjni_test_helper("rJniBooleanArray", true, new_array);
+  rjni_test_helper.Call<"rJniBooleanArray">(true, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeByteTests(
@@ -87,10 +87,11 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeByteTests(
 
   // Simple lvalue pass through works as expected.
   LocalArray<jbyte> local_arr{byte_array};
-  rjni_test_helper("rJniByteArray", jbyte{0}, local_arr);
+  rjni_test_helper.Call<"rJniByteArray">(jbyte{0}, local_arr);
 
   // Simple rvalue pass through works as expected.
-  rjni_test_helper("rJniByteArray", jbyte{0}, LocalArray<jbyte>{byte_array});
+  rjni_test_helper.Call<"rJniByteArray">(jbyte{0},
+                                         LocalArray<jbyte>{byte_array});
 
   // Building a new array, and setting all the values by hand works.
   LocalArray<jbyte> new_array{8};
@@ -100,7 +101,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeByteTests(
       array_view.ptr()[i] = static_cast<jbyte>(i);
     }
   }
-  rjni_test_helper("rJniByteArray", jbyte{0}, new_array);
+  rjni_test_helper.Call<"rJniByteArray">(jbyte{0}, new_array);
 
   // You can pull the view multiple times.
   {
@@ -109,7 +110,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeByteTests(
       array_view.ptr()[i] += 5;
     }
   }
-  rjni_test_helper("rJniByteArray", jbyte{5}, new_array);
+  rjni_test_helper.Call<"rJniByteArray">(jbyte{5}, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeCharTests(
@@ -118,10 +119,11 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeCharTests(
 
   // Simple lvalue pass through works as expected.
   LocalArray<jchar> local_arr{char_array};
-  rjni_test_helper("rJniCharArray", jchar{0}, local_arr);
+  rjni_test_helper.Call<"rJniCharArray">(jchar{0}, local_arr);
 
   // Simple rvalue pass through works as expected.
-  rjni_test_helper("rJniCharArray", jchar{0}, LocalArray<jchar>{char_array});
+  rjni_test_helper.Call<"rJniCharArray">(jchar{0},
+                                         LocalArray<jchar>{char_array});
 
   // Building a new array, and setting all the values by hand works.
   LocalArray<jchar> new_array{8};
@@ -131,7 +133,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeCharTests(
       array_view.ptr()[i] = static_cast<jchar>(i);
     }
   }
-  rjni_test_helper("rJniCharArray", jchar{0}, new_array);
+  rjni_test_helper.Call<"rJniCharArray">(jchar{0}, new_array);
 
   // You can pull the view multiple times.
   {
@@ -140,7 +142,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeCharTests(
       array_view.ptr()[i] += 5;
     }
   }
-  rjni_test_helper("rJniCharArray", jchar{5}, new_array);
+  rjni_test_helper.Call<"rJniCharArray">(jchar{5}, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeShortTests(
@@ -149,11 +151,11 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeShortTests(
 
   // Simple lvalue pass through works as expected.
   LocalArray<jshort> local_arr{short_array};
-  rjni_test_helper("rJniShortArray", jshort{0}, local_arr);
+  rjni_test_helper.Call<"rJniShortArray">(jshort{0}, local_arr);
 
   // Simple rvalue pass through works as expected.
-  rjni_test_helper("rJniShortArray", jshort{0},
-                   LocalArray<jshort>{short_array});
+  rjni_test_helper.Call<"rJniShortArray">(jshort{0},
+                                          LocalArray<jshort>{short_array});
 
   // Building a new array, and setting all the values by hand works.
   LocalArray<jshort> new_array{8};
@@ -163,7 +165,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeShortTests(
       array_view.ptr()[i] = static_cast<jshort>(i);
     }
   }
-  rjni_test_helper("rJniShortArray", jshort{0}, new_array);
+  rjni_test_helper.Call<"rJniShortArray">(jshort{0}, new_array);
 
   // You can pull the view multiple times.
   {
@@ -172,7 +174,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeShortTests(
       array_view.ptr()[i] += 5;
     }
   }
-  rjni_test_helper("rJniShortArray", jshort{5}, new_array);
+  rjni_test_helper.Call<"rJniShortArray">(jshort{5}, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeIntTests(
@@ -181,10 +183,10 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeIntTests(
 
   // Simple lvalue pass through works as expected.
   LocalArray<jint> local_arr{int_array};
-  rjni_test_helper("rJniIntArray", 0, local_arr);
+  rjni_test_helper.Call<"rJniIntArray">(0, local_arr);
 
   // Simple rvalue pass through works as expected.
-  rjni_test_helper("rJniIntArray", 0, LocalArray<jint>{int_array});
+  rjni_test_helper.Call<"rJniIntArray">(0, LocalArray<jint>{int_array});
 
   // Building a new array, and setting all the values by hand works.
   LocalArray<jint> new_array{8};
@@ -194,7 +196,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeIntTests(
       array_view.ptr()[i] = i;
     }
   }
-  rjni_test_helper("rJniIntArray", 0, new_array);
+  rjni_test_helper.Call<"rJniIntArray">(0, new_array);
 
   // You can pull the view multiple times.
   {
@@ -203,7 +205,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeIntTests(
       array_view.ptr()[i] += 5;
     }
   }
-  rjni_test_helper("rJniIntArray", 5, new_array);
+  rjni_test_helper.Call<"rJniIntArray">(5, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeLongTests(
@@ -212,10 +214,11 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeLongTests(
 
   // Simple lvalue pass through works as expected.
   LocalArray<jlong> local_arr{long_array};
-  rjni_test_helper("rJniLongArray", jlong{0}, local_arr);
+  rjni_test_helper.Call<"rJniLongArray">(jlong{0}, local_arr);
 
   // Simple rvalue pass through works as expected.
-  rjni_test_helper("rJniLongArray", jlong{0}, LocalArray<jlong>{long_array});
+  rjni_test_helper.Call<"rJniLongArray">(jlong{0},
+                                         LocalArray<jlong>{long_array});
 
   // Building a new array, and setting all the values by hand works.
   LocalArray<jlong> new_array{8};
@@ -225,7 +228,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeLongTests(
       array_view.ptr()[i] = static_cast<jlong>(i);
     }
   }
-  rjni_test_helper("rJniLongArray", jlong{0}, new_array);
+  rjni_test_helper.Call<"rJniLongArray">(jlong{0}, new_array);
 
   // You can pull the view multiple times.
   {
@@ -234,7 +237,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeLongTests(
       array_view.ptr()[i] += 5;
     }
   }
-  rjni_test_helper("rJniLongArray", jlong{5}, new_array);
+  rjni_test_helper.Call<"rJniLongArray">(jlong{5}, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeFloatTests(
@@ -242,7 +245,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeFloatTests(
   LocalObject<kArrayTest> rjni_test_helper{test_fixture};
 
   LocalArray<jfloat> local_arr{float_array};
-  rjni_test_helper("rJniFloatArray", 0.f, local_arr);
+  rjni_test_helper.Call<"rJniFloatArray">(0.f, local_arr);
 
   {
     ArrayView array_view{local_arr.Pin(true)};
@@ -250,7 +253,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeFloatTests(
       array_view.ptr()[i] += 2.5f;
     }
   }
-  rjni_test_helper("rJniFloatArray", 2.5f, local_arr);
+  rjni_test_helper.Call<"rJniFloatArray">(2.5f, local_arr);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeDoubleTests(
@@ -259,11 +262,11 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeDoubleTests(
 
   // Simple lvalue pass through works as expected.
   LocalArray<jdouble> local_arr{double_array};
-  rjni_test_helper("rJniDoubleArray", jdouble{0}, local_arr);
+  rjni_test_helper.Call<"rJniDoubleArray">(jdouble{0}, local_arr);
 
   // Simple rvalue pass through works as expected.
-  rjni_test_helper("rJniDoubleArray", jdouble{0},
-                   LocalArray<jdouble>{double_array});
+  rjni_test_helper.Call<"rJniDoubleArray">(jdouble{0},
+                                           LocalArray<jdouble>{double_array});
 
   // Building a new array, and setting all the values by hand works.
   LocalArray<jdouble> new_array{8};
@@ -273,7 +276,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeDoubleTests(
       array_view.ptr()[i] = static_cast<jdouble>(i);
     }
   }
-  rjni_test_helper("rJniDoubleArray", jdouble{0}, new_array);
+  rjni_test_helper.Call<"rJniDoubleArray">(jdouble{0}, new_array);
 
   // You can pull the view multiple times.
   {
@@ -282,7 +285,7 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeDoubleTests(
       array_view.ptr()[i] += 5;
     }
   }
-  rjni_test_helper("rJniDoubleArray", jdouble{5}, new_array);
+  rjni_test_helper.Call<"rJniDoubleArray">(jdouble{5}, new_array);
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeObjectTests(
@@ -291,12 +294,12 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeObjectTests(
 
   // Simple lvalue pass through works as expected.
   LocalArray<jobject, 1, kObjectTestHelperClass> local_arr{object_array};
-  rjni_test_helper("rJniObjectArray", 0, local_arr);
+  rjni_test_helper.Call<"rJniObjectArray">(0, local_arr);
 
   // Simple rvalue pass through works as expected.
-  rjni_test_helper("rJniObjectArray", 5,
-                   LocalArray<jobject, 1, kObjectTestHelperClass>{
-                       1, LocalObject<kObjectTestHelperClass>{5, 5, 5}});
+  rjni_test_helper.Call<"rJniObjectArray">(
+      5, LocalArray<jobject, 1, kObjectTestHelperClass>{
+             1, LocalObject<kObjectTestHelperClass>{5, 5, 5}});
 
   // Building a new array, and setting all the values by hand works.
   LocalObject<kObjectTestHelperClass> obj{0, 0, 0};
@@ -307,17 +310,17 @@ JNIEXPORT void JNICALL Java_com_jnibind_android_ArrayTest_nativeObjectTests(
           i, LocalObject<kObjectTestHelperClass>{jint{i}, jint{i}, jint{i}});
     }
   }
-  rjni_test_helper("rJniObjectArray", 0, new_array);
+  rjni_test_helper.Call<"rJniObjectArray">(0, new_array);
 
   // You can pull the view multiple times.
   {
     for (int i = 0; i < new_array.Length(); ++i) {
-      new_array.Set(i,
-                    LocalObject<kObjectTestHelperClass>{2, 2, 2}(
-                        "returnNewObjectWithFieldSetToSum", new_array.Get(i)));
+      new_array.Set(
+          i, LocalObject<kObjectTestHelperClass>{2, 2, 2}
+                 .Call<"returnNewObjectWithFieldSetToSum">(new_array.Get(i)));
     }
   }
-  rjni_test_helper("rJniObjectArray", 2, new_array);
+  rjni_test_helper.Call<"rJniObjectArray">(2, new_array);
 }
 
 }  // extern "C"

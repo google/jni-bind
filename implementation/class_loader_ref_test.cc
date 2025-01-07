@@ -118,7 +118,7 @@ TEST_F(JniTest, LocalObject_SupportsPassingAnObjectWithAClassLoader) {
   // LocalObject<kClass2, kClassLoader> a{}; // doesn't compile (good).
   LocalObject<kClass1, kClassLoader> a{Fake<jobject>()};
   LocalObject<kClass2> b{};
-  b("Foo", a);
+  b.Call<"Foo">(a);
 
   default_globals_made_that_should_be_released_.clear();
 }
@@ -130,7 +130,7 @@ TEST_F(JniTestForClassLoaders,
   LocalClassLoader<kClassLoader> local_class_loader{Fake<jobject>()};
   auto a = local_class_loader.BuildLocalObject<kClass1>();
   LocalObject<kClass2> b{a};
-  b("Foo", a);
+  b.Call<"Foo">(a);
 
   default_globals_made_that_should_be_released_.clear();
   TearDown();
@@ -143,7 +143,7 @@ TEST_F(JniTestForClassLoaders,
   LocalClassLoader<kClassLoader> local_class_loader{Fake<jobject>()};
   auto a = local_class_loader.BuildGlobalObject<kClass1>();
   LocalObject<kClass2> b{a};
-  b("Foo", a);
+  b.Call<"Foo">(a);
 
   default_globals_made_that_should_be_released_.clear();
   TearDown();
@@ -160,7 +160,7 @@ TEST_F(JniTestForClassLoaders,
   LocalObject<kClass1, kClassLoader> a =
       local_class_loader.BuildLocalObject<kClass1>();
   LocalObject<kClass2> b{a};
-  b("Foo", a);
+  b.Call<"Foo">(a);
 
   TearDown();
 }
@@ -172,7 +172,7 @@ TEST_F(JniTestForClassLoaders, ClassLoaderRefTest_ConstructsFromRValue) {
   LocalObject<kClass1, kClassLoader, kJvm> b{
       local_class_loader.BuildLocalObject<kClass1>()};
 
-  LocalObject<kClass2, kClassLoader, kJvm> c{b("Foo")};
+  LocalObject<kClass2, kClassLoader, kJvm> c{b.Call<"Foo">()};
 
   TearDown();
 }
@@ -186,7 +186,7 @@ TEST_F(JniTestForClassLoaders,
   LocalObject<kClass1> a{};
   LocalObject<kClass2, kClassLoader, kJvm> b =
       local_class_loader.BuildLocalObject<kClass2>(a);
-  b("Foo", a);
+  b.Call<"Foo">(a);
 
   TearDown();
 }
@@ -235,7 +235,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   LocalObject<kClass1, kClassLoader, kJvm> a =
       local_class_loader.BuildLocalObject<kClass1>();
   LocalObject<kClass2> b{};
-  b("Foo", a);
+  b.Call<"Foo">(a);
 
   TearDown();
 }
@@ -309,7 +309,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
                                                kDefaultConfiguration};
   jni::LocalObject<class_under_test, class_loader, atypical_jvm_definition>
       obj1{AdoptLocal{}, Fake<jobject>(1)};
-  obj1("Foo");
+  obj1.Call<"Foo">();
 
   this->TearDown();
 }

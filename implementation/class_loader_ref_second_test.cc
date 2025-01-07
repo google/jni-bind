@@ -91,7 +91,7 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   auto second_custom_loader_object =
       class_loader.BuildLocalObject<kClass>(jint{2});
 
-  EXPECT_EQ(custom_loader_object("methodNoCrossTalk", jint{2}), 123);
+  EXPECT_EQ(custom_loader_object.Call<"methodNoCrossTalk">(jint{2}), 123);
 
   TearDown();
 }

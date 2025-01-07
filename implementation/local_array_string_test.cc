@@ -72,7 +72,7 @@ TEST_F(JniTest, Array_CorrectSignatureForStringParams) {
 
   LocalObject<kClass> obj{jobject{nullptr}};
   LocalArray<jstring> arr{3};
-  obj("StringArray", arr);
+  obj.Call<"StringArray">(arr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ TEST_F(JniTest, Array_CorrectReturnSignatureForStrings) {
   LocalObject<kClass> obj{Fake<jobject>()};
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("StringArray"),
                                  StrEq("()[Ljava/lang/String;")));
-  LocalArray<jstring> arr = obj("StringArray");
+  LocalArray<jstring> arr = obj.Call<"StringArray">();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +144,7 @@ TEST_F(JniTest, Array_CorrectParamSignatureForStrings) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("StringArray"),
                                  StrEq("([Ljava/lang/String;)V")));
   LocalArray<jstring> arr{2};
-  obj("StringArray", arr);
+  obj.Call<"StringArray">(arr);
 }
 
 TEST_F(JniTest, LocalStringArray_ConstructsObjectsForLValues) {
@@ -196,9 +196,9 @@ TEST_F(JniTest, Array_CorrectFieldSignatureForStrings) {
   EXPECT_CALL(*env_, GetFieldID(_, StrEq("StringArrayRank3"),
                                 StrEq("[[[Ljava/lang/String;")));
 
-  LocalArray<jstring> arr1 = obj["StringArrayRank1"].Get();
-  LocalArray<jstring, 2> arr2 = obj["StringArrayRank2"].Get();
-  LocalArray<jstring, 3> arr3 = obj["StringArrayRank3"].Get();
+  LocalArray<jstring> arr1 = obj.Access<"StringArrayRank1">().Get();
+  LocalArray<jstring, 2> arr2 = obj.Access<"StringArrayRank2">().Get();
+  LocalArray<jstring, 3> arr3 = obj.Access<"StringArrayRank3">().Get();
 }
 
 }  // namespace

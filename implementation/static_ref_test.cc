@@ -73,8 +73,8 @@ TEST_F(JniTest, StaticBooleanField) {
   EXPECT_CALL(*env_, SetStaticBooleanField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
-  EXPECT_TRUE(StaticRef<kClass>{}["booleanField"].Get());
-  StaticRef<kClass>{}["booleanField"].Set(true);
+  EXPECT_TRUE(StaticRef<kClass>{}.Access<"booleanField">().Get());
+  StaticRef<kClass>{}.Access<"booleanField">().Set(true);
 }
 
 TEST_F(JniTest, StaticByteField) {
@@ -85,8 +85,8 @@ TEST_F(JniTest, StaticByteField) {
   EXPECT_CALL(*env_, SetStaticByteField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
-  EXPECT_TRUE(StaticRef<kClass>{}["byteField"].Get());
-  StaticRef<kClass>{}["byteField"].Set(true);
+  EXPECT_TRUE(StaticRef<kClass>{}.Access<"byteField">().Get());
+  StaticRef<kClass>{}.Access<"byteField">().Set(true);
 }
 
 TEST_F(JniTest, StaticCharField) {
@@ -97,8 +97,8 @@ TEST_F(JniTest, StaticCharField) {
   EXPECT_CALL(*env_, SetStaticCharField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
-  EXPECT_TRUE(StaticRef<kClass>{}["charField"].Get());
-  StaticRef<kClass>{}["charField"].Set(true);
+  EXPECT_TRUE(StaticRef<kClass>{}.Access<"charField">().Get());
+  StaticRef<kClass>{}.Access<"charField">().Set(true);
 }
 
 TEST_F(JniTest, StaticShortField) {
@@ -109,8 +109,8 @@ TEST_F(JniTest, StaticShortField) {
   EXPECT_CALL(*env_, SetStaticShortField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
-  EXPECT_TRUE(StaticRef<kClass>{}["shortField"].Get());
-  StaticRef<kClass>{}["shortField"].Set(true);
+  EXPECT_TRUE(StaticRef<kClass>{}.Access<"shortField">().Get());
+  StaticRef<kClass>{}.Access<"shortField">().Set(true);
 }
 
 TEST_F(JniTest, StaticIntField) {
@@ -121,8 +121,8 @@ TEST_F(JniTest, StaticIntField) {
   EXPECT_CALL(*env_, SetStaticIntField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
-  EXPECT_TRUE(StaticRef<kClass>{}["intField"].Get());
-  StaticRef<kClass>{}["intField"].Set(true);
+  EXPECT_TRUE(StaticRef<kClass>{}.Access<"intField">().Get());
+  StaticRef<kClass>{}.Access<"intField">().Set(true);
 }
 
 TEST_F(JniTest, StaticLongField) {
@@ -133,8 +133,8 @@ TEST_F(JniTest, StaticLongField) {
   EXPECT_CALL(*env_, SetStaticLongField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
-  EXPECT_TRUE(StaticRef<kClass>{}["longField"].Get());
-  StaticRef<kClass>{}["longField"].Set(true);
+  EXPECT_TRUE(StaticRef<kClass>{}.Access<"longField">().Get());
+  StaticRef<kClass>{}.Access<"longField">().Set(true);
 }
 
 TEST_F(JniTest, StaticFloatField) {
@@ -145,8 +145,8 @@ TEST_F(JniTest, StaticFloatField) {
   EXPECT_CALL(*env_, SetStaticFloatField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
-  EXPECT_TRUE(StaticRef<kClass>{}["floatField"].Get());
-  StaticRef<kClass>{}["floatField"].Set(true);
+  EXPECT_TRUE(StaticRef<kClass>{}.Access<"floatField">().Get());
+  StaticRef<kClass>{}.Access<"floatField">().Set(true);
 }
 
 TEST_F(JniTest, StaticDoubleField) {
@@ -157,8 +157,8 @@ TEST_F(JniTest, StaticDoubleField) {
   EXPECT_CALL(*env_, SetStaticDoubleField(_, Fake<jfieldID>(), true));
 
   LocalObject<kClass> obj;
-  EXPECT_TRUE(StaticRef<kClass>{}["doubleField"].Get());
-  StaticRef<kClass>{}["doubleField"].Set(true);
+  EXPECT_TRUE(StaticRef<kClass>{}.Access<"doubleField">().Get());
+  StaticRef<kClass>{}.Access<"doubleField">().Set(true);
 }
 
 TEST_F(JniTest, StaticField_ObjectGet) {
@@ -168,7 +168,8 @@ TEST_F(JniTest, StaticField_ObjectGet) {
   EXPECT_CALL(*env_, GetStaticObjectField(_, Fake<jfieldID>()))
       .WillOnce(Return(Fake<jobject>()));
 
-  jni::LocalObject<kClass2> obj = StaticRef<kClass>{}["classField"].Get();
+  jni::LocalObject<kClass2> obj =
+      StaticRef<kClass>{}.Access<"classField">().Get();
 }
 
 TEST_F(JniTest, StaticField_StringSet) {
@@ -178,7 +179,7 @@ TEST_F(JniTest, StaticField_StringSet) {
   EXPECT_CALL(*env_,
               SetStaticObjectField(_, Fake<jfieldID>(), Fake<jstring>()));
 
-  StaticRef<kClass>{}["stringField"].Set(
+  StaticRef<kClass>{}.Access<"stringField">().Set(
       LocalString{AdoptLocal{}, Fake<jstring>()});
 }
 
@@ -189,7 +190,7 @@ TEST_F(JniTest, StaticField_ObjectSet) {
   EXPECT_CALL(*env_,
               SetStaticObjectField(_, Fake<jfieldID>(), Fake<jobject>()));
 
-  StaticRef<kClass>{}["classField"].Set(
+  StaticRef<kClass>{}.Access<"classField">().Set(
       LocalObject<kClass2>{AdoptLocal{}, Fake<jobject>()});
 }
 
@@ -199,7 +200,8 @@ TEST_F(JniTest, StaticField_SelfGet) {
   EXPECT_CALL(*env_, GetStaticObjectField(_, Fake<jfieldID>()))
       .WillOnce(Return(Fake<jobject>()));
 
-  jni::LocalObject<kClass> obj = StaticRef<kClass>{}["selfField"].Get();
+  jni::LocalObject<kClass> obj =
+      StaticRef<kClass>{}.Access<"selfField">().Get();
 }
 
 TEST_F(JniTest, StaticField_SelfSet) {
@@ -208,7 +210,7 @@ TEST_F(JniTest, StaticField_SelfSet) {
   EXPECT_CALL(*env_,
               SetStaticObjectField(_, Fake<jfieldID>(), Fake<jobject>()));
 
-  StaticRef<kClass>{}["selfField"].Set(
+  StaticRef<kClass>{}.Access<"selfField">().Set(
       LocalObject<kClass>{AdoptLocal{}, Fake<jobject>()});
 }
 
@@ -276,21 +278,21 @@ TEST_F(JniTest, StaticExerciseAllReturns) {
 
   EXPECT_CALL(*env_, CallStaticObjectMethodV).Times(5);
 
-  StaticRef<kMethodClass>{}("booleanMethod");
-  StaticRef<kMethodClass>{}("byteMethod");
-  StaticRef<kMethodClass>{}("charMethod");
-  StaticRef<kMethodClass>{}("shortMethod");
-  StaticRef<kMethodClass>{}("intMethod");
-  StaticRef<kMethodClass>{}("longMethod");
-  StaticRef<kMethodClass>{}("floatMethod");
-  StaticRef<kMethodClass>{}("doubleMethod");
-  StaticRef<kMethodClass>{}("stringMethod");
+  StaticRef<kMethodClass>{}.Call<"booleanMethod">();
+  StaticRef<kMethodClass>{}.Call<"byteMethod">();
+  StaticRef<kMethodClass>{}.Call<"charMethod">();
+  StaticRef<kMethodClass>{}.Call<"shortMethod">();
+  StaticRef<kMethodClass>{}.Call<"intMethod">();
+  StaticRef<kMethodClass>{}.Call<"longMethod">();
+  StaticRef<kMethodClass>{}.Call<"floatMethod">();
+  StaticRef<kMethodClass>{}.Call<"doubleMethod">();
+  StaticRef<kMethodClass>{}.Call<"stringMethod">();
 
-  StaticRef<kMethodClass>{}("objectMethod");
-  StaticRef<kMethodClass>{}("rank1ArrayMethod");
-  StaticRef<kMethodClass>{}("rank2ArrayMethod");
+  StaticRef<kMethodClass>{}.Call<"objectMethod">();
+  StaticRef<kMethodClass>{}.Call<"rank1ArrayMethod">();
+  StaticRef<kMethodClass>{}.Call<"rank2ArrayMethod">();
 
-  LocalObject<kClass> self_ret = StaticRef<kMethodClass>{}("selfMethod");
+  LocalObject<kClass> self_ret = StaticRef<kMethodClass>{}.Call<"selfMethod">();
 }
 
 // clang-format off
@@ -339,23 +341,23 @@ TEST_F(JniTest, StaticExerciseAllTypesThroughSingleParam) {
 
   EXPECT_CALL(*env_, CallStaticVoidMethodV).Times(13);
 
-  StaticRef<kMethodClassSingleParam>{}("booleanMethod", jboolean{true});
-  StaticRef<kMethodClassSingleParam>{}("byteMethod", jbyte{1});
-  StaticRef<kMethodClassSingleParam>{}("charMethod", jchar{'a'});
-  StaticRef<kMethodClassSingleParam>{}("shortMethod", jshort{1});
-  StaticRef<kMethodClassSingleParam>{}("intMethod", jint{123});
-  StaticRef<kMethodClassSingleParam>{}("longMethod", jlong{456});
-  StaticRef<kMethodClassSingleParam>{}("floatMethod", jfloat{789.f});
-  StaticRef<kMethodClassSingleParam>{}("doubleMethod", jdouble{101.});
-  StaticRef<kMethodClassSingleParam>{}("stringMethod", "test");
+  StaticRef<kMethodClassSingleParam>{}.Call<"booleanMethod">(jboolean{true});
+  StaticRef<kMethodClassSingleParam>{}.Call<"byteMethod">(jbyte{1});
+  StaticRef<kMethodClassSingleParam>{}.Call<"charMethod">(jchar{'a'});
+  StaticRef<kMethodClassSingleParam>{}.Call<"shortMethod">(jshort{1});
+  StaticRef<kMethodClassSingleParam>{}.Call<"intMethod">(jint{123});
+  StaticRef<kMethodClassSingleParam>{}.Call<"longMethod">(jlong{456});
+  StaticRef<kMethodClassSingleParam>{}.Call<"floatMethod">(jfloat{789.f});
+  StaticRef<kMethodClassSingleParam>{}.Call<"doubleMethod">(jdouble{101.});
+  StaticRef<kMethodClassSingleParam>{}.Call<"stringMethod">("test");
 
   // It would be more complete to exercise all types here.
-  StaticRef<kMethodClassSingleParam>{}("objectMethod", Fake<jobject>());
-  StaticRef<kMethodClassSingleParam>{}("rank1ArrayMethod",
-                                       Fake<jobjectArray>());
-  StaticRef<kMethodClassSingleParam>{}("rank2ArrayMethod",
-                                       Fake<jobjectArray>());
-  StaticRef<kMethodClassSingleParam>{}("selfMethod", Fake<jobject>());
+  StaticRef<kMethodClassSingleParam>{}.Call<"objectMethod">(Fake<jobject>());
+  StaticRef<kMethodClassSingleParam>{}.Call<"rank1ArrayMethod">(
+      Fake<jobjectArray>());
+  StaticRef<kMethodClassSingleParam>{}.Call<"rank2ArrayMethod">(
+      Fake<jobjectArray>());
+  StaticRef<kMethodClassSingleParam>{}.Call<"selfMethod">(Fake<jobject>());
 }
 
 TEST_F(JniTest, StaticExerciseComplexSetOfParams) {
@@ -365,9 +367,9 @@ TEST_F(JniTest, StaticExerciseComplexSetOfParams) {
   EXPECT_CALL(*env_, GetStaticMethodID(_, StrEq("complexFunc"),
                                        StrEq("([[LkClass2;IFLkClass3;)F")));
 
-  StaticRef<kMethodClass>{}("simpleFunc", 123.f);
-  StaticRef<kMethodClass>{}("complexFunc", jobjectArray{nullptr}, 123, 456.f,
-                            jobject{nullptr});
+  StaticRef<kMethodClass>{}.Call<"simpleFunc">(123.f);
+  StaticRef<kMethodClass>{}.Call<"complexFunc">(jobjectArray{nullptr}, 123,
+                                                456.f, jobject{nullptr});
 }
 
 }  // namespace

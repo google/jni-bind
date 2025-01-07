@@ -32,7 +32,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_jnibind_android_LocalObjectTest_jniCreateNewObject(JNIEnv* env, jclass) {
+Java_com_jnibind_android_LocalObjectTest_jniCreateNewObject(JNIEnv* env,
+                                                            jclass) {
   return jni::LocalObject<kObjectTestHelperClass>{1, 2, 3}.Release();
 }
 
@@ -53,8 +54,8 @@ JNIEXPORT jobject JNICALL
 Java_com_jnibind_android_LocalObjectTest_jniBuildNewObjectsFromExistingObjects(
     JNIEnv* env, jclass, jobject jtest_obj, jobject jhelper_obj) {
   jni::LocalObject<kObjectTestHelperClass> helper_obj{jhelper_obj};
-  return jni::LocalObject<kLocalObjectTestClass>{jtest_obj}(
-             "methodTakesLocalObjectReturnsNewObject", helper_obj)
+  return jni::LocalObject<kLocalObjectTestClass>{jtest_obj}
+      .Call<"methodTakesLocalObjectReturnsNewObject">(helper_obj)
       .Release();
 }
 
@@ -62,17 +63,17 @@ JNIEXPORT jobject JNICALL
 Java_com_jnibind_android_LocalObjectTest_jniManipulateNewLocalObjectSetIntVal238(
     JNIEnv* env, jclass, jobject jtest_obj) {
   jni::LocalObject<kObjectTestHelperClass> helper_obj{2, 3, 8};
-  return jni::LocalObject<kLocalObjectTestClass>{jtest_obj}(
-             "methodTakesLocalObjectReturnsNewObject", std::move(helper_obj))
+  return jni::LocalObject<kLocalObjectTestClass>{jtest_obj}
+      .Call<"methodTakesLocalObjectReturnsNewObject">(std::move(helper_obj))
       .Release();
 }
 
 JNIEXPORT jobject JNICALL
 Java_com_jnibind_android_LocalObjectTest_jniMaterializeNewLocalObjectSetIntVal159(
     JNIEnv* env, jclass, jobject jtest_obj) {
-  return jni::LocalObject<kLocalObjectTestClass>{jtest_obj}(
-             "methodTakesLocalObjectReturnsNewObject",
-             jni::LocalObject<kObjectTestHelperClass>{1, 5, 9})
+  return jni::LocalObject<kLocalObjectTestClass>{jtest_obj}
+      .Call<"methodTakesLocalObjectReturnsNewObject">(
+          jni::LocalObject<kObjectTestHelperClass>{1, 5, 9})
       .Release();
 }
 

@@ -99,7 +99,7 @@ TEST_F(JniTest, AllowsMoveCtorIntoLambdaWithThreadGuardUsage) {
 
   std::thread worker{[gobj{std::move(global_obj)}]() mutable {
     ThreadGuard thread_guard{};
-    gobj["intVal1"].Get();
+    gobj.Access<"intVal1">().Get();
   }};
 
   worker.join();

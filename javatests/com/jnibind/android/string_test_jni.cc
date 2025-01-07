@@ -51,9 +51,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
 
 /** Void return type tests. */
 JNIEXPORT void JNICALL
-Java_com_jnibind_android_StringTest_jniVoidMethodTakesString(JNIEnv* env, jclass,
-                                                          jobject object,
-                                                          jstring string) {
+Java_com_jnibind_android_StringTest_jniVoidMethodTakesString(JNIEnv* env,
+                                                             jclass,
+                                                             jobject object,
+                                                             jstring string) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
   // TODO(b/175083373):  The following (and below) should compile with overload
   // sets.
@@ -62,17 +63,17 @@ Java_com_jnibind_android_StringTest_jniVoidMethodTakesString(JNIEnv* env, jclass
   r_jni_string_test_helper.GetMethod("voidMethodTakesString",
       std::string{LocalString{string}.Pin().ToString()});
   */
-  r_jni_string_test_helper("voidMethodTakesString",
-                           std::string{LocalString{string}.Pin().ToString()});
+  r_jni_string_test_helper.Call<"voidMethodTakesString">(
+      std::string{LocalString{string}.Pin().ToString()});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_android_StringTest_jniVoidMethodTakesTwoStrings(
     JNIEnv* env, jclass, jobject object, jstring s1, jstring s2) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
-  r_jni_string_test_helper("voidMethodTakesTwoStrings",
-                           std::string{LocalString{s1}.Pin().ToString()},
-                           std::string{LocalString{s2}.Pin().ToString()});
+  r_jni_string_test_helper.Call<"voidMethodTakesTwoStrings">(
+      std::string{LocalString{s1}.Pin().ToString()},
+      std::string{LocalString{s2}.Pin().ToString()});
 }
 
 JNIEXPORT void JNICALL
@@ -80,26 +81,26 @@ Java_com_jnibind_android_StringTest_jniVoidMethodTakesFiveStrings(
     JNIEnv* env, jclass, jobject object, jstring s1, jstring s2, jstring s3,
     jstring s4, jstring s5) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
-  r_jni_string_test_helper("voidMethodTakesFiveStrings",
-                           std::string{LocalString{s1}.Pin().ToString()},
-                           std::string{LocalString{s2}.Pin().ToString()},
-                           std::string{LocalString{s3}.Pin().ToString()},
-                           std::string{LocalString{s4}.Pin().ToString()},
-                           std::string{LocalString{s5}.Pin().ToString()});
+  r_jni_string_test_helper.Call<"voidMethodTakesFiveStrings">(
+      std::string{LocalString{s1}.Pin().ToString()},
+      std::string{LocalString{s2}.Pin().ToString()},
+      std::string{LocalString{s3}.Pin().ToString()},
+      std::string{LocalString{s4}.Pin().ToString()},
+      std::string{LocalString{s5}.Pin().ToString()});
 }
 
 /** String return type tests. */
 JNIEXPORT jstring JNICALL
-Java_com_jnibind_android_StringTest_jniStringMethodTakesString(JNIEnv* env, jclass,
-                                                            jobject object,
-                                                            jstring string) {
+Java_com_jnibind_android_StringTest_jniStringMethodTakesString(JNIEnv* env,
+                                                               jclass,
+                                                               jobject object,
+                                                               jstring string) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
 
-  // TODO(b/174272629):  This declaration is clumsy because Return<std::string> is
-  // an ObjectRef and thus not implicitly convertible to jstring.  The following
-  // needs to be simpler to express.
-  return LocalString{r_jni_string_test_helper(
-                         "stringMethodTakesString",
+  // TODO(b/174272629):  This declaration is clumsy because Return<std::string>
+  // is an ObjectRef and thus not implicitly convertible to jstring.  The
+  // following needs to be simpler to express.
+  return LocalString{r_jni_string_test_helper.Call<"stringMethodTakesString">(
                          std::string{LocalString{string}.Pin().ToString()})}
       .Release();
 }
@@ -109,9 +110,9 @@ Java_com_jnibind_android_StringTest_jniStringMethodTakesTwoStrings(
     JNIEnv* env, jclass, jobject object, jstring s1, jstring s2) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
   return LocalString{
-      r_jni_string_test_helper("stringMethodTakesTwoStrings",
-                               std::string{LocalString{s1}.Pin().ToString()},
-                               std::string{LocalString{s2}.Pin().ToString()})}
+      r_jni_string_test_helper.Call<"stringMethodTakesTwoStrings">(
+          std::string{LocalString{s1}.Pin().ToString()},
+          std::string{LocalString{s2}.Pin().ToString()})}
       .Release();
 }
 
@@ -121,12 +122,12 @@ Java_com_jnibind_android_StringTest_jniStringMethodTakesFiveStrings(
     jstring s4, jstring s5) {
   LocalObject<kMethodTestHelper> r_jni_string_test_helper{object};
   return LocalString{
-      r_jni_string_test_helper("stringMethodTakesFiveStrings",
-                               std::string{LocalString{s1}.Pin().ToString()},
-                               std::string{LocalString{s2}.Pin().ToString()},
-                               std::string{LocalString{s3}.Pin().ToString()},
-                               std::string{LocalString{s4}.Pin().ToString()},
-                               std::string{LocalString{s5}.Pin().ToString()})}
+      r_jni_string_test_helper.Call<"stringMethodTakesFiveStrings">(
+          std::string{LocalString{s1}.Pin().ToString()},
+          std::string{LocalString{s2}.Pin().ToString()},
+          std::string{LocalString{s3}.Pin().ToString()},
+          std::string{LocalString{s4}.Pin().ToString()},
+          std::string{LocalString{s5}.Pin().ToString()})}
       .Release();
 }
 

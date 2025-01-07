@@ -23,6 +23,7 @@
 #include "object_test_helper_jni.h"
 #include "jni_bind.h"
 #include "metaprogramming/lambda_string.h"
+#include "metaprogramming/string_literal.h"
 
 using ::jni::Array;
 using ::jni::ArrayView;
@@ -33,6 +34,7 @@ using ::jni::LocalObject;
 using ::jni::Modulo;
 using ::jni::Rank;
 using ::jni::StaticRef;
+using ::jni::metaprogramming::StringLiteral;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
 
@@ -58,18 +60,15 @@ static constexpr Class kArrayTestFieldRank2 {
 
 // Generic field test suitable for simple primitive types.
 // Strings are passed through lambdas as field indexing is compile time.
-template <typename SpanType, typename FieldNameLambda,
-          typename MethodNameLambda>
+template <typename SpanType, StringLiteral field_name_literal,
+          StringLiteral method_name_literal>
 void GenericFieldTest(LocalObject<kArrayTestFieldRank2> fixture,
-                      SpanType max_val, SpanType base, SpanType stride,
-                      FieldNameLambda field_name_lambda,
-                      MethodNameLambda method_name_lambda) {
-  LocalArray<SpanType, 2> arr{fixture[field_name_lambda()].Get()};
+                      SpanType max_val, SpanType base, SpanType stride) {
+  LocalArray<SpanType, 2> arr{fixture.Access<field_name_literal>().Get()};
 
   // Field starts in default state.
-  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), SpanType{0},
-                                     SpanType{0},
-                                     fixture[field_name_lambda()].Get());
+  StaticRef<kArrayTestHelperClass>{}.Call<method_name_literal>(
+      SpanType{0}, SpanType{0}, fixture.Access<field_name_literal>().Get());
 
   // Updating the field manually works.
   {
@@ -82,8 +81,8 @@ void GenericFieldTest(LocalObject<kArrayTestFieldRank2> fixture,
       }
     }
 
-    StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, SpanType{1},
-                                       fixture[field_name_lambda()].Get());
+    StaticRef<kArrayTestHelperClass>{}.Call<method_name_literal>(
+        base, SpanType{1}, fixture.Access<field_name_literal>().Get());
   }
 
   // Updating the field repeatedly works.
@@ -101,8 +100,8 @@ void GenericFieldTest(LocalObject<kArrayTestFieldRank2> fixture,
           }
         }
       }
-      StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, stride,
-                                         fixture[field_name_lambda()].Get());
+      StaticRef<kArrayTestHelperClass>{}.Call<method_name_literal>(
+          base, stride, fixture.Access<field_name_literal>().Get());
     }
   }
 
@@ -113,8 +112,8 @@ void GenericFieldTest(LocalObject<kArrayTestFieldRank2> fixture,
                   arr_rank_1.Length() * sizeof(SpanType));
     }
   }
-  StaticRef<kArrayTestHelperClass>{}(method_name_lambda(), base, stride,
-                                     fixture[field_name_lambda()].Get());
+  StaticRef<kArrayTestHelperClass>{}.Call<method_name_literal>(
+      base, stride, fixture.Access<field_name_literal>().Get());
 }
 
 extern "C" {
@@ -132,68 +131,68 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTestFieldRank2_jniTearDown(
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank2_nativeBooleanTests(
     JNIEnv* env, jclass, jobject test_fixture) {
-  GenericFieldTest(LocalObject<kArrayTestFieldRank2>{test_fixture}, jboolean{2},
-                   jboolean{0}, jboolean{1}, STR("booleanArrayField"),
-                   STR("assertBoolean2D"));
+  GenericFieldTest<jboolean, "booleanArrayField", "assertBoolean2D">(
+      LocalObject<kArrayTestFieldRank2>{test_fixture}, jboolean{2}, jboolean{0},
+      jboolean{1});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank2_nativeByteTests(
     JNIEnv* env, jclass, jobject test_fixture) {
-  GenericFieldTest(LocalObject<kArrayTestFieldRank2>{test_fixture},
-                   std::numeric_limits<jbyte>::max(), jbyte{10}, jbyte{2},
-                   STR("byteArrayField"), STR("assertByte2D"));
+  GenericFieldTest<jbyte, "byteArrayField", "assertByte2D">(
+      LocalObject<kArrayTestFieldRank2>{test_fixture},
+      std::numeric_limits<jbyte>::max(), jbyte{10}, jbyte{2});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank2_nativeCharTests(
     JNIEnv* env, jclass, jobject test_fixture) {
-  GenericFieldTest(LocalObject<kArrayTestFieldRank2>{test_fixture},
-                   std::numeric_limits<jchar>::max(), jchar{0}, jchar{1},
-                   STR("charArrayField"), STR("assertChar2D"));
+  GenericFieldTest<jchar, "charArrayField", "assertChar2D">(
+      LocalObject<kArrayTestFieldRank2>{test_fixture},
+      std::numeric_limits<jchar>::max(), jchar{0}, jchar{1});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank2_nativeShortTests(
     JNIEnv* env, jclass, jobject test_fixture) {
-  GenericFieldTest(LocalObject<kArrayTestFieldRank2>{test_fixture},
-                   std::numeric_limits<jshort>::max(), jshort{0}, jshort{1},
-                   STR("shortArrayField"), STR("assertShort2D"));
+  GenericFieldTest<jshort, "shortArrayField", "assertShort2D">(
+      LocalObject<kArrayTestFieldRank2>{test_fixture},
+      std::numeric_limits<jshort>::max(), jshort{0}, jshort{1});
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_ArrayTestFieldRank2_nativeIntTests(
     JNIEnv* env, jclass, jobject test_fixture) {
-  GenericFieldTest(LocalObject<kArrayTestFieldRank2>{test_fixture},
-                   std::numeric_limits<jint>::max(), jint{0}, jint{1},
-                   STR("intArrayField"), STR("assertInt2D"));
+  GenericFieldTest<jint, "intArrayField", "assertInt2D">(
+      LocalObject<kArrayTestFieldRank2>{test_fixture},
+      std::numeric_limits<jint>::max(), jint{0}, jint{1});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank2_nativeLongTests(
     JNIEnv* env, jclass, jobject test_fixture) {
-  GenericFieldTest(LocalObject<kArrayTestFieldRank2>{test_fixture},
-                   std::numeric_limits<jlong>::max(), jlong{0}, jlong{1},
-                   STR("longArrayField"), STR("assertLong2D"));
+  GenericFieldTest<jlong, "longArrayField", "assertLong2D">(
+      LocalObject<kArrayTestFieldRank2>{test_fixture},
+      std::numeric_limits<jlong>::max(), jlong{0}, jlong{1});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank2_nativeFloatTests(
     JNIEnv* env, jclass, jobject test_fixture) {
-  GenericFieldTest(LocalObject<kArrayTestFieldRank2>{test_fixture},
-                   std::numeric_limits<jfloat>::max(), jfloat{0.f}, jfloat{1.f},
-                   STR("floatArrayField"), STR("assertFloat2D"));
+  GenericFieldTest<jfloat, "floatArrayField", "assertFloat2D">(
+      LocalObject<kArrayTestFieldRank2>{test_fixture},
+      std::numeric_limits<jfloat>::max(), jfloat{0.f}, jfloat{1.f});
 }
 
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank2_nativeDoubleTests(
     JNIEnv* env, jclass, jobject test_fixture) {
-  GenericFieldTest(LocalObject<kArrayTestFieldRank2>{test_fixture},
-                   std::numeric_limits<jdouble>::max(), jdouble{0}, jdouble{1},
-                   STR("doubleArrayField"), STR("assertDouble2D"));
+  GenericFieldTest<jdouble, "doubleArrayField", "assertDouble2D">(
+      LocalObject<kArrayTestFieldRank2>{test_fixture},
+      std::numeric_limits<jdouble>::max(), jdouble{0}, jdouble{1});
 }
 
 // TODO(b/143908983): This is broken, but using regular `jobject` works,
-// so there is still an alternative path to be take.
+// so there is still an alternative path to be taken.
 JNIEXPORT void JNICALL
 Java_com_jnibind_test_ArrayTestFieldRank2_nativeStringTests(
     JNIEnv* env, jclass, jobject test_fixture) {
@@ -202,40 +201,43 @@ Java_com_jnibind_test_ArrayTestFieldRank2_nativeStringTests(
 
   // Field starts in default state.
   StaticRef<kArrayTestHelperClass>{}(
-      "assertString1D", fixture["stringArrayField"].Get(), jboolean{false});
+      "assertString1D", fixture.Access<"stringArrayField">().Get(),
+  jboolean{false});
 
   // Updating the field manually works.
-  LocalArray<jstring> arr = fixture["stringArrayField"].Get();
+  LocalArray<jstring> arr = fixture.Access<"stringArrayField">().Get();
   arr.Set(0, LocalString{"Foo"});
   arr.Set(1, LocalString{"Baz"});
   arr.Set(2, LocalString{"Bar"});
-  StaticRef<kArrayTestHelperClass>{}("assertString1D", arr, true);
+  StaticRef<kArrayTestHelperClass>{}.Call<"assertString1D">( arr, true);
 
   // Updating the field repeatedly works.
   arr.Set(0, LocalString{"FAKE"});
   arr.Set(1, LocalString{"DEAD"});
   arr.Set(2, LocalString{"BEEF"});
-  StaticRef<kArrayTestHelperClass>{}("assertString1D", arr, false);
+  StaticRef<kArrayTestHelperClass>{}.Call<"assertString1D">( arr, false);
 
   // Updating the field repeatedly works.
   arr.Set(0, "Foo");
   const char* kBaz = "Baz";
   arr.Set(1, kBaz);
   arr.Set(2, std::string{"Bar"});
-  StaticRef<kArrayTestHelperClass>{}("assertString1D", arr, true);
+  StaticRef<kArrayTestHelperClass>{}.Call<"assertString1D">( arr, true);
 
   // Iterating over values works.
   static constexpr std::array vals{"Foo", "Baz", "Bar"};
   int i = 0;
   for (LocalString local_string : arr.Pin()) {
-    StaticRef<kArrayTestHelperClass>{}("assertString", local_string, vals[i]);
+    StaticRef<kArrayTestHelperClass>{}.Call<"assertString">( local_string,
+  vals[i]);
     ++i;
   }
 
   // Iterating over passed values works.
   i = 0;
   for (LocalString local_string : LocalArray<jstring>{object_array}.Pin()) {
-    StaticRef<kArrayTestHelperClass>{}("assertString", local_string, vals[i]);
+    StaticRef<kArrayTestHelperClass>{}.Call<"assertString">( local_string,
+  vals[i]);
     ++i;
   }
   */
@@ -245,29 +247,29 @@ void Java_com_jnibind_test_ArrayTestFieldRank2_nativeObjectTests(
     JNIEnv* env, jclass, jobject test_fixture) {
   LocalObject<kArrayTestFieldRank2> fixture{test_fixture};
   LocalArray<jobject, 2, kObjectTestHelperClass> arr =
-      fixture["objectArrayField"].Get();
+      fixture.Access<"objectArrayField">().Get();
 
   int i = 0;
   {
     for (LocalArray<jobject, 1, kObjectTestHelperClass> arr_rank_1 :
          arr.Pin()) {
       for (LocalObject<kObjectTestHelperClass> obj : arr_rank_1.Pin()) {
-        obj["intVal1"].Set(i);
+        obj.Access<"intVal1">().Set(i);
         i++;
-        obj["intVal2"].Set(i);
+        obj.Access<"intVal2">().Set(i);
         i++;
-        obj["intVal3"].Set(i);
+        obj.Access<"intVal3">().Set(i);
         i++;
       }
     }
   }
 
   // Object on fixture is already updated.
-  StaticRef<kArrayTestHelperClass>{}("assertObject2D", 0, 1,
-                                     fixture["objectArrayField"].Get());
+  StaticRef<kArrayTestHelperClass>{}.Call<"assertObject2D">(
+      0, 1, fixture.Access<"objectArrayField">().Get());
 
   // But using local reference works too.
-  StaticRef<kArrayTestHelperClass>{}("assertObject2D", 0, 1, arr);
+  StaticRef<kArrayTestHelperClass>{}.Call<"assertObject2D">(0, 1, arr);
 }
 
 }  // extern "C"

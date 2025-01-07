@@ -82,6 +82,7 @@ cc_library(
         "//implementation/jni_helper:static_field_value",
         "//metaprogramming:corpus",
         "//metaprogramming:corpus_tag",
+        "//metaprogramming:string_literal",
     ],
 )
 

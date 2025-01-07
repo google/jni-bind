@@ -318,7 +318,7 @@ TEST_F(JniTest, ArrayView_RichObjectsAreIterable) {
   int fake_result = 123;
   for (LocalObject<kClass> obj : obj_view) {
     EXPECT_CALL(*env_, CallIntMethodV).WillOnce(::testing::Return(fake_result));
-    EXPECT_EQ(obj("Foo"), fake_result);
+    EXPECT_EQ(obj.Call<"Foo">(), fake_result);
     fake_result++;
   }
 }

@@ -60,33 +60,33 @@ Java_com_jnibind_test_FieldTest_jniTearDown(JavaVM* pjvm, void* reserved) {
 JNIEXPORT jint JNICALL Java_com_jnibind_test_FieldTest_jniIntField(
     JNIEnv* env, jclass, jobject object, jint val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
-  rjni_test_helper["intField"].Set(jint{val});
+  rjni_test_helper.Access<"intField">().Set(jint{val});
 
-  return rjni_test_helper["intField"].Get();
+  return rjni_test_helper.Access<"intField">().Get();
 }
 
 JNIEXPORT jfloat JNICALL Java_com_jnibind_test_FieldTest_jniFloatField(
     JNIEnv* env, jclass, jobject object, jfloat val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
-  rjni_test_helper["floatField"].Set(jfloat{val});
+  rjni_test_helper.Access<"floatField">().Set(jfloat{val});
 
-  return rjni_test_helper["floatField"].Get();
+  return rjni_test_helper.Access<"floatField">().Get();
 }
 
 JNIEXPORT jdouble JNICALL Java_com_jnibind_test_FieldTest_jniDoubleField(
     JNIEnv* env, jclass, jobject object, jdouble val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
-  rjni_test_helper["doubleField"].Set(jdouble{val});
+  rjni_test_helper.Access<"doubleField">().Set(jdouble{val});
 
-  return rjni_test_helper["doubleField"].Get();
+  return rjni_test_helper.Access<"doubleField">().Get();
 }
 
 JNIEXPORT jstring JNICALL Java_com_jnibind_test_FieldTest_jniStringField(
     JNIEnv* env, jclass, jobject object, jstring val) {
   LocalObject<kFieldTestHelper> rjni_test_helper{object};
-  rjni_test_helper["stringField"].Set(val);
+  rjni_test_helper.Access<"stringField">().Set(val);
 
-  return rjni_test_helper["stringField"].Get().Release();
+  return rjni_test_helper.Access<"stringField">().Get().Release();
 }
 
 JNIEXPORT void JNICALL Java_com_jnibind_test_FieldTest_jniObjectFieldSet(
@@ -95,12 +95,15 @@ JNIEXPORT void JNICALL Java_com_jnibind_test_FieldTest_jniObjectFieldSet(
   LocalObject<kFieldTest> field_test{test_class};
   LocalObject<kFieldTestHelper> obj{intVal, floatVal, doubleVal};
 
-  field_test["fieldTestHelper"].Set(obj);
+  field_test.Access<"fieldTestHelper">().Set(obj);
 }
 
 JNIEXPORT jobject JNICALL Java_com_jnibind_test_FieldTest_jniObjectFieldGet(
     JNIEnv* env, jclass, jobject test_class) {
-  return LocalObject<kFieldTest>{test_class}["fieldTestHelper"].Get().Release();
+  return LocalObject<kFieldTest>{test_class}
+      .Access<"fieldTestHelper">()
+      .Get()
+      .Release();
 }
 
 }  // extern "C"

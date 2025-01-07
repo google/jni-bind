@@ -21,6 +21,7 @@
 
 #include "class_defs/java_lang_classes.h"
 #include "implementation/class_loader.h"
+#include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/global_object.h"
 #include "implementation/id.h"
@@ -29,9 +30,11 @@
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
+#include "implementation/jvm.h"
 #include "implementation/local_object.h"
 #include "implementation/no_idx.h"
 #include "implementation/promotion_mechanics.h"
+#include "implementation/promotion_mechanics_tags.h"
 #include "jni_dep.h"
 
 namespace jni {
@@ -73,10 +76,19 @@ class ClassLoaderRef : public ClassLoaderImpl<lifecycleType> {
                   kDefaultClassLoader) {
       ClassRef_t<JniT<jobject, class_v, class_loader_v_, jvm_v_,
                       0>>::PrimeJClassFromClassLoader([&]() {
-        // Prevent the object (which is a runtime instance of a class) from
-        // falling out of scope so it is not released.
+      // Prevent the object (which is a runtime instance of a class) from
+      // falling out of scope so it is not released.
+
+#if __cplusplus >= 202002L
+        LocalObject loaded_class =
+            (*this).template Call<"loadClass">(IdClassT::kNameUsingDots);
+#elif __clang__
         LocalObject loaded_class =
             (*this)("loadClass", IdClassT::kNameUsingDots);
+#else
+        static_assert(
+            false, "JNI Bind requires C++20 (or later) or C++17 with clang.");
+#endif
 
         // We only want to create global references if we are actually going
         // to use them so that they do not leak.

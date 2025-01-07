@@ -57,7 +57,7 @@ Java_com_jnibind_test_ThreadTest_RunsThreadedWorkOnObject(JNIEnv* env, jclass,
   std::thread worker{
       [global_object_lambda_scope{std::move(global_obj)}]() mutable {
         ThreadGuard thread_guard{};
-        global_object_lambda_scope("foo");
+        global_object_lambda_scope.Call<"foo">();
       }};
 
   worker.join();

@@ -39,7 +39,15 @@ inline jclass FindClassFallback(const char* class_name) {
   GlobalClassLoader<kDefaultClassLoader> loader{AdoptGlobal{},
                                                 FallbackLoader()};
 
+#if __cplusplus >= 202002L
+  jni::LocalObject loaded_class = loader.Call<"loadClass">(class_name);
+#elif __clang__
   jni::LocalObject loaded_class = loader("loadClass", class_name);
+#else
+  static_assert(false,
+                "JNI Bind requires C++20 (or later) or C++17 with clang.");
+#endif
+
   jclass ret{static_cast<jclass>(static_cast<jobject>(loaded_class.Release()))};
 
   loader.Release();

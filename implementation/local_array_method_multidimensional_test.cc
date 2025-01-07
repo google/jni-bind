@@ -48,7 +48,7 @@ TEST_F(JniTest, V_2I) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("I"), StrEq("()[[I")));
 
   LocalObject<kClass> obj{Fake<jobject>()};
-  obj("I");
+  obj.Call<"I">();
 }
 
 TEST_F(JniTest, V_2LkClass) {
@@ -58,7 +58,7 @@ TEST_F(JniTest, V_2LkClass) {
   EXPECT_CALL(*env_, GetMethodID(_, StrEq("Foo"), StrEq("()[[LkClass2;")));
 
   LocalObject<kClass> obj{Fake<jobject>()};
-  obj("Foo");
+  obj.Call<"Foo">();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +77,7 @@ TEST_F(JniTest, 3I1D_2LkClass) {
               GetMethodID(_, StrEq("Bar"), StrEq("([[[I[D)[[LkClass3;")));
 
   LocalObject<kArrClass> obj{Fake<jobject>()};
-  obj("Bar", Fake<jobjectArray>(), Fake<jdoubleArray>());
+  obj.Call<"Bar">(Fake<jobjectArray>(), Fake<jdoubleArray>());
 }
 
 TEST_F(JniTest, 2I_I) {
@@ -88,8 +88,8 @@ TEST_F(JniTest, 2I_I) {
 
   LocalObject<kClass> obj{Fake<jobject>()};
   // obj("I", jintArray{nullptr}); // doesn't compile (good).
-  obj("I", Fake<jobjectArray>());
-  obj("I", LocalArray<jint, 2>{Fake<jobjectArray>()});
+  obj.Call<"I">(Fake<jobjectArray>());
+  obj.Call<"I">(LocalArray<jint, 2>{Fake<jobjectArray>()});
 }
 
 TEST_F(JniTest, 3I_1LkClass) {
@@ -103,8 +103,7 @@ TEST_F(JniTest, 3I_1LkClass) {
 
   // TODO(b/143908983): CTAD is failing.
   // LocalArray ret = obj("Baz", jobjectArray{nullptr});
-
-  LocalArray<jobject, 1, kClass2> ret = obj("Baz", Fake<jobjectArray>());
+  LocalArray<jobject, 1, kClass2> ret = obj.Call<"Baz">(Fake<jobjectArray>());
   static_assert(std::is_same_v<decltype(ret), LocalArray<jobject, 1, kClass2>>);
 }
 
@@ -113,7 +112,7 @@ TEST_F(JniTest, 3I1D_1LkClass) {
               GetMethodID(_, StrEq("Bar"), StrEq("([[[I[D)[[LkClass3;")));
 
   LocalObject<kArrClass> obj{Fake<jobject>()};
-  obj("Bar", Fake<jobjectArray>(), Fake<jdoubleArray>());
+  obj.Call<"Bar">(Fake<jobjectArray>(), Fake<jdoubleArray>());
 }
 
 }  // namespace

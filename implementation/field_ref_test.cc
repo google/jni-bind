@@ -59,8 +59,8 @@ TEST_F(JniTest, Field_SimpleGetAndSet) {
                                                Field("SomeField", jint{})};
 
   GlobalObject<java_class_under_test> obj{};
-  EXPECT_EQ(999, obj["SomeField"].Get());
-  obj["SomeField"].Set(123);
+  EXPECT_EQ(999, obj.Access<"SomeField">().Get());
+  obj.Access<"SomeField">().Set(123);
 }
 
 TEST_F(JniTest, Field_BooleanField) {
@@ -68,8 +68,8 @@ TEST_F(JniTest, Field_BooleanField) {
   EXPECT_CALL(*env_, SetBooleanField);
 
   LocalObject<java_class_under_test> obj{};
-  obj["booleanField"].Get();
-  obj["booleanField"].Set(true);
+  obj.Access<"booleanField">().Get();
+  obj.Access<"booleanField">().Set(true);
 }
 
 TEST_F(JniTest, Field_ByteField) {
@@ -77,8 +77,8 @@ TEST_F(JniTest, Field_ByteField) {
   EXPECT_CALL(*env_, SetByteField);
 
   LocalObject<java_class_under_test> obj{};
-  obj["byteField"].Get();
-  obj["byteField"].Set(jbyte{123});
+  obj.Access<"byteField">().Get();
+  obj.Access<"byteField">().Set(jbyte{123});
 }
 
 TEST_F(JniTest, Field_CharField) {
@@ -86,8 +86,8 @@ TEST_F(JniTest, Field_CharField) {
   EXPECT_CALL(*env_, SetCharField);
 
   LocalObject<java_class_under_test> obj{};
-  obj["charField"].Get();
-  obj["charField"].Set(jchar{'a'});
+  obj.Access<"charField">().Get();
+  obj.Access<"charField">().Set(jchar{'a'});
 }
 
 TEST_F(JniTest, Field_ShortField) {
@@ -95,8 +95,8 @@ TEST_F(JniTest, Field_ShortField) {
   EXPECT_CALL(*env_, SetShortField);
 
   LocalObject<java_class_under_test> obj{};
-  obj["shortField"].Get();
-  obj["shortField"].Set(jshort{123});
+  obj.Access<"shortField">().Get();
+  obj.Access<"shortField">().Set(jshort{123});
 }
 
 TEST_F(JniTest, Field_intField) {
@@ -104,8 +104,8 @@ TEST_F(JniTest, Field_intField) {
   EXPECT_CALL(*env_, SetIntField);
 
   LocalObject<java_class_under_test> obj{};
-  obj["intField"].Get();
-  obj["intField"].Set(123);
+  obj.Access<"intField">().Get();
+  obj.Access<"intField">().Set(123);
 }
 
 TEST_F(JniTest, Field_longField) {
@@ -113,24 +113,24 @@ TEST_F(JniTest, Field_longField) {
   EXPECT_CALL(*env_, SetLongField);
 
   LocalObject<java_class_under_test> obj{};
-  obj["longField"].Get();
-  obj["longField"].Set(123);
+  obj.Access<"longField">().Get();
+  obj.Access<"longField">().Set(123);
 }
 
 TEST_F(JniTest, Field_floatField) {
   LocalObject<java_class_under_test> obj{};
   EXPECT_CALL(*env_, GetFloatField);
   EXPECT_CALL(*env_, SetFloatField);
-  obj["floatField"].Get();
-  obj["floatField"].Set(123.f);
+  obj.Access<"floatField">().Get();
+  obj.Access<"floatField">().Set(123.f);
 }
 
 TEST_F(JniTest, Field_doubleField) {
   LocalObject<java_class_under_test> obj{};
   EXPECT_CALL(*env_, GetDoubleField);
   EXPECT_CALL(*env_, SetDoubleField);
-  obj["doubleField"].Get();
-  obj["doubleField"].Set(123.);
+  obj.Access<"doubleField">().Get();
+  obj.Access<"doubleField">().Set(123.);
 }
 
 TEST_F(JniTest, Field_ObjectGet) {
@@ -144,7 +144,7 @@ TEST_F(JniTest, Field_ObjectGet) {
   static constexpr Class kClass2{"kClass2"};
 
   LocalObject<kClass> obj{};
-  LocalObject<kClass2> obj2 = obj["classField"].Get();
+  LocalObject<kClass2> obj2 = obj.Access<"classField">().Get();
 }
 
 TEST_F(JniTest, Field_ObjectSet) {
@@ -161,10 +161,11 @@ TEST_F(JniTest, Field_ObjectSet) {
 
   LocalObject<kClass> obj{};
   LocalObject<kClass2> some_obj{AdoptLocal{}, Fake<jobject>()};
-  obj["classField"].Set(Fake<jobject>());
-  obj["classField"].Set(LocalObject<kClass2>{AdoptLocal{}, Fake<jobject>()});
-  obj["classField"].Set(some_obj);
-  obj["classField"].Set(std::move(some_obj));
+  obj.Access<"classField">().Set(Fake<jobject>());
+  obj.Access<"classField">().Set(
+      LocalObject<kClass2>{AdoptLocal{}, Fake<jobject>()});
+  obj.Access<"classField">().Set(some_obj);
+  obj.Access<"classField">().Set(std::move(some_obj));
 }
 
 }  // namespace
