@@ -81,7 +81,7 @@ static constexpr auto Sig_v =
 ////////////////////////////////////////////////////////////////////////////////
 using kSelf1 = Id<JT, IdType::CLASS, kNoIdx, 0, kNoIdx, 0>;
 using JniSelfT =
-    JniTSelector<jni::LocalArray<jobject, 3, kClass1>::JniT_, -1, 0>;
+    JniTSelector<jni::LocalArray<jobject, 3, kClass1>::_JniT, -1, 0>;
 using StaticSelectorInfoSelf = SelectorStaticInfo<JniSelfT>;
 
 static_assert(std::string_view{"LkClass1;"} ==

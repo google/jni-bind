@@ -160,7 +160,7 @@ struct Proxy<JObject,
   template <typename Id>
   struct Helper {
     static constexpr auto kClass{Id::Val()};
-    static constexpr auto kClassLoader{Id::JniT::GetClassLoader()};
+    static constexpr auto kClassLoader{Id::_JniT::GetClassLoader()};
 
     // TODO(b/174272629): Class loaders should also be enforced.
     using type = LocalObject<kClass, kClassLoader, kDefaultJvm>;
@@ -200,7 +200,7 @@ struct Proxy<SelfType,
   template <typename Id>
   struct Helper {
     static constexpr auto kClass{Id::Val()};
-    static constexpr auto kClassLoader{Id::JniT::GetClassLoader()};
+    static constexpr auto kClassLoader{Id::_JniT::GetClassLoader()};
 
     // TODO(b/174272629): Class loaders should also be enforced.
     using type = LocalObject<kClass, kClassLoader, kDefaultJvm>;

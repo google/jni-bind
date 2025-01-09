@@ -16,6 +16,7 @@
 
 #include "invocable_map.h"
 
+#include <cstddef>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
@@ -24,7 +25,7 @@
 
 namespace {
 
-using ::jni::metaprogramming::InvocableMap_t;
+using ::jni::metaprogramming::InvocableMap;
 
 struct Str {
   const char* name_;
@@ -43,11 +44,12 @@ constexpr NameContainer name_container{
 
 ////////////////////////////////////////////////////////////////////////////////
 class SampleClassNowExposingCallOperator1
-    : public InvocableMap_t<SampleClassNowExposingCallOperator1, name_container,
-                            &NameContainer::container1_> {
+    : public InvocableMap<SampleClassNowExposingCallOperator1, name_container,
+                          NameContainer, decltype(&NameContainer::container1_),
+                          &NameContainer::container1_> {
  protected:
   template <typename CrtpBase, const auto& tup_container_v,
-            typename TupContainerT, const auto TupContainerT::*nameable_member,
+            typename TupContainerT, typename MemberT, MemberT nameable_member,
             size_t I>
   friend class jni::metaprogramming::InvocableMapEntry;
 
@@ -70,6 +72,8 @@ class SampleClassNowExposingCallOperator1
   }
 };
 
+#if __clang__
+
 TEST(InvocableMapTest1, HasCorrectTypesAndForwardsCalls) {
   SampleClassNowExposingCallOperator1 val;
   val("Foo", 1);
@@ -80,13 +84,17 @@ TEST(InvocableMapTest1, HasCorrectTypesAndForwardsCalls) {
   // val("BazNar", 7, 8, 9);
 }
 
+#endif  // __clang__
+
 ////////////////////////////////////////////////////////////////////////////////
 class SampleClassNowExposingCallOperator2
-    : public InvocableMap_t<SampleClassNowExposingCallOperator2, name_container,
-                            &NameContainer::container2_> {
+    : public InvocableMap<SampleClassNowExposingCallOperator2, name_container,
+
+                          NameContainer, decltype(&NameContainer::container1_),
+                          &NameContainer::container2_> {
  public:
   template <typename CrtpBase, const auto& tup_container_v,
-            typename TupContainerT, const auto TupContainerT::*nameable_member,
+            typename TupContainerT, typename MemberT, MemberT nameable_member,
             size_t I>
   friend class jni::metaprogramming::InvocableMapEntry;
 
@@ -109,6 +117,8 @@ class SampleClassNowExposingCallOperator2
   }
 };
 
+#if __clang__
+
 TEST(InvocableMapTest2, HasCorrectTypesAndForwardsCalls) {
   SampleClassNowExposingCallOperator2 val;
   val("Fizz", 1);
@@ -118,5 +128,7 @@ TEST(InvocableMapTest2, HasCorrectTypesAndForwardsCalls) {
   // By design, doesn't compile.
   // val("BazNar", 7, 8, 9);
 }
+
+#endif  // __clang__
 
 }  // namespace

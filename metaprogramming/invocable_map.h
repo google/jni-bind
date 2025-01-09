@@ -25,10 +25,6 @@
 
 namespace jni::metaprogramming {
 
-template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::* nameable_member>
-class InvocableMap;
-
 // This is an interface that can be inherited from to expose an operator(...).
 // It provides compile time string index lookup with no macros although it is
 // dependent on a clang extension.
@@ -54,36 +50,38 @@ class InvocableMap;
 // the the const char cannot be propagated without losing its constexpr-ness,
 // and so the clang extension can no longer restrict function candidates.
 template <typename CrtpBase, const auto& tup_container_v,
-          const auto std::decay_t<decltype(tup_container_v)>::* nameable_member>
-using InvocableMap_t =
-    InvocableMap<CrtpBase, tup_container_v,
-                 std::decay_t<decltype(tup_container_v)>, nameable_member>;
+          typename TupContainerT, typename MemberT, MemberT nameable_member>
+class InvocableMap;
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::* nameable_member,
+          typename TupContainerT, typename MemberT, MemberT nameable_member,
           std::size_t I>
 class InvocableMapEntry;
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::* nameable_member,
+          typename TupContainerT, typename MemberT, MemberT nameable_member,
           typename IndexSequenceType>
 class InvocableMapBase {};
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::* nameable_member,
+          typename TupContainerT, typename MemberT, MemberT nameable_member,
+
           std::size_t... idxs>
-class InvocableMapBase<CrtpBase, tup_container_v, TupContainerT,
+class InvocableMapBase<CrtpBase, tup_container_v, TupContainerT, MemberT,
                        nameable_member, std::index_sequence<idxs...>>
     : public InvocableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                               nameable_member, idxs>... {
+                               MemberT, nameable_member, idxs>... {
  public:
-  using InvocableMapEntry<CrtpBase, tup_container_v, TupContainerT,
+#if __clang__
+  using InvocableMapEntry<CrtpBase, tup_container_v, TupContainerT, MemberT,
                           nameable_member, idxs>::
   operator()...;
+#endif  // __clang__
 };
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::* nameable_member,
+          typename TupContainerT, typename MemberT, MemberT nameable_member,
+
           std::size_t I>
 class InvocableMapEntry {
  public:
@@ -109,18 +107,15 @@ class InvocableMapEntry {
         .template InvocableMapCall<I, Args...>(key,
                                                std::forward<Args>(args)...);
   }
-#else
-  static_assert(false,
-                "This container requires clang for compile time strings.");
-#endif
+#endif  // __clang__
 };
 
 //==============================================================================
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::* nameable_member>
+          typename TupContainerT, typename MemberT, MemberT nameable_member>
 class InvocableMap
     : public InvocableMapBase<
-          CrtpBase, tup_container_v, TupContainerT, nameable_member,
+          CrtpBase, tup_container_v, TupContainerT, MemberT, nameable_member,
           std::make_index_sequence<std::tuple_size_v<
               std::decay_t<decltype(tup_container_v.*nameable_member)>>>> {};
 

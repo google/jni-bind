@@ -53,14 +53,17 @@ class ObjectRef
     // C++17 augmentations.
     : public metaprogramming::InvocableMap<
           ObjectRef<JniT>, JniT::stripped_class_v, typename JniT::ClassT,
-          &JniT::ClassT::methods_>,
+          decltype(&JniT::ClassT::methods_), &JniT::ClassT::methods_>,
       public metaprogramming::QueryableMap_t<
-          ObjectRef<JniT>, JniT::stripped_class_v, &JniT::ClassT::fields_>,
+          ObjectRef<JniT>, JniT::stripped_class_v,
+          decltype(&JniT::ClassT::fields_), &JniT::ClassT::fields_>,
       // C++ 20 augmentations.
-      public metaprogramming::InvocableMap20_t<
-          ObjectRef<JniT>, JniT::stripped_class_v, &JniT::ClassT::methods_>,
-      public metaprogramming::QueryableMap20_t<
-          ObjectRef<JniT>, JniT::stripped_class_v, &JniT::ClassT::fields_>,
+      public metaprogramming::InvocableMap20<
+          ObjectRef<JniT>, JniT::stripped_class_v, ObjectRef<JniT>,
+          decltype(&JniT::ClassT::methods_), &JniT::ClassT::methods_>,
+      public metaprogramming::QueryableMap20<
+          ObjectRef<JniT>, JniT::stripped_class_v, ObjectRef<JniT>,
+          decltype(&JniT::ClassT::fields_), &JniT::ClassT::fields_>,
       public RefBase<typename JniT::StorageType> {
  protected:
   static_assert(
@@ -109,7 +112,7 @@ class ObjectRef
     static_assert(MethodSelectionForArgs::kIsValidArgSet,
                   "JNI Error: Invalid argument set.");
 
-    return MethodSelectionForArgs::OverloadRef::Invoke(
+    return MethodSelectionForArgs::_OverloadRef::Invoke(
         GetJClass(), RefBaseT::object_ref_, std::forward<Args>(args)...);
   }
 
@@ -139,7 +142,7 @@ class ObjectRef
     static_assert(MethodSelectionForArgs::kIsValidArgSet,
                   "JNI Error: Invalid argument set.");
 
-    return MethodSelectionForArgs::OverloadRef::Invoke(
+    return MethodSelectionForArgs::_OverloadRef::Invoke(
         GetJClass(), RefBaseT::object_ref_, std::forward<Args>(args)...);
   }
 
@@ -187,7 +190,7 @@ class ConstructorValidator : public ObjectRef<JniT> {
                                     int>::type = 0>
   ConstructorValidator(Args&&... args)
       : Base(static_cast<typename JniT::StorageType>(
-            Permutation_t<Args...>::OverloadRef::Invoke(
+            Permutation_t<Args...>::_OverloadRef::Invoke(
                 Base::GetJClass(), Base::object_ref_,
                 std::forward<Args>(args)...)
                 .Release())) {
@@ -196,8 +199,8 @@ class ConstructorValidator : public ObjectRef<JniT> {
   }
 
   ConstructorValidator()
-      : Base(Permutation_t<>::OverloadRef::Invoke(Base::GetJClass(),
-                                                  Base::object_ref_)
+      : Base(Permutation_t<>::_OverloadRef::Invoke(Base::GetJClass(),
+                                                   Base::object_ref_)
                  .Release()) {}
 };
 

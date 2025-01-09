@@ -26,7 +26,7 @@
 
 #if __cplusplus >= 202002L
 
-using jni::metaprogramming::QueryableMap20_t;
+using jni::metaprogramming::QueryableMap20;
 using jni::metaprogramming::StringLiteral;
 
 struct Str {
@@ -46,11 +46,13 @@ constexpr NameContainer name_container{
 
 ////////////////////////////////////////////////////////////////////////////////
 class SampleClassNowExposingCallOperator1
-    : public QueryableMap20_t<SampleClassNowExposingCallOperator1,
-                              name_container, &NameContainer::container1_> {
+    : public QueryableMap20<
+          SampleClassNowExposingCallOperator1, name_container, NameContainer,
+          decltype(&NameContainer::container1_), &NameContainer::container1_> {
  protected:
-  friend QueryableMap20_t<SampleClassNowExposingCallOperator1, name_container,
-                          &NameContainer::container1_>;
+  friend QueryableMap20<SampleClassNowExposingCallOperator1, name_container,
+                        NameContainer, decltype(&NameContainer::container1_),
+                        &NameContainer::container1_>;
 
   template <size_t I, StringLiteral key_literal>
   auto QueryableMap20Call() {

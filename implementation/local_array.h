@@ -56,7 +56,7 @@ class LocalArray
   using RawValT = std::conditional_t<std::is_same_v<jobject, SpanType>,
                                      std::decay_t<decltype(kClass)>, SpanType>;
 
-  using JniT_ = JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>;
+  using _JniT = JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>;
 
   using Base =
       ArrayRef<JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
@@ -68,7 +68,7 @@ class LocalArray
   LocalArray(std::size_t size, RefTag arr)
       : Base(AdoptLocal{}, JniArrayHelper<jobject, kRank_>::NewArray(
                                size,
-                               ClassRef_t<JniT_>::GetAndMaybeLoadClassRef(
+                               ClassRef_t<_JniT>::GetAndMaybeLoadClassRef(
                                    static_cast<jobject>(arr)),
                                arr)) {}
 
@@ -103,7 +103,7 @@ class LocalArray
       const ObjectContainer<class_v, class_loader_v, jvm_v>& local_object)
       : Base(JniArrayHelper<jobject, kRank_>::NewArray(
             size,
-            ClassRef_t<JniT_>::GetAndMaybeLoadClassRef(
+            ClassRef_t<_JniT>::GetAndMaybeLoadClassRef(
                 static_cast<jobject>(local_object)),
             static_cast<jobject>(local_object))) {}
 

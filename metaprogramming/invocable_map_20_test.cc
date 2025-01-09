@@ -24,7 +24,7 @@
 #include "string_literal.h"
 #include <gtest/gtest.h>
 
-using jni::metaprogramming::InvocableMap20_t;
+using jni::metaprogramming::InvocableMap20;
 using jni::metaprogramming::StringLiteral;
 
 struct Str {
@@ -44,11 +44,13 @@ constexpr NameContainer name_container{
 
 ////////////////////////////////////////////////////////////////////////////////
 class SampleClassNowExposingCallOperator1
-    : public InvocableMap20_t<SampleClassNowExposingCallOperator1,
-                              name_container, &NameContainer::container1_> {
+    : public InvocableMap20<
+          SampleClassNowExposingCallOperator1, name_container, NameContainer,
+          decltype(&NameContainer::container1_), &NameContainer::container1_> {
  protected:
-  friend InvocableMap20_t<SampleClassNowExposingCallOperator1, name_container,
-                          &NameContainer::container1_>;
+  friend InvocableMap20<SampleClassNowExposingCallOperator1, name_container,
+                        NameContainer, decltype(&NameContainer::container1_),
+                        &NameContainer::container1_>;
 
   template <size_t I, StringLiteral key_literal, typename... Args>
   auto InvocableMap20Call(Args&&... ts) {

@@ -50,12 +50,16 @@ namespace jni::metaprogramming {
 // |tup_container_v| is a static instance of an object whose |nameable_member|
 //   contains a public field called name_.  It might seem strange not to
 //   directly pass a const auto&, however, this prevents accessing subobjects.
+// |TupContainerT| is the type of the container for the member.
+// |MemberT| is the type of a *pointer to member* in the container, *not* the
+//   actual type of the member itself.
+// |nameable_member| is pointer to member of the nameable type.
 //
 // The motivation for using inheritance as opposed to a simple member is that
 // the the const char cannot be propagated without losing its constexpr-ness,
 // and so the clang extension can no longer restrict function candidates.
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::* nameable_member>
+          typename TupContainerT, typename MemberT, MemberT nameable_member>
 class InvocableMap20 {
 #if __cplusplus >= 202002L
  public:
@@ -88,12 +92,6 @@ class InvocableMap20 {
   }
 #endif  // __cplusplus >= 202002L
 };
-
-template <typename CrtpBase, const auto& tup_container_v,
-          const auto std::decay_t<decltype(tup_container_v)>::* nameable_member>
-using InvocableMap20_t =
-    InvocableMap20<CrtpBase, tup_container_v,
-                   std::decay_t<decltype(tup_container_v)>, nameable_member>;
 
 }  // namespace jni::metaprogramming
 

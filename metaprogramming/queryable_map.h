@@ -26,7 +26,7 @@
 namespace jni::metaprogramming {
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
+          typename TupContainerT, typename MemberT, MemberT nameable_member,
           typename IndexSequenceType>
 class QueryableMapBase {};
 
@@ -50,46 +50,50 @@ class QueryableMapBase {};
 // the the const char cannot be propagated without losing its constexpr-ness,
 // and so the clang extension can no longer restrict function candidates.
 template <typename CrtpBase, const auto& tup_container_v,
-          std::size_t container_size, typename TupContainerT,
-          const auto TupContainerT::*nameable_member>
+          std::size_t container_size, typename TupContainerT, typename MemberT,
+          MemberT nameable_member>
 class QueryableMap
-    : public QueryableMapBase<CrtpBase, tup_container_v, TupContainerT,
+    : public QueryableMapBase<CrtpBase, tup_container_v, TupContainerT, MemberT,
                               nameable_member,
                               std::make_index_sequence<container_size>> {};
 
-template <typename CrtpBase, const auto& tup_container_v,
-          const auto std::decay_t<decltype(tup_container_v)>::*nameable_member>
-using QueryableMap_t =
-    QueryableMap<CrtpBase, tup_container_v,
-                 std::tuple_size_v<std::decay_t<decltype((tup_container_v.*
-                                                          nameable_member))>>,
-                 std::decay_t<decltype(tup_container_v)>, nameable_member>;
+template <typename CrtpBase, const auto& tup_container_v, typename MemberT,
+          MemberT nameable_member>
+using QueryableMap_t = QueryableMap<
+    CrtpBase, tup_container_v,
+    std::tuple_size_v<
+        std::decay_t<decltype((tup_container_v.*nameable_member))>>,
+    std::decay_t<decltype(tup_container_v)>, MemberT, nameable_member>;
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
+          typename TupContainerT, typename MemberT, MemberT nameable_member,
           std::size_t I>
 class QueryableMapEntry;
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
+          typename TupContainerT, typename MemberT, MemberT nameable_member,
           std::size_t... idxs>
-class QueryableMapBase<CrtpBase, tup_container_v, TupContainerT,
+class QueryableMapBase<CrtpBase, tup_container_v, TupContainerT, MemberT,
                        nameable_member, std::index_sequence<idxs...>>
     : public QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                               nameable_member, idxs>... {
+                               MemberT, nameable_member, idxs>... {
  public:
+#if __clang__
   using QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                          nameable_member, idxs>::operator[]...;
+
+                          MemberT, nameable_member, idxs>::operator[]...;
 
   using QueryableMapEntry<CrtpBase, tup_container_v, TupContainerT,
-                          nameable_member, idxs>::Contains...;
+
+                          MemberT, nameable_member, idxs>::Contains...;
+#endif  // __clang__
 
   // Will select subclass specialisations if present.
   constexpr bool Contains(const char* key) { return false; }
 };
 
 template <typename CrtpBase, const auto& tup_container_v,
-          typename TupContainerT, const auto TupContainerT::*nameable_member,
+          typename TupContainerT, typename MemberT, MemberT nameable_member,
           std::size_t I>
 class QueryableMapEntry {
  public:
@@ -119,10 +123,7 @@ class QueryableMapEntry {
                 ""))) {
     return true;
   }
-#else
-  static_assert(false,
-                "This container requires clang for compile time strings.");
-#endif
+#endif  // __clang__
 };
 
 }  // namespace jni::metaprogramming

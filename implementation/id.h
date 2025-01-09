@@ -36,10 +36,10 @@ template <typename JniT_, IdType kIdType_, std::size_t idx,
           std::size_t secondary_idx, std::size_t tertiary_idx,
           std::size_t ancestry_idx>
 struct Id {
-  using JniT = JniT_;
+  using _JniT = JniT_;
   static constexpr IdType kIdType = kIdType_;
 
-  static constexpr auto Class() { return JniT::GetClass(); }
+  static constexpr auto Class() { return _JniT::GetClass(); }
 
   static constexpr std::size_t kIdx = idx;
   static constexpr std::size_t kSecondaryIdx = secondary_idx;
@@ -58,10 +58,10 @@ struct Id {
 
   template <IdType new_id_type>
   using ChangeIdType =
-      Id<JniT, new_id_type, idx, secondary_idx, tertiary_idx, ancestry_idx>;
+      Id<_JniT, new_id_type, idx, secondary_idx, tertiary_idx, ancestry_idx>;
 
   template <std::size_t kIdxToChange, std::size_t kNewValue>
-  using ChangeIdx = Id<JniT, kIdType, (kIdxToChange == 0 ? kNewValue : idx),
+  using ChangeIdx = Id<_JniT, kIdType, (kIdxToChange == 0 ? kNewValue : idx),
                        (kIdxToChange == 1 ? kNewValue : secondary_idx),
                        (kIdxToChange == 2 ? kNewValue : tertiary_idx),
                        (kIdxToChange == 3 ? kNewValue : ancestry_idx)>;
@@ -148,7 +148,7 @@ struct Id {
     }
   }
 
-  using ParentIdT = Id<typename JniT::ParentJniT, kIdType_, idx, secondary_idx,
+  using ParentIdT = Id<typename _JniT::ParentJniT, kIdType_, idx, secondary_idx,
                        tertiary_idx, ancestry_idx - 1>;
 
   static constexpr auto Val() {
@@ -199,7 +199,7 @@ struct Id {
     } else if constexpr (kIdType == IdType::STATIC_OVERLOAD_SET) {
       return Val().name_;
     } else if constexpr (kIdType == IdType::STATIC_OVERLOAD) {
-      return Id<JniT, IdType::STATIC_OVERLOAD_SET, idx, secondary_idx,
+      return Id<_JniT, IdType::STATIC_OVERLOAD_SET, idx, secondary_idx,
                 tertiary_idx, ancestry_idx>::Name();
     } else if constexpr (kIdType == IdType::STATIC_FIELD) {
       return std::get<idx>(Class().static_.fields_).name_;
@@ -208,7 +208,7 @@ struct Id {
     } else if constexpr (kIdType == IdType::OVERLOAD_SET) {
       return Val().name_;
     } else if constexpr (kIdType == IdType::OVERLOAD) {
-      return Id<JniT, IdType::OVERLOAD_SET, idx, secondary_idx, tertiary_idx,
+      return Id<_JniT, IdType::OVERLOAD_SET, idx, secondary_idx, tertiary_idx,
                 ancestry_idx>::Name();
     } else if constexpr (kIdType == IdType::FIELD) {
       return std::get<idx>(Class().fields_).name_;

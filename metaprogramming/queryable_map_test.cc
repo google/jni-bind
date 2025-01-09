@@ -50,10 +50,11 @@ using ValuesTup = std::tuple<int, SomeCustomKeyStruct, double>;
 
 class SampleClassNowExposingCallOperator1
     : public QueryableMap_t<SampleClassNowExposingCallOperator1, name_container,
+                            decltype(&NameContainer::container1_),
                             &NameContainer::container1_> {
  protected:
   template <typename CrtpBase, const auto& tup_container_v,
-            typename TupContainerT, const auto TupContainerT::*nameable_member,
+            typename TupContainerT, typename MemberT, MemberT nameable_member,
             size_t I>
   friend class jni::metaprogramming::QueryableMapEntry;
 
@@ -79,14 +80,18 @@ constexpr SomeIndexerStruct kSomeKey{"Foo"};
 
 template <const auto& val>
 void FuncThatTrampolinesStaticValue(SampleClassNowExposingCallOperator1& map) {
+#if __clang__
   map["Foo"];
   map[val.key_];
+#endif  // __clang__
 }
 
 template <typename, typename = void>
 struct InSet {
   using type = std::false_type;
 };
+
+#if __clang__
 
 TEST(QueryableMapTest1, HasCorrectTypesAndForwardsCalls) {
   SampleClassNowExposingCallOperator1 val;
@@ -107,12 +112,15 @@ TEST(QueryableMapTest1, HasCorrectTypesAndForwardsCalls) {
   // val["BazNar"];
 }
 
+#endif  // __clang__
+
 class SampleClassNowExposingCallOperator2
     : public QueryableMap_t<SampleClassNowExposingCallOperator2, name_container,
+                            decltype(&NameContainer::container2_),
                             &NameContainer::container2_> {
  protected:
   template <typename CrtpBase, const auto& tup_container_v,
-            typename TupContainerT, const auto TupContainerT::*nameable_member,
+            typename TupContainerT, typename MemberT, MemberT nameable_member,
             size_t I>
   friend class jni::metaprogramming::QueryableMapEntry;
 
@@ -130,6 +138,8 @@ class SampleClassNowExposingCallOperator2
   }
 };
 
+#if __clang__
+
 TEST(QueryableMapTest2, HasCorrectTypesAndForwardsCalls) {
   SampleClassNowExposingCallOperator2 val;
   val["Fizz"];
@@ -139,5 +149,7 @@ TEST(QueryableMapTest2, HasCorrectTypesAndForwardsCalls) {
   // By design, doesn't compile.
   // val("BazNar", 7, 8, 9);
 }
+
+#endif  // __clang__
 
 }  // namespace
