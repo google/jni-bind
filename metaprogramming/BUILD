@@ -231,29 +231,6 @@ cc_test(
 )
 
 ################################################################################
-# Conjunction.
-################################################################################
-cc_library(
-    name = "conjunction",
-    hdrs = ["conjunction.h"],
-    deps = [
-        ":invoke",
-        ":next",
-    ],
-)
-
-cc_test(
-    name = "conjunction_test",
-    srcs = ["conjunction_test.cc"],
-    deps = [
-        ":conjunction",
-        ":invoke",
-        ":next",
-        "@googletest//:gtest_main",
-    ],
-)
-
-################################################################################
 # Contains.
 ################################################################################
 cc_library(
@@ -345,27 +322,8 @@ cc_test(
 )
 
 ################################################################################
-# Deep Equal.
+# Deep Equal Diminished.
 ################################################################################
-cc_library(
-    name = "deep_equal",
-    hdrs = ["deep_equal.h"],
-    deps = [
-        ":pack_discriminator",
-        ":vals_equal",
-    ],
-)
-
-cc_test(
-    name = "deep_equal_test",
-    srcs = ["deep_equal_test.cc"],
-    deps = [
-        ":deep_equal",
-        ":pack_discriminator",
-        "@googletest//:gtest_main",
-    ],
-)
-
 cc_library(
     name = "deep_equal_diminished",
     hdrs = ["deep_equal_diminished.h"],
@@ -655,30 +613,6 @@ cc_test(
 )
 
 ################################################################################
-# Lambda Compatible.
-################################################################################
-cc_library(
-    name = "lambda_compatible",
-    hdrs = ["lambda_compatible.h"],
-    deps = [
-        ":deep_equal",
-        ":tuple_manipulation",
-        ":type_of_nth_element",
-    ],
-)
-
-cc_test(
-    name = "lambda_compatible_test",
-    srcs = ["lambda_compatible_test.cc"],
-    deps = [
-        ":deep_equal",
-        ":lambda_compatible",
-        ":vals",
-        "@googletest//:gtest_main",
-    ],
-)
-
-################################################################################
 # Lambda String.
 ################################################################################
 cc_library(
@@ -742,30 +676,6 @@ cc_test(
     srcs = ["tuple_from_size_test.cc"],
     deps = [
         ":tuple_from_size",
-        "@googletest//:gtest_main",
-    ],
-)
-
-################################################################################
-# Type Map.
-################################################################################
-cc_library(
-    name = "type_map",
-    hdrs = ["type_map.h"],
-    deps = [
-        ":interleave",
-        ":lambda_string",
-        ":tuple_from_size",
-        ":tuple_manipulation",
-        ":type_of_nth_element",
-    ],
-)
-
-cc_test(
-    name = "type_map_test",
-    srcs = ["type_map_test.cc"],
-    deps = [
-        ":type_map",
         "@googletest//:gtest_main",
     ],
 )
@@ -975,15 +885,16 @@ cc_library(
     ],
 )
 
-cc_test(
-    name = "queryable_map_test",
-    srcs = ["queryable_map_test.cc"],
-    deps = [
-        ":lambda_string",
-        ":queryable_map",
-        "@googletest//:gtest_main",
-    ],
-)
+# Currently not running because of a bug in gcc C++20 on Github's Bazel.
+#cc_test(
+#    name = "queryable_map_test",
+#    srcs = ["queryable_map_test.cc"],
+#    deps = [
+#        ":lambda_string",
+#        ":queryable_map",
+#        "//testing/base/public:gunit_main",
+#    ],
+#)
 
 ################################################################################
 # Queryable Map 20.
