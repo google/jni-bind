@@ -43,7 +43,7 @@ struct EndConstRefVal;
 // |T| must always be a container of a single kind of template expression.
 template <typename T>
 using Next_t =
-    typename PackDiscriminatedForward<NextType, NextVal,
+    typename PackDiscriminatedForward<NextType,
                                       NextConstRefVal>::template type<T>;
 
 }  // namespace jni::metaprogramming

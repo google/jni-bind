@@ -36,12 +36,6 @@ struct A {
 template <typename... Ts>
 struct Type {};
 
-template <const auto... Vs>
-struct Auto {};
-
-template <const auto... Vs>
-struct AutoRef {};
-
 template <const auto&... Vs>
 struct ConstAutoRef {};
 
@@ -65,43 +59,10 @@ static_assert(!DeepEqualDiminished_v<std::tuple<Type<int, int>>,
                                      std::tuple<std::tuple<int, int>>>);
 
 ////////////////////////////////////////////////////////////////////////////////
-// Autos.
-////////////////////////////////////////////////////////////////////////////////
-static_assert(
-    !DeepEqualDiminished_v<std::tuple<Type<int>>, std::tuple<Auto<'a'>>>);
-static_assert(
-    DeepEqualDiminished_v<std::tuple<Auto<'a'>>, std::tuple<Auto<'a'>>>);
-static_assert(
-    !DeepEqualDiminished_v<std::tuple<Auto<'a'>>, std::tuple<Auto<'b'>>>);
-static_assert(
-    !DeepEqualDiminished_v<std::tuple<Auto<'a'>>, std::tuple<Auto<'a', 'a'>>>);
-
-static_assert(DeepEqualDiminished_v<Auto<1>, Auto<1>>);
-static_assert(!DeepEqualDiminished_v<Auto<1>, Auto<2>>);
-static_assert(!DeepEqualDiminished_v<Auto<1>, Auto<1, 1>>);
-
-////////////////////////////////////////////////////////////////////////////////
-// Autos Refs.
+// Const Autos Refs.
 ////////////////////////////////////////////////////////////////////////////////
 const auto a = 'a';
 const auto b = 'b';
-
-static_assert(
-    !DeepEqualDiminished_v<std::tuple<Type<int>>, std::tuple<AutoRef<a>>>);
-static_assert(
-    DeepEqualDiminished_v<std::tuple<AutoRef<a>>, std::tuple<AutoRef<a>>>);
-static_assert(
-    !DeepEqualDiminished_v<std::tuple<AutoRef<a>>, std::tuple<AutoRef<b>>>);
-static_assert(
-    !DeepEqualDiminished_v<std::tuple<AutoRef<a>>, std::tuple<AutoRef<a, a>>>);
-
-static_assert(DeepEqualDiminished_v<AutoRef<a>, AutoRef<a>>);
-static_assert(!DeepEqualDiminished_v<AutoRef<a>, AutoRef<b>>);
-static_assert(!DeepEqualDiminished_v<AutoRef<a>, AutoRef<a, a>>);
-
-////////////////////////////////////////////////////////////////////////////////
-// Const Autos Refs.
-////////////////////////////////////////////////////////////////////////////////
 static_assert(
     !DeepEqualDiminished_v<std::tuple<Type<int>>, std::tuple<ConstAutoRef<a>>>);
 static_assert(DeepEqualDiminished_v<std::tuple<ConstAutoRef<a>>,

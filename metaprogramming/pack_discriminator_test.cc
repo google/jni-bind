@@ -21,9 +21,6 @@ namespace {
 using ::jni::metaprogramming::PackDiscriminator_e;
 using ::jni::metaprogramming::PackType;
 
-int a = 1;
-int b = 1;
-
 static constexpr bool kVal1 = false;
 static constexpr bool kVal2 = false;
 
@@ -32,19 +29,8 @@ struct NonContainer {};
 template <typename... Ts>
 struct A {};
 
-template <auto... Vs>
-struct B {};
-
-template <auto&... Vs>
-struct C {};
-
 template <const auto&... Vs>
 struct D {};
-
-// See class comment.
-// static_assert(PackDiscriminator_e<B<>> == PackType::AUTO);
-// static_assert(PackDiscriminator_e<C<>> == PackType::AUTO_REF);
-// static_assert(PackDiscriminator_e<D<>> == PackType::CONST_AUTO_REF);
 
 static_assert(PackDiscriminator_e<int> == PackType::NOT_CONTAINER);
 static_assert(PackDiscriminator_e<NonContainer> == PackType::NOT_CONTAINER);
@@ -52,12 +38,6 @@ static_assert(PackDiscriminator_e<NonContainer> == PackType::NOT_CONTAINER);
 static_assert(PackDiscriminator_e<A<>> == PackType::TYPES);
 static_assert(PackDiscriminator_e<A<float>> == PackType::TYPES);
 static_assert(PackDiscriminator_e<A<int, float>> == PackType::TYPES);
-
-static_assert(PackDiscriminator_e<B<0>> == PackType::AUTO);
-static_assert(PackDiscriminator_e<B<0, 1>> == PackType::AUTO);
-
-static_assert(PackDiscriminator_e<C<a>> == PackType::AUTO_REF);
-static_assert(PackDiscriminator_e<C<a, b>> == PackType::AUTO_REF);
 
 static_assert(PackDiscriminator_e<D<kVal1>> == PackType::CONST_AUTO_REF);
 static_assert(PackDiscriminator_e<D<kVal1, kVal2>> == PackType::CONST_AUTO_REF);
