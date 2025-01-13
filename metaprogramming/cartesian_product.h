@@ -53,44 +53,46 @@ struct GenerateBitSequenceFromTupSets {
     };
   };
 
+  // Due to a gcc bug, this requires using a name that is *not* type.
   template <typename... Tups>
-  using type = typename Helper<Tups...>::template SequenceGenerator<
+  using generated_type = typename Helper<Tups...>::template SequenceGenerator<
       std::make_index_sequence<sizeof...(Tups)>>::type;
 };
 
 struct GenerateBitSequenceFromTupSetsFunc {
   template <typename... Tups>
-  using type = typename GenerateBitSequenceFromTupSets::template type<Tups...>;
+  using generated_type =
+      typename GenerateBitSequenceFromTupSets::template generated_type<Tups...>;
 };
 
 template <typename... Tups>
 using GenerateBitSequenceFromTupSets_t =
-    typename GenerateBitSequenceFromTupSets::template type<Tups...>;
+    typename GenerateBitSequenceFromTupSets::template generated_type<Tups...>;
+
+template <typename... Tups>
+struct CartesianProductHelper {
+  using NBitSequenceForTups = GenerateBitSequenceFromTupSets_t<Tups...>;
+  using AllTupsAsList = std::tuple<Tups...>;
+
+  template <typename>
+  struct SequenceGenerator {};
+
+  template <size_t... Is>
+  struct SequenceGenerator<std::index_sequence<Is...>> {
+    using type = std::tuple<typename Increment_t<
+        NBitSequenceForTups, Is>::TypeMask::template type<AllTupsAsList>...>;
+  };
+
+  using type = typename SequenceGenerator<std::make_index_sequence<
+      NBitSequenceForTups::max_representable_size_>>::type;
+};
+
+template <>
+struct CartesianProductHelper<> {
+  using type = std::tuple<>;
+};
 
 struct CartesianProduct {
-  template <typename... Tups>
-  struct CartesianProductHelper {
-    using NBitSequenceForTups = GenerateBitSequenceFromTupSets_t<Tups...>;
-    using AllTupsAsList = std::tuple<Tups...>;
-
-    template <typename>
-    struct SequenceGenerator {};
-
-    template <size_t... Is>
-    struct SequenceGenerator<std::index_sequence<Is...>> {
-      using type = std::tuple<typename Increment_t<
-          NBitSequenceForTups, Is>::TypeMask::template type<AllTupsAsList>...>;
-    };
-
-    using type = typename SequenceGenerator<std::make_index_sequence<
-        NBitSequenceForTups::max_representable_size_>>::type;
-  };
-
-  template <>
-  struct CartesianProductHelper<> {
-    using type = std::tuple<>;
-  };
-
   template <typename... Tups>
   using type = typename CartesianProductHelper<Tups...>::type;
 };

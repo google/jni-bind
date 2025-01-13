@@ -36,6 +36,35 @@ struct NBitSequence<> {
   using Increment = NBitSequence<>;
 };
 
+template <size_t I, typename Sequence>
+using GetBit = TypeOfNthTupleElement_t<I, Sequence>;
+
+// If the next bit is overflowing (i.e. it just rolled over), this current
+// value increments. Bits only overflow for a single cycle, otherwise higher
+// order bits flip when no rollover is happening.
+template <size_t I, typename Sequence, std::size_t kSequenceSize>
+struct IncrementedBit {
+  using type = std::conditional_t<
+      IncrementedBit<I + 1, Sequence, kSequenceSize>::type::overflow_bit_,
+      typename GetBit<I, Sequence>::Increment,
+      typename GetBit<I, Sequence>::ResetOverflow>;
+};
+
+template <typename Sequence, std::size_t kSequenceSize>
+struct IncrementedBit<kSequenceSize - 1, Sequence, kSequenceSize> {
+  using type = typename GetBit<kSequenceSize - 1, Sequence>::Increment;
+};
+
+template <typename Sequence, std::size_t kSequenceSize, typename index_sequence>
+struct IncrementSequenceHelper {};
+
+template <typename Sequence, std::size_t kSequenceSize, size_t... Is>
+struct IncrementSequenceHelper<Sequence, kSequenceSize,
+                               std::index_sequence<Is...>> {
+  using type = NBitSequence<
+      typename IncrementedBit<Is, Sequence, kSequenceSize>::type...>;
+};
+
 // Represents a sequence of "NBits".  This can be useful for generating
 // selections of pools of objects of various sizes.
 //
@@ -52,9 +81,6 @@ struct NBitSequence<NBit<values, max_values, overflows>...> {
   using Sequence = std::tuple<NBit<values, max_values, overflows>...>;
   using TypeMask = TypeIndexMask<values...>;
 
-  template <size_t I>
-  using GetBit = TypeOfNthTupleElement_t<I, Sequence>;
-
   // Helper method to compare values of all NBits.
   template <size_t... Bits>
   static constexpr bool Same(std::index_sequence<Bits...> = {}) {
@@ -68,31 +94,8 @@ struct NBitSequence<NBit<values, max_values, overflows>...> {
   template <size_t... Bits>
   static constexpr bool same_ = Same(std::index_sequence<Bits...>{});
 
-  // If the next bit is overflowing (i.e. it just rolled over), this current
-  // value increments. Bits only overflow for a single cycle, otherwise higher
-  // order bits flip when no rollover is happening.
-  template <size_t I>
-  struct IncrementedBit {
-    using type = std::conditional_t<IncrementedBit<I + 1>::type::overflow_bit_,
-                                    typename GetBit<I>::Increment,
-                                    typename GetBit<I>::ResetOverflow>;
-  };
-
-  template <>
-  struct IncrementedBit<sequence_size_ - 1> {
-    using type = typename GetBit<sequence_size_ - 1>::Increment;
-  };
-
-  template <typename index_sequence>
-  struct IncrementSequenceHelper {};
-
-  template <size_t... Is>
-  struct IncrementSequenceHelper<std::index_sequence<Is...>> {
-    using type = NBitSequence<typename IncrementedBit<Is>::type...>;
-  };
-
   using Increment = typename IncrementSequenceHelper<
-      std::make_index_sequence<sequence_size_>>::type;
+      Sequence, sequence_size_, std::make_index_sequence<sequence_size_>>::type;
 };
 
 }  // namespace jni::metaprogramming

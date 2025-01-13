@@ -39,7 +39,7 @@ struct A {
   void Foo() {}
 
   ~A() {
-    if (val_0 == 0xdeadbeef) {
+    if (val_0 == 0xdead) {
       // never happens because custom dtor.
       fail_happened = true;
     }
@@ -85,11 +85,15 @@ TEST(Passthrough, PeersThroughDereference) {
 }
 
 TEST(Passthrough, CustomDtorIsInvoked) {
-  { Passthrough<A, ReleaseObjectRef<A>> val{0xdeadbeef}; }
+  {
+    Passthrough<A, ReleaseObjectRef<A>> val{0xdead};
+  }
 
   EXPECT_FALSE(fail_happened);
 
-  { Passthrough<A> val{0xdeadbeef}; }
+  {
+    Passthrough<A> val{0xdead};
+  }
   EXPECT_TRUE(fail_happened);
 }
 

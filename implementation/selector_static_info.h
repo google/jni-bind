@@ -57,6 +57,22 @@ struct Ancestor<IdT, 0> {
 template <typename IdT, std::size_t I>
 using Ancestor_t = typename Ancestor<IdT, I>::type;
 
+template <std::size_t I>
+struct IthRawTypeMember {
+  template <typename T>
+  static constexpr const auto& Val(const T& val) {
+    return IthRawTypeMember<I - 1>::Val(val.raw_);
+  }
+};
+
+template <>
+struct IthRawTypeMember<0> {
+  template <typename T>
+  static constexpr const auto& Val(const T& val) {
+    return val;
+  }
+};
+
 // Helper to generate full signature information for a "selected" value, and
 // possibly some container information.  Here, |Selector| is |MethodSelection|,
 // |FieldSelection|, etc.
@@ -72,22 +88,6 @@ struct SelectorStaticInfo {
       std::is_same_v<Self, typename SelectorIn::RawValT>;
   using Selector =
       ParentIfSelf_t<kIsSelf, Ancestor_t<SelectorIn, SelectorIn::kAncestorIdx>>;
-
-  template <std::size_t I>
-  struct IthRawTypeMember {
-    template <typename T>
-    static constexpr const auto& Val(const T& val) {
-      return IthRawTypeMember<I - 1>::Val(val.raw_);
-    }
-  };
-
-  template <>
-  struct IthRawTypeMember<0> {
-    template <typename T>
-    static constexpr const auto& Val(const T& val) {
-      return val;
-    }
-  };
 
   // Strangely, the compiler refuses to peer through Val and loses the
   // constexpr-ness (i.e std::decay_t<decltype(Val())>; is not a constant

@@ -45,6 +45,8 @@ struct StringAsType : StringAsTypeBase {
 
 template <typename Identifier, std::size_t... I>
 constexpr auto LambdaToStr(Identifier id, std::index_sequence<I...>) {
+  // This stifles an incorrect compiler warning on gcc.
+  static_assert(!std::is_same_v<void, decltype(id)>);
   return StringAsType<id()[I]...>{};
 }
 

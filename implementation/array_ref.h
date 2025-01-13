@@ -19,7 +19,9 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include <atomic>
 #include <cstddef>
+#include <type_traits>
 
 #include "implementation/array_view.h"
 #include "implementation/class_ref.h"
@@ -27,6 +29,7 @@
 #include "implementation/jni_helper/jni_array_helper.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/local_object.h"
+#include "implementation/no_idx.h"
 #include "implementation/promotion_mechanics_tags.h"
 #include "jni_dep.h"
 
@@ -49,10 +52,6 @@ class ArrayRef : public ScopedArrayImpl<JniT> {
   ArrayRef(std::size_t size)
       : Base(AdoptLocal{},
              JniArrayHelper<SpanType, JniT::kRank>::NewArray(size)) {}
-
-  template <typename T>
-  ArrayRef(const ArrayViewHelper<T>& array_view_helper)
-      : Base(AdoptLocal{}, array_view_helper.val) {}
 
   explicit ArrayRef(int size) : ArrayRef(static_cast<std::size_t>(size)) {}
 
@@ -133,9 +132,9 @@ class ArrayRef<
   // e.g.
   //  LocalArray arr { 5, LocalObject<kClass> {args...} };
   //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
-  template <template <const auto&, const auto&, const auto&>
-            class ObjectContainer,
-            const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  template <
+      template <const auto&, const auto&, const auto&> class ObjectContainer,
+      const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   ArrayRef(std::size_t size,
            const ObjectContainer<class_v, class_loader_v, jvm_v>& obj)
       : ArrayRef(size, static_cast<jobject>(obj)) {}

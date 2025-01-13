@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <cstddef>
+
 #include <gtest/gtest.h>
 #include "jni_bind.h"
 
@@ -39,16 +41,19 @@ TEST(Jni, JvmStaticClassLoaderLookupsWork) {
                                              SupportedClassSet{}};
 
   static constexpr Jvm kJvm1{kClassLoader1};
-  static_assert(kJvm1.IdxOfClassLoader<kUnusedLoader>() == -1);
+  static_assert(kJvm1.IdxOfClassLoader<kUnusedLoader>() ==
+                static_cast<size_t>(-1));
   static_assert(kJvm1.IdxOfClassLoader<kClassLoader1>() == 0);
 
   static constexpr Jvm kJvm2{kClassLoader1, kClassLoader2};
-  static_assert(kJvm2.IdxOfClassLoader<kUnusedLoader>() == -1);
+  static_assert(kJvm2.IdxOfClassLoader<kUnusedLoader>() ==
+                static_cast<size_t>(-1));
   static_assert(kJvm2.IdxOfClassLoader<kClassLoader1>() == 0);
   static_assert(kJvm2.IdxOfClassLoader<kClassLoader2>() == 1);
 
   static constexpr Jvm kJvm3{kClassLoader1, kClassLoader2, kClassLoader3};
-  static_assert(kJvm3.IdxOfClassLoader<kUnusedLoader>() == -1);
+  static_assert(kJvm3.IdxOfClassLoader<kUnusedLoader>() ==
+                static_cast<size_t>(-1));
   static_assert(kJvm3.IdxOfClassLoader<kClassLoader1>() == 0);
   static_assert(kJvm3.IdxOfClassLoader<kClassLoader2>() == 1);
   static_assert(kJvm3.IdxOfClassLoader<kClassLoader3>() == 2);

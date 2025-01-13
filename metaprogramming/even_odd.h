@@ -23,35 +23,35 @@
 
 namespace jni::metaprogramming {
 
+template <typename... Ts>
+struct EvenHelper {};
+
+template <>
+struct EvenHelper<std::tuple<>> {
+  using type = std::tuple<>;
+};
+
+template <typename... Ts>
+struct OddHelper {};
+
+template <>
+struct OddHelper<std::tuple<>> {
+  using type = std::tuple<>;
+};
+
+template <typename T, typename... Ts>
+struct EvenHelper<std::tuple<T, Ts...>> {
+  using type = ConcatenateTup_t<std::tuple<T>,
+                                typename OddHelper<std::tuple<Ts...>>::type>;
+};
+
+template <typename T, typename... Ts>
+struct OddHelper<std::tuple<T, Ts...>> {
+  using type = typename EvenHelper<std::tuple<Ts...>>::type;
+};
+
 // Metafunction to return only even elements.
 struct Even {
-  template <typename... Ts>
-  struct EvenHelper {};
-
-  template <>
-  struct EvenHelper<std::tuple<>> {
-    using type = std::tuple<>;
-  };
-
-  template <typename... Ts>
-  struct OddHelper {};
-
-  template <>
-  struct OddHelper<std::tuple<>> {
-    using type = std::tuple<>;
-  };
-
-  template <typename T, typename... Ts>
-  struct OddHelper<std::tuple<T, Ts...>> {
-    using type = typename EvenHelper<std::tuple<Ts...>>::type;
-  };
-
-  template <typename T, typename... Ts>
-  struct EvenHelper<std::tuple<T, Ts...>> {
-    using type = ConcatenateTup_t<std::tuple<T>,
-                                  typename OddHelper<std::tuple<Ts...>>::type>;
-  };
-
   template <typename... Ts>
   using type = typename EvenHelper<std::tuple<Ts...>>::type;
 };
@@ -61,16 +61,6 @@ using Even_t = typename Even::template type<Ts...>;
 
 // Metafunction to return only odd elements.
 struct Odd {
-  template <typename... Ts>
-  struct OddHelper {
-    using type = std::tuple<>;
-  };
-
-  template <typename T, typename... Ts>
-  struct OddHelper<std::tuple<T, Ts...>> {
-    using type = Even_t<Ts...>;
-  };
-
   template <typename... Ts>
   using type = typename OddHelper<std::tuple<Ts...>>::type;
 };

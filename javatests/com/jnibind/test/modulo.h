@@ -13,7 +13,7 @@ T Modulo(std::size_t increment_count, T val = T{0},
          T max = std::numeric_limits<T>::max()) {
   T ret = val;
 
-  for (int i = 0; i < increment_count; ++i) {
+  for (std::size_t i = 0; i < increment_count; ++i) {
     ret += T{1};
     while (ret >= max) {
       ret -= max;

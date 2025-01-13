@@ -41,21 +41,15 @@ cc_library(
     name = "array_ref",
     hdrs = ["array_ref.h"],
     deps = [
-        ":array",
         ":array_view",
-        ":class",
         ":class_ref",
-        ":default_class_loader",
         ":forward_declarations",
-        ":jni_type",
         ":local_object",
-        ":object_ref",
+        ":no_idx",
         ":promotion_mechanics_tags",
-        ":ref_base",
         "//:jni_dep",
         "//implementation/jni_helper:jni_array_helper",
         "//implementation/jni_helper:lifecycle",
-        "//implementation/jni_helper:lifecycle_object",
     ],
 )
 

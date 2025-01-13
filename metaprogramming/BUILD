@@ -877,6 +877,7 @@ cc_test(
 cc_library(
     name = "queryable_map",
     hdrs = ["queryable_map.h"],
+    tags = ["manual"],
     deps = [
         ":interleave",
         ":tuple_from_size",

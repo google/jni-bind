@@ -121,6 +121,22 @@ class ArrayView {
   const std::size_t size_;
 };
 
+// Metafunction that returns the type after a single dereference.
+template <typename SpanType, std::size_t>
+struct PinHelper {
+  using type = jobjectArray;
+};
+
+template <typename SpanType>
+struct PinHelper<SpanType, 2> {
+  using type = RegularToArrayTypeMap_t<SpanType>;
+};
+
+template <typename SpanType>
+struct PinHelper<SpanType, 1> {
+  using type = jobject;
+};
+
 // Object arrays, or arrays with rank > 1 (which are object arrays), or strings.
 template <typename SpanType_, std::size_t kRank>
 class ArrayView<
@@ -130,21 +146,7 @@ class ArrayView<
  public:
   using SpanType = SpanType_;
 
-  // Metafunction that returns the type after a single dereference.
-  template <std::size_t>
-  struct PinHelper {
-    using type = jobjectArray;
-  };
-  template <>
-  struct PinHelper<2> {
-    using type = RegularToArrayTypeMap_t<SpanType>;
-  };
-  template <>
-  struct PinHelper<1> {
-    using type = jobject;
-  };
-
-  using PinHelper_t = typename PinHelper<kRank>::type;
+  using PinHelper_t = typename PinHelper<SpanType_, kRank>::type;
 
   struct Iterator {
     using iterator_category = std::random_access_iterator_tag;

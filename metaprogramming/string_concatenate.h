@@ -36,6 +36,9 @@ struct StringConcatenate {
       (append_single_string(Vs), ...);
       arr[len] = 0;
 
+      // This stifles an incorrect compiler warning on gcc.
+      static_assert(!std::is_same_v<void, decltype(append_single_string)>);
+
       return arr;
     }
 
