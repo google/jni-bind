@@ -10,6 +10,7 @@ permissions:
   contents: read
 
 jobs:
+  # These jobs are legacy but needed for CopyBara to pass tests.
   ubuntu-latest-cpp17:
     runs-on: ubuntu-latest
     steps:
@@ -32,6 +33,44 @@ jobs:
       run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors //implementation/legacy/...
 
   macos-latest-cpp20:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: test
+      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++20' --repo_env=CC=clang --test_output=errors ...
+
+  # These are the new jobs that will be migrated to.
+  ubuntu-latest-cpp17-clang:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: test
+      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors //implementation/legacy/...
+
+  ubuntu-latest-cpp20-clang:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: test
+      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++20' --repo_env=CC=clang --test_output=errors ...
+
+  # Commented out because for some reason Github's action runner seems to be
+  # forcing C++14 which I can't reproduce locally.
+  #  ubuntu-latest-cpp20-gcc:
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #    - uses: actions/checkout@v4
+  #    - name: test
+  #      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++20' --repo_env=CC=gcc --test_output=errors ... -- -//implementation/legacy/...
+
+  macos-latest-cpp17-clang:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: test
+      run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++17' --repo_env=CC=clang --test_output=errors //implementation/legacy/...
+
+  macos-latest-cpp20-clang:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
