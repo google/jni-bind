@@ -2,9 +2,9 @@
 
 ![Ubuntu Build](https://github.com/google/jni-bind/actions/workflows/ci.yml/badge.svg)
 
-`JNI Bind` is a new metaprogramming library that provides syntactic sugar for `C++` => `Java/Kotlin`. It is header only and provides sophisticated type conversion with compile time validation of method calls and field accesses.
+`JNI Bind` is a metaprogramming library that provides syntactic sugar for `C++` => `Java/Kotlin`. It is header only and provides sophisticated type conversion with compile time validation of method calls and field accesses.
 
-It requires clang enabled at C++17 or later, is compatible with Android, and is unit / E2E tested on `x86`/`ARM` toolchains.
+It requires C++20, or clang enabled at C++17 or later. It is compatible with Android, and is unit / E2E / integration tested on `x86`/`ARM` toolchains.
 
 **Many** features and optimisations are included:
 
@@ -18,11 +18,14 @@ It requires clang enabled at C++17 or later, is compatible with Android, and is 
 - **Arrays** *inline object construction for method arguments, efficient pinning of existing spans.*
 - And *much* more!
 
-For a quick introduction, check out [the slides](https://docs.google.com/presentation/d/1PrpidDPcfbH37GywwzeL78Nd1fseHNEQoYWqbslYvBE/edit?usp=sharing).
+<a href="https://docs.google.com/presentation/d/1PrpidDPcfbH37GywwzeL78Nd1fseHNEQoYWqbslYvBE/edit?usp=sharing" target="_blank">
+<img src="slides-screenshot.png" width="300">
+</a>
+<a href="https://godbolt.org/z/4YMf5sPKc" target="_blank">
+<img src="godbolt.png" width="300">
+</a>
 
-Curious to try it? Check out the [Godbolt sample](https://godbolt.org/z/4YMf5sPKc)!
-
-If you're enjoying JNI Bind, or just want to support it, please consider adding a GitHub ⭐️!
+Check out the slides above! If you're enjoying JNI Bind, or just want to support it, please consider adding a GitHub ⭐️!
 
 ## Table of Contents
 - [Quick Intro](#quick-intro)
@@ -30,8 +33,8 @@ If you're enjoying JNI Bind, or just want to support it, please consider adding 
 - [Usage](#usage)
   - [Classes](#classes)
   - [Local and Global Objects](#local-and-global-objects)
-  - [Fields](#fields)
   - [Methods](#methods)
+  - [Fields](#fields)
   - [Constructors](#constructors)
   - [Type Conversion Rules](#type-conversion-rules)
 - [Advanced Usage](#advanced-usage)
@@ -43,6 +46,7 @@ If you're enjoying JNI Bind, or just want to support it, please consider adding 
   - [Builder Patterns](#builder-patterns)
   - [Class Loaders](#class-loaders)
   - [Arrays](#arrays)
+- [C++17/Clang Legacy Syntax](#cpp17-clang-legacy-syntax)
 - [Upcoming Features](#upcoming-features)
 - [License](#license)
 
@@ -51,7 +55,7 @@ If you're enjoying JNI Bind, or just want to support it, please consider adding 
 
 **JNI is notoriously difficult to use, and numerous libraries exist to try to reduce this complexity**. These libraries usually require code generation (or extensive macro use) which leads to brittle implementation, indexes poorly, and still requires domain expertise in JNI (making code difficult to maintain).
 
-**`JNI Bind` is header only (no auto-generation), and it generates robust, easily maintained, and expressive code.** It obeys the regular RAII idioms of C++17 and can help separate JNI symbols in compilation. Classes are provided in `static constexpr` definitions which can be shared across different implementations enabling code re-use.
+**`JNI Bind` is header only (no auto-generation), and it generates robust, easily maintained, and expressive code.** It obeys the regular RAII idioms of C++ and can help separate JNI symbols in compilation. Classes are provided in `static constexpr` definitions which can be shared across different implementations enabling code re-use.
 
 This is a sample Java class and it's corresponding`JNI Bind` class definition:
 
@@ -67,13 +71,17 @@ public class Clazz {
 
 static constexpr jni::Class kClass {
   "com/project/clazz",
-  jni::Method { "Foo", jni::Return<jint>{}, jni::Params<jfloat, jstring>{}
+  jni::Method {"Foo", jni::Return<jint>{}, jni::Params<jfloat, jstring>{}
 },
 
 jni::LocalObject<kClass> obj { jobject_to_wrap };
-obj("Foo", 1.5f, "argString");
-// obj("Bar", 1.5, "argString");  // won't compile (good).
+obj.Call<"Foo">(1.5f, "argString");
+// obj.Call<"Bar">( 1.5, "argString");  // won't compile (good).
 ```
+
+<div style="background-color: #e6f2ff; border-left: 6px solid #ffcc00; padding: 10px;">
+  <b>⚠️ Syntax Note ⚠️</b> As of <b>Release-1.2.0-beta</b>, calls and field access use <code>Call</code> and <code>Access</code> instead of <code>operator()</code> and <code>operator[]</code> respectively, but the old syntax is still supported for clang. See the <a href="#cpp17-clang-legacy-syntax">C++17/Clang Legacy Syntax</a> section for more details.
+</div>
 
 There are [sample tests](javatests/com/jnibind/test/) which can be a good way to see some example code. Consider starting with with [context_test_jni](javatests/com/jnibind/test/context_test_jni.cc), [object_test_helper_jni.h](/javatests/com/jnibind/test/object_test_helper_jni.h) and [ContextTest.java](javatests/com/jnibind/test/ContextTest.java).
 
@@ -137,9 +145,11 @@ There are easy to lift samples in [javatests/com/jnibind/test/](javatests/com/jn
 cd ~
 git clone https://github.com/google/jni-bind.git
 cd jni-bind
-bazel test  --cxxopt='-std=c++17' --repo_env=CC=clang ...
+bazel test  --cxxopt='-std=c++20' ...
 ```
-
+<div style="background-color: #e6f2ff; border-left: 6px solid #ffcc00; padding: 10px;">
+  <b>⚠️ Note ⚠️</b> As of <b>Release-1.2.0-beta</b>, C++20 is the targeted syntax. See the <a href="#cpp17-clang-legacy-syntax">C++17/Clang Legacy Syntax</a> section for more details.  To target C++17, use: <p><code> bazel test  --cxxopt='-std=c++17' --repo_env=CC=clang ... </code>
+</div>
 <a name="usage"></a>
 # Usage
 
@@ -200,7 +210,11 @@ jni::GlobalObject global_obj_2 {AdoptGlobal{}, obj3}; // obj3 will *not* be prom
 <a name="method-definitions"></a>
 ## Methods
 
-**A `jni::Method` is described as a method name, a `jni::Return`, and an optional `jni::Params` containing a variadic pack of zero values of the desired type.** If a class definition contains `jni::Method`s in its definition then corresponding objects constructed will be imbued with `operator()`. Using this operator with the corresponding method name will invoke the corresponding method.
+<div style="background-color: #e6f2ff; border-left: 6px solid #ffcc00; padding: 10px;">
+  <b>⚠️ Syntax Note ⚠️</b> As of <b>Release-1.2.0-beta</b>, calls and field access use <code>Call</code> and <code>Access</code> instead of <code>operator()</code> and <code>operator[]</code> respectively, but the old syntax is still supported for clang. See the <a href="#cpp17-clang-legacy-syntax">C++17/Clang Legacy Syntax</a> section for more details.
+</div>
+
+**A `jni::Method` is described as a method name, a `jni::Return`, and an optional `jni::Params` containing a variadic pack of zero values of the desired type.** If a class definition contains `jni::Method`s in its definition then corresponding objects will get a `Call` method which when invoke the corresponding method.
 
 ```cpp
 static constexpr jni::Class kClass {
@@ -211,9 +225,9 @@ static constexpr jni::Class kClass {
 };
 
 jni::LocalObject<kClass> runtime_object{jobj};
-int int_val = runtime_object("intMethod");
-float float_val = runtime_object("floatMethod");
-jni::LocalObject<kClassFromOtherHeader> class_val { runtime_object("classMethod") };
+int int_val = runtime_object.Call<"intMethod">();
+float float_val = runtime_object.Call<"floatMethod">(123, 456.78f);
+jni::LocalObject<kClassFromOtherHeader> class_val { runtime_object.Call<"classMethod">() };
 ```
 
 Methods will follow the rules laid out in [Type Conversion Rules](#type-conversion-rules). *Invalid method names won't compile, and `jmethodID`s are cached on your behalf. Method lookups are compile time, there is no hash lookup cost.*
@@ -223,7 +237,11 @@ Methods will follow the rules laid out in [Type Conversion Rules](#type-conversi
 <a name="fields"></a>
 ## Fields
 
-**A `jni::Field` is described as a field name and a zero value of the underlying type.** If a class definition contains `jni::Fields` in its definition then corresponding objects constructed will be imbued with `operator[]`. Using this operator with the corresponding field name will provide a proxy object with two methods `Get` and `Set`.
+<div style="background-color: #e6f2ff; border-left: 6px solid #ffcc00; padding: 10px;">
+  <b>⚠️ Syntax Note ⚠️</b> As of <b>Release-1.2.0-beta</b>, calls and field access use <code>Call</code> and <code>Access</code> instead of <code>operator()</code> and <code>operator[]</code> respectively, but the old syntax is still supported for clang. See the <a href="#cpp17-clang-legacy-syntax">C++17/Clang Legacy Syntax</a> section for more details.
+</div>
+
+**A `jni::Field` is described as a field name and a zero value of the underlying type.** If a class definition contains `jni::Fields` in its definition then corresponding objects constructed will get an `Access` method which when invoked will provide a proxy object with two methods `Get` and `Set`.
 
 ```cpp
 static constexpr jni::Class kClass {
@@ -232,8 +250,8 @@ static constexpr jni::Class kClass {
 };
 
 jni::LocalObject<kClass> runtime_object{jobj};
-runtime_object["intField"].Set(5);
-runtime_object["intField"].Get(); // = 5;
+runtime_object.Access<"intField">().Set(5);
+runtime_object.Access<"intField">().Get(); // = 5;
 ```
 
 Accessing and setting fields will follow the rules laid out in [Type Conversion Rules](#type-conversion-rules). *Accessing invalid field names won't compile, and `jfieldID`s are cached on your behalf.*
@@ -335,12 +353,12 @@ static constexpr Class kClass2 {
 };
 
 LocalObject<kClass> obj1{};
-obj1("returnsNothing", LocalObject<kClass2>{});        // correctly forces kClass2 for arg
-LocalObject<kClass> obj2{ obj1("returnsKClass") };     // correctly forces kClass for return
-LocalObject shallow_obj{} = obj1("returnsKClass");     // returns unusable but name safe kClass
-// shallow_obj("Foo");                                 // this won't compile as it's only a forward decl
-LocalObject<kClass> rich_obj{std::move(shallow_obj)};  // promotes the object to a usable version
-LocalObject<kClass2> { obj1("returnsKClass2") };       // materialised from a temporary shallow rvalue
+obj1.Call<"returnsNothing">( LocalObject<kClass2>{});     // correctly forces kClass2 for arg
+LocalObject<kClass> obj2{ obj1.Call<"returnsKClass">() }; // correctly forces kClass for return
+LocalObject shallow_obj{} = obj1.Call<"returnsKClass">(); // returns unusable but name safe kClass
+// shallow_obj.Call<"Foo">();                             // this won't compile as it's only a forward decl
+LocalObject<kClass> rich_obj{ std::move(shallow_obj) };   // promotes the object to a usable version
+LocalObject<kClass2> { obj1.Call<"returnsKClass2">() };   // materialised from a temporary shallow rvalue
 
 ```
 Note, if you use the output of a forward declaration, it will result in a *shallow* object. You can use this object in calls to other methods or constructors and they will validate as expected.
@@ -385,9 +403,9 @@ static constexpr Class kClass{
 };
 
 LocalObject<kClass> obj{};
-obj("Foo", 1);
-obj("Foo", "arg");
-obj("Foo", "arg", jstring{nullptr});
+obj.Call<"Foo">(1);
+obj.Call<"Foo">().Call<"arg">();
+obj.Call<"Foo">().Call<"arg">( jstring{nullptr} );
 ```
 
 Sample [method_test_jni.cc](javatests/com/jnibind/test/method_test_jni.cc), [MethodTest.java](javatests/com/jnibind/test/MethodTest.java).
@@ -445,10 +463,10 @@ static constexpr Class kClass{
   Field { "Foo", jint{}, }
 };
 
-StaticRef<kClass>{}("staticTakesInt", 123);
-StaticRef<kClass>{}("staticTakesFloat", 123.f);
-StaticRef<kClass>{}["staticLongField"].Set(123);
-StaticRef<kClass>{}["staticObjectField"].Set(LocalObject<kSomeClass>{});
+StaticRef<kClass>{}.Call<"staticTakesInt">(123);
+StaticRef<kClass>{}.Call<"staticTakesFloat">(123.f);
+StaticRef<kClass>{}.Access<"staticLongField">().Set(123);
+StaticRef<kClass>{}.Access<"staticObjectField">().Set(LocalObject<kSomeClass>{});
 ```
 
 Statics will follow the rules laid out in [Type Conversion Rules](#type-conversion-rules). *Invalid static method names won't compile, and `jmethodID`s are cached on your behalf. Static method lookups are compile time, there is no hash lookup cost.*
@@ -498,7 +516,7 @@ constexpr Class kBuilder {
     Method{"build", Return{kObjectTestHelperClass}},
 };
 
- LocalObject<kBuilder>{}("setOne", 111)("setTwo", 222)("build")
+ LocalObject<kBuilder>{}.Call<"setOne">(111).Call<"setTwo">(222).Call<"build">();
 ```
 
 The commented line above would fail to compile at the invocation, because the return value of `setTwo` is a shallow copy. Self preserves the methods and fields so the returned `LocalObject` "just works".
@@ -542,7 +560,7 @@ Arrays can be used in conjunction with fields and methods as you would expect:
 };
 
 LocalObject<kClass> obj{};
-LocalArray<int> arr = obj["intArrayField"];
+LocalArray<int> arr = obj.Access<"intArrayField">();
 ```
 
 Arrays can be used in conjunction with primitive types or classes, but if they are used with classes they will always consist of `LocalObjects` (reasoning about a `LocalArray` with a `GlobalObject` is too confusing).
@@ -556,9 +574,9 @@ static constexpr Class kClass{
 LocalArray<jint> int_arr{1,2,3};
 
 // Arrays work just like any other type in JNI Bind.
-obj("Foo", 1);
-obj("Foo", "arg");
-obj("Foo", "arg", jstring{nullptr});
+obj.Call<"Foo">(1);
+obj.Call<"Foo">("arg");
+obj.Call<"Foo">("arg", jstring{nullptr});
 ```
 
 `LocalArray` has two constructors, one for construction from an existing `jarray` object (similar to `LocalObject`) and another that builds a new array full of zero initialised objects. For primitives, simply indicate the size, for object arrays, provide a default object that will be used to fill the array.
@@ -572,18 +590,44 @@ obj("Foo", "arg", jstring{nullptr});
 
 Sample [local_array.h](implementation/local_array_test.cc), [array_test_jni.cc](javatests/com/jnibind/test/array_test_jni.cc), [ArrayTest.java](javatests/com/jnibind/test/ArrayTest.java).
 
+<a name="cpp17-clang-legacy-syntax"></a>
+## C++17 Clang Legacy Syntax
+
+As of <b>Release-1.2.0-beta</b>, calls and field access use <code>Call</code> and <code>Access</code> instead of <code>operator()</code> and <code>operator[]</code> respectively, but the old syntax is still supported for clang.  Previously, the encouraged syntax for JNI Bind method and field calls looked like so:
+
+```
+static constexpr jni::Class kClass {
+  "com/project/clazz",
+  jni::Method { "Foo", jni::Return<jint>{}, jni::Params<jfloat, jstring>{},
+  jni::Field {"intField", jint{} },
+},
+
+jni::LocalObject<kClass> obj { jobject_to_wrap };
+obj.Call<"Foo">(1.5f, "argString");
+obj.Access<"intField">().Set(123);
+```
+
+This syntax was all that could be supported in C++17, and unfortunately [relies on a clang extension](metaprogramming/invocable_map.h). Because C++17 does not support string literals in non-type template parameters, the new syntax is not possible. Conversely, the syntax enabled by the clang extension is not possible to represent in standard C++20.
+
+As such, the documentation and sample code all use the new syntax, and because this uses standard C++20, it is portable. The old syntax is fully unit tested under the [legacy directory](implementation/legacy), and will continue to be supported for clang on C++17 and onwards. In the unlikely event this syntax needed deprecation I will only do so after a major version bump.
+
+This change is discussed in https://github.com/google/jni-bind/issues/4 and https://github.com/google/jni-bind/issues/42.
+The original Godbolt is https://godbolt.org/z/4YMf5sPKc.
+
+To trigger builds for C++17 with clang on bazel, you can use the following command:
+`bazel test  --cxxopt='-std=c++17' --repo_env=CC=clang ...`
+
+While it is disappointing to change the syntax, this new syntax expresses the compile time lookup implicit in calling and accessing fields and also enables compilers other than clang. Given the old syntax would not be lost, these two advantages justified encouraging the new syntax.
+
 <a name="upcoming-features"></a>
 ## Upcoming Features
 
 Feature requests are welcome! Some upcoming features are:
 
-- Statics
+- Proto support + syntactic sugar.
 - Tighter array type validation (arrays are overly permissive for arguments)
 - Better error messages
 - Link time symbol validation in Bazel
-- Unit Testing Support (enabling unit testing of JNI interfaces)
-- Callback syntactic sugar
-- Per JNI call lambda invocations (e.g. per JNI call logging, perf tracing)
 - Auto generated interfaces (with pre-loaded scrapes of Java libraries)
 - And more!
 
