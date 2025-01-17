@@ -18,12 +18,14 @@ It requires C++20, or clang enabled at C++17 or later. It is compatible with And
 - **Arrays** *inline object construction for method arguments, efficient pinning of existing spans.*
 - And *much* more!
 
-<a href="https://docs.google.com/presentation/d/1PrpidDPcfbH37GywwzeL78Nd1fseHNEQoYWqbslYvBE/edit?usp=sharing" target="_blank">
-<img src="slides-screenshot.png" width="300">
-</a>
-<a href="https://godbolt.org/z/4YMf5sPKc" target="_blank">
-<img src="godbolt.png" width="300">
-</a>
+<div style="text-align: center;">
+  <a href="https://docs.google.com/presentation/d/1PrpidDPcfbH37GywwzeL78Nd1fseHNEQoYWqbslYvBE/edit?usp=sharing" target="_blank">
+    <img src="slides-screenshot.png" width="300" style="margin-right: 20px;">
+  </a>
+  <a href="https://godbolt.org/z/rfv4sqbYM" target="_blank">
+    <img src="godbolt.png" width="300" style="margin-left: 20px;">
+  </a>
+</div>
 
 Check out the slides above! If you're enjoying JNI Bind, or just want to support it, please consider adding a GitHub ⭐️!
 
@@ -151,7 +153,8 @@ bazel test  --cxxopt='-std=c++20' ...
   <b>⚠️ Note ⚠️</b> As of <b>Release-1.2.0-beta</b>, C++20 is the targeted syntax. See the <a href="#cpp17-clang-legacy-syntax">C++17/Clang Legacy Syntax</a> section for more details.  To target C++17, use: <p><code> bazel test  --cxxopt='-std=c++17' --repo_env=CC=clang ... </code>
 </div>
 <a name="usage"></a>
-# Usage
+
+## Usage
 
 <a name="jvm-lifecycle"></a>
 ## JVM Lifecycle
