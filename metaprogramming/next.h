@@ -36,7 +36,7 @@ struct EndVal;
 template <template <const auto&...> class Container>
 struct NextConstRefVal;
 
-template <template <const auto...> class Container>
+template <template <const auto&...> class Container>
 struct EndConstRefVal;
 
 // Returns the "next" value in given a value in type space.
