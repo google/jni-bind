@@ -1,0 +1,7 @@
+# Suppress duplicate library warnings during linking
+build --action_env=LDFLAGS="-Wl,-w"
+build --linkopt="-Wl,-w"
+
+# Additional platform-specific settings
+build:macos --linkopt="-Wl,-dead_strip_dylibs"
+build:linux --linkopt="-Wl,--as-needed"
