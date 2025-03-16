@@ -1,4 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_binary", "java_library", "java_test")
+load("//javatests/com/jnibind/test:jni_shared_library.bzl", "jni_shared_library")
 
 licenses(["notice"])
 
