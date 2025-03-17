@@ -600,3 +600,38 @@ java_test(
         "@maven//:org_mockito_mockito_core",
     ],
 )
+
+################################################################################
+# Type Erasure Test.
+################################################################################
+cc_library(
+    name = "type_erasure_test_jni_impl",
+    testonly = True,
+    srcs = ["type_erasure_test_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
+    copts = ["-std=c++20"],
+    deps = [
+        "//:jni_bind",
+    ],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libtype_erasure_test_jni.so",
+    testonly = True,
+    linkshared = True,
+    deps = [":type_erasure_test_jni_impl"],
+)
+
+java_test(
+    name = "TypeErasureTest",
+    testonly = True,
+    srcs = ["TypeErasureTest.java"],
+    data = [":libtype_erasure_test_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
+    deps = [
+        "@maven//:com_google_truth_truth",
+        "@maven//:junit_junit",
+    ],
+)
