@@ -98,34 +98,65 @@ struct JniArrayHelper<jboolean, 1> : public JniArrayHelperBase {
   }
 
   static inline GetArrayElementsResult<jboolean> GetArrayElements(
-      jarray array) {
-    Trace(
-        metaprogramming::LambdaToStr(STR("GetArrayElements, jboolean, Rank 1")),
-        array);
+      jarray array, ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(
+          metaprogramming::LambdaToStr(STR("GetArrayElements, jboolean, Rank 1")),
+          array);
 
 #ifdef DRY_RUN
-    return GetArrayElementsResult<jboolean>{};
+      return GetArrayElementsResult<jboolean>{};
 #else
-    GetArrayElementsResult<jboolean> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetBooleanArrayElements(
-        static_cast<jbooleanArray>(array), &return_value.is_copy);
+      GetArrayElementsResult<jboolean> return_value;
+      return_value.ptr_ = jni::JniEnv::GetEnv()->GetBooleanArrayElements(
+          static_cast<jbooleanArray>(array), &return_value.is_copy);
 
-    return return_value;
+      return return_value;
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(
+          metaprogramming::LambdaToStr(STR("GetPrimitiveArrayCritical, jboolean, Rank 1")),
+          array);
+
+#ifdef DRY_RUN
+      return GetArrayElementsResult<jboolean>{};
+#else
+      GetArrayElementsResult<jboolean> return_value;
+      return_value.ptr_ = static_cast<jboolean*>(
+          jni::JniEnv::GetEnv()->GetPrimitiveArrayCritical(
+              static_cast<jbooleanArray>(array), &return_value.is_copy));
+
+      return return_value;
+#endif  // DRY_RUN
+    }
   }
 
   static inline void ReleaseArrayElements(jarray array, jboolean* native_ptr,
-                                          bool copy_on_completion) {
-    Trace(metaprogramming::LambdaToStr(
-              STR("ReleaseArrayElements, jboolean, Rank 1")),
-          array, native_ptr, copy_on_completion);
+                                         bool copy_on_completion,
+                                         ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleaseArrayElements, jboolean, Rank 1")),
+            array, native_ptr, copy_on_completion);
 
 #ifdef DRY_RUN
 #else
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseBooleanArrayElements(
-        static_cast<jbooleanArray>(array), native_ptr, copy_back_mode);
+      jni::JniEnv::GetEnv()->ReleaseBooleanArrayElements(
+          static_cast<jbooleanArray>(array), native_ptr, copy_back_mode);
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleasePrimitiveArrayCritical, jboolean, Rank 1")),
+            array, native_ptr, copy_on_completion);
+
+#ifdef DRY_RUN
+#else
+      jni::JniEnv::GetEnv()->ReleasePrimitiveArrayCritical(
+          static_cast<jbooleanArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
+    }
   }
 };
 
@@ -143,33 +174,64 @@ struct JniArrayHelper<jbyte, 1> : public JniArrayHelperBase {
 #endif  // DRY_RUN
   }
 
-  static inline GetArrayElementsResult<jbyte> GetArrayElements(jarray array) {
-    Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jbyte, Rank 1")),
-          array);
+  static inline GetArrayElementsResult<jbyte> GetArrayElements(
+      jarray array, ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jbyte, Rank 1")),
+            array);
 
 #ifdef DRY_RUN
-    return GetArrayElementsResult<jbyte>{};
+      return GetArrayElementsResult<jbyte>{};
 #else
-    GetArrayElementsResult<jbyte> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetByteArrayElements(
-        static_cast<jbyteArray>(array), &return_value.is_copy);
+      GetArrayElementsResult<jbyte> return_value;
+      return_value.ptr_ = jni::JniEnv::GetEnv()->GetByteArrayElements(
+          static_cast<jbyteArray>(array), &return_value.is_copy);
 
-    return return_value;
+      return return_value;
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(STR("GetPrimitiveArrayCritical, jbyte, Rank 1")),
+            array);
+
+#ifdef DRY_RUN
+      return GetArrayElementsResult<jbyte>{};
+#else
+      GetArrayElementsResult<jbyte> return_value;
+      return_value.ptr_ = static_cast<jbyte*>(
+          jni::JniEnv::GetEnv()->GetPrimitiveArrayCritical(
+              static_cast<jbyteArray>(array), &return_value.is_copy));
+
+      return return_value;
+#endif  // DRY_RUN
+    }
   }
 
   static inline void ReleaseArrayElements(jarray array, jbyte* native_ptr,
-                                          bool copy_on_completion) {
-    Trace(metaprogramming::LambdaToStr(
-              STR("ReleaseArrayElements, jbyte, Rank 1")),
-          array, native_ptr, copy_on_completion);
+                                         bool copy_on_completion,
+                                         ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleaseArrayElements, jbyte, Rank 1")),
+            array, native_ptr, copy_on_completion);
 
 #ifdef DRY_RUN
 #else
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseByteArrayElements(
-        static_cast<jbyteArray>(array), native_ptr, copy_back_mode);
+      jni::JniEnv::GetEnv()->ReleaseByteArrayElements(
+          static_cast<jbyteArray>(array), native_ptr, copy_back_mode);
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleasePrimitiveArrayCritical, jbyte, Rank 1")),
+            array, native_ptr, copy_on_completion);
+
+#ifdef DRY_RUN
+#else
+      jni::JniEnv::GetEnv()->ReleasePrimitiveArrayCritical(
+          static_cast<jbyteArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
+    }
   }
 };
 
@@ -187,33 +249,64 @@ struct JniArrayHelper<jchar, 1> : public JniArrayHelperBase {
 #endif  // DRY_RUN
   }
 
-  static inline GetArrayElementsResult<jchar> GetArrayElements(jarray array) {
-    Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jchar, Rank 1")),
-          array);
+  static inline GetArrayElementsResult<jchar> GetArrayElements(
+      jarray array, ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jchar, Rank 1")),
+            array);
 
 #ifdef DRY_RUN
-    return GetArrayElementsResult<jchar>{};
+      return GetArrayElementsResult<jchar>{};
 #else
-    GetArrayElementsResult<jchar> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetCharArrayElements(
-        static_cast<jcharArray>(array), &return_value.is_copy);
+      GetArrayElementsResult<jchar> return_value;
+      return_value.ptr_ = jni::JniEnv::GetEnv()->GetCharArrayElements(
+          static_cast<jcharArray>(array), &return_value.is_copy);
 
-    return return_value;
+      return return_value;
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(STR("GetPrimitiveArrayCritical, jchar, Rank 1")),
+            array);
+
+#ifdef DRY_RUN
+      return GetArrayElementsResult<jchar>{};
+#else
+      GetArrayElementsResult<jchar> return_value;
+      return_value.ptr_ = static_cast<jchar*>(
+          jni::JniEnv::GetEnv()->GetPrimitiveArrayCritical(
+              static_cast<jcharArray>(array), &return_value.is_copy));
+
+      return return_value;
+#endif  // DRY_RUN
+    }
   }
 
   static inline void ReleaseArrayElements(jarray array, jchar* native_ptr,
-                                          bool copy_on_completion) {
-    Trace(metaprogramming::LambdaToStr(
-              STR("ReleaseArrayElements, jchar, Rank 1")),
-          array, native_ptr, copy_on_completion);
+                                         bool copy_on_completion,
+                                         ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleaseArrayElements, jchar, Rank 1")),
+            array, native_ptr, copy_on_completion);
 
 #ifdef DRY_RUN
 #else
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseCharArrayElements(
-        static_cast<jcharArray>(array), native_ptr, copy_back_mode);
+      jni::JniEnv::GetEnv()->ReleaseCharArrayElements(
+          static_cast<jcharArray>(array), native_ptr, copy_back_mode);
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleasePrimitiveArrayCritical, jchar, Rank 1")),
+            array, native_ptr, copy_on_completion);
+
+#ifdef DRY_RUN
+#else
+      jni::JniEnv::GetEnv()->ReleasePrimitiveArrayCritical(
+          static_cast<jcharArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
+    }
   }
 };
 
@@ -231,33 +324,64 @@ struct JniArrayHelper<jshort, 1> : public JniArrayHelperBase {
 #endif  // DRY_RUN
   }
 
-  static inline GetArrayElementsResult<jshort> GetArrayElements(jarray array) {
-    Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jshort, Rank 1")),
-          array);
+  static inline GetArrayElementsResult<jshort> GetArrayElements(
+      jarray array, ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jshort, Rank 1")),
+            array);
 
 #ifdef DRY_RUN
-    return GetArrayElementsResult<jshort>{};
+      return GetArrayElementsResult<jshort>{};
 #else
-    GetArrayElementsResult<jshort> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetShortArrayElements(
-        static_cast<jshortArray>(array), &return_value.is_copy);
+      GetArrayElementsResult<jshort> return_value;
+      return_value.ptr_ = jni::JniEnv::GetEnv()->GetShortArrayElements(
+          static_cast<jshortArray>(array), &return_value.is_copy);
 
-    return return_value;
+      return return_value;
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(STR("GetPrimitiveArrayCritical, jshort, Rank 1")),
+            array);
+
+#ifdef DRY_RUN
+      return GetArrayElementsResult<jshort>{};
+#else
+      GetArrayElementsResult<jshort> return_value;
+      return_value.ptr_ = static_cast<jshort*>(
+          jni::JniEnv::GetEnv()->GetPrimitiveArrayCritical(
+              static_cast<jshortArray>(array), &return_value.is_copy));
+
+      return return_value;
+#endif  // DRY_RUN
+    }
   }
 
   static inline void ReleaseArrayElements(jarray array, jshort* native_ptr,
-                                          bool copy_on_completion) {
-    Trace(metaprogramming::LambdaToStr(
-              STR("ReleaseArrayElements, jshort, Rank 1")),
-          array, native_ptr, copy_on_completion);
+                                         bool copy_on_completion,
+                                         ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleaseArrayElements, jshort, Rank 1")),
+            array, native_ptr, copy_on_completion);
 
 #ifdef DRY_RUN
 #else
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseShortArrayElements(
-        static_cast<jshortArray>(array), native_ptr, copy_back_mode);
+      jni::JniEnv::GetEnv()->ReleaseShortArrayElements(
+          static_cast<jshortArray>(array), native_ptr, copy_back_mode);
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleasePrimitiveArrayCritical, jshort, Rank 1")),
+            array, native_ptr, copy_on_completion);
+
+#ifdef DRY_RUN
+#else
+      jni::JniEnv::GetEnv()->ReleasePrimitiveArrayCritical(
+          static_cast<jshortArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
+    }
   }
 };
 
@@ -275,33 +399,64 @@ struct JniArrayHelper<jint, 1> : public JniArrayHelperBase {
 #endif  // DRY_RUN
   }
 
-  static inline GetArrayElementsResult<jint> GetArrayElements(jarray array) {
-    Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jint, Rank 1")),
-          array);
+  static inline GetArrayElementsResult<jint> GetArrayElements(
+      jarray array, ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jint, Rank 1")),
+            array);
 
 #ifdef DRY_RUN
-    return GetArrayElementsResult<jint>{};
+      return GetArrayElementsResult<jint>{};
 #else
-    GetArrayElementsResult<jint> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetIntArrayElements(
-        static_cast<jintArray>(array), &return_value.is_copy);
+      GetArrayElementsResult<jint> return_value;
+      return_value.ptr_ = jni::JniEnv::GetEnv()->GetIntArrayElements(
+          static_cast<jintArray>(array), &return_value.is_copy);
 
-    return return_value;
+      return return_value;
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(STR("GetPrimitiveArrayCritical, jint, Rank 1")),
+            array);
+
+#ifdef DRY_RUN
+      return GetArrayElementsResult<jint>{};
+#else
+      GetArrayElementsResult<jint> return_value;
+      return_value.ptr_ = static_cast<jint*>(
+          jni::JniEnv::GetEnv()->GetPrimitiveArrayCritical(
+              static_cast<jintArray>(array), &return_value.is_copy));
+
+      return return_value;
+#endif  // DRY_RUN
+    }
   }
 
   static inline void ReleaseArrayElements(jarray array, int* native_ptr,
-                                          bool copy_on_completion) {
-    Trace(
-        metaprogramming::LambdaToStr(STR("ReleaseArrayElements, jint, Rank 1")),
-        array, native_ptr, copy_on_completion);
+                                         bool copy_on_completion,
+                                         ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(
+          metaprogramming::LambdaToStr(STR("ReleaseArrayElements, jint, Rank 1")),
+          array, native_ptr, copy_on_completion);
 
 #ifdef DRY_RUN
 #else
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseIntArrayElements(
-        static_cast<jintArray>(array), native_ptr, copy_back_mode);
+      jni::JniEnv::GetEnv()->ReleaseIntArrayElements(
+          static_cast<jintArray>(array), native_ptr, copy_back_mode);
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleasePrimitiveArrayCritical, jint, Rank 1")),
+            array, native_ptr, copy_on_completion);
+
+#ifdef DRY_RUN
+#else
+      jni::JniEnv::GetEnv()->ReleasePrimitiveArrayCritical(
+          static_cast<jintArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
+    }
   }
 };
 
@@ -319,32 +474,63 @@ struct JniArrayHelper<jlong, 1> : public JniArrayHelperBase {
 #endif  // DRY_RUN
   }
 
-  static inline GetArrayElementsResult<jlong> GetArrayElements(jarray array) {
-    Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jlong, Rank 1")),
-          array);
+  static inline GetArrayElementsResult<jlong> GetArrayElements(
+      jarray array, ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jlong, Rank 1")),
+            array);
 
 #ifdef DRY_RUN
-    return GetArrayElementsResult<jlong>{};
+      return GetArrayElementsResult<jlong>{};
 #else
-    GetArrayElementsResult<jlong> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetLongArrayElements(
-        static_cast<jlongArray>(array), &return_value.is_copy);
-    return return_value;
+      GetArrayElementsResult<jlong> return_value;
+      return_value.ptr_ = jni::JniEnv::GetEnv()->GetLongArrayElements(
+          static_cast<jlongArray>(array), &return_value.is_copy);
+      return return_value;
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(STR("GetPrimitiveArrayCritical, jlong, Rank 1")),
+            array);
+
+#ifdef DRY_RUN
+      return GetArrayElementsResult<jlong>{};
+#else
+      GetArrayElementsResult<jlong> return_value;
+      return_value.ptr_ = static_cast<jlong*>(
+          jni::JniEnv::GetEnv()->GetPrimitiveArrayCritical(
+              static_cast<jlongArray>(array), &return_value.is_copy));
+
+      return return_value;
+#endif  // DRY_RUN
+    }
   }
 
   static inline void ReleaseArrayElements(jarray array, jlong* native_ptr,
-                                          bool copy_on_completion) {
-    Trace(metaprogramming::LambdaToStr(
-              STR("ReleaseArrayElements, jlong, Rank 1")),
-          array, native_ptr, copy_on_completion);
+                                         bool copy_on_completion,
+                                         ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleaseArrayElements, jlong, Rank 1")),
+            array, native_ptr, copy_on_completion);
 
 #ifdef DRY_RUN
 #else
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseLongArrayElements(
-        static_cast<jlongArray>(array), native_ptr, copy_back_mode);
+      jni::JniEnv::GetEnv()->ReleaseLongArrayElements(
+          static_cast<jlongArray>(array), native_ptr, copy_back_mode);
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleasePrimitiveArrayCritical, jlong, Rank 1")),
+            array, native_ptr, copy_on_completion);
+
+#ifdef DRY_RUN
+#else
+      jni::JniEnv::GetEnv()->ReleasePrimitiveArrayCritical(
+          static_cast<jlongArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
+    }
   }
 };
 
@@ -362,29 +548,63 @@ struct JniArrayHelper<jfloat, 1> : public JniArrayHelperBase {
 #endif  // DRY_RUN
   }
 
-  static inline GetArrayElementsResult<jfloat> GetArrayElements(jarray array) {
-    Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jfloat, Rank 1")),
-          array);
+  static inline GetArrayElementsResult<jfloat> GetArrayElements(
+      jarray array, ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(STR("GetArrayElements, jfloat, Rank 1")),
+            array);
 
 #ifdef DRY_RUN
-    return GetArrayElementsResult<jfloat>{};
+      return GetArrayElementsResult<jfloat>{};
 #else
-    GetArrayElementsResult<jfloat> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetFloatArrayElements(
-        static_cast<jfloatArray>(array), &return_value.is_copy);
-    return return_value;
+      GetArrayElementsResult<jfloat> return_value;
+      return_value.ptr_ = jni::JniEnv::GetEnv()->GetFloatArrayElements(
+          static_cast<jfloatArray>(array), &return_value.is_copy);
+      return return_value;
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(STR("GetPrimitiveArrayCritical, jfloat, Rank 1")),
+            array);
+
+#ifdef DRY_RUN
+      return GetArrayElementsResult<jfloat>{};
+#else
+      GetArrayElementsResult<jfloat> return_value;
+      return_value.ptr_ = static_cast<jfloat*>(
+          jni::JniEnv::GetEnv()->GetPrimitiveArrayCritical(
+              static_cast<jfloatArray>(array), &return_value.is_copy));
+
+      return return_value;
+#endif  // DRY_RUN
+    }
   }
 
   static inline void ReleaseArrayElements(jarray array, jfloat* native_ptr,
-                                          bool copy_on_completion) {
-    Trace(metaprogramming::LambdaToStr(
-              STR("ReleaseArrayElements, jfloat, Rank 1")),
-          array, native_ptr, copy_on_completion);
-
+                                         bool copy_on_completion,
+                                         ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
     const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseFloatArrayElements(
-        static_cast<jfloatArray>(array), native_ptr, copy_back_mode);
+
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleaseArrayElements, jfloat, Rank 1")),
+            array, native_ptr, copy_on_completion);
+
+#ifdef DRY_RUN
+#else
+      jni::JniEnv::GetEnv()->ReleaseFloatArrayElements(
+          static_cast<jfloatArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleasePrimitiveArrayCritical, jfloat, Rank 1")),
+            array, native_ptr, copy_on_completion);
+
+#ifdef DRY_RUN
+#else
+      jni::JniEnv::GetEnv()->ReleasePrimitiveArrayCritical(
+          static_cast<jfloatArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
+    }
   }
 };
 
@@ -402,33 +622,64 @@ struct JniArrayHelper<jdouble, 1> : public JniArrayHelperBase {
 #endif  // DRY_RUN
   }
 
-  static inline GetArrayElementsResult<jdouble> GetArrayElements(jarray array) {
-    Trace(
-        metaprogramming::LambdaToStr(STR("GetArrayElements, jdouble, Rank 1")),
-        array);
+  static inline GetArrayElementsResult<jdouble> GetArrayElements(
+      jarray array, ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(
+          metaprogramming::LambdaToStr(STR("GetArrayElements, jdouble, Rank 1")),
+          array);
 
 #ifdef DRY_RUN
-    return GetArrayElementsResult<jdouble>();
+      return GetArrayElementsResult<jdouble>();
 #else
-    GetArrayElementsResult<jdouble> return_value;
-    return_value.ptr_ = jni::JniEnv::GetEnv()->GetDoubleArrayElements(
-        static_cast<jdoubleArray>(array), &return_value.is_copy);
-    return return_value;
+      GetArrayElementsResult<jdouble> return_value;
+      return_value.ptr_ = jni::JniEnv::GetEnv()->GetDoubleArrayElements(
+          static_cast<jdoubleArray>(array), &return_value.is_copy);
+      return return_value;
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(STR("GetPrimitiveArrayCritical, jdouble, Rank 1")),
+            array);
+
+#ifdef DRY_RUN
+      return GetArrayElementsResult<jdouble>();
+#else
+      GetArrayElementsResult<jdouble> return_value;
+      return_value.ptr_ = static_cast<jdouble*>(
+          jni::JniEnv::GetEnv()->GetPrimitiveArrayCritical(
+              static_cast<jdoubleArray>(array), &return_value.is_copy));
+
+      return return_value;
+#endif  // DRY_RUN
+    }
   }
 
   static inline void ReleaseArrayElements(jarray array, jdouble* native_ptr,
-                                          bool copy_on_completion) {
-    Trace(metaprogramming::LambdaToStr(
-              STR("ReleaseArrayElements, jdouble, Rank 1")),
-          array, native_ptr, copy_on_completion);
+                                         bool copy_on_completion,
+                                         ArrayAccessMode mode = ArrayAccessMode::REGULAR) {
+    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
+
+    if (mode == ArrayAccessMode::REGULAR) {
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleaseArrayElements, jdouble, Rank 1")),
+            array, native_ptr, copy_on_completion);
 
 #ifdef DRY_RUN
 #else
-    const jint copy_back_mode = copy_on_completion ? 0 : JNI_ABORT;
-    jni::JniEnv::GetEnv()->ReleaseDoubleArrayElements(
-        static_cast<jdoubleArray>(array), native_ptr, copy_back_mode);
+      jni::JniEnv::GetEnv()->ReleaseDoubleArrayElements(
+          static_cast<jdoubleArray>(array), native_ptr, copy_back_mode);
 #endif  // DRY_RUN
+    } else { // ArrayAccessMode::CRITICAL
+      Trace(metaprogramming::LambdaToStr(
+                STR("ReleasePrimitiveArrayCritical, jdouble, Rank 1")),
+            array, native_ptr, copy_on_completion);
+
+#ifdef DRY_RUN
+#else
+      jni::JniEnv::GetEnv()->ReleasePrimitiveArrayCritical(
+          static_cast<jdoubleArray>(array), native_ptr, copy_back_mode);
+#endif  // DRY_RUN
+    }
   }
 };
 
