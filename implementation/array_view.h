@@ -94,16 +94,24 @@ class ArrayView {
   ArrayView(ArrayView&&) = delete;
   ArrayView(const ArrayView&) = delete;
 
-  ArrayView(jarray array, bool copy_on_completion, std::size_t size)
+  // Constructor for ArrayView
+  // array: The Java array to access
+  // copy_on_completion: Whether to copy changes back to the Java array on destruction
+  // size: The size of the array
+  // access_mode: The access mode to use (REGULAR for normal JNI access,
+  //              CRITICAL for GetPrimitiveArrayCritical)
+  ArrayView(jarray array, bool copy_on_completion, std::size_t size,
+         ArrayAccessMode access_mode = ArrayAccessMode::REGULAR)
       : array_(array),
         get_array_elements_result_(
-            JniArrayHelper<SpanType, kRank>::GetArrayElements(array)),
+            JniArrayHelper<SpanType, kRank>::GetArrayElements(array, access_mode)),
         copy_on_completion_(copy_on_completion),
-        size_(size) {}
+        size_(size),
+        access_mode_(access_mode) {}
 
   ~ArrayView() {
     JniArrayHelper<SpanType, kRank>::ReleaseArrayElements(
-        array_, get_array_elements_result_.ptr_, copy_on_completion_);
+        array_, get_array_elements_result_.ptr_, copy_on_completion_, access_mode_);
   }
 
   // Arrays of rank > 1 are object arrays which are not contiguous.
@@ -119,6 +127,7 @@ class ArrayView {
   const GetArrayElementsResult<SpanType> get_array_elements_result_;
   const bool copy_on_completion_;
   const std::size_t size_;
+  const ArrayAccessMode access_mode_;
 };
 
 // Metafunction that returns the type after a single dereference.

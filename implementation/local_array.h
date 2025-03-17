@@ -37,10 +37,27 @@
 
 namespace jni {
 
-// Represents a an array object (e.g. int[], float[][], Object[], etc).
+// Represents an array object (e.g. int[], float[][], Object[], etc).
 // Currently GlobalArrays do not exist, as reasoning about the lifecycles of the
 // underlying objects is non-trivial, e.g. a GlobalArray taking a local object
 // would result in a possibly unexpected extension of lifetime.
+//
+// LocalArray supports both regular JNI array access (via Get*ArrayElements) and 
+// critical access (via GetPrimitiveArrayCritical) for primitive array types.
+//
+// Direct arrays:
+// When using critical access (PinCritical() method), the implementation may return
+// a direct pointer to the array in the JVM's memory, avoiding copying. This is
+// determined by the JVM and indicated by the is_copy flag in GetArrayElementsResult.
+//
+// Indirect arrays:
+// When using regular access (Pin() method), or when the JVM cannot provide direct 
+// access with critical methods, a copy of the array is returned.
+//
+// Usage notes:
+// - Critical sections should be kept as short as possible
+// - No JNI calls should be made during a critical section
+// - Critical access may block garbage collection in the JVM
 template <typename SpanType_, std::size_t kRank_ = 1,
           const auto& class_v_ = kNoClassSpecified,
           const auto& class_loader_v_ = kDefaultClassLoader,

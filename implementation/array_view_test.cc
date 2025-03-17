@@ -121,6 +121,87 @@ TEST_F(JniTest, LocalArrayView_AllowsCTAD) {
   // ArrayView ctad_array_view_2 {std::move(ctad_array_view)};
 }
 
+TEST_F(JniTest, ArrayView_GetsAndReleaseCriticalArrayBuffer) {
+  EXPECT_CALL(*env_, GetPrimitiveArrayCritical(Eq(Fake<jbooleanArray>()), _))
+      .WillOnce(::testing::Return(static_cast<void*>(Fake<jboolean*>())));
+  EXPECT_CALL(*env_, ReleasePrimitiveArrayCritical(Eq(Fake<jbooleanArray>()),
+                                                 Eq(static_cast<void*>(Fake<jboolean*>())), 0));
+
+  EXPECT_CALL(*env_, GetPrimitiveArrayCritical(Eq(Fake<jbyteArray>()), _))
+      .WillOnce(::testing::Return(static_cast<void*>(Fake<jbyte*>())));
+  EXPECT_CALL(*env_, ReleasePrimitiveArrayCritical(Eq(Fake<jbyteArray>()),
+                                                 Eq(static_cast<void*>(Fake<jbyte*>())), 0));
+
+  EXPECT_CALL(*env_, GetPrimitiveArrayCritical(Eq(Fake<jcharArray>()), _))
+      .WillOnce(::testing::Return(static_cast<void*>(Fake<jchar*>())));
+  EXPECT_CALL(*env_, ReleasePrimitiveArrayCritical(Eq(Fake<jcharArray>()),
+                                                 Eq(static_cast<void*>(Fake<jchar*>())), 0));
+
+  EXPECT_CALL(*env_, GetPrimitiveArrayCritical(Eq(Fake<jshortArray>()), _))
+      .WillOnce(::testing::Return(static_cast<void*>(Fake<jshort*>())));
+  EXPECT_CALL(*env_, ReleasePrimitiveArrayCritical(Eq(Fake<jshortArray>()),
+                                                 Eq(static_cast<void*>(Fake<jshort*>())), 0));
+
+  EXPECT_CALL(*env_, GetPrimitiveArrayCritical(Eq(Fake<jintArray>()), _))
+      .WillOnce(::testing::Return(static_cast<void*>(Fake<jint*>())));
+  EXPECT_CALL(*env_, ReleasePrimitiveArrayCritical(Eq(Fake<jintArray>()),
+                                                 Eq(static_cast<void*>(Fake<jint*>())), 0));
+
+  EXPECT_CALL(*env_, GetPrimitiveArrayCritical(Eq(Fake<jlongArray>()), _))
+      .WillOnce(::testing::Return(static_cast<void*>(Fake<jlong*>())));
+  EXPECT_CALL(*env_, ReleasePrimitiveArrayCritical(Eq(Fake<jlongArray>()),
+                                                 Eq(static_cast<void*>(Fake<jlong*>())), 0));
+
+  EXPECT_CALL(*env_, GetPrimitiveArrayCritical(Eq(Fake<jfloatArray>()), _))
+      .WillOnce(::testing::Return(static_cast<void*>(Fake<jfloat*>())));
+  EXPECT_CALL(*env_, ReleasePrimitiveArrayCritical(Eq(Fake<jfloatArray>()),
+                                                 Eq(static_cast<void*>(Fake<jfloat*>())), 0));
+
+  EXPECT_CALL(*env_, GetPrimitiveArrayCritical(Eq(Fake<jdoubleArray>()), _))
+      .WillOnce(::testing::Return(static_cast<void*>(Fake<jdouble*>())));
+  EXPECT_CALL(*env_, ReleasePrimitiveArrayCritical(Eq(Fake<jdoubleArray>()),
+                                                 Eq(static_cast<void*>(Fake<jdouble*>())), 0));
+
+  LocalArray<jboolean> boolean_array{AdoptLocal{}, Fake<jbooleanArray>()};
+  LocalArray<jbyte> byte_array{AdoptLocal{}, Fake<jbyteArray>()};
+  LocalArray<jchar> char_array{AdoptLocal{}, Fake<jcharArray>()};
+  LocalArray<jshort> short_array{AdoptLocal{}, Fake<jshortArray>()};
+  LocalArray<jint> int_array{AdoptLocal{}, Fake<jintArray>()};
+  LocalArray<jlong> long_array{AdoptLocal{}, Fake<jlongArray>()};
+  LocalArray<jfloat> float_array{AdoptLocal{}, Fake<jfloatArray>()};
+  LocalArray<jdouble> double_array{AdoptLocal{}, Fake<jdoubleArray>()};
+
+  // Test using PinCritical convenience method
+  ArrayView<jboolean, 1> boolean_array_pin = {boolean_array.PinCritical()};
+  ArrayView<jbyte, 1> byte_array_pin = {byte_array.PinCritical()};
+  ArrayView<jint, 1> int_array_pin = {int_array.PinCritical()};
+  ArrayView<jchar, 1> char_array_pin = {char_array.PinCritical()};
+  ArrayView<jshort, 1> short_array_pin = {short_array.PinCritical()};
+  ArrayView<jlong, 1> long_array_pin = {long_array.PinCritical()};
+  ArrayView<jfloat, 1> float_array_pin = {float_array.PinCritical()};
+  ArrayView<jdouble, 1> double_array_pin = {double_array.PinCritical()};
+}
+
+TEST_F(JniTest, ArrayView_GetsAndReleaseWithExplicitAccessMode) {
+  EXPECT_CALL(*env_, GetIntArrayElements(Eq(Fake<jintArray>()), _))
+      .WillOnce(::testing::Return(Fake<jint*>()));
+  EXPECT_CALL(*env_, ReleaseIntArrayElements(Eq(Fake<jintArray>()),
+                                           Eq(Fake<jint*>()), 0));
+                                           
+  EXPECT_CALL(*env_, GetPrimitiveArrayCritical(Eq(Fake<jintArray>()), _))
+      .WillOnce(::testing::Return(static_cast<void*>(Fake<jint*>())));
+  EXPECT_CALL(*env_, ReleasePrimitiveArrayCritical(Eq(Fake<jintArray>()),
+                                                Eq(static_cast<void*>(Fake<jint*>())), 0));
+
+  LocalArray<jint> int_array{AdoptLocal{}, Fake<jintArray>()};
+  
+  // Test using Pin with explicit access mode
+  ArrayView<jint, 1> int_array_pin_regular = {
+      int_array.Pin(true, jni::ArrayAccessMode::REGULAR)};
+  ArrayView<jint, 1> int_array_pin_critical = {
+      int_array.Pin(true, jni::ArrayAccessMode::CRITICAL)};
+}
+
 TEST_F(JniTest, ArrayView_ConstructsFromAnObject) {
   static constexpr Class kClass{"kClass"};
   LocalArray<jobject, 1, kClass> local_obj_array{1, LocalObject<kClass>{}};
