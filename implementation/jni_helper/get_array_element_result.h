@@ -28,6 +28,12 @@ struct GetArrayElementsResult {
   jboolean is_copy;
 };
 
+// Enum to specify array access mode (regular vs. critical)
+enum class ArrayAccessMode {
+  REGULAR, // Uses Get*ArrayElements API
+  CRITICAL // Uses GetPrimitiveArrayCritical API
+};
+
 }  // namespace jni
 
 #endif  // JNI_BIND_IMPLEMENTATION_JNI_HELPER_GET_ARRAY_ELEMENT_RESULT_H_

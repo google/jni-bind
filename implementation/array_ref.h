@@ -55,8 +55,37 @@ class ArrayRef : public ScopedArrayImpl<JniT> {
 
   explicit ArrayRef(int size) : ArrayRef(static_cast<std::size_t>(size)) {}
 
-  ArrayView<SpanType, JniT::kRank> Pin(bool copy_on_completion = true) {
-    return {Base::object_ref_, copy_on_completion, Length()};
+  // Pin the array to get direct access to its elements
+  //
+  // copy_on_completion: Whether to copy changes back to the Java array when the
+  //                     ArrayView is destroyed (default: true)
+  // access_mode: The access mode to use (REGULAR for normal JNI access,
+  //              CRITICAL for GetPrimitiveArrayCritical)
+  //
+  // Returns: An ArrayView that provides access to the array elements
+  // 
+  // When access_mode is REGULAR, this uses the standard JNI Get*ArrayElements functions
+  // When access_mode is CRITICAL, this uses the JNI GetPrimitiveArrayCritical function
+  // which may provide a direct pointer to the array in the Java heap without copying
+  ArrayView<SpanType, JniT::kRank> Pin(bool copy_on_completion = true,
+                                    ArrayAccessMode access_mode = ArrayAccessMode::REGULAR) {
+    return {Base::object_ref_, copy_on_completion, Length(), access_mode};
+  }
+  
+  // Convenience method to access array using the critical API
+  //
+  // This uses GetPrimitiveArrayCritical which may provide direct access to the 
+  // array memory without copying. During critical access:
+  // - No other JNI calls should be made
+  // - The critical section should be as short as possible
+  // - The JVM's garbage collector may be blocked
+  //
+  // copy_on_completion: Whether to copy changes back to the Java array when the
+  //                     ArrayView is destroyed (default: true)
+  //
+  // Returns: An ArrayView that provides access to the array elements
+  ArrayView<SpanType, JniT::kRank> PinCritical(bool copy_on_completion = true) {
+    return Pin(copy_on_completion, ArrayAccessMode::CRITICAL);
   }
 
   std::size_t Length() {
@@ -96,8 +125,31 @@ class ArrayRefBase : public ScopedArrayImpl<JniT> {
                                static_cast<jobject>(obj))) {}
 
   // Object arrays cannot be efficiently pinned like primitive types can.
-  ArrayView<SpanType, JniT::kRank> Pin() {
-    return {Base::object_ref_, false, Length()};
+  // The access_mode parameter is ignored for object arrays as they cannot use
+  // the GetPrimitiveArrayCritical API.
+  //
+  // copy_on_completion: Whether to copy changes back to the Java array when the
+  //                     ArrayView is destroyed (default: false)
+  // access_mode: Ignored for object arrays
+  //
+  // Returns: An ArrayView that provides access to the array elements
+  ArrayView<SpanType, JniT::kRank> Pin(bool copy_on_completion = false,
+                                     ArrayAccessMode access_mode = ArrayAccessMode::REGULAR) {
+    return {Base::object_ref_, copy_on_completion, Length()};
+  }
+  
+  // For API consistency only - objects cannot use critical access
+  //
+  // Note: This method exists for API consistency, but object arrays
+  // cannot use GetPrimitiveArrayCritical. This call is equivalent to
+  // calling Pin() with REGULAR access mode.
+  //
+  // copy_on_completion: Whether to copy changes back to the Java array when the
+  //                     ArrayView is destroyed (default: false)
+  //
+  // Returns: An ArrayView that provides access to the array elements
+  ArrayView<SpanType, JniT::kRank> PinCritical(bool copy_on_completion = false) {
+    return Pin(copy_on_completion, ArrayAccessMode::REGULAR);
   }
 
   std::size_t Length() {

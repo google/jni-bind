@@ -600,3 +600,69 @@ java_test(
         "@maven//:org_mockito_mockito_core",
     ],
 )
+
+################################################################################
+# Array Test: Critical vs Regular Access
+################################################################################
+cc_library(
+    name = "array_test_critical_jni_impl",
+    testonly = True,
+    srcs = ["array_test_critical_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
+    deps = [
+        "//:jni_bind",
+    ],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libarray_test_critical_jni.so",
+    testonly = True,
+    linkshared = True,
+    deps = [":array_test_critical_jni_impl"],
+)
+
+java_test(
+    name = "ArrayTestCritical",
+    testonly = True,
+    srcs = ["ArrayTestCritical.java"],
+    data = [":libarray_test_critical_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
+    deps = [
+        "@maven//:junit_junit",
+    ],
+)
+
+################################################################################
+# Array Test: Multiple Types with Direct/Indirect Access
+################################################################################
+cc_library(
+    name = "array_test_multitype_jni_impl",
+    testonly = True,
+    srcs = ["array_test_multitype_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
+    deps = [
+        "//:jni_bind",
+    ],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libarray_test_multitype_jni.so",
+    testonly = True,
+    linkshared = True,
+    deps = [":array_test_multitype_jni_impl"],
+)
+
+java_test(
+    name = "ArrayTestMultitype",
+    testonly = True,
+    srcs = ["ArrayTestMultitype.java"],
+    data = [":libarray_test_multitype_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
+    deps = [
+        "@maven//:junit_junit",
+    ],
+)
