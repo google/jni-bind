@@ -32,6 +32,8 @@ Check out the slides above! If you're enjoying JNI Bind, or just want to support
 ## Table of Contents
 - [Quick Intro](#quick-intro)
 - [Installation](#installation-without-bazel)
+  - [With CMake](#installation-with-cmake)
+  - [With Bazel](#installation-with-bazel)
 - [Usage](#usage)
   - [Classes](#classes)
   - [Local and Global Objects](#local-and-global-objects)
@@ -93,6 +95,19 @@ There are [sample tests](javatests/com/jnibind/test/) which can be a good way to
 If you want to jump right in, copy [jni_bind_release.h](jni_bind_release.h) into your own project. The header itself is an automatically generated "flattened" version of the Bazel dependency set, so this documentation is a simpler introduction to `JNI Bind` than reading the header directly.
 
 You are responsible for ensuring `#include <jni.h>` compiles when you include `JNI Bind`.
+
+<a name="installation-with-cmake"></a>
+## Installation *with CMake*
+
+JNI Bind now includes CMake support. See [CMAKE.md](CMAKE.md) for detailed instructions.
+
+```bash
+# Quick start:
+mkdir cmake-build && cd cmake-build
+cmake ..
+cmake --build .
+cmake --install .
+```
 
 <a name="installation-with-bazel"></a>
 ## Installation *with Bazel*
