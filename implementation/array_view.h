@@ -122,7 +122,8 @@ class ArrayView {
   Iterator begin() { return Iterator{ptr(), size_, 0}; }
   Iterator end() { return Iterator{ptr(), size_, size_}; }
 
- protected:
+ public:
+  // These members are protected for access by tests
   const jarray array_;
   const GetArrayElementsResult<SpanType> get_array_elements_result_;
   const bool copy_on_completion_;
