@@ -1,0 +1,70 @@
+{
+    "version": 6,
+
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
+
+    "configurePresets": [
+        {
+            "hidden": true,
+            "name": "msvc-16-base",
+            "generator": "Visual Studio 16 2019",
+            "binaryDir": "${sourceDir}/cmake_build",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            }
+        },
+        {
+            "name": "msvc-16-config-debug",
+            "inherits": "msvc-16-base",
+            "installDir": "${sourceDir}/cmake_install/Debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "msvc-16-config-release",
+            "inherits": "msvc-16-base",
+            "installDir": "${sourceDir}/cmake_install/Release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ],
+
+    "buildPresets": [
+        {
+            "name": "msvc-16-build-debug",
+            "configurePreset": "msvc-16-config-debug",
+            "configuration": "Debug",
+            "jobs": 4
+        },
+        {
+            "name": "msvc-16-build-release",
+            "configurePreset": "msvc-16-config-release",
+            "configuration": "Release",
+            "jobs": 4
+        }
+    ],
+
+    "testPresets": [
+        {
+            "name": "msvc-16-test-debug",
+            "configurePreset": "msvc-16-config-debug",
+            "configuration": "Debug",
+            "output": {
+                "outputOnFailure": true,
+                "verbosity": "verbose"
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            }
+        }
+    ]
+
+}
