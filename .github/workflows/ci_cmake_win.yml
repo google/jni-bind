@@ -7,13 +7,12 @@ on:
 #    branches: [ "main" ]
 
 jobs:
-  windows-latest-cpp20-cmake-mvsc:
-    runs-on: windows-latest
+  windows-2019-cpp20-cmake-mvsc:
+    runs-on: windows-2019
     steps:
     - name: checkout
       uses: actions/checkout@v4
     - name: cmake build
       run: |
-        where cmake
         cmake --preset msvc-16-config-debug
         cmake --build --preset msvc-16-build-debug
