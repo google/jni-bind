@@ -1,0 +1,19 @@
+name: JNI Bind Build/Test Status
+
+on:
+  push:
+    branches: [ "feature/240_cmake" ]
+#  pull_request:
+#    branches: [ "main" ]
+
+jobs:
+  windows-latest-cpp20-cmake-mvsc:
+    runs-on: windows-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+    - name: cmake build
+      run: |
+        where cmake
+        cmake --preset msvc-16-config-debug
+        cmake --build --preset msvc-16-build-debug
