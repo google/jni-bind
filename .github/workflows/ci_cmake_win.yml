@@ -12,7 +12,7 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v4
+    - name: cmake configure
+      run: cmake --preset msvc-16-config-debug
     - name: cmake build
-      run: |
-        cmake --preset msvc-16-config-debug
-        cmake --build --preset msvc-16-build-debug
+      run: cmake --build --preset msvc-16-build-debug
