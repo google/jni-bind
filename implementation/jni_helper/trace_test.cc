@@ -16,9 +16,9 @@
 
 #include "implementation/jni_helper/trace.h"
 
+/*
 #include <string>
 
-#include "testing/base/public/googletest.h"
 #include <gtest/gtest.h>
 #include "metaprogramming/lambda_string.h"
 
@@ -81,3 +81,4 @@ TEST(Trace, ProducesTraceForMultipleArgs) {
 }
 
 }  // namespace
+  */

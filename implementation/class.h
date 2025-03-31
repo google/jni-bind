@@ -172,13 +172,12 @@ struct Class<Extends_, std::tuple<Constructors_...>,
 ////////////////////////////////////////////////////////////////////////////////
 // Equality operators.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename LhsParentClass, typename... LhsParams,
-          typename... LhsConstructors, typename... LhsStaticMethods,
-          typename... LhsStaticFields, typename... LhsFields,
-          typename... LhsMethods, typename RhsParentClass,
-          typename... RhsParams, typename... RhsConstructors,
-          typename... RhsStaticMethods, typename... RhsStaticFields,
-          typename... RhsFields, typename... RhsMethods>
+template <
+    typename LhsParentClass, typename... LhsParams, typename... LhsConstructors,
+    typename... LhsStaticMethods, typename... LhsStaticFields,
+    typename... LhsFields, typename... LhsMethods, typename RhsParentClass,
+    typename... RhsConstructors, typename... RhsStaticMethods,
+    typename... RhsStaticFields, typename... RhsFields, typename... RhsMethods>
 constexpr bool operator==(
     const Class<LhsParentClass, std::tuple<LhsConstructors...>,
                 std::tuple<Static<std::tuple<LhsStaticMethods...>,

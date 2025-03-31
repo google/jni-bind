@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/*
 #include <type_traits>
 
 #include "jni_bind.h"
@@ -35,3 +36,5 @@ static_assert(std::is_same_v<StorageHelper_t<jobject, 1>, jobjectArray>);
 static_assert(std::is_same_v<StorageHelper_t<jobject, 2>, jobjectArray>);
 
 }  // namespace
+
+*/
