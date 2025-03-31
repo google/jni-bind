@@ -25,16 +25,18 @@
 
 namespace jni {
 
-struct ExtendsBase {};
-
-struct RootObject {
-  constexpr RootObject() = default;
+struct ExtendsBase {
+  constexpr ExtendsBase() {}
 };
 
-static constexpr RootObject kObject{};
+struct RootObject {
+  constexpr RootObject() {}
+};
 
-static constexpr struct NoClass {
-  // For compatability reasons, this must be defined (not default) because some
+constexpr RootObject kObject{};
+
+constexpr struct NoClass {
+  // For compatibility reasons, this must be defined (not default) because some
   // compilers will complain about defaulted constructors being deleted.
   constexpr NoClass() {}
 
