@@ -82,6 +82,27 @@ struct Proxy<CharType,
                                   IsConvertibleKey<T>::template value<jchar>;
 };
 
+// jint is differently sized on Windows platforms. This surely leads to widening
+// issues for lay developers, but we will try to silently widen for them.
+template <typename IntType>
+struct Proxy<IntType, typename std::enable_if_t<std::is_same_v<IntType, jint> &&
+                                                !std::is_same_v<int, jint>>>
+    : public ProxyBase<jint> {
+  using AsArg = std::tuple<int, jint>;
+  using AsDecl = std::tuple<int, jint>;
+
+  template <typename OverloadSelection, typename T>
+  static constexpr bool kViable = IsConvertibleKey<T>::template value<jint> ||
+                                  IsConvertibleKey<T>::template value<int>;
+
+  static jint ProxyAsArg(jint val) { return val; }
+
+  template <typename T, typename = std::enable_if_t<std::is_same_v<T, int>>>
+  static jint ProxyAsArg(T val) {
+    return static_cast<jint>(val);
+  }
+};
+
 template <typename BooleanType>
 struct Proxy<BooleanType,
              typename std::enable_if_t<std::is_same_v<BooleanType, jboolean>>>

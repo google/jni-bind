@@ -1,4 +1,5 @@
 bazel*
 .vscode
 MODULE.bazel.lock
-cmake-build
+cmake_build
+cmake_install
