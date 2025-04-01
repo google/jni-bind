@@ -54,7 +54,7 @@ class SampleClassNowExposingCallOperator1
   friend class jni::metaprogramming::InvocableMapEntry;
 
   template <size_t I, typename... Args>
-  auto InvocableMapCall(const char* key, Args&&... ts) {
+  auto InvocableMapCall(const char* key, Args&&... ts) const {
     if (std::string_view(key) == "Foo") {
       EXPECT_TRUE(I == 0);
       EXPECT_TRUE((std::is_same_v<std::tuple<Args...>, std::tuple<int>>));
@@ -99,7 +99,7 @@ class SampleClassNowExposingCallOperator2
   friend class jni::metaprogramming::InvocableMapEntry;
 
   template <size_t I, typename... Args>
-  auto InvocableMapCall(const char* key, Args&&... args) {
+  auto InvocableMapCall(const char* key, Args&&... args) const {
     if (std::string_view(key) == "Fizz") {
       EXPECT_TRUE(I == 0);
       EXPECT_TRUE((std::is_same_v<std::tuple<Args...>, std::tuple<int>>));
