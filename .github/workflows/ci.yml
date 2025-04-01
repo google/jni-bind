@@ -2,9 +2,9 @@ name: JNI Bind Build/Test Status
 
 on:
   push:
-    branches: '*'
+    branches: [ "main" ]
   pull_request:
-    branches: '*'
+    branches: [ "main" ]
 
 permissions:
   contents: read
