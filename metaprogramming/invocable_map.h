@@ -96,14 +96,15 @@ class InvocableMapEntry {
   // the constexpr-ness of the string can't be propagated.  This essentially
   // means you get one shot at defining the function.
   template <typename... Args>
-  constexpr auto operator()(const char* key, Args&&... args) __attribute__((
-      enable_if(std::string_view(key) ==
-                    std::get<I>(tup_container_v.*nameable_member).name_,
-                ""))) {
+  constexpr auto operator()(const char* key, Args&&... args) const
+      __attribute__((
+          enable_if(std::string_view(key) ==
+                        std::get<I>(tup_container_v.*nameable_member).name_,
+                    ""))) {
     static_assert(std::is_base_of_v<InvocableMapEntry, CrtpBase>,
                   "You must derive from the invocable map.");
 
-    return (*static_cast<CrtpBase*>(this))
+    return (*static_cast<const CrtpBase*>(this))
         .template InvocableMapCall<I, Args...>(key,
                                                std::forward<Args>(args)...);
   }

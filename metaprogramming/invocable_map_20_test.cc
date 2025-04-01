@@ -53,7 +53,7 @@ class SampleClassNowExposingCallOperator1
                         &NameContainer::container1_>;
 
   template <size_t I, StringLiteral key_literal, typename... Args>
-  auto InvocableMap20Call(Args&&... ts) {
+  auto InvocableMap20Call(Args&&... ts) const {
     if (std::string_view(key_literal.value) == "Foo") {
       EXPECT_TRUE(I == 0);
       EXPECT_TRUE((std::is_same_v<std::tuple<Args...>, std::tuple<int>>));
