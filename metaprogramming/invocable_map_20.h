@@ -64,8 +64,8 @@ class InvocableMap20 {
 #if __cplusplus >= 202002L
  public:
   template <StringLiteral key_literal, std::size_t Idx, typename... Args>
-  constexpr auto Do(Args&&... args) {
-    return (*static_cast<CrtpBase*>(this))
+  constexpr auto Do(Args&&... args) const {
+    return (*static_cast<const CrtpBase*>(this))
         .template InvocableMap20Call<Idx, key_literal, Args...>(
             std::forward<Args>(args)...);
   }
@@ -82,7 +82,7 @@ class InvocableMap20 {
   }
 
   template <StringLiteral string_literal, typename... Args>
-  constexpr auto Call(Args&&... args) {
+  constexpr auto Call(Args&&... args) const {
     return Do<string_literal,
               SelectCandidate(
                   string_literal,
