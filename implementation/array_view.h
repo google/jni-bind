@@ -111,6 +111,9 @@ class ArrayView {
     return get_array_elements_result_.ptr_;
   }
 
+  // Arrays of rank > 1 are object arrays which are not contiguous.
+  std::size_t size() { return size_; }
+
   Iterator begin() { return Iterator{ptr(), size_, 0}; }
   Iterator end() { return Iterator{ptr(), size_, size_}; }
 
