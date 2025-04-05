@@ -1208,26 +1208,6 @@ cc_library(
 )
 
 cc_library(
-    name = "vals_equal",
-    hdrs = ["vals_equal.h"],
-
-    # This is incompatibel with MSVC, do not use.
-    visibility = ["//visibility:private"],
-    deps = [":vals"],
-)
-
-cc_test(
-    name = "vals_equal_test",
-    srcs = ["vals_equal_test.cc"],
-    tags = ["manual"],
-    deps = [
-        ":vals",
-        ":vals_equal",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "vals_equal_diminished",
     hdrs = ["vals_equal_diminished.h"],
     deps = [":vals"],
