@@ -6701,8 +6701,8 @@ class InvocableMap20 {
 #if __cplusplus >= 202002L
  public:
   template <StringLiteral key_literal, std::size_t Idx, typename... Args>
-  constexpr auto Do(Args&&... args) {
-    return (*static_cast<CrtpBase*>(this))
+  constexpr auto Do(Args&&... args) const {
+    return (*static_cast<const CrtpBase*>(this))
         .template InvocableMap20Call<Idx, key_literal, Args...>(
             std::forward<Args>(args)...);
   }
@@ -6719,7 +6719,7 @@ class InvocableMap20 {
   }
 
   template <StringLiteral string_literal, typename... Args>
-  constexpr auto Call(Args&&... args) {
+  constexpr auto Call(Args&&... args) const {
     return Do<string_literal,
               SelectCandidate(
                   string_literal,
@@ -6811,14 +6811,15 @@ class InvocableMapEntry {
   // the constexpr-ness of the string can't be propagated.  This essentially
   // means you get one shot at defining the function.
   template <typename... Args>
-  constexpr auto operator()(const char* key, Args&&... args) __attribute__((
-      enable_if(std::string_view(key) ==
-                    std::get<I>(tup_container_v.*nameable_member).name_,
-                ""))) {
+  constexpr auto operator()(const char* key, Args&&... args) const
+      __attribute__((
+          enable_if(std::string_view(key) ==
+                        std::get<I>(tup_container_v.*nameable_member).name_,
+                    ""))) {
     static_assert(std::is_base_of_v<InvocableMapEntry, CrtpBase>,
                   "You must derive from the invocable map.");
 
-    return (*static_cast<CrtpBase*>(this))
+    return (*static_cast<const CrtpBase*>(this))
         .template InvocableMapCall<I, Args...>(key,
                                                std::forward<Args>(args)...);
   }
