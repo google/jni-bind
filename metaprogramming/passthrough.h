@@ -50,22 +50,26 @@ struct Passthrough {
 };
 
 template <typename T, typename U, typename CustomDeleter>
-bool operator==(const T& lhs, const Passthrough<U, CustomDeleter>& rhs) {
+constexpr bool operator==(const T& lhs,
+                          const Passthrough<U, CustomDeleter>& rhs) {
   return lhs == static_cast<T>(rhs.t_);
 }
 
 template <typename T, typename U, typename CustomDeleter>
-bool operator==(const Passthrough<U, CustomDeleter>& lhs, const T& rhs) {
+bool constexpr operator==(const Passthrough<U, CustomDeleter>& lhs,
+                          const T& rhs) {
   return static_cast<T>(lhs.t_) == rhs;
 }
 
 template <typename T, typename U, typename CustomDeleter>
-bool operator!=(const T& lhs, const Passthrough<U, CustomDeleter>& rhs) {
+constexpr bool operator!=(const T& lhs,
+                          const Passthrough<U, CustomDeleter>& rhs) {
   return !(lhs == rhs);
 }
 
 template <typename T, typename U, typename CustomDeleter>
-bool operator!=(const Passthrough<U, CustomDeleter>& lhs, const T& rhs) {
+constexpr bool operator!=(const Passthrough<U, CustomDeleter>& lhs,
+                          const T& rhs) {
   return !(lhs == rhs);
 }
 

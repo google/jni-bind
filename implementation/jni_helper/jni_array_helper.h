@@ -290,7 +290,7 @@ struct JniArrayHelper<jint, 1> : public JniArrayHelperBase {
 #endif  // DRY_RUN
   }
 
-  static inline void ReleaseArrayElements(jarray array, int* native_ptr,
+  static inline void ReleaseArrayElements(jarray array, jint* native_ptr,
                                           bool copy_on_completion) {
     Trace(
         metaprogramming::LambdaToStr(STR("ReleaseArrayElements, jint, Rank 1")),
