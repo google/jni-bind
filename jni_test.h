@@ -31,7 +31,6 @@
 #endif
 
 namespace jni::test {
-
 static constexpr std::size_t kGlobalOffset = 0xBABA0000000000;
 static constexpr std::size_t kCopyOffset = 0X100000000000A0;
 
@@ -65,7 +64,7 @@ inline jobject AsGlobal(jobject object) {
 // JniTest that provides some simple fake behaviour when using mock JNIEnv and
 // mock JVM objects.  To skip setting up JvmRef (typical usage), use JniTest.
 class JniTestWithNoDefaultJvmRef : public ::testing::Test {
- public:
+public:
   // Notably, there is no TearDown call that calls Jvm::Destroy, but this is
   // fine, as calling DetachCurrentThread doesn't matter for unit testing.
   void SetUp() override {
@@ -79,19 +78,20 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
     // args.  If a different jni.h is used for testing, this would likely need
     // to be updated.
     static_assert(std::is_same_v<metaprogramming::FunctionTraitsArg_t<
-                                     decltype(&JavaVM::AttachCurrentThread), 1>,
+                                   decltype(&JavaVM::AttachCurrentThread), 1>,
                                  void**>);
 
     ON_CALL(*jvm_, GetEnv)
         .WillByDefault(testing::Invoke([&](void** out_env, int vs_code) {
-          *reinterpret_cast<JNIEnv**>(out_env) = env_.get();
-          return JNI_OK;
-        }));
+                            *reinterpret_cast<JNIEnv**>(out_env) = env_.get();
+                            return JNI_OK;
+                          }));
     ON_CALL(*jvm_, AttachCurrentThread)
         .WillByDefault(testing::Invoke([&](void** out_env, void*) {
-          *reinterpret_cast<JNIEnv**>(out_env) = env_.get();
-          return JNI_OK;
-        }));
+                                         *reinterpret_cast<JNIEnv**>(out_env) =
+                                             env_.get();
+                                         return JNI_OK;
+                                       }));
 
     // It's tedious to have logic in unit tests for the creation and destruction
     // of the global objects for jclasses.  This gives reasonable non-null
@@ -114,17 +114,21 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
 
     ON_CALL(*env_, NewLocalRef)
         .WillByDefault(testing::Invoke(
-            [&](jobject object) { return AsNewLocalReference(object); }));
+                                   [&](jobject object) {
+                                     return AsNewLocalReference(object);
+                                   }));
 
     ON_CALL(*env_, NewGlobalRef)
         .WillByDefault(testing::Invoke([&](jobject object) {
-          jobject return_value = AsGlobal(object);
-          if (return_value == AsGlobal(Fake<jclass>())) {
-            default_globals_made_that_should_be_released_.push_back(
-                return_value);
-          }
-          return return_value;
-        }));
+                                  jobject return_value = AsGlobal(object);
+                                  if (return_value ==
+                                      AsGlobal(Fake<jclass>())) {
+                                    default_globals_made_that_should_be_released_
+                                        .push_back(
+                                            return_value);
+                                  }
+                                  return return_value;
+                                }));
   }
 
   void TearDown() override {
@@ -136,7 +140,7 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
     default_globals_made_that_should_be_released_.clear();
   }
 
- protected:
+protected:
   std::vector<jobject> default_globals_made_that_should_be_released_;
 
   std::unique_ptr<MockJvm> jvm_;
@@ -146,7 +150,7 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
 // Standard test with default Jvm setup and teardown.
 // Set expectations on inherited members |jvm_| and |env_|.
 class JniTest : public JniTestWithNoDefaultJvmRef {
- public:
+public:
   void SetUp() override {
     // This mimics a JNI_OnLoad call.
     // https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/invocation.html#JNJI_OnLoad
@@ -165,7 +169,6 @@ class JniTest : public JniTestWithNoDefaultJvmRef {
 
   std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> default_jvm_ref_;
 };
-
-}  // namespace jni::test
+} // namespace jni::test
 
 #endif  // JNI_BIND_JNI_TEST_H_
