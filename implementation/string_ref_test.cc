@@ -49,6 +49,7 @@ static constexpr jni::Class kClass{
     jni::Method{"TakesStrParam", jni::Return<void>{}, jni::Params<jstring>{}},
 };
 
+  /*
 ////////////////////////////////////////////////////////////////////////////////
 // Local String Tests.
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,6 +234,52 @@ TEST_F(JniTest, GlobalString_AllowsLValueGlobalString) {
 TEST_F(JniTest, GlobalString_AllowsRValueGlobalString) {
   LocalObject<kClass> obj{};
   obj.Call<"TakesStrParam">(GlobalString{"abcde"});
+}
+*/
+
+TEST_F(JniTest, AllocationThrash)
+{
+  int i = 0;
+  //while (true)
+  for (int i = 0; i < 1; i++)
+  {
+    //for (int j = 0; j < 10000; j++)
+    for (int j = 0; j < 1; j++)
+    {
+      /*
+      LocalString str = "akdfajslkfaskflj"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs"
+      "alkdsjklafjkldsajklfasdjldasfjklasdfkjdlasfkjdsafljafs";
+      */
+      LocalString str { "akdfajslkfaskflj" };
+    }
+
+    i++;
+    if (i % 100 == 0)
+    {
+      std::cout << "Iteration: " << i << std::endl;
+      // I even tried to manually call gc, but it has no effect in this case.
+    }
+  }
 }
 
 }  // namespace

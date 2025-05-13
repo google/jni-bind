@@ -93,7 +93,7 @@ struct OverloadRef {
   }
 
   template <typename... Params>
-  static ReturnProxied Invoke(jclass clazz, jobject object,
+  static auto Invoke(jclass clazz, jobject object,
                               Params&&... params) {
     constexpr std::size_t kRank = ReturnIdT::kRank;
     constexpr bool kStatic = ReturnIdT::kIsStatic;
@@ -104,11 +104,20 @@ struct OverloadRef {
           object, clazz, mthd,
           Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
     } else if constexpr (IdT::kIsConstructor) {
-      return ReturnProxied{
+      if constexpr (std::is_same_v<typename IdT::_JniT::SpanType, jstring> && IdT::kRank == 0)
+      {
+        return LocalString{
+          AdoptLocal{},
+              Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...
+        };
+      } else
+      {
+        return ReturnProxied{
           AdoptLocal{},
           LifecycleHelper<jobject, LifecycleType::LOCAL>::Construct(
               clazz, mthd,
               Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
+      }
     } else {
       if constexpr (std::is_base_of_v<RefBaseBase, ReturnProxied>) {
         return ReturnProxied{
