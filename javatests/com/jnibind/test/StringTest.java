@@ -146,11 +146,4 @@ public final class StringTest {
   public void globalReturnsCorrectlyOverJniBoundary() {
     jniReturnsAGlobalString();
   }
-
-  native void nativeAllocationThrash();
-
-  @Test
-  public void allocationThrash() {
-    nativeAllocationThrash();
-  }
 }

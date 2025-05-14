@@ -48,11 +48,6 @@ class LocalString : public LocalStringImpl {
   using Base = LocalStringImpl;
   using Base::Base;
 
-  ~LocalString()
-  {
-      printf("~LocalString\n");
-  }
-
   LocalString(LocalObject<kJavaLangString>&& obj)
       : Base(AdoptLocal{}, static_cast<jstring>(obj.Release())) {}
 
