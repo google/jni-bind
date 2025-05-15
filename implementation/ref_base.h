@@ -24,20 +24,23 @@
 #include "implementation/jni_helper/lifecycle.h"
 
 namespace jni {
-
-struct RefBaseBase {};
+struct RefBaseBase {
+};
 
 // Used to detect RefBase in type proxying.
 // This is useful, e.g. when you want to say "an object that might be passed"
 // but the object's type (i.e. full name + loader information) is unknown.
-template <typename StorageType>
+template <typename StorageType_>
 class RefBase : public RefBaseBase {
- public:
+public:
   template <typename Base, LifecycleType lifecycleType, typename JniT,
             typename ViableSpan>
   friend struct EntryBase;
 
-  RefBase(StorageType object) : object_ref_(object) {}
+  using StorageType = StorageType_;
+
+  RefBase(StorageType object) : object_ref_(object) {
+  }
 
   RefBase(const RefBase& rhs) = delete;
 
@@ -48,7 +51,8 @@ class RefBase : public RefBaseBase {
 
   template <typename T,
             typename = std::enable_if_t<std::is_same_v<T, StorageType>>>
-  RefBase(RefBase<T>&& rhs) : object_ref_(rhs.Release()) {}
+  RefBase(RefBase<T>&& rhs) : object_ref_(rhs.Release()) {
+  }
 
   // Releases ownership of the underlying object, further use is undefined.
   StorageType Release() {
@@ -57,9 +61,12 @@ class RefBase : public RefBaseBase {
 
     return return_value;
   }
-  explicit operator StorageType() const { return object_ref_; }
 
- protected:
+  explicit operator StorageType() const {
+    return object_ref_;
+  }
+
+protected:
   StorageType object_ref_ = nullptr;
 };
 
@@ -67,6 +74,11 @@ class RefBase : public RefBaseBase {
 template <typename T>
 using RefBaseT_t = typename T::RefBaseT;
 
-}  // namespace jni
+template <typename T>
+using RefBaseStorageT_t = typename T::StorageType;
+
+//==============================================================================
+
+} // namespace jni
 
 #endif  // JNI_BIND_REF_BASE_H_

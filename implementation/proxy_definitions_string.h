@@ -32,12 +32,12 @@
 #include "implementation/jni_helper/lifecycle_string.h"
 #include "implementation/jvm.h"
 #include "implementation/proxy.h"
+#include "implementation/proxy_temporary.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
 
 namespace jni {
-
 template <typename JString>
 struct Proxy<JString,
              typename std::enable_if_t<std::is_same_v<JString, jstring>>>
@@ -68,22 +68,39 @@ struct Proxy<JString,
       IsConvertibleKey<T>::template value<std::string_view> ||
       std::is_same_v<T, LocalString> || std::is_same_v<T, GlobalString>;
 
+  static constexpr auto DeleteLambda = [](const jstring& s) {
+    JniEnv::GetEnv()->DeleteLocalRef(static_cast<jobject>(s));
+  };
+
+  struct DeleteLocalRef {
+    static void Call(const jstring& s) {
+      JniEnv::GetEnv()->DeleteLocalRef(static_cast<jobject>(s));
+    }
+  };
+
   // These leak local instances of strings.  Usually, RAII mechanisms would
   // correctly release local instances, but here we are stripping that so it can
   // be used in a method.  This could be obviated by wrapping the calling scope
   // in a local stack frame.
-  static jstring ProxyAsArg(jstring s) { return s; }
+  //static ProxyTemporary<jstring, DeleteLocalRef> ProxyAsArg(jstring s) {
+  static jstring ProxyAsArg(jstring s) {
+    //LocalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm> obj{"afsd"};
+
+    //return {s};
+    return s;
+  }
 
   template <typename T,
             typename = std::enable_if_t<std::is_same_v<T, const char*> ||
                                         std::is_same_v<T, std::string> ||
                                         std::is_same_v<T, std::string_view>>>
-  static jstring ProxyAsArg(T s) {
+ // static jstring ProxyAsArg(T s) {
+ static ProxyTemporary<jstring, DeleteLocalRef> ProxyAsArg(T s) {
     if constexpr (std::is_same_v<T, const char*>) {
-      return LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s);
+      return {LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s)};
     } else {
-      return LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(
-          s.data());
+      return {LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(
+          s.data())};
     }
   }
 
@@ -101,7 +118,6 @@ struct Proxy<JString,
     return t.Release();
   }
 };
-
-}  // namespace jni
+} // namespace jni
 
 #endif  // JNI_BIND_IMPLEMENTATION_PROXY_DEFINITIONS_STRING_H_
