@@ -53,7 +53,7 @@ struct FieldHelper<jboolean, 0, false, void> {
   }
 
   static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jboolean&& value) {
+                              const jfieldID field_ref_, jboolean value) {
     Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
           field_ref_);
 
@@ -79,7 +79,7 @@ struct FieldHelper<jbyte, 0, false, void> {
   }
 
   static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jbyte&& value) {
+                              const jfieldID field_ref_, jbyte value) {
     Trace(metaprogramming::LambdaToStr(STR("SetByteValue")), object_ref,
           field_ref_);
 
@@ -105,7 +105,7 @@ struct FieldHelper<jchar, 0, false, void> {
   }
 
   static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jchar&& value) {
+                              const jfieldID field_ref_, jchar value) {
     Trace(metaprogramming::LambdaToStr(STR("SetCharValue")), object_ref,
           field_ref_);
 
@@ -131,7 +131,7 @@ struct FieldHelper<jshort, 0, false, void> {
   }
 
   static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jshort&& value) {
+                              const jfieldID field_ref_, jshort value) {
     Trace(metaprogramming::LambdaToStr(STR("SetShortValue")), object_ref,
           field_ref_);
 
@@ -157,7 +157,7 @@ struct FieldHelper<jint, 0, false, void> {
   }
 
   static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jint&& value) {
+                              const jfieldID field_ref_, jint value) {
     Trace(metaprogramming::LambdaToStr(STR("SetIntValue")), object_ref,
           field_ref_);
 
@@ -183,7 +183,7 @@ struct FieldHelper<jlong, 0, false, void> {
   }
 
   static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jlong&& value) {
+                              const jfieldID field_ref_, jlong value) {
     Trace(metaprogramming::LambdaToStr(STR("SetLongField")), object_ref,
           field_ref_);
 
@@ -209,7 +209,7 @@ struct FieldHelper<jfloat, 0, false, void> {
   }
 
   static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jfloat&& value) {
+                              const jfieldID field_ref_, jfloat value) {
     Trace(metaprogramming::LambdaToStr(STR("SetFloatField")), object_ref,
           field_ref_);
 
@@ -235,7 +235,7 @@ struct FieldHelper<jdouble, 0, false, void> {
   }
 
   static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jdouble&& value) {
+                              const jfieldID field_ref_, jdouble value) {
     Trace(metaprogramming::LambdaToStr(STR("SetDoubleField")), object_ref,
           field_ref_);
 
@@ -261,7 +261,7 @@ struct FieldHelper<jobject, 0, false, void> {
   }
 
   static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jobject&& new_value) {
+                              const jfieldID field_ref_, jobject new_value) {
     Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
           field_ref_);
 
@@ -288,7 +288,7 @@ struct FieldHelper<jstring, 0, false, void> {
   }
 
   static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, jstring&& new_value) {
+                              const jfieldID field_ref_, jstring new_value) {
     Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
           field_ref_);
 

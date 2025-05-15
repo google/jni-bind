@@ -111,6 +111,7 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
     ON_CALL(*env_, GetFieldID).WillByDefault(Return(Fake<jfieldID>()));
     ON_CALL(*env_, NewObjectArray).WillByDefault(Return(Fake<jobjectArray>()));
     ON_CALL(*env_, NewObjectV).WillByDefault(Return(Fake<jobject>()));
+    ON_CALL(*env_, NewStringUTF).WillByDefault(Return(Fake<jstring>()));
 
     ON_CALL(*env_, NewLocalRef)
         .WillByDefault(testing::Invoke(

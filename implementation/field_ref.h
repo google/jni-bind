@@ -22,8 +22,10 @@
 #include <cstddef>
 #include <type_traits>
 #include <utility>
+#include <utility>
 #include <vector>
 
+#include "implementation/proxy_temporary.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_selection.h"
 #include "implementation/id.h"
@@ -113,10 +115,13 @@ class FieldRef {
 
   template <typename T>
   void Set(T&& value) {
+    fprintf(stderr, "pre field set\n");
     FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
                 IdT::kIsStatic>::SetValue(SelfVal(), GetFieldID(class_ref_),
-                                          Proxy_t<T>::ProxyAsArg(
-                                              std::forward<T>(value)));
+                                          ForwardWithRefStrip(
+                                              Proxy_t<T>::ProxyAsArg(
+                                                  std::forward<T>(value))));
+    fprintf(stderr, "post field set\n");
   }
 
  private:

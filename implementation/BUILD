@@ -294,6 +294,7 @@ cc_library(
     name = "field_ref",
     hdrs = ["field_ref.h"],
     deps = [
+        ":proxy_temporary",
         ":default_class_loader",
         ":field_selection",
         ":id",
@@ -788,6 +789,7 @@ cc_library(
     name = "method_ref",
     hdrs = ["overload_ref.h"],
     deps = [
+        ":proxy_temporary",
         ":configuration",
         ":id_type",
         ":promotion_mechanics_tags",
@@ -1052,6 +1054,7 @@ cc_library(
     name = "proxy_definitions_string",
     hdrs = ["proxy_definitions_string.h"],
     deps = [
+        ":proxy_temporary",
         ":default_class_loader",
         ":forward_declarations",
         ":jvm",
@@ -1074,6 +1077,14 @@ cc_test(
         "//metaprogramming:type_to_type_map",
         "@googletest//:gtest_main",
     ],
+)
+
+################################################################################
+# ProxyTemporary.
+################################################################################
+cc_library(
+    name = "proxy_temporary",
+    hdrs = ["proxy_temporary.h"],
 )
 
 ################################################################################
