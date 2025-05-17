@@ -3814,6 +3814,55 @@ struct SelectorStaticInfo {
 
 }  // namespace jni
 
+#include <type_traits>
+#include <utility>
+
+namespace jni {
+
+struct ProxyTemporaryBase {};
+
+// Some values built in proxy_definitions are intended to be ephemeral.
+// Because the full decorated LocalObject is not defined, we use this
+// class to proxy the value for the duration of `ProxyAsArg`, but allow it to
+// immediately be destroyed after the call.
+//
+// See https://github.com/google/jni-bind/issues/414.
+template <typename T, typename DtorLambda>
+struct ProxyTemporary : ProxyTemporaryBase {
+  ProxyTemporary(T t) : t_(t) {}
+
+  ~ProxyTemporary() { DtorLambda::Call(t_); }
+
+  const T& Get() const { return t_; }
+
+  T t_;
+};
+
+namespace detail {
+
+template <typename T>
+const auto& ForwardWithProxyTemporaryStripImpl(
+    T&& t, std::true_type /* is_ref_base */) {
+  return t.Get();
+}
+
+template <typename T>
+decltype(auto) ForwardWithProxyTemporaryStripImpl(
+    T&& t, std::false_type /* not ref base */) {
+  return std::forward<T>(t);  // perfect forward
+}
+
+}  // namespace detail
+
+template <typename T>
+decltype(auto) ForwardWithProxyTemporaryStrip(T&& t) {
+  using U = std::remove_reference_t<T>;
+  return detail::ForwardWithProxyTemporaryStripImpl(
+      std::forward<T>(t), std::is_base_of<ProxyTemporaryBase, U>{});
+}
+
+}  // namespace jni
+
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
 #include <tuple>
@@ -4232,22 +4281,34 @@ struct Proxy<JString,
       IsConvertibleKey<T>::template value<std::string_view> ||
       std::is_same_v<T, LocalString> || std::is_same_v<T, GlobalString>;
 
+  static constexpr auto DeleteLambda = [](const jstring& s) {
+    JniEnv::GetEnv()->DeleteLocalRef(static_cast<jobject>(s));
+  };
+
+  struct DeleteLocalRef {
+    static void Call(const jstring& s) {
+      JniEnv::GetEnv()->DeleteLocalRef(static_cast<jobject>(s));
+    }
+  };
+
   // These leak local instances of strings.  Usually, RAII mechanisms would
   // correctly release local instances, but here we are stripping that so it can
   // be used in a method.  This could be obviated by wrapping the calling scope
   // in a local stack frame.
   static jstring ProxyAsArg(jstring s) { return s; }
 
+  // Note: Because a temporary is created `ProxyTemporary` is used to
+  // guarantee the release of the underlying local after use in `ProxyAsArg`.
   template <typename T,
             typename = std::enable_if_t<std::is_same_v<T, const char*> ||
                                         std::is_same_v<T, std::string> ||
                                         std::is_same_v<T, std::string_view>>>
-  static jstring ProxyAsArg(T s) {
+  static ProxyTemporary<jstring, DeleteLocalRef> ProxyAsArg(T s) {
     if constexpr (std::is_same_v<T, const char*>) {
-      return LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s);
+      return {LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s)};
     } else {
-      return LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(
-          s.data());
+      return {
+          LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s.data())};
     }
   }
 
@@ -6353,25 +6414,29 @@ struct OverloadRef {
     if constexpr (std::is_same_v<ReturnProxied, void>) {
       return InvokeHelper<void, kRank, kStatic>::Invoke(
           object, clazz, mthd,
-          Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
+          ForwardWithProxyTemporaryStrip(
+              Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params)))...);
     } else if constexpr (IdT::kIsConstructor) {
       return ReturnProxied{
           AdoptLocal{},
           LifecycleHelper<jobject, LifecycleType::LOCAL>::Construct(
               clazz, mthd,
-              Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
+              ForwardWithProxyTemporaryStrip(Proxy_t<Params>::ProxyAsArg(
+                  std::forward<Params>(params)))...)};
     } else {
       if constexpr (std::is_base_of_v<RefBaseBase, ReturnProxied>) {
         return ReturnProxied{
             AdoptLocal{},
             InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(
                 object, clazz, mthd,
-                Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
+                ForwardWithProxyTemporaryStrip(Proxy_t<Params>::ProxyAsArg(
+                    std::forward<Params>(params)))...)};
       } else {
         return static_cast<ReturnProxied>(
             InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(
                 object, clazz, mthd,
-                Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...));
+                ForwardWithProxyTemporaryStrip(Proxy_t<Params>::ProxyAsArg(
+                    std::forward<Params>(params)))...));
       }
     }
   }
@@ -7021,8 +7086,9 @@ class FieldRef {
   void Set(T&& value) {
     FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
                 IdT::kIsStatic>::SetValue(SelfVal(), GetFieldID(class_ref_),
-                                          Proxy_t<T>::ProxyAsArg(
-                                              std::forward<T>(value)));
+                                          ForwardWithProxyTemporaryStrip(
+                                              Proxy_t<T>::ProxyAsArg(
+                                                  std::forward<T>(value))));
   }
 
  private:
@@ -8258,6 +8324,9 @@ class ArrayView {
   std::enable_if_t<kRank == 1, SpanType*> ptr() {
     return get_array_elements_result_.ptr_;
   }
+
+  // Arrays of rank > 1 are object arrays which are not contiguous.
+  std::size_t size() { return size_; }
 
   Iterator begin() { return Iterator{ptr(), size_, 0}; }
   Iterator end() { return Iterator{ptr(), size_, size_}; }
