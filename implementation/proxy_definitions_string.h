@@ -28,11 +28,13 @@
 #include "class_defs/java_lang_classes.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
+#include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_string.h"
 #include "implementation/jvm.h"
 #include "implementation/proxy.h"
 #include "implementation/proxy_convenience_aliases.h"
+#include "implementation/proxy_temporary.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
 
@@ -68,22 +70,34 @@ struct Proxy<JString,
       IsConvertibleKey<T>::template value<std::string_view> ||
       std::is_same_v<T, LocalString> || std::is_same_v<T, GlobalString>;
 
+  static constexpr auto DeleteLambda = [](const jstring& s) {
+    JniEnv::GetEnv()->DeleteLocalRef(static_cast<jobject>(s));
+  };
+
+  struct DeleteLocalRef {
+    static void Call(const jstring& s) {
+      JniEnv::GetEnv()->DeleteLocalRef(static_cast<jobject>(s));
+    }
+  };
+
   // These leak local instances of strings.  Usually, RAII mechanisms would
   // correctly release local instances, but here we are stripping that so it can
   // be used in a method.  This could be obviated by wrapping the calling scope
   // in a local stack frame.
   static jstring ProxyAsArg(jstring s) { return s; }
 
+  // Note: Because a temporary is created `ProxyTemporary` is used to
+  // guarantee the release of the underlying local after use in `ProxyAsArg`.
   template <typename T,
             typename = std::enable_if_t<std::is_same_v<T, const char*> ||
                                         std::is_same_v<T, std::string> ||
                                         std::is_same_v<T, std::string_view>>>
-  static jstring ProxyAsArg(T s) {
+  static ProxyTemporary<jstring, DeleteLocalRef> ProxyAsArg(T s) {
     if constexpr (std::is_same_v<T, const char*>) {
-      return LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s);
+      return {LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s)};
     } else {
-      return LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(
-          s.data());
+      return {
+          LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s.data())};
     }
   }
 
