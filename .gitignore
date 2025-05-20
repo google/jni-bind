@@ -1,5 +1,9 @@
 bazel*
-.vscode
+.vscode/
+.clwb/
+.ijwb/
+.idea/
+.vscode/
 MODULE.bazel.lock
 cmake_build
 cmake_install
