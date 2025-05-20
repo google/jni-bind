@@ -150,4 +150,24 @@ Java_com_jnibind_test_StringTest_jniReturnsAGlobalString(JNIEnv* env, jclass) {
   GlobalString g{"fake"};
 }
 
+JNIEXPORT void JNICALL
+Java_com_jnibind_test_StringTest_nativeAllocationThrash(JNIEnv* env, jclass) {
+  std::string evil_string = "";
+  for (int i = 0; i < 15000; i++) {
+    evil_string +=
+        "This is a really long test string. It will not have dangling "
+        "references.\n";
+  }
+
+  // This test exercises the correct release behaviour of ephemeral strings.
+  // When a char*, string_view, or std::string is used via `ProxyAsArg`, a
+  // temporary is created. This guarantees it is released as intended, or this
+  // will cause a massive memory increase.
+  for (int i = 0; i < 100; i++) {
+    for (int j = 0; j < 100; j++) {
+      LocalString str { evil_string };
+    }
+  }
+}
+
 }  // extern "C"

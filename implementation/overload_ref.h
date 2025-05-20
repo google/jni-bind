@@ -102,25 +102,29 @@ struct OverloadRef {
     if constexpr (std::is_same_v<ReturnProxied, void>) {
       return InvokeHelper<void, kRank, kStatic>::Invoke(
           object, clazz, mthd,
-          Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...);
+          ForwardWithProxyTemporaryStrip(
+              Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params)))...);
     } else if constexpr (IdT::kIsConstructor) {
       return ReturnProxied{
           AdoptLocal{},
           LifecycleHelper<jobject, LifecycleType::LOCAL>::Construct(
               clazz, mthd,
-              Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
+              ForwardWithProxyTemporaryStrip(Proxy_t<Params>::ProxyAsArg(
+                  std::forward<Params>(params)))...)};
     } else {
       if constexpr (std::is_base_of_v<RefBaseBase, ReturnProxied>) {
         return ReturnProxied{
             AdoptLocal{},
             InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(
                 object, clazz, mthd,
-                Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...)};
+                ForwardWithProxyTemporaryStrip(Proxy_t<Params>::ProxyAsArg(
+                    std::forward<Params>(params)))...)};
       } else {
         return static_cast<ReturnProxied>(
             InvokeHelper<typename ReturnIdT::CDecl, kRank, kStatic>::Invoke(
                 object, clazz, mthd,
-                Proxy_t<Params>::ProxyAsArg(std::forward<Params>(params))...));
+                ForwardWithProxyTemporaryStrip(Proxy_t<Params>::ProxyAsArg(
+                    std::forward<Params>(params)))...));
       }
     }
   }
