@@ -109,9 +109,8 @@ TEST_F(JniTest, Array_LocalVanillaObjectRValuesCanBeSet) {
   // In the future, this should drop to 1.
   EXPECT_CALL(*env_, FindClass(StrEq("java/lang/String"))).Times(2);
 
-  EXPECT_CALL(*env_, DeleteLocalRef(_)).Times(2);  // array, in place obj
+  EXPECT_CALL(*env_, DeleteLocalRef(_)).Times(3);  // array, in place obj
   EXPECT_CALL(*env_, DeleteLocalRef(Fake<jclass>())).Times(2);  // FindClass
-  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>())).Times(0);
 
   LocalArray<jobject, 1, kJavaLangString> arr{
       3, LocalObject<kJavaLangString>{"Foo"}};
