@@ -64,6 +64,7 @@ cc_library(
         "//implementation:promotion_mechanics",
         "//implementation:promotion_mechanics_tags",
         "//implementation:proxy_convenience_aliases",
+        "//implementation:proxy_temporary",
         "//implementation:ref_base",
         "//implementation:return",
         "//implementation:selector_static_info",

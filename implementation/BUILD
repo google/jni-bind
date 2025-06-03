@@ -301,6 +301,7 @@ cc_library(
         ":no_idx",
         ":promotion_mechanics_tags",
         ":proxy_convenience_aliases",
+        ":proxy_temporary",
         ":ref_base",
         ":signature",
         "//:jni_dep",
@@ -795,6 +796,7 @@ cc_library(
         ":proxy_definitions",
         ":proxy_definitions_array",
         ":proxy_definitions_string",
+        ":proxy_temporary",
         ":ref_base",
         ":ref_storage",
         ":signature",
@@ -1057,9 +1059,11 @@ cc_library(
         ":jvm",
         ":proxy",
         ":proxy_convenience_aliases",
+        ":proxy_temporary",
         ":ref_base",
         "//:jni_dep",
         "//class_defs:java_lang_classes",
+        "//implementation/jni_helper:jni_env",
         "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_string",
     ],
@@ -1074,6 +1078,14 @@ cc_test(
         "//metaprogramming:type_to_type_map",
         "@googletest//:gtest_main",
     ],
+)
+
+################################################################################
+# ProxyTemporary.
+################################################################################
+cc_library(
+    name = "proxy_temporary",
+    hdrs = ["proxy_temporary.h"],
 )
 
 ################################################################################

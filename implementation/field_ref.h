@@ -33,6 +33,7 @@
 #include "implementation/no_idx.h"
 #include "implementation/promotion_mechanics_tags.h"
 #include "implementation/proxy_convenience_aliases.h"
+#include "implementation/proxy_temporary.h"
 #include "implementation/ref_base.h"
 #include "implementation/signature.h"
 #include "jni_dep.h"
@@ -115,8 +116,9 @@ class FieldRef {
   void Set(T&& value) {
     FieldHelper<CDecl_t<typename IdT::RawValT>, IdT::kRank,
                 IdT::kIsStatic>::SetValue(SelfVal(), GetFieldID(class_ref_),
-                                          Proxy_t<T>::ProxyAsArg(
-                                              std::forward<T>(value)));
+                                          ForwardWithProxyTemporaryStrip(
+                                              Proxy_t<T>::ProxyAsArg(
+                                                  std::forward<T>(value))));
   }
 
  private:

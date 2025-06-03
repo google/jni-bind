@@ -42,7 +42,7 @@ Check out the slides above! If you're enjoying JNI Bind, or just want to support
 - [Advanced Usage](#advanced-usage)
   - [Strings](#strings)
   - [Forward Class Declarations](#forward-class-declarations)
-  - [Multhreading](#multi-threading)
+  - [Multi-Threading](#multi-threading)
   - [Overloads](#overloads)
   - [Statics](#statics)
   - [Builder Patterns](#builder-patterns)
@@ -369,7 +369,7 @@ Note, if you use the output of a forward declaration, it will result in a *shall
 Sample: [proxy_test.cc](implementation/proxy_test.cc).
 
 <a name="multi-threading"></a>
-## Multhreading
+## Multi-Threading
 
 When using multi-threaded code in native, it's important to remember the difference between maintaining thread safety in your native code vs your Java code. `JNI Bind` *only* handles thread safety of your native handles and class ids. e.g. you might safely pass a `jobject` from one native thread to another (i.e. you managed to get the handle correctly to the other thread), however, your Java code may not be expecting calls from multiple threads.
 
