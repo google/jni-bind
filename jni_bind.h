@@ -71,6 +71,7 @@ static constexpr Configuration kConfig{
 #include "implementation/no_idx.h"
 #include "implementation/params.h"
 #include "implementation/proxy_convenience_aliases.h"
+#include "implementation/proxy_temporary.h"
 #include "implementation/return.h"
 #include "implementation/selector_static_info.h"
 #include "implementation/self.h"
