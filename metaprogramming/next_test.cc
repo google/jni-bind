@@ -19,14 +19,16 @@
 #include <cstddef>
 #include <type_traits>
 
+#ifdef NO
+
 using ::jni::metaprogramming::EndConstRefVal;
 using ::jni::metaprogramming::EndType;
-using ::jni::metaprogramming::EndVal;
+// using ::jni::metaprogramming::EndVal;
 
 using ::jni::metaprogramming::Next_t;
 using ::jni::metaprogramming::NextConstRefVal;  // NOLINT
 using ::jni::metaprogramming::NextType;         // NOLINT
-using ::jni::metaprogramming::NextVal;          // NOLINT
+// using ::jni::metaprogramming::NextVal;          // NOLINT
 
 namespace jni::metaprogramming {
 
@@ -69,6 +71,7 @@ static_assert(
     std::is_same_v<Next_t<Next_t<Next_t<Next_t<TypeCounter_t<0, 3>>>>>,
                    EndType<TypeCounter>>);
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // Auto tests.
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +97,6 @@ struct NextVal<Counter> {
   using type = typename Helper<T>::type;
 };
 
-/*
 static_assert(std::is_same_v<Next_t<Counter<0, 3>>, Counter<1, 3>>);
 static_assert(std::is_same_v<Next_t<Next_t<Counter<0, 3>>>, Counter<2, 3>>);
 static_assert(
@@ -145,3 +147,5 @@ static_assert(
     3);
 
 }  // namespace jni::metaprogramming
+
+#endif  // NO

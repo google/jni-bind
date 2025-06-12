@@ -25,7 +25,7 @@ enum class PackType {
   CONST_AUTO_REF,
 };
 
-// Metafunction to discrimate the underlying pack type of a Container.
+// Metafunction to discriminate the underlying pack type of a Container.
 // Note: This interface is subject to change as the auto partial specialisations
 // cannot discriminate on void.
 struct PackDiscrimator {
