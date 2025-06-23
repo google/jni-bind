@@ -18,8 +18,8 @@
 #include <memory>
 #include <utility>
 
-#include "array_test_helpers_native.h"
-#include "modulo.h"
+#include "javatests/com/jnibind/test/array_test_helpers_native.h"
+#include "javatests/com/jnibind/test/modulo.h"
 #include "javatests/com/jnibind/test/object_test_helper_jni.h"
 #include "jni_bind.h"
 
@@ -215,7 +215,7 @@ Java_com_jnibind_test_ArrayTestMethodRank2_nativeObjectTests2D(
         i++;
       }
     }
-    StaticRef<kArrayTestHelperClass>{}("assertObject2D", 0, 1, new_array);
+    StaticRef<kArrayTestHelperClass>{}.Call<"assertObject2D">(0, 1, new_array);
   }
 
   // You can pull the view multiple times with raw loops.

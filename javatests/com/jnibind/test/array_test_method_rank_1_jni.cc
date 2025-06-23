@@ -18,8 +18,8 @@
 #include <memory>
 #include <utility>
 
-#include "array_test_helpers_native.h"
-#include "object_test_helper_jni.h"
+#include "javatests/com/jnibind/test/array_test_helpers_native.h"
+#include "javatests/com/jnibind/test/object_test_helper_jni.h"
 #include "jni_bind.h"
 
 using ::jni::ArrayView;

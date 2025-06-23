@@ -18,9 +18,9 @@
 #include <limits>
 #include <memory>
 
-#include "array_test_helpers_native.h"
-#include "modulo.h"
-#include "object_test_helper_jni.h"
+#include "javatests/com/jnibind/test/array_test_helpers_native.h"
+#include "javatests/com/jnibind/test/modulo.h"
+#include "javatests/com/jnibind/test/object_test_helper_jni.h"
 #include "jni_bind.h"
 #include "metaprogramming/lambda_string.h"
 #include "metaprogramming/string_literal.h"

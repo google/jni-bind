@@ -160,6 +160,7 @@ cc_library(
         ":object_test_helper_jni",
         "//:jni_bind",
         "//metaprogramming:lambda_string",
+        "//metaprogramming:string_literal",
     ],
     alwayslink = True,
 )
