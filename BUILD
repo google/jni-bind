@@ -1,3 +1,5 @@
+load("//third_party/bazel_rules/rules_shell/shell:sh_test.bzl", "sh_test")
+
 package(licenses = ["notice"])
 
 filegroup(
