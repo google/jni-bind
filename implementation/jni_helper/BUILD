@@ -1,3 +1,6 @@
+load("//third_party/bazel_rules/rules_cc/cc:cc_library.bzl", "cc_library")
+load("//third_party/bazel_rules/rules_cc/cc:cc_test.bzl", "cc_test")
+
 # Do not depend on any targets in this package.  Instead, depend //third_party/jni_wrapper:jni_bind
 package(
     default_visibility = ["//:__subpackages__"],
