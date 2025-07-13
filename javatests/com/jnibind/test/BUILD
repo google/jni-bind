@@ -1,4 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary", "java_library", "java_test")
+load("//third_party/bazel_rules/rules_cc/cc:cc_binary.bzl", "cc_binary")
+load("//third_party/bazel_rules/rules_cc/cc:cc_library.bzl", "cc_library")
+load("//third_party/bazel_rules/rules_cc/cc:cc_test.bzl", "cc_test")
 
 licenses(["notice"])
 
