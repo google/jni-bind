@@ -2,9 +2,9 @@ name: JNI Bind Build/Test Status
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -46,3 +46,13 @@ jobs:
     - uses: actions/checkout@v4
     - name: test
       run: bazel test --cxxopt='-Werror' --cxxopt='-std=c++20' --repo_env=CC=clang --test_output=errors ...
+
+  windows-latest-cpp20-cmake-mvsc:
+    runs-on: windows-2019
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+    - name: cmake build
+      run: |
+        cmake --preset msvc-16-config-debug
+        cmake --build --preset msvc-16-build-debug
