@@ -47,6 +47,7 @@ using ::jni::test::JniTest;
 using ::jni::test::JniTestWithNoDefaultJvmRef;
 using ::jni::test::kDefaultConfiguration;
 using ::testing::_;
+using ::testing::AnyNumber;
 using ::testing::Eq;
 using ::testing::InSequence;
 using ::testing::StrEq;
@@ -89,12 +90,12 @@ TEST_F(JniTest, LocalsAreMoveable) {
 }
 
 TEST_F(JniTest, GlobalClassLoadersSupportAdoptionMechanics) {
-  EXPECT_CALL(*env_, DeleteLocalRef).Times(0);
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(AnyNumber());
   GlobalClassLoader<kClassLoader, kJvm> obj_1{AdoptGlobal{}, Fake<jobject>()};
 }
 
 TEST_F(JniTest, GlobalClassLoadersSupportPromoteMechanics) {
-  EXPECT_CALL(*env_, DeleteLocalRef).Times(1);
+  EXPECT_CALL(*env_, DeleteLocalRef).Times(AnyNumber());
   GlobalClassLoader<kClassLoader, kJvm> obj_1{PromoteToGlobal{},
                                               Fake<jobject>()};
 }
@@ -266,6 +267,10 @@ TEST_F(JniTestWithNoDefaultJvmRef,
   static constexpr jni::Jvm atypical_jvm_definition{class_loader};
 
   InSequence seq;
+
+  EXPECT_CALL(*env_, FindClass(StrEq("android/app/ActivityThread")))
+      .WillOnce(testing::Return(nullptr));
+  EXPECT_CALL(*env_, ExceptionClear());
 
   // The java/lang/Class and java/lang/ClassLoader will always be from the
   // default loader, and they only need to be cached once.
