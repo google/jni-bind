@@ -58,6 +58,10 @@ class LocalString : public LocalStringImpl {
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
   UtfStringView Pin() { return {RefBase<jstring>::object_ref_}; }
+
+  // Returns a UtfString which performs an expensive copy to std::string
+  // and releases the pinned characters.
+  UtfString PinAsStr() { return UtfString{RefBase<jstring>::object_ref_}; }
 };
 
 }  // namespace jni

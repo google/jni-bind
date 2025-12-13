@@ -147,6 +147,23 @@ TEST_F(JniTest, LocalString_PinsAndUnpinsMemoryForLocals) {
   EXPECT_EQ(utf_string_view.ToString().data(), char_ptr);
 }
 
+TEST_F(JniTest, LocalString_PinsAndUnpinsMemoryAsStdStringForLocals) {
+  jstring faked_input_jstring = Fake<jstring>();
+  jstring actual_local_jstring = Fake<jstring>(2);
+
+  EXPECT_CALL(*env_, NewLocalRef(faked_input_jstring))
+      .WillOnce(Return(actual_local_jstring));
+  EXPECT_CALL(*env_, GetStringUTFChars(actual_local_jstring, nullptr))
+      .WillOnce(Return(char_ptr));
+  EXPECT_CALL(*env_, ReleaseStringUTFChars(actual_local_jstring, char_ptr));
+  EXPECT_CALL(*env_, DeleteLocalRef(actual_local_jstring));
+  LocalString str{NewRef{}, faked_input_jstring};
+
+  jni::UtfString utf_string = str.PinAsStr();
+
+  EXPECT_EQ(utf_string.ToString(), char_ptr);
+}
+
 TEST_F(JniTest, LocalString_AllowsLValueLocalString) {
   LocalObject<kClass> obj{};
   LocalString local_string{"abcde"};
@@ -223,6 +240,22 @@ TEST_F(JniTest, GlobalString_PinsAndUnpinsMemoryForLocals) {
   EXPECT_EQ(utf_string_view.ToString().data(), char_ptr);
 }
 
+TEST_F(JniTest, GlobalString_PinsAndUnpinsMemoryAsStdStringForLocals) {
+  jstring faked_global_jstring = Fake<jstring>();
+
+  EXPECT_CALL(*env_, GetStringUTFChars(faked_global_jstring, nullptr))
+      .WillOnce(Return(char_ptr));
+
+  EXPECT_CALL(*env_, ReleaseStringUTFChars(faked_global_jstring, char_ptr));
+  EXPECT_CALL(*env_, NewGlobalRef(faked_global_jstring)).Times(0);
+  EXPECT_CALL(*env_, DeleteLocalRef(_)).Times(0);
+
+  GlobalString str{AdoptGlobal{}, faked_global_jstring};
+  jni::UtfString utf_string = str.PinAsStr();
+
+  EXPECT_EQ(utf_string.ToString(), char_ptr);
+}
+
 TEST_F(JniTest, GlobalString_AllowsLValueGlobalString) {
   LocalObject<kClass> obj{};
   GlobalString global_string{"abcde"};
@@ -232,6 +265,26 @@ TEST_F(JniTest, GlobalString_AllowsLValueGlobalString) {
 TEST_F(JniTest, GlobalString_AllowsRValueGlobalString) {
   LocalObject<kClass> obj{};
   obj.Call<"TakesStrParam">(GlobalString{"abcde"});
+}
+
+TEST_F(JniTest, UtfString_ConstructsAndCopies) {
+  const char* expected_chars = "Hello, UtfString!";
+  jstring fake_jstring = Fake<jstring>();
+
+  EXPECT_CALL(*env_, GetStringUTFChars(fake_jstring, nullptr))
+      .WillOnce(Return(expected_chars));
+  EXPECT_CALL(*env_, ReleaseStringUTFChars(fake_jstring, expected_chars));
+
+  jni::UtfString utf_string{fake_jstring};
+  EXPECT_EQ(utf_string.ToString(), expected_chars);
+}
+
+TEST_F(JniTest, UtfString_ConstructsFromNull) {
+  EXPECT_CALL(*env_, GetStringUTFChars(nullptr, nullptr)).Times(0);
+  EXPECT_CALL(*env_, ReleaseStringUTFChars(nullptr, _)).Times(0);
+
+  jni::UtfString utf_string{nullptr};
+  EXPECT_TRUE(utf_string.ToString().empty());
 }
 
 }  // namespace

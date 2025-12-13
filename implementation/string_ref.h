@@ -46,7 +46,7 @@ class StringRefBase
 
   ~StringRefBase() {
     if (object_ref_) {
-      static_cast<CrtpBase &>(*this).ClassSpecificDeleteObjectRef(object_ref_);
+      static_cast<CrtpBase&>(*this).ClassSpecificDeleteObjectRef(object_ref_);
     }
   }
 };
@@ -71,8 +71,8 @@ class UtfStringView {
     }
   }
 
-  UtfStringView(UtfStringView &&) = delete;
-  UtfStringView(const UtfStringView &) = delete;
+  UtfStringView(UtfStringView&&) = delete;
+  UtfStringView(const UtfStringView&) = delete;
 
   // Returns a view into the pinned character string.
   // Warning: std::string_view{nullptr} is undefined behaviour and may crash.
@@ -80,7 +80,35 @@ class UtfStringView {
 
  private:
   const jstring java_string_;
-  const char *chars_;
+  const char* chars_;
+};
+
+// Represents a UTF string which copies the contents of a jstring to an
+// std::string on construction.
+//
+// This class will immediately pin memory associated with the jstring, copy the
+// contents to an std::string, and release the jstring pinning. The std::string
+// is owned by this object.
+class UtfString {
+ public:
+  explicit UtfString(jstring java_string)
+      : pinned_chars_(java_string ? JniHelper::GetStringUTFChars(java_string)
+                                  : nullptr),
+        string_(pinned_chars_ ? pinned_chars_ : "") {
+    if (pinned_chars_) {
+      JniHelper::ReleaseStringUTFChars(java_string, pinned_chars_);
+    }
+  }
+
+  UtfString(UtfString&&) = delete;
+  UtfString(const UtfString&) = delete;
+
+  // Returns a const reference to the owned std::string.
+  const std::string& ToString() const { return string_; }
+
+ private:
+  const char* pinned_chars_;
+  const std::string string_;
 };
 
 }  // namespace jni

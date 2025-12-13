@@ -20,8 +20,11 @@
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
 #include "class_defs/java_lang_classes.h"
+#include "implementation/default_class_loader.h"
 #include "implementation/global_object.h"
+#include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_string.h"
+#include "implementation/jvm.h"
 #include "implementation/local_string.h"
 #include "implementation/promotion_mechanics.h"
 #include "implementation/ref_base.h"
@@ -41,15 +44,15 @@ class GlobalString : public GlobalStringImpl {
 
   using LifecycleT = LifecycleHelper<jstring, LifecycleType::GLOBAL>;
 
-  GlobalString(GlobalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>
-                   &&global_string)
+  GlobalString(GlobalObject<kJavaLangString, kDefaultClassLoader, kDefaultJvm>&&
+                   global_string)
       : Base(static_cast<jstring>(global_string.Release())) {}
 
-  GlobalString(LocalString &&local_string)
+  GlobalString(LocalString&& local_string)
       : Base(LifecycleT::Promote(local_string.Release())) {}
 
   template <typename... Ts>
-  GlobalString(Ts &&...vals) : Base(std::forward<Ts &&>(vals)...) {
+  GlobalString(Ts&&... vals) : Base(std::forward<Ts&&>(vals)...) {
     RefBase<jstring>::object_ref_ =
         LifecycleT::Promote(RefBase<jstring>::object_ref_);
   }
@@ -57,6 +60,10 @@ class GlobalString : public GlobalStringImpl {
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
   UtfStringView Pin() { return {RefBase<jstring>::object_ref_}; }
+
+  // Returns a UtfString which performs an expensive copy to std::string
+  // and releases the pinned characters.
+  UtfString PinAsStr() { return UtfString{RefBase<jstring>::object_ref_}; }
 };
 
 }  // namespace jni

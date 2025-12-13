@@ -80,6 +80,17 @@ Java_com_jnibind_test_StringTest_jniPassesStringsInManyWays(
   fixture.Call<"voidMethodTakesString">(global_string_lval);
   fixture.Call<"voidMethodTakesString">(LocalString{input});
   fixture.Call<"voidMethodTakesString">(GlobalString{PromoteToGlobal{}, input});
+  fixture.Call<"voidMethodTakesString">(
+      LocalString{input}.PinAsStr().ToString());
+}
+
+JNIEXPORT void JNICALL Java_com_jnibind_test_StringTest_jniUsesPinAsStr(
+    JNIEnv* env, jclass, jobject test_fixture_object, jstring input) {
+  LocalObject<kMethodTestHelper> fixture{test_fixture_object};
+  fixture.Call<"voidMethodTakesString">(
+      LocalString{input}.PinAsStr().ToString());
+  fixture.Call<"voidMethodTakesString">(
+      GlobalString{PromoteToGlobal{}, input}.PinAsStr().ToString());
 }
 
 /** Void return type tests. */
@@ -165,7 +176,7 @@ Java_com_jnibind_test_StringTest_nativeAllocationThrash(JNIEnv* env, jclass) {
   // will cause a massive memory increase.
   for (int i = 0; i < 100; i++) {
     for (int j = 0; j < 100; j++) {
-      LocalString str { evil_string };
+      LocalString str{evil_string};
     }
   }
 }

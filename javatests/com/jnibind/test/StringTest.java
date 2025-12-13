@@ -142,6 +142,15 @@ public final class StringTest {
 
   native void jniReturnsAGlobalString();
 
+  native void jniUsesPinAsStr(StringTestHelper helper, String s);
+
+  @Test
+  public void jniUsesPinAsStr() {
+    jniUsesPinAsStr(rJniStringTestHelper, "TestString");
+
+    verify(rJniStringTestHelper, times(2)).voidMethodTakesString("TestString");
+  }
+
   @Test
   public void globalReturnsCorrectlyOverJniBoundary() {
     jniReturnsAGlobalString();

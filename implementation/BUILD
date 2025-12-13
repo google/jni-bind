@@ -387,6 +387,40 @@ cc_library(
 )
 
 ################################################################################
+# GlobalException.
+################################################################################
+cc_library(
+    name = "global_exception",
+    hdrs = ["global_exception.h"],
+    deps = [
+        ":class_ref",
+        ":default_class_loader",
+        ":global_object",
+        ":jni_type",
+        ":jvm",
+        ":local_exception",
+        ":local_string",
+        ":promotion_mechanics",
+        "//:jni_dep",
+        "//class_defs:java_lang_exception",
+        "//implementation/jni_helper:jni_env",
+        "//implementation/jni_helper:lifecycle",
+    ],
+)
+
+cc_test(
+    name = "global_exception_test",
+    srcs = ["global_exception_test.cc"],
+    deps = [
+        ":global_exception",
+        "//:jni_bind",
+        "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
+        "@googletest//:gtest_main",
+    ],
+)
+
+################################################################################
 # GlobalObject.
 ################################################################################
 cc_library(
@@ -425,13 +459,16 @@ cc_library(
     name = "global_string",
     hdrs = ["global_string.h"],
     deps = [
+        ":default_class_loader",
         ":global_object",
+        ":jvm",
         ":local_string",
         ":promotion_mechanics",
         ":ref_base",
         ":string_ref",
         "//:jni_dep",
         "//class_defs:java_lang_classes",
+        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_string",
     ],
 )
@@ -724,6 +761,38 @@ cc_library(
         ":promotion_mechanics_tags",
         "//:jni_dep",
         "//implementation/jni_helper:lifecycle",
+    ],
+)
+
+################################################################################
+# LocalException.
+################################################################################
+cc_library(
+    name = "local_exception",
+    hdrs = ["local_exception.h"],
+    deps = [
+        ":class_ref",
+        ":default_class_loader",
+        ":jni_type",
+        ":jvm",
+        ":local_object",
+        ":local_string",
+        ":promotion_mechanics",
+        "//:jni_dep",
+        "//class_defs:java_lang_exception",
+        "//implementation/jni_helper:jni_env",
+    ],
+)
+
+cc_test(
+    name = "local_exception_test",
+    srcs = ["local_exception_test.cc"],
+    deps = [
+        ":local_exception",
+        "//:jni_bind",
+        "//:jni_test",
+        "//implementation/jni_helper:fake_test_constants",
+        "@googletest//:gtest_main",
     ],
 )
 
