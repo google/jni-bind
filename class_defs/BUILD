@@ -15,6 +15,16 @@ filegroup(
 exports_files(["LICENSE"])
 
 cc_library(
+    name = "java_lang_boolean",
+    hdrs = ["java_lang_boolean.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":java_lang_classes",
+        "//:jni_bind",
+    ],
+)
+
+cc_library(
     name = "java_lang_exception",
     hdrs = ["java_lang_exception.h"],
     deps = [
