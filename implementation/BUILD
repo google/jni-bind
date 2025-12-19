@@ -425,13 +425,16 @@ cc_library(
     name = "global_string",
     hdrs = ["global_string.h"],
     deps = [
+        ":default_class_loader",
         ":global_object",
+        ":jvm",
         ":local_string",
         ":promotion_mechanics",
         ":ref_base",
         ":string_ref",
         "//:jni_dep",
         "//class_defs:java_lang_classes",
+        "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_string",
     ],
 )
