@@ -37,10 +37,26 @@ blaze build //third_party/jni_wrapper:gen_readme_public && cp ../../../blaze-gen
 *Note: Adjust the relative path to `blaze-genfiles` based on your current working directory.*
 
 ### Avoiding Circular Dependencies
-When adding new types (like `LocalException` or `GlobalException`), always add them to `implementation/forward_declarations.h`. This helps break circular dependencies and reduces header inclusion bloat, which can lead to `clang-tidy` errors and compilation failures. Clients can include `forward_declarations.h` when they only need pointers or references to these types.
+When adding new types (like `LocalException`, `GlobalException`, or `LifecycleHelper`), always add them to `implementation/forward_declarations.h`. This helps break circular dependencies and reduces header inclusion bloat, which can lead to `clang-tidy` errors and compilation failures. Clients can include `forward_declarations.h` when they only need pointers or references to these types.
 
 ### `IWYU pragma: private, include`
 When `clang-tidy` or `IWYU` complains about headers that are meant to be internal, such as `implementation/local_exception.h` or `implementation/global_exception.h`, ensure that these headers include `// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"`. This pragma indicates that these headers should only be included through `jni_bind.h` and not directly by external consumers. If you need to use the types declared in these internal headers without including `jni_bind.h` (e.g., to break circular dependencies or avoid bloat in other internal headers), you should add forward declarations to `implementation/forward_declarations.h` instead.
 
 ### Open Source Appropriateness
 Since this project is shared as open source, all code, documentation, and guidance stored in files like `GEMINI.md` must be appropriate for both internal Google use and external consumption. Avoid including any internal-only links, tool names, or instructions that would not be relevant or accessible to external users. Ensure that all contributions align with open-source best practices and licensing requirements.
+
+## Release Management
+
+### Cutting a New Release of `jni_bind_release.h`
+To cut a new release of the `jni_bind_release.h` header, follow these steps:
+
+1.  **Build the release header**: This generates the updated `jni_bind_release.h` file.
+    ```bash
+    blaze build //third_party/jni_wrapper:gen_jni_bind_release
+    ```
+
+2.  **Copy the generated header**: Overwrite the existing `jni_bind_release.h` with the newly generated one from `blaze-genfiles`.
+    ```bash
+    cp ../../blaze-genfiles/third_party/jni_wrapper/jni_bind_release.h jni_bind_release.h
+    ```
+

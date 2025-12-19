@@ -3552,12 +3552,22 @@ struct Id;
 template <LifecycleType lifecycleType, typename JniT, typename... ViableSpans>
 struct Scoped;
 
+template <typename Span, LifecycleType lifecycle_type>
+struct LifecycleHelper;
+
 // Objects.
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class LocalObject;
 
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class GlobalObject;
+
+// Exceptions.
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+class LocalException;
+
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+class GlobalException;
 
 // Strings.
 class LocalString;
@@ -6854,8 +6864,7 @@ class InvocableMapBase<CrtpBase, tup_container_v, TupContainerT, MemberT,
  public:
 #if __clang__
   using InvocableMapEntry<CrtpBase, tup_container_v, TupContainerT, MemberT,
-                          nameable_member, idxs>::
-  operator()...;
+                          nameable_member, idxs>::operator()...;
 #endif  // __clang__
 };
 
@@ -8186,6 +8195,94 @@ LocalObject(LocalObject<class_v_, class_loader_v_, jvm_v_>&&)
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include <cstddef>
+#include <string_view>
+
+namespace jni {
+
+template <typename CrtpBase>
+class StringRefBase
+    : public ConstructorValidator<
+          JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>> {
+ public:
+  using ValidT = ConstructorValidator<
+      JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>>;
+  using ValidT::ValidT;
+
+  StringRefBase(std::nullptr_t) : ValidT(jstring{nullptr}) {}
+  StringRefBase(jstring object) : ValidT(object) {}
+
+  ~StringRefBase() {
+    if (object_ref_) {
+      static_cast<CrtpBase&>(*this).ClassSpecificDeleteObjectRef(object_ref_);
+    }
+  }
+};
+
+// Represents a UTF view into a jstring (see jni::String::Pin()).
+//
+// This class will immediately pin memory associated with the jstring, and
+// release on leaving scope. Note, this class will *always* make an expensive
+// copy, as strings are natively represented in Java as Unicode.
+//
+// (C++20 will offer a compatible std::string_view but C++17 does not).
+class UtfStringView {
+ public:
+  UtfStringView(jstring java_string)
+      : java_string_(java_string),
+        chars_(java_string_ ? JniHelper::GetStringUTFChars(java_string)
+                            : nullptr) {}
+
+  ~UtfStringView() {
+    if (chars_) {
+      JniHelper::ReleaseStringUTFChars(java_string_, chars_);
+    }
+  }
+
+  UtfStringView(UtfStringView&&) = delete;
+  UtfStringView(const UtfStringView&) = delete;
+
+  // Returns a view into the pinned character string.
+  // Warning: std::string_view{nullptr} is undefined behaviour and may crash.
+  const std::string_view ToString() const { return std::string_view{chars_}; }
+
+ private:
+  const jstring java_string_;
+  const char* chars_;
+};
+
+// Represents a UTF string which copies the contents of a jstring to an
+// std::string on construction.
+//
+// This class will immediately pin memory associated with the jstring, copy the
+// contents to an std::string, and release the jstring pinning. The std::string
+// is owned by this object.
+class UtfString {
+ public:
+  explicit UtfString(jstring java_string)
+      : pinned_chars_(java_string ? JniHelper::GetStringUTFChars(java_string)
+                                  : nullptr),
+        string_(pinned_chars_ ? pinned_chars_ : "") {
+    if (pinned_chars_) {
+      JniHelper::ReleaseStringUTFChars(java_string, pinned_chars_);
+    }
+  }
+
+  UtfString(UtfString&&) = delete;
+  UtfString(const UtfString&) = delete;
+
+  // Returns a const reference to the owned std::string.
+  const std::string& ToString() const { return string_; }
+
+ private:
+  const char* pinned_chars_;
+  const std::string string_;
+};
+
+}  // namespace jni
+
+// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
+
 namespace jni {
 
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
@@ -8446,6 +8543,18 @@ ArrayView(ArrayView<SpanType, kRank>&&) -> ArrayView<SpanType, kRank>;
 
 }  // namespace jni
 
+namespace jni {
+
+static constexpr Class kJavaLangThrowable{
+    "java/lang/Throwable",
+    Constructor{},
+    Constructor<jstring>{},
+    Constructor{jstring{}, Self{}},
+    Constructor{jstring{}, Self{}, jboolean{}, jboolean{}},
+    Constructor{Self{}}};
+
+}  // namespace jni
+
 #include <cstddef>
 #include <tuple>
 
@@ -8499,60 +8608,38 @@ using FunctionTraitsArg_t =
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
-#include <cstddef>
-#include <string_view>
-
 namespace jni {
 
-template <typename CrtpBase>
-class StringRefBase
-    : public ConstructorValidator<
-          JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>> {
- public:
-  using ValidT = ConstructorValidator<
-      JniT<jstring, kJavaLangString, kDefaultClassLoader, kDefaultJvm>>;
-  using ValidT::ValidT;
+using LocalStringImpl =
+    Scoped<LifecycleType::LOCAL, JniT<jstring, kJavaLangString>, jobject,
+           jstring>;
 
-  StringRefBase(std::nullptr_t) : ValidT(jstring{nullptr}) {}
-  StringRefBase(jstring object) : ValidT(object) {}
-
-  ~StringRefBase() {
-    if (object_ref_) {
-      static_cast<CrtpBase&>(*this).ClassSpecificDeleteObjectRef(object_ref_);
-    }
-  }
-};
-
-// Represents a UTF view into a jstring (see jni::String::Pin()).
+// Represents and possibly builds a runtime Java String object.
 //
-// This class will immediately pin memory associated with the jstring, and
-// release on leaving scope. Note, this class will *always* make an expensive
-// copy, as strings are natively represented in Java as Unicode.
+// In order to use a string in memory (as opposed to only using it for function
+// arguments), "Pin" the string.
 //
-// (C++20 will offer a compatible std::string_view but C++17 does not).
-class UtfStringView {
+// Like |jobjects|, |jstring|s can be either local or global with the same
+// ownership semantics.
+class LocalString : public LocalStringImpl {
  public:
-  UtfStringView(jstring java_string)
-      : java_string_(java_string),
-        chars_(java_string_ ? JniHelper::GetStringUTFChars(java_string)
-                            : nullptr) {}
+  using Base = LocalStringImpl;
+  using Base::Base;
 
-  ~UtfStringView() {
-    if (chars_) {
-      JniHelper::ReleaseStringUTFChars(java_string_, chars_);
-    }
-  }
+  LocalString(LocalObject<kJavaLangString>&& obj)
+      : Base(AdoptLocal{}, static_cast<jstring>(obj.Release())) {}
 
-  UtfStringView(UtfStringView&&) = delete;
-  UtfStringView(const UtfStringView&) = delete;
+  template <typename T>
+  LocalString(ArrayViewHelper<T> array_view_helper)
+      : LocalString(AdoptLocal{}, array_view_helper.val_) {}
 
-  // Returns a view into the pinned character string.
-  // Warning: std::string_view{nullptr} is undefined behaviour and may crash.
-  const std::string_view ToString() const { return std::string_view{chars_}; }
+  // Returns a StringView which possibly performs an expensive pinning
+  // operation.  String objects can be pinned multiple times.
+  UtfStringView Pin() { return {RefBase<jstring>::object_ref_}; }
 
- private:
-  const jstring java_string_;
-  const char* chars_;
+  // Returns a UtfString which performs an expensive copy to std::string
+  // and releases the pinned characters.
+  UtfString PinAsStr() { return UtfString{RefBase<jstring>::object_ref_}; }
 };
 
 }  // namespace jni
@@ -8823,6 +8910,27 @@ class ArrayRef<JniT, std::enable_if_t<(JniT::kRank > 1)>>
 
 }  // namespace jni
 
+namespace jni {
+
+static constexpr Class kJavaLangException{
+    "java/lang/Exception",
+    Constructor{},
+    Constructor<jstring>{},
+    Constructor{jstring{}, kJavaLangThrowable, jboolean{}, jboolean{}},
+    Constructor{kJavaLangThrowable},
+
+    // Inherited.
+    Method{"getMessage", Return{jstring{}}, Params<>{}},
+    Method{"getLocalizedMessage", Return{jstring{}}, Params<>{}},
+    Method{"getCause", Return{kJavaLangThrowable}, Params<>{}},
+    Method{"initCause", Return{kJavaLangThrowable}, Params{kJavaLangThrowable}},
+    Method{"fillInStackTrace", Return{kJavaLangThrowable}, Params<>{}},
+    Method{"printStackTrace", Return{}, Params<>{}},
+    Method{"toString", Return{jstring{}}, Params<>{}},
+};
+
+}  // namespace jni
+
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
 namespace jni {
@@ -8915,33 +9023,57 @@ class ThreadGuard {
 
 namespace jni {
 
-using LocalStringImpl =
-    Scoped<LifecycleType::LOCAL, JniT<jstring, kJavaLangString>, jobject,
-           jstring>;
-
-// Represents and possibly builds a runtime Java String object.
-//
-// In order to use a string in memory (as opposed to only using it for function
-// arguments), "Pin" the string.
-//
-// Like |jobjects|, |jstring|s can be either local or global with the same
-// ownership semantics.
-class LocalString : public LocalStringImpl {
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+class LocalException
+    : public LocalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
  public:
-  using Base = LocalStringImpl;
+  using Base = LocalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
+  using JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
+  using SpanType = jobject;
   using Base::Base;
 
-  LocalString(LocalObject<kJavaLangString>&& obj)
-      : Base(AdoptLocal{}, static_cast<jstring>(obj.Release())) {}
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  LocalException(LocalObject<class_v, class_loader_v, jvm_v>&& obj)
+      : Base(AdoptLocal{}, obj.Release()) {}
 
-  template <typename T>
-  LocalString(ArrayViewHelper<T> array_view_helper)
-      : LocalString(AdoptLocal{}, array_view_helper.val_) {}
-
-  // Returns a StringView which possibly performs an expensive pinning
-  // operation.  String objects can be pinned multiple times.
-  UtfStringView Pin() { return {RefBase<jstring>::object_ref_}; }
+  void Throw() {
+    LocalString message = (*this)("getMessage");
+    ::jni::JniEnv::GetEnv()->ThrowNew(
+        ::jni::ClassRef<JniT>::GetAndMaybeLoadClassRef(nullptr),
+        message.PinAsStr().ToString().c_str());
+  }
 };
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+LocalException(LocalObject<class_v_, class_loader_v_, jvm_v_>&&)
+    -> LocalException<class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+LocalException(std::string_view)
+    -> LocalException<class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+LocalException(const char*)
+    -> LocalException<class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+LocalException(std::string)
+    -> LocalException<class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+LocalException(jobject) -> LocalException<class_v_, class_loader_v_, jvm_v_>;
 
 }  // namespace jni
 
@@ -9080,18 +9212,6 @@ class GlobalClassLoader
   GlobalClassLoader(GlobalClassLoader<class_loader_v, jvm_v>&& rhs)
       : Base(rhs.Release()) {}
 };
-
-}  // namespace jni
-
-namespace jni {
-
-static constexpr Class kJavaLangThrowable{
-    "java/lang/Throwable",
-    Constructor{},
-    Constructor<jstring>{},
-    Constructor{jstring{}, Self{}},
-    Constructor{jstring{}, Self{}, jboolean{}, jboolean{}},
-    Constructor{Self{}}};
 
 }  // namespace jni
 
@@ -10425,7 +10545,95 @@ class GlobalString : public GlobalStringImpl {
   // Returns a StringView which possibly performs an expensive pinning
   // operation.  String objects can be pinned multiple times.
   UtfStringView Pin() { return {RefBase<jstring>::object_ref_}; }
+
+  // Returns a UtfString which performs an expensive copy to std::string
+  // and releases the pinned characters.
+  UtfString PinAsStr() { return UtfString{RefBase<jstring>::object_ref_}; }
 };
+
+}  // namespace jni
+
+// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
+
+namespace jni {
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+class GlobalException
+    : public GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
+ public:
+  using Base = GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
+  using JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
+  using Base::Base;
+  using SpanType = jobject;
+  using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
+
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  GlobalException(GlobalObject<class_v, class_loader_v, jvm_v>&& obj)
+      : Base(obj.Release()) {}
+
+  template <typename... Ts>
+  GlobalException(Ts&&... vals) : Base(std::forward<Ts&&>(vals)...) {
+    RefBase<jobject>::object_ref_ =
+        LifecycleT::Promote(RefBase<jobject>::object_ref_);
+  }
+
+  GlobalException() {
+    RefBase<jobject>::object_ref_ =
+        LifecycleT::Promote(RefBase<jobject>::object_ref_);
+  }
+
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  GlobalException& operator=(
+      LocalObject<class_v, class_loader_v, jvm_v>&& rhs) {
+    Base::MaybeReleaseUnderlyingObject();
+    Base::object_ref_ = rhs.Release();
+    return *this;
+  }
+
+  void Throw() {
+    LocalString message = (*this)("getMessage");
+    ::jni::JniEnv::GetEnv()->ThrowNew(
+        ::jni::ClassRef<JniT>::GetAndMaybeLoadClassRef(nullptr),
+        message.PinAsStr().ToString().c_str());
+  }
+};
+
+template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+GlobalException(LocalObject<class_v, class_loader_v, jvm_v>&&)
+    -> GlobalException<class_v, class_loader_v, jvm_v>;
+
+template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+GlobalException(LocalException<class_v, class_loader_v, jvm_v>&&)
+    -> GlobalException<class_v, class_loader_v, jvm_v>;
+
+template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+GlobalException(GlobalObject<class_v, class_loader_v, jvm_v>&&)
+    -> GlobalException<class_v, class_loader_v, jvm_v>;
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+GlobalException(std::string_view)
+    -> GlobalException<class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+GlobalException(const char*)
+    -> GlobalException<class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+GlobalException(std::string)
+    -> GlobalException<class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+GlobalException(jobject) -> GlobalException<class_v_, class_loader_v_, jvm_v_>;
 
 }  // namespace jni
 
@@ -10483,23 +10691,6 @@ static constexpr ::jni::Class kJavaUtilArrayList{
     Constructor{int{}},
 
     Method{"add", Return<jboolean>{}, Params{kJavaLangObject}},
-};
-
-}  // namespace jni
-
-namespace jni {
-
-static constexpr Class kJavaLangException{
-    "java/lang/Exception",
-    Constructor{},
-    Constructor<jstring>{},
-    Constructor{jstring{}, kJavaLangThrowable, jboolean{}, jboolean{}},
-    Constructor{kJavaLangThrowable},
-
-    // Inherited.
-    Method{"getMessage", Return{jstring{}}, Params<>{}},
-    Method{"printStackTrace", Return{}, Params<>{}},
-    Method{"toString", Return{jstring{}}, Params<>{}},
 };
 
 }  // namespace jni
