@@ -54,12 +54,22 @@ struct Id;
 template <LifecycleType lifecycleType, typename JniT, typename... ViableSpans>
 struct Scoped;
 
+template <typename Span, LifecycleType lifecycle_type>
+struct LifecycleHelper;
+
 // Objects.
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class LocalObject;
 
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
 class GlobalObject;
+
+// Exceptions.
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+class LocalException;
+
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+class GlobalException;
 
 // Strings.
 class LocalString;

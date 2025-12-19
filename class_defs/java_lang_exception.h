@@ -36,6 +36,10 @@ static constexpr Class kJavaLangException{
 
     // Inherited.
     Method{"getMessage", Return{jstring{}}, Params<>{}},
+    Method{"getLocalizedMessage", Return{jstring{}}, Params<>{}},
+    Method{"getCause", Return{kJavaLangThrowable}, Params<>{}},
+    Method{"initCause", Return{kJavaLangThrowable}, Params{kJavaLangThrowable}},
+    Method{"fillInStackTrace", Return{kJavaLangThrowable}, Params<>{}},
     Method{"printStackTrace", Return{}, Params<>{}},
     Method{"toString", Return{jstring{}}, Params<>{}},
 };

@@ -310,6 +310,51 @@ java_test(
 )
 
 ################################################################################
+# Exception Test.
+################################################################################
+java_library(
+    name = "custom_exception",
+    testonly = True,
+    srcs = [
+        "ClassWithStaticMethod.java",
+        "CustomException.java",
+    ],
+)
+
+cc_library(
+    name = "exception_test_jni_impl",
+    testonly = True,
+    srcs = ["exception_test_jni.cc"],
+    defines = ["ENABLE_DEBUG_OUTPUT"],
+    deps = [
+        "//:jni_bind",
+        "//implementation:local_exception",
+    ],
+    alwayslink = True,
+)
+
+cc_binary(
+    name = "libexception_test_jni.so",
+    testonly = True,
+    linkshared = True,
+    deps = [":exception_test_jni_impl"],
+)
+
+java_test(
+    name = "ExceptionTest",
+    testonly = True,
+    srcs = ["ExceptionTest.java"],
+    data = [":libexception_test_jni.so"],
+    jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
+    tags = ["nosan"],
+    deps = [
+        ":custom_exception",
+        "@maven//:com_google_truth_truth",
+        "@maven//:junit_junit",
+    ],
+)
+
+################################################################################
 # Field Test.
 ################################################################################
 cc_library(
