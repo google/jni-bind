@@ -71,12 +71,16 @@ struct Proxy<JString,
       std::is_same_v<T, LocalString> || std::is_same_v<T, GlobalString>;
 
   static constexpr auto DeleteLambda = [](const jstring& s) {
+#ifndef DRY_RUN
     JniEnv::GetEnv()->DeleteLocalRef(static_cast<jobject>(s));
+#endif
   };
 
   struct DeleteLocalRef {
     static void Call(const jstring& s) {
+#ifndef DRY_RUN
       JniEnv::GetEnv()->DeleteLocalRef(static_cast<jobject>(s));
+#endif
     }
   };
 

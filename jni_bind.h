@@ -82,6 +82,8 @@ static constexpr Configuration kConfig{
 #include "implementation/thread_guard.h"
 
 // Convenience headers for system libraries.
+#include "class_defs/android/activity_thread.h"
+#include "class_defs/android/application.h"
 #include "class_defs/java_lang_classes.h"
 #include "class_defs/java_lang_exception.h"
 #include "class_defs/java_lang_throwable.h"
