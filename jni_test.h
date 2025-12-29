@@ -17,6 +17,7 @@
 #ifndef JNI_BIND_JNI_TEST_H_
 #define JNI_BIND_JNI_TEST_H_
 
+#include <cstring>
 #include <memory>
 
 #include <gmock/gmock.h>
@@ -82,16 +83,15 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
                                      decltype(&JavaVM::AttachCurrentThread), 1>,
                                  void**>);
 
-    ON_CALL(*jvm_, GetEnv)
-        .WillByDefault(testing::Invoke([&](void** out_env, int vs_code) {
-          *reinterpret_cast<JNIEnv**>(out_env) = env_.get();
-          return JNI_OK;
-        }));
+    ON_CALL(*jvm_, GetEnv).WillByDefault([&](void** out_env, int vs_code) {
+      *reinterpret_cast<JNIEnv**>(out_env) = env_.get();
+      return JNI_OK;
+    });
     ON_CALL(*jvm_, AttachCurrentThread)
-        .WillByDefault(testing::Invoke([&](void** out_env, void*) {
+        .WillByDefault([&](void** out_env, void*) {
           *reinterpret_cast<JNIEnv**>(out_env) = env_.get();
           return JNI_OK;
-        }));
+        });
 
     // It's tedious to have logic in unit tests for the creation and destruction
     // of the global objects for jclasses.  This gives reasonable non-null
@@ -106,25 +106,27 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
     // they are null, so this causes behaviour unreflective of the tests that
     // exercise FindClass code.  You can delete this block and |TearDown|, and
     // only those tests will fail.
-    ON_CALL(*env_, FindClass).WillByDefault(Return(Fake<jclass>()));
+    ON_CALL(*env_, FindClass).WillByDefault([&](const char* name) {
+      if (strcmp(name, "android/app/ActivityThread") == 0)
+        return static_cast<jclass>(nullptr);
+      return Fake<jclass>();
+    });
     ON_CALL(*env_, GetMethodID).WillByDefault(Return(Fake<jmethodID>()));
     ON_CALL(*env_, GetFieldID).WillByDefault(Return(Fake<jfieldID>()));
     ON_CALL(*env_, NewObjectArray).WillByDefault(Return(Fake<jobjectArray>()));
     ON_CALL(*env_, NewObjectV).WillByDefault(Return(Fake<jobject>()));
 
-    ON_CALL(*env_, NewLocalRef)
-        .WillByDefault(testing::Invoke(
-            [&](jobject object) { return AsNewLocalReference(object); }));
+    ON_CALL(*env_, NewLocalRef).WillByDefault([&](jobject object) {
+      return AsNewLocalReference(object);
+    });
 
-    ON_CALL(*env_, NewGlobalRef)
-        .WillByDefault(testing::Invoke([&](jobject object) {
-          jobject return_value = AsGlobal(object);
-          if (return_value == AsGlobal(Fake<jclass>())) {
-            default_globals_made_that_should_be_released_.push_back(
-                return_value);
-          }
-          return return_value;
-        }));
+    ON_CALL(*env_, NewGlobalRef).WillByDefault([&](jobject object) {
+      jobject return_value = AsGlobal(object);
+      if (return_value == AsGlobal(Fake<jclass>())) {
+        default_globals_made_that_should_be_released_.push_back(return_value);
+      }
+      return return_value;
+    });
   }
 
   void TearDown() override {
