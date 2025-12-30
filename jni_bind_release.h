@@ -15,7 +15,7 @@
  */
 
 /*******************************************************************************
- * JNI Bind Version __JNI_BIND_VERSION__.
+ * JNI Bind Version 1.4.0.
  * Beta Public Release.
  ********************************************************************************
  * This header is the single header version which you can use to quickly test or
@@ -8912,6 +8912,15 @@ class ArrayRef<JniT, std::enable_if_t<(JniT::kRank > 1)>>
 
 namespace jni {
 
+static constexpr Class kApplicationClass{
+    "android/app/Application",
+    Method{"getClassLoader", Return{kJavaLangClassLoader}},
+};
+
+}  // namespace jni
+
+namespace jni {
+
 static constexpr Class kJavaLangException{
     "java/lang/Exception",
     Constructor{},
@@ -8927,650 +8936,6 @@ static constexpr Class kJavaLangException{
     Method{"fillInStackTrace", Return{kJavaLangThrowable}, Params<>{}},
     Method{"printStackTrace", Return{}, Params<>{}},
     Method{"toString", Return{jstring{}}, Params<>{}},
-};
-
-}  // namespace jni
-
-// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
-
-namespace jni {
-
-// Designed to be the very last JniBind object to execute on the thread.
-// Objects passed by move for lambdas will be destructed after any contents
-// statements within their lambda, and `ThreadGuard` can't be moved into the
-// lambda because its construction will be on the host thread. This static
-// teardown guarantees a delayed destruction beyond any GlobalObject.
-class ThreadLocalGuardDestructor {
- public:
-  bool detach_thread_when_all_guards_released_ = false;
-
-  // By calling this the compiler is obligated to perform initalisation.
-  void ForceDestructionOnThreadClose() {}
-
-  ~ThreadLocalGuardDestructor() {
-    if (detach_thread_when_all_guards_released_) {
-      JavaVM* jvm = JvmRefBase::GetJavaVm();
-      if (jvm) {
-        jvm->DetachCurrentThread();
-      }
-    }
-  }
-};
-
-// ThreadGuard attaches and detaches JNIEnv* objects on the creation of new
-// threads.  All new threads which want to use JNI Wrapper must hold a
-// ThreadGuard beyond the scope of all created objects.  If the ThreadGuard
-// needs to create an Env, it will also detach itself.
-class ThreadGuard {
- public:
-  ~ThreadGuard() { thread_guard_count_--; }
-
-  ThreadGuard(ThreadGuard&) = delete;
-  ThreadGuard(ThreadGuard&&) = delete;
-
-  template <const auto& jvm_v_>
-  friend class JvmRef;
-
-  // This constructor must *never* be called before a |JvmRef| has been
-  // constructed. It depends on static setup from |JvmRef|.
-  [[nodiscard]] ThreadGuard() {
-    thread_local_guard_destructor.ForceDestructionOnThreadClose();
-
-    // Nested ThreadGuards should be permitted in the same way mutex locks are.
-    thread_guard_count_++;
-    if (thread_guard_count_ != 1) {
-      // SetEnv has been called prior, GetEnv is currently valid.
-      return;
-    }
-
-    // Declarations for AttachCurrentThread are inconsistent across different
-    // JNI headers.  This forces a cast to whatever the expected type is.
-    JavaVM* const vm = JvmRefBase::GetJavaVm();
-    JNIEnv* jni_env = 0;
-
-    using TypeForGetEnv =
-        metaprogramming::FunctionTraitsArg_t<decltype(&JavaVM::GetEnv), 1>;
-    const int code =
-        vm->GetEnv(reinterpret_cast<TypeForGetEnv>(&jni_env), JNI_VERSION_1_6);
-
-    if (code != JNI_OK) {
-      using TypeForAttachment = metaprogramming::FunctionTraitsArg_t<
-          decltype(&JavaVM::AttachCurrentThread), 1>;
-      vm->AttachCurrentThread(reinterpret_cast<TypeForAttachment>(&jni_env),
-                              nullptr);
-      thread_local_guard_destructor.detach_thread_when_all_guards_released_ =
-          true;
-    }
-    // Why not store this locally to ThreadGuard?
-    //
-    // JNIEnv is thread local static, and the context an object is built from
-    // may not have easy access to a JNIEnv* (or this ThreadGuard).  For most
-    // constructions of new objects, the env is likely trivial (it's passed as
-    // part of the JNI call), however, if an object reference is moved from one
-    // thread to another, the JNIEnv* is certainly not available.
-    JniEnv::SetEnv(jni_env);
-  }
-
- private:
-  static inline thread_local int thread_guard_count_ = 0;
-  static inline thread_local ThreadLocalGuardDestructor
-      thread_local_guard_destructor{};
-};
-
-}  // namespace jni
-
-// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
-
-namespace jni {
-
-template <const auto& class_v_ = kJavaLangException,
-          const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm>
-class LocalException
-    : public LocalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
- public:
-  using Base = LocalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
-  using JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
-  using SpanType = jobject;
-  using Base::Base;
-
-  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  LocalException(LocalObject<class_v, class_loader_v, jvm_v>&& obj)
-      : Base(AdoptLocal{}, obj.Release()) {}
-
-  void Throw() {
-    LocalString message = (*this)("getMessage");
-    ::jni::JniEnv::GetEnv()->ThrowNew(
-        ::jni::ClassRef<JniT>::GetAndMaybeLoadClassRef(nullptr),
-        message.PinAsStr().ToString().c_str());
-  }
-};
-
-template <const auto& class_v_ = kJavaLangException,
-          const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm>
-LocalException(LocalObject<class_v_, class_loader_v_, jvm_v_>&&)
-    -> LocalException<class_v_, class_loader_v_, jvm_v_>;
-
-template <const auto& class_v_ = kJavaLangException,
-          const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm>
-LocalException(std::string_view)
-    -> LocalException<class_v_, class_loader_v_, jvm_v_>;
-
-template <const auto& class_v_ = kJavaLangException,
-          const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm>
-LocalException(const char*)
-    -> LocalException<class_v_, class_loader_v_, jvm_v_>;
-
-template <const auto& class_v_ = kJavaLangException,
-          const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm>
-LocalException(std::string)
-    -> LocalException<class_v_, class_loader_v_, jvm_v_>;
-
-template <const auto& class_v_ = kJavaLangException,
-          const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm>
-LocalException(jobject) -> LocalException<class_v_, class_loader_v_, jvm_v_>;
-
-}  // namespace jni
-
-// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
-
-#include <cstddef>
-#include <type_traits>
-
-namespace jni {
-
-// Represents a an array object (e.g. int[], float[][], Object[], etc).
-// Currently GlobalArrays do not exist, as reasoning about the lifecycles of the
-// underlying objects is non-trivial, e.g. a GlobalArray taking a local object
-// would result in a possibly unexpected extension of lifetime.
-template <typename SpanType_, std::size_t kRank_ = 1,
-          const auto& class_v_ = kNoClassSpecified,
-          const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm>
-class LocalArray
-    : public ArrayRef<
-          JniT<SpanType_, class_v_, class_loader_v_, jvm_v_, kRank_>> {
- public:
-  static constexpr Class kClass{class_v_.name_};
-  static constexpr std::size_t kRank = kRank_;
-  using SpanType = SpanType_;
-
-  using RawValT = std::conditional_t<std::is_same_v<jobject, SpanType>,
-                                     std::decay_t<decltype(kClass)>, SpanType>;
-
-  using _JniT = JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>;
-
-  using Base =
-      ArrayRef<JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
-  using Base::Base;
-
-  using RefTag = std::conditional_t<(kRank_ > 1), jobject, SpanType>;
-
-  // RefTag ctor (supports multi-dimensions, `jobject` if rank > 1).
-  LocalArray(std::size_t size, RefTag arr)
-      : Base(AdoptLocal{}, JniArrayHelper<jobject, kRank_>::NewArray(
-                               size,
-                               ClassRef_t<_JniT>::GetAndMaybeLoadClassRef(
-                                   static_cast<jobject>(arr)),
-                               arr)) {}
-
-  template <typename T>
-  LocalArray(ArrayViewHelper<T> array_view_helper)
-      : LocalArray(AdoptLocal{}, array_view_helper.val_) {}
-
-  // Rvalue ctor.
-  LocalArray(LocalArray<SpanType, kRank_>&& rhs)
-      : Base(AdoptLocal{}, rhs.Release()) {}
-
-  // Rvalue ctor.
-  template <typename SpanTypeRhs_, std::size_t kRank, const auto& class_v,
-            const auto& class_loader_v, const auto& jvm_v>
-  LocalArray(
-      LocalArray<SpanTypeRhs_, kRank, class_v, class_loader_v, jvm_v>&& rhs)
-      : Base(AdoptLocal{}, rhs.Release()) {
-    static_assert(std::is_same_v<SpanType, SpanTypeRhs_> && kRank == kRank_ &&
-                  class_v == class_v_ && class_loader_v == class_loader_v_);
-  }
-
-  // Construct from decorated object lvalue (object is used as template).
-  //
-  // e.g.
-  //  LocalArray arr { 5, LocalObject<kClass> {args...} };
-  //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
-  template <
-      template <const auto&, const auto&, const auto&> class ObjectContainer,
-      const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
-  LocalArray(
-      std::size_t size,
-      const ObjectContainer<class_v, class_loader_v, jvm_v>& local_object)
-      : Base(JniArrayHelper<jobject, kRank_>::NewArray(
-            size,
-            ClassRef_t<_JniT>::GetAndMaybeLoadClassRef(
-                static_cast<jobject>(local_object)),
-            static_cast<jobject>(local_object))) {}
-
-  operator jobject() { return static_cast<jobject>(Base::object_ref_); }
-};
-
-template <
-    template <const auto&, const auto&, const auto&> class ObjectContainer,
-    const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-LocalArray(std::size_t,
-           const ObjectContainer<class_v_, class_loader_v_, jvm_v_>&)
-    -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
-
-template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
-LocalArray(
-    std::size_t,
-    const Scoped<LifecycleType::LOCAL,
-                 JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>&)
-    -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
-
-template <typename SpanType>
-LocalArray(std::size_t, SpanType)
-    -> LocalArray<SpanType, 1, kNoClassSpecified, kDefaultClassLoader,
-                  kDefaultJvm>;
-
-template <typename SpanType, std::size_t kRank_minus_1>
-LocalArray(std::size_t, LocalArray<SpanType, kRank_minus_1>)
-    -> LocalArray<SpanType, kRank_minus_1 + 1>;
-
-template <typename SpanType, std::size_t kRank_minus_1, const auto& class_v,
-          const auto& class_loader_v, const auto& jvm_v>
-LocalArray(std::size_t,
-           LocalArray<SpanType, kRank_minus_1, class_v, class_loader_v, jvm_v>)
-    -> LocalArray<SpanType, kRank_minus_1 + 1>;
-
-template <typename SpanType, std::size_t kRank_minus_1>
-LocalArray(std::size_t, LocalArray<SpanType, kRank_minus_1>&&)
-    -> LocalArray<SpanType, kRank_minus_1 + 1>;
-
-template <typename TUndecayed>
-struct ProxyHelper;
-
-}  // namespace jni
-
-// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
-
-namespace jni {
-
-template <const auto& class_loader_v_ = kDefaultClassLoader,
-          const auto& jvm_v_ = kDefaultJvm>
-class GlobalClassLoader
-    : public ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_> {
- public:
-  using Base = ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_>;
-  using Base::Base;
-  using SpanType = jobject;
-
-  template <const auto& class_loader_v, const auto& jvm_v>
-  GlobalClassLoader(GlobalClassLoader<class_loader_v, jvm_v>&& rhs)
-      : Base(rhs.Release()) {}
-};
-
-}  // namespace jni
-
-#include <cstddef>
-#include <type_traits>
-
-namespace jni {
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank 0: Static primitive types (e.g. int).
-////////////////////////////////////////////////////////////////////////////////
-template <>
-struct FieldHelper<jboolean, 0, true, void> {
-  static inline jboolean GetValue(const jclass clazz,
-                                  const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticBooleanField")), clazz,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jboolean>();
-#else
-    return jni::JniEnv::GetEnv()->GetStaticBooleanField(clazz, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jboolean&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticBooleanField")), clazz,
-          field_ref_, value);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetStaticBooleanField(clazz, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jbyte, 0, true, void> {
-  static inline jbyte GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticByteField")), clazz,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jbyte>();
-#else
-    return jni::JniEnv::GetEnv()->GetStaticByteField(clazz, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jbyte&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticByteField")), clazz,
-          field_ref_, value);
-
-#ifdef DRY_RUN
-#else
-    return jni::JniEnv::GetEnv()->SetStaticByteField(clazz, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jchar, 0, true, void> {
-  static inline jchar GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticCharField")), clazz,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jchar>();
-#else
-    return jni::JniEnv::GetEnv()->GetStaticCharField(clazz, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jchar&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticCharField")), clazz,
-          field_ref_, value);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetStaticCharField(clazz, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jshort, 0, true, void> {
-  static inline jshort GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticShortField")), clazz,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jshort>();
-#else
-    return jni::JniEnv::GetEnv()->GetStaticShortField(clazz, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jshort&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticShortField")), clazz,
-          field_ref_, value);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetStaticShortField(clazz, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jint, 0, true, void> {
-  static inline jint GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticIntField")), clazz,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jint>();
-#else
-    return jni::JniEnv::GetEnv()->GetStaticIntField(clazz, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jint&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticIntField")), clazz,
-          field_ref_, value);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetStaticIntField(clazz, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jlong, 0, true, void> {
-  static inline jlong GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticLongField")), clazz,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jlong>();
-#else
-    return jni::JniEnv::GetEnv()->GetStaticLongField(clazz, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jlong&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticLongField")), clazz,
-          field_ref_, value);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetStaticLongField(clazz, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jfloat, 0, true, void> {
-  static inline jfloat GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticFloatField")), clazz,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return 123.f;
-#else
-    return jni::JniEnv::GetEnv()->GetStaticFloatField(clazz, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jfloat&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticFloatField")), clazz,
-          field_ref_, value);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetStaticFloatField(clazz, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jdouble, 0, true, void> {
-  static inline jdouble GetValue(const jclass clazz,
-                                 const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticDoubleField")), clazz,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return 123.;
-#else
-    return jni::JniEnv::GetEnv()->GetStaticDoubleField(clazz, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jdouble&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticDoubleField")), clazz,
-          field_ref_, value);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetStaticDoubleField(clazz, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jobject, 0, true, void> {
-  static inline jobject GetValue(const jclass clazz,
-                                 const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jobject>();
-#else
-    return jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_);
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jobject&& new_value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
-          field_ref_, new_value);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
-#endif  // DRY_RUN
-  }
-};
-
-template <>
-struct FieldHelper<jstring, 0, true, void> {
-  static inline jstring GetValue(const jclass clazz,
-                                 const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jstring>();
-#else
-    return reinterpret_cast<jstring>(
-        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jstring&& new_value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
-          field_ref_, new_value);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
-#endif  // DRY_RUN
-  }
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank 1: Static single dimension arrays (e.g. int[]).
-////////////////////////////////////////////////////////////////////////////////
-template <typename ArrayType>
-struct StaticBaseFieldArrayHelper {
-  static inline ArrayType GetValue(const jobject object_ref,
-                                   const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
-          field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<ArrayType>();
-#else
-    return static_cast<ArrayType>(
-        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jobject object_ref,
-                              const jfieldID field_ref_, ArrayType&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
-          field_ref_, value);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
-#endif  // DRY_RUN
-  }
-};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jbooleanArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jbyteArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jcharArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jshortArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jint>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jintArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jlongArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jfloatArray> {};
-
-template <std::size_t kRank>
-struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, true, void>
-    : StaticBaseFieldArrayHelper<jdoubleArray> {};
-
-////////////////////////////////////////////////////////////////////////////////
-// Rank 1: Static jobjects.
-// Rank 2+: Static multi-dimension arrays (e.g. int[][], int[][][]).
-////////////////////////////////////////////////////////////////////////////////
-template <typename T, std::size_t kRank>
-struct FieldHelper<
-    T, kRank, true,
-    std::enable_if_t<(std::is_same_v<jobject, T> || (kRank > 1))>> {
-  static inline jobjectArray GetValue(const jclass clazz,
-                                      const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField, Rank 1+")),
-          clazz, field_ref_);
-
-#ifdef DRY_RUN
-    return Fake<jobjectArray>();
-#else
-    return static_cast<jobjectArray>(
-        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
-#endif  // DRY_RUN
-  }
-
-  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
-                              jobjectArray&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField, Rank 1+")),
-          clazz, field_ref_, value);
-
-#ifdef DRY_RUN
-#else
-    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, value);
-#endif  // DRY_RUN
-  }
 };
 
 }  // namespace jni
@@ -10154,6 +9519,94 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, true> {
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+namespace jni {
+
+// Designed to be the very last JniBind object to execute on the thread.
+// Objects passed by move for lambdas will be destructed after any contents
+// statements within their lambda, and `ThreadGuard` can't be moved into the
+// lambda because its construction will be on the host thread. This static
+// teardown guarantees a delayed destruction beyond any GlobalObject.
+class ThreadLocalGuardDestructor {
+ public:
+  bool detach_thread_when_all_guards_released_ = false;
+
+  // By calling this the compiler is obligated to perform initalisation.
+  void ForceDestructionOnThreadClose() {}
+
+  ~ThreadLocalGuardDestructor() {
+    if (detach_thread_when_all_guards_released_) {
+      JavaVM* jvm = JvmRefBase::GetJavaVm();
+      if (jvm) {
+        jvm->DetachCurrentThread();
+      }
+    }
+  }
+};
+
+// ThreadGuard attaches and detaches JNIEnv* objects on the creation of new
+// threads.  All new threads which want to use JNI Wrapper must hold a
+// ThreadGuard beyond the scope of all created objects.  If the ThreadGuard
+// needs to create an Env, it will also detach itself.
+class ThreadGuard {
+ public:
+  ~ThreadGuard() { thread_guard_count_--; }
+
+  ThreadGuard(ThreadGuard&) = delete;
+  ThreadGuard(ThreadGuard&&) = delete;
+
+  template <const auto& jvm_v_>
+  friend class JvmRef;
+
+  // This constructor must *never* be called before a |JvmRef| has been
+  // constructed. It depends on static setup from |JvmRef|.
+  [[nodiscard]] ThreadGuard() {
+    thread_local_guard_destructor.ForceDestructionOnThreadClose();
+
+    // Nested ThreadGuards should be permitted in the same way mutex locks are.
+    thread_guard_count_++;
+    if (thread_guard_count_ != 1) {
+      // SetEnv has been called prior, GetEnv is currently valid.
+      return;
+    }
+
+    // Declarations for AttachCurrentThread are inconsistent across different
+    // JNI headers.  This forces a cast to whatever the expected type is.
+    JavaVM* const vm = JvmRefBase::GetJavaVm();
+    JNIEnv* jni_env = 0;
+
+    using TypeForGetEnv =
+        metaprogramming::FunctionTraitsArg_t<decltype(&JavaVM::GetEnv), 1>;
+    const int code =
+        vm->GetEnv(reinterpret_cast<TypeForGetEnv>(&jni_env), JNI_VERSION_1_6);
+
+    if (code != JNI_OK) {
+      using TypeForAttachment = metaprogramming::FunctionTraitsArg_t<
+          decltype(&JavaVM::AttachCurrentThread), 1>;
+      vm->AttachCurrentThread(reinterpret_cast<TypeForAttachment>(&jni_env),
+                              nullptr);
+      thread_local_guard_destructor.detach_thread_when_all_guards_released_ =
+          true;
+    }
+    // Why not store this locally to ThreadGuard?
+    //
+    // JNIEnv is thread local static, and the context an object is built from
+    // may not have easy access to a JNIEnv* (or this ThreadGuard).  For most
+    // constructions of new objects, the env is likely trivial (it's passed as
+    // part of the JNI call), however, if an object reference is moved from one
+    // thread to another, the JNIEnv* is certainly not available.
+    JniEnv::SetEnv(jni_env);
+  }
+
+ private:
+  static inline thread_local int thread_guard_count_ = 0;
+  static inline thread_local ThreadLocalGuardDestructor
+      thread_local_guard_destructor{};
+};
+
+}  // namespace jni
+
+// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
+
 #include <cstddef>
 
 namespace jni {
@@ -10280,6 +9733,574 @@ struct StaticRef
     return FieldRef<_JniT, IdType::STATIC_FIELD, I>{GetJClass(), nullptr};
   }
 #endif  // __cplusplus >= 202002L
+};
+
+}  // namespace jni
+
+// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
+
+namespace jni {
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+class LocalException
+    : public LocalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
+ public:
+  using Base = LocalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
+  using JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
+  using SpanType = jobject;
+  using Base::Base;
+
+  template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  LocalException(LocalObject<class_v, class_loader_v, jvm_v>&& obj)
+      : Base(AdoptLocal{}, obj.Release()) {}
+
+  void Throw() {
+    LocalString message = (*this)("getMessage");
+    ::jni::JniEnv::GetEnv()->ThrowNew(
+        ::jni::ClassRef<JniT>::GetAndMaybeLoadClassRef(nullptr),
+        message.PinAsStr().ToString().c_str());
+  }
+};
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+LocalException(LocalObject<class_v_, class_loader_v_, jvm_v_>&&)
+    -> LocalException<class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+LocalException(std::string_view)
+    -> LocalException<class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+LocalException(const char*)
+    -> LocalException<class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+LocalException(std::string)
+    -> LocalException<class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_ = kJavaLangException,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+LocalException(jobject) -> LocalException<class_v_, class_loader_v_, jvm_v_>;
+
+}  // namespace jni
+
+// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
+
+#include <cstddef>
+#include <type_traits>
+
+namespace jni {
+
+// Represents a an array object (e.g. int[], float[][], Object[], etc).
+// Currently GlobalArrays do not exist, as reasoning about the lifecycles of the
+// underlying objects is non-trivial, e.g. a GlobalArray taking a local object
+// would result in a possibly unexpected extension of lifetime.
+template <typename SpanType_, std::size_t kRank_ = 1,
+          const auto& class_v_ = kNoClassSpecified,
+          const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+class LocalArray
+    : public ArrayRef<
+          JniT<SpanType_, class_v_, class_loader_v_, jvm_v_, kRank_>> {
+ public:
+  static constexpr Class kClass{class_v_.name_};
+  static constexpr std::size_t kRank = kRank_;
+  using SpanType = SpanType_;
+
+  using RawValT = std::conditional_t<std::is_same_v<jobject, SpanType>,
+                                     std::decay_t<decltype(kClass)>, SpanType>;
+
+  using _JniT = JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>;
+
+  using Base =
+      ArrayRef<JniT<SpanType, class_v_, class_loader_v_, jvm_v_, kRank_>>;
+  using Base::Base;
+
+  using RefTag = std::conditional_t<(kRank_ > 1), jobject, SpanType>;
+
+  // RefTag ctor (supports multi-dimensions, `jobject` if rank > 1).
+  LocalArray(std::size_t size, RefTag arr)
+      : Base(AdoptLocal{}, JniArrayHelper<jobject, kRank_>::NewArray(
+                               size,
+                               ClassRef_t<_JniT>::GetAndMaybeLoadClassRef(
+                                   static_cast<jobject>(arr)),
+                               arr)) {}
+
+  template <typename T>
+  LocalArray(ArrayViewHelper<T> array_view_helper)
+      : LocalArray(AdoptLocal{}, array_view_helper.val_) {}
+
+  // Rvalue ctor.
+  LocalArray(LocalArray<SpanType, kRank_>&& rhs)
+      : Base(AdoptLocal{}, rhs.Release()) {}
+
+  // Rvalue ctor.
+  template <typename SpanTypeRhs_, std::size_t kRank, const auto& class_v,
+            const auto& class_loader_v, const auto& jvm_v>
+  LocalArray(
+      LocalArray<SpanTypeRhs_, kRank, class_v, class_loader_v, jvm_v>&& rhs)
+      : Base(AdoptLocal{}, rhs.Release()) {
+    static_assert(std::is_same_v<SpanType, SpanTypeRhs_> && kRank == kRank_ &&
+                  class_v == class_v_ && class_loader_v == class_loader_v_);
+  }
+
+  // Construct from decorated object lvalue (object is used as template).
+  //
+  // e.g.
+  //  LocalArray arr { 5, LocalObject<kClass> {args...} };
+  //  LocalArray arr { 5, GlobalObject<kClass> {args...} };
+  template <
+      template <const auto&, const auto&, const auto&> class ObjectContainer,
+      const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
+  LocalArray(
+      std::size_t size,
+      const ObjectContainer<class_v, class_loader_v, jvm_v>& local_object)
+      : Base(JniArrayHelper<jobject, kRank_>::NewArray(
+            size,
+            ClassRef_t<_JniT>::GetAndMaybeLoadClassRef(
+                static_cast<jobject>(local_object)),
+            static_cast<jobject>(local_object))) {}
+
+  operator jobject() { return static_cast<jobject>(Base::object_ref_); }
+};
+
+template <
+    template <const auto&, const auto&, const auto&> class ObjectContainer,
+    const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+LocalArray(std::size_t,
+           const ObjectContainer<class_v_, class_loader_v_, jvm_v_>&)
+    -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
+
+template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>
+LocalArray(
+    std::size_t,
+    const Scoped<LifecycleType::LOCAL,
+                 JniT<jobject, class_v_, class_loader_v_, jvm_v_>, jobject>&)
+    -> LocalArray<jobject, class_v_, class_loader_v_, jvm_v_>;
+
+template <typename SpanType>
+LocalArray(std::size_t, SpanType)
+    -> LocalArray<SpanType, 1, kNoClassSpecified, kDefaultClassLoader,
+                  kDefaultJvm>;
+
+template <typename SpanType, std::size_t kRank_minus_1>
+LocalArray(std::size_t, LocalArray<SpanType, kRank_minus_1>)
+    -> LocalArray<SpanType, kRank_minus_1 + 1>;
+
+template <typename SpanType, std::size_t kRank_minus_1, const auto& class_v,
+          const auto& class_loader_v, const auto& jvm_v>
+LocalArray(std::size_t,
+           LocalArray<SpanType, kRank_minus_1, class_v, class_loader_v, jvm_v>)
+    -> LocalArray<SpanType, kRank_minus_1 + 1>;
+
+template <typename SpanType, std::size_t kRank_minus_1>
+LocalArray(std::size_t, LocalArray<SpanType, kRank_minus_1>&&)
+    -> LocalArray<SpanType, kRank_minus_1 + 1>;
+
+template <typename TUndecayed>
+struct ProxyHelper;
+
+}  // namespace jni
+
+// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
+
+namespace jni {
+
+template <const auto& class_loader_v_ = kDefaultClassLoader,
+          const auto& jvm_v_ = kDefaultJvm>
+class GlobalClassLoader
+    : public ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_> {
+ public:
+  using Base = ClassLoaderRef<LifecycleType::GLOBAL, class_loader_v_, jvm_v_>;
+  using Base::Base;
+  using SpanType = jobject;
+
+  template <const auto& class_loader_v, const auto& jvm_v>
+  GlobalClassLoader(GlobalClassLoader<class_loader_v, jvm_v>&& rhs)
+      : Base(rhs.Release()) {}
+};
+
+}  // namespace jni
+
+namespace jni {
+
+static constexpr Class kActivityThreadClass{
+    "android/app/ActivityThread",
+    Static{
+        Method{"currentActivityThread", Return{Self{}}},
+    },
+    Method{"getApplication", Return{kApplicationClass}},
+};
+
+}  // namespace jni
+
+#include <cstddef>
+#include <type_traits>
+
+namespace jni {
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 0: Static primitive types (e.g. int).
+////////////////////////////////////////////////////////////////////////////////
+template <>
+struct FieldHelper<jboolean, 0, true, void> {
+  static inline jboolean GetValue(const jclass clazz,
+                                  const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticBooleanField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jboolean>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticBooleanField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jboolean&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticBooleanField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticBooleanField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jbyte, 0, true, void> {
+  static inline jbyte GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticByteField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jbyte>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticByteField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jbyte&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticByteField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    return jni::JniEnv::GetEnv()->SetStaticByteField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jchar, 0, true, void> {
+  static inline jchar GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticCharField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jchar>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticCharField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jchar&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticCharField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticCharField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jshort, 0, true, void> {
+  static inline jshort GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticShortField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jshort>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticShortField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jshort&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticShortField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticShortField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jint, 0, true, void> {
+  static inline jint GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticIntField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jint>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticIntField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jint&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticIntField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticIntField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jlong, 0, true, void> {
+  static inline jlong GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticLongField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jlong>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticLongField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jlong&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticLongField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticLongField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jfloat, 0, true, void> {
+  static inline jfloat GetValue(const jclass clazz, const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticFloatField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return 123.f;
+#else
+    return jni::JniEnv::GetEnv()->GetStaticFloatField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jfloat&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticFloatField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticFloatField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jdouble, 0, true, void> {
+  static inline jdouble GetValue(const jclass clazz,
+                                 const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticDoubleField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return 123.;
+#else
+    return jni::JniEnv::GetEnv()->GetStaticDoubleField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jdouble&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticDoubleField")), clazz,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticDoubleField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jobject, 0, true, void> {
+  static inline jobject GetValue(const jclass clazz,
+                                 const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jobject>();
+#else
+    return jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_);
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jobject&& new_value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
+          field_ref_, new_value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+#endif  // DRY_RUN
+  }
+};
+
+template <>
+struct FieldHelper<jstring, 0, true, void> {
+  static inline jstring GetValue(const jclass clazz,
+                                 const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jstring>();
+#else
+    return reinterpret_cast<jstring>(
+        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jstring&& new_value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
+          field_ref_, new_value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, new_value);
+#endif  // DRY_RUN
+  }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1: Static single dimension arrays (e.g. int[]).
+////////////////////////////////////////////////////////////////////////////////
+template <typename ArrayType>
+struct StaticBaseFieldArrayHelper {
+  static inline ArrayType GetValue(const jobject object_ref,
+                                   const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
+          field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<ArrayType>();
+#else
+    return static_cast<ArrayType>(
+        jni::JniEnv::GetEnv()->GetObjectField(object_ref, field_ref_));
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jobject object_ref,
+                              const jfieldID field_ref_, ArrayType&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
+          field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetObjectField(object_ref, field_ref_, value);
+#endif  // DRY_RUN
+  }
+};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jbooleanArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jbyteArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jcharArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jshortArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jint>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jintArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jlongArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jfloatArray> {};
+
+template <std::size_t kRank>
+struct FieldHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, true, void>
+    : StaticBaseFieldArrayHelper<jdoubleArray> {};
+
+////////////////////////////////////////////////////////////////////////////////
+// Rank 1: Static jobjects.
+// Rank 2+: Static multi-dimension arrays (e.g. int[][], int[][][]).
+////////////////////////////////////////////////////////////////////////////////
+template <typename T, std::size_t kRank>
+struct FieldHelper<
+    T, kRank, true,
+    std::enable_if_t<(std::is_same_v<jobject, T> || (kRank > 1))>> {
+  static inline jobjectArray GetValue(const jclass clazz,
+                                      const jfieldID field_ref_) {
+    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField, Rank 1+")),
+          clazz, field_ref_);
+
+#ifdef DRY_RUN
+    return Fake<jobjectArray>();
+#else
+    return static_cast<jobjectArray>(
+        jni::JniEnv::GetEnv()->GetStaticObjectField(clazz, field_ref_));
+#endif  // DRY_RUN
+  }
+
+  static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
+                              jobjectArray&& value) {
+    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField, Rank 1+")),
+          clazz, field_ref_, value);
+
+#ifdef DRY_RUN
+#else
+    jni::JniEnv::GetEnv()->SetStaticObjectField(clazz, field_ref_, value);
+#endif  // DRY_RUN
+  }
 };
 
 }  // namespace jni
@@ -10422,9 +10443,13 @@ class JvmRef : public JvmRefBase {
   }
 
   explicit JvmRef(JNIEnv* env, const Configuration& configuration = {})
-      : JvmRefBase(BuildJavaVMFromEnv(env), configuration) {}
+      : JvmRefBase(BuildJavaVMFromEnv(env), configuration) {
+    ScrapeAndroidFallbackLoader(env);
+  }
   explicit JvmRef(JavaVM* vm, const Configuration& configuration = {})
-      : JvmRefBase(vm, configuration) {}
+      : JvmRefBase(vm, configuration) {
+    ScrapeAndroidFallbackLoader(JniEnv::GetEnv());
+  }
 
   ~JvmRef() {
     TeardownClassloadersHelper(
@@ -10502,6 +10527,61 @@ class JvmRef : public JvmRefBase {
   }
 
  private:
+  // This function attempts to find an Android application class loader
+  // by scraping it from the current ActivityThread.
+  // It only has an effect on Android where ActivityThread is available.
+  void ScrapeAndroidFallbackLoader(JNIEnv* env) {
+    if (JniHelper::FindClass(kActivityThreadClass.name_) == nullptr) {
+      env->ExceptionClear();
+      return;
+    }
+
+#if __cplusplus >= 202002L
+    LocalObject<kActivityThreadClass> activity_thread =
+        StaticRef<kActivityThreadClass>{}.Call<"currentActivityThread">();
+    if (jobject{activity_thread} == nullptr) {
+      return;
+    }
+
+    LocalObject<kApplicationClass> application =
+        activity_thread.Call<"getApplication">();
+    if (jobject{application} == nullptr) {
+      return;
+    }
+
+    LocalObject<kJavaLangClassLoader> class_loader =
+        application.Call<"getClassLoader">();
+    if (jobject{class_loader} == nullptr) {
+      return;
+    }
+
+    SetFallbackClassLoader(std::move(class_loader));
+#elif __clang__
+    LocalObject<kActivityThreadClass> activity_thread =
+        StaticRef<kActivityThreadClass>{}("currentActivityThread");
+    if (jobject{activity_thread} == nullptr) {
+      return;
+    }
+
+    LocalObject<kApplicationClass> application =
+        activity_thread("getApplication");
+    if (jobject{application} == nullptr) {
+      return;
+    }
+
+    LocalObject<kJavaLangClassLoader> class_loader =
+        application("getClassLoader");
+    if (jobject{class_loader} == nullptr) {
+      return;
+    }
+
+    SetFallbackClassLoader(std::move(class_loader));
+#else
+    static_assert(false,
+                  "JNI Bind requires C++20 (or later) or C++17 with clang.");
+#endif
+  }
+
   // Main thread has a JNIEnv just like every other thread.
   const ThreadGuard thread_guard_ = {};
 

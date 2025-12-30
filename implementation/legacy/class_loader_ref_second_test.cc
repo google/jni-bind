@@ -44,6 +44,10 @@ TEST_F(JniTestWithNoDefaultJvmRef,
 
   InSequence sequence;
 
+  EXPECT_CALL(*env_, FindClass(StrEq("android/app/ActivityThread")))
+      .WillOnce(testing::Return(nullptr));
+  EXPECT_CALL(*env_, ExceptionClear());
+
   EXPECT_CALL(*env_, FindClass(StrEq("java/lang/ClassLoader")))
       .WillOnce(testing::Return(Fake<jclass>(1)));
 
