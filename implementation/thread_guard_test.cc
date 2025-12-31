@@ -15,7 +15,7 @@
  */
 
 #include <mutex>
-#include <thread>
+#include <thread>  // NOLINT
 #include <utility>
 #include <vector>
 
@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 #include "jni_bind.h"
 #include "jni_test.h"
+#include "mock_jni_env.h"
 #include "mock_jvm.h"
 
 using ::jni::Class;
@@ -41,7 +42,11 @@ namespace {
 TEST(ThreadGuard,
      NeverCallsAttachOrDetachCurrentThreadIfAnEnvIsAlreadyAttached) {
   MockJvm jvm;
-  EXPECT_CALL(jvm, GetEnv).WillOnce(Return(JNI_OK));
+  jni::test::MockJniEnv env;
+  EXPECT_CALL(jvm, GetEnv).WillOnce([&](void** out_env, int) {
+    *reinterpret_cast<JNIEnv**>(out_env) = &env;
+    return JNI_OK;
+  });
   EXPECT_CALL(jvm, AttachCurrentThread).Times(0);
   EXPECT_CALL(jvm, DetachCurrentThread).Times(0);
 
@@ -50,7 +55,11 @@ TEST(ThreadGuard,
 
 TEST(ThreadGuard, WontEffectDetachmentForPreexistingEnv) {
   MockJvm jvm;
-  EXPECT_CALL(jvm, GetEnv).WillOnce(Return(JNI_OK));
+  jni::test::MockJniEnv env;
+  EXPECT_CALL(jvm, GetEnv).WillOnce([&](void** out_env, int) {
+    *reinterpret_cast<JNIEnv**>(out_env) = &env;
+    return JNI_OK;
+  });
   EXPECT_CALL(jvm, AttachCurrentThread).Times(0);
   EXPECT_CALL(jvm, DetachCurrentThread).Times(0);
 
@@ -107,9 +116,14 @@ TEST_F(JniTest, AllowsMoveCtorIntoLambdaWithThreadGuardUsage) {
 
 TEST(JvmThreadGuard, DetachesOnceForMultipleGuardsOnSingleThread) {
   jni::test::MockJvm jvm;
+  jni::test::MockJniEnv env;
 
   EXPECT_CALL(jvm, GetEnv(_, _)).WillRepeatedly(Return(JNI_EDETACHED));
-  EXPECT_CALL(jvm, AttachCurrentThread(_, _)).Times(1);
+  EXPECT_CALL(jvm, AttachCurrentThread(_, _))
+      .WillOnce([&](void** out_env, void*) {
+        *reinterpret_cast<JNIEnv**>(out_env) = &env;
+        return JNI_OK;
+      });
 
   // See above uncommented test.
   // EXPECT_CALL(jvm, DetachCurrentThread).Times(1);
@@ -126,25 +140,26 @@ TEST(JvmThreadGuard, DetachesOnceForMultipleGuardsOnSingleThread) {
 
 TEST(JvmThreadGuard, UpdatesIndividualThreadsWithNewValues) {
   jni::test::MockJvm jvm;
+  jni::test::MockJniEnv env;  // For main thread JvmRef init
 
   // This sequence of expectation mimics a normal application.
   // A main thread usually exists with a JNIEnv that is attached on your
   // behalf, and subsequent thread spawns require an explicit attach/detach.
   EXPECT_CALL(jvm, GetEnv(_, _))
-      .WillOnce(testing::Invoke([&](void** out_env, int) {
-        *out_env = reinterpret_cast<void*>(0xAAAAAAAAAAA);
+      .WillOnce([&](void** out_env, int) {
+        *reinterpret_cast<JNIEnv**>(out_env) = &env;
         return JNI_OK;
-      }))
+      })
       .WillRepeatedly(Return(JNI_EDETACHED));
   EXPECT_CALL(jvm, AttachCurrentThread(_, _))
-      .WillOnce(testing::Invoke([&](void** out_env, void*) {
+      .WillOnce([&](void** out_env, void*) {
         *out_env = reinterpret_cast<void*>(0xBBBBBBBBBBB);
         return JNI_OK;
-      }))
-      .WillOnce(testing::Invoke([&](void** out_env, void*) {
+      })
+      .WillOnce([&](void** out_env, void*) {
         *out_env = reinterpret_cast<void*>(0xCCCCCCCCCCC);
         return JNI_OK;
-      }));
+      });
   EXPECT_CALL(jvm, DetachCurrentThread()).Times(2);
 
   JvmRef<jni::kDefaultJvm> jvm_ref{&jvm};
