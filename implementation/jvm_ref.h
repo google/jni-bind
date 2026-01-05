@@ -23,6 +23,8 @@
 #include <memory>
 #include <utility>
 
+#include "class_defs/android/activity_thread.h"
+#include "class_defs/android/application.h"
 #include "class_defs/java_lang_classes.h"
 #include "implementation/class_ref.h"
 #include "implementation/configuration.h"
@@ -30,15 +32,19 @@
 #include "implementation/field_ref.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/global_class_loader.h"
+#include "implementation/jni_helper/invoke_static.h"  // NOLINT
+#include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/lifecycle_object.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/jvm_ref_base.h"
+#include "implementation/local_object.h"
 #include "implementation/no_class_specified.h"
 #include "implementation/promotion_mechanics_tags.h"
 #include "implementation/ref_storage.h"
+#include "implementation/static_ref.h"
 #include "implementation/thread_guard.h"
 #include "jni_dep.h"
 #include "metaprogramming/double_locked_value.h"
@@ -97,9 +103,13 @@ class JvmRef : public JvmRefBase {
   }
 
   explicit JvmRef(JNIEnv* env, const Configuration& configuration = {})
-      : JvmRefBase(BuildJavaVMFromEnv(env), configuration) {}
+      : JvmRefBase(BuildJavaVMFromEnv(env), configuration) {
+    ScrapeAndroidFallbackLoader(env);
+  }
   explicit JvmRef(JavaVM* vm, const Configuration& configuration = {})
-      : JvmRefBase(vm, configuration) {}
+      : JvmRefBase(vm, configuration) {
+    ScrapeAndroidFallbackLoader(JniEnv::GetEnv());
+  }
 
   ~JvmRef() {
     TeardownClassloadersHelper(
@@ -177,6 +187,61 @@ class JvmRef : public JvmRefBase {
   }
 
  private:
+  // This function attempts to find an Android application class loader
+  // by scraping it from the current ActivityThread.
+  // It only has an effect on Android where ActivityThread is available.
+  void ScrapeAndroidFallbackLoader(JNIEnv* env) {
+    if (JniHelper::FindClass(kActivityThreadClass.name_) == nullptr) {
+      env->ExceptionClear();
+      return;
+    }
+
+#if __cplusplus >= 202002L
+    LocalObject<kActivityThreadClass> activity_thread =
+        StaticRef<kActivityThreadClass>{}.Call<"currentActivityThread">();
+    if (jobject{activity_thread} == nullptr) {
+      return;
+    }
+
+    LocalObject<kApplicationClass> application =
+        activity_thread.Call<"getApplication">();
+    if (jobject{application} == nullptr) {
+      return;
+    }
+
+    LocalObject<kJavaLangClassLoader> class_loader =
+        application.Call<"getClassLoader">();
+    if (jobject{class_loader} == nullptr) {
+      return;
+    }
+
+    SetFallbackClassLoader(std::move(class_loader));
+#elif __clang__
+    LocalObject<kActivityThreadClass> activity_thread =
+        StaticRef<kActivityThreadClass>{}("currentActivityThread");
+    if (jobject{activity_thread} == nullptr) {
+      return;
+    }
+
+    LocalObject<kApplicationClass> application =
+        activity_thread("getApplication");
+    if (jobject{application} == nullptr) {
+      return;
+    }
+
+    LocalObject<kJavaLangClassLoader> class_loader =
+        application("getClassLoader");
+    if (jobject{class_loader} == nullptr) {
+      return;
+    }
+
+    SetFallbackClassLoader(std::move(class_loader));
+#else
+    static_assert(false,
+                  "JNI Bind requires C++20 (or later) or C++17 with clang.");
+#endif
+  }
+
   // Main thread has a JNIEnv just like every other thread.
   const ThreadGuard thread_guard_ = {};
 
