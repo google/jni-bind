@@ -25,7 +25,16 @@ namespace {
 using ::jni::Class;
 using ::jni::Field;
 using ::jni::GlobalObject;
+using ::jni::kActivityThreadClass;
+using ::jni::kApplicationClass;
+using ::jni::kJavaLangClassLoader;
+using ::jni::LocalObject;
+using ::jni::Method;
 using ::jni::PromoteToGlobal;
+using ::jni::Return;
+using ::jni::Self;
+using ::jni::Static;
+using ::jni::StaticRef;
 using ::jni::ThreadGuard;
 
 std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
@@ -56,7 +65,6 @@ Java_com_jnibind_android_ThreadTest_runsThreadedWorkOnObject(JNIEnv* env,
   // To avoid premature caching of `ObjectTestHelperClass`'s `jclass`, a
   // copy of the fixture is held, which defers jclass lookup.
   GlobalObject<kFixtureClass> fixture_object{PromoteToGlobal{}, fixture};
-  jvm->SetFallbackClassLoaderFromJObject(fixture);
 
   std::thread worker{[fixture{std::move(fixture_object)}]() mutable {
     ThreadGuard thread_guard{};
