@@ -16,7 +16,12 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-exports_files(["LICENSE"])
+exports_files([
+    "LICENSE",
+    "build_readme.sh",
+    "README_inc.md",
+    "JNI_BIND_VERSION.inc",
+])
 
 ################################################################################
 # JNI Bind
