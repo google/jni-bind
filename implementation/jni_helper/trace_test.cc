@@ -18,7 +18,6 @@
 
 #include <string>
 
-#include "testing/base/public/googletest.h"
 #include <gtest/gtest.h>
 #include "metaprogramming/lambda_string.h"
 
