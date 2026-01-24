@@ -27,11 +27,13 @@ struct NextType;
 template <template <typename...> class Container>
 struct EndType;
 
+/*
 template <template <auto...> class Container>
 struct NextVal;
 
 template <template <auto...> class Container>
 struct EndVal;
+*/
 
 template <template <const auto&...> class Container>
 struct NextConstRefVal;

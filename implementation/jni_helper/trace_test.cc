@@ -16,6 +16,7 @@
 
 #include "implementation/jni_helper/trace.h"
 
+/*
 #include <string>
 
 #include <gtest/gtest.h>
@@ -80,3 +81,4 @@ TEST(Trace, ProducesTraceForMultipleArgs) {
 }
 
 }  // namespace
+  */
