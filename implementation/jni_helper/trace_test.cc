@@ -24,12 +24,15 @@
 using ::jni::Trace;
 using ::jni::metaprogramming::LambdaToStr;
 
+using ::testing::internal::CaptureStdout;
+using ::testing::internal::GetCapturedStdout;
+
 namespace {
 
 TEST(Trace, ProducesTraceForVoidFunction) {
-  CaptureTestStdout();
+  CaptureStdout();
   Trace(LambdaToStr(STR("Foo")));
-  EXPECT_TRUE(GetCapturedTestStdout().find("Foo();") ==
+  EXPECT_TRUE(GetCapturedStdout().find("Foo();") ==
               std::string::npos);  // NOLINT
 
   // Just for debugging, prints to console.
@@ -37,9 +40,9 @@ TEST(Trace, ProducesTraceForVoidFunction) {
 }
 
 TEST(Trace, ProducesTraceWithArgs) {
-  CaptureTestStdout();
+  CaptureStdout();
   Trace(LambdaToStr(STR("Foo")), 123);
-  EXPECT_TRUE(GetCapturedTestStdout().find("Foo(123);") ==
+  EXPECT_TRUE(GetCapturedStdout().find("Foo(123);") ==
               std::string::npos);  // NOLINT
 
   // Just for debugging, prints to console.
@@ -47,31 +50,31 @@ TEST(Trace, ProducesTraceWithArgs) {
 }
 
 TEST(Trace, ProducesTraceForStrings) {
-  CaptureTestStdout();
+  CaptureStdout();
   Trace(LambdaToStr(STR("Baz")), "helloworld");
-  EXPECT_TRUE(GetCapturedTestStdout().find("Baz(helloworld);") ==  // NOLINT
-              std::string::npos);                                  // NOLINT
+  EXPECT_TRUE(GetCapturedStdout().find("Baz(helloworld);") ==  // NOLINT
+              std::string::npos);                              // NOLINT
 
   // Just for debugging, prints to console.
   Trace(LambdaToStr(STR("Baz")), "helloworld");
 }
 
 TEST(Trace, ProducesTraceForPointers) {
-  CaptureTestStdout();
+  CaptureStdout();
   void* ptr = reinterpret_cast<void*>(0xabcde);
   Trace(LambdaToStr(STR("Foo")), ptr);
-  EXPECT_TRUE(GetCapturedTestStdout().find("Foo(0xabcde);") ==  // NOLINT
-              std::string::npos);                               // NOLINT
+  EXPECT_TRUE(GetCapturedStdout().find("Foo(0xabcde);") ==  // NOLINT
+              std::string::npos);                           // NOLINT
 
   // Just for debugging, prints to console.
   Trace(LambdaToStr(STR("Foo")), ptr);
 }
 
 TEST(Trace, ProducesTraceForMultipleArgs) {
-  CaptureTestStdout();
+  CaptureStdout();
   void* ptr = reinterpret_cast<void*>(0xabcde);
   Trace(LambdaToStr(STR("Baz")), 123, "Neil", "Breen", ptr);
-  EXPECT_TRUE(GetCapturedTestStdout().find(
+  EXPECT_TRUE(GetCapturedStdout().find(
                   "Baz(123, Neil, Breen, 0xabcde);") ==  // NOLINT
               std::string::npos);                        // NOLINT
 

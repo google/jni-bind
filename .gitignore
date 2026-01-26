@@ -4,6 +4,10 @@ bazel*
 .ijwb/
 .idea/
 .vscode/
+.cache/
 MODULE.bazel.lock
+cmake-build
 cmake_build
+cmake-install
 cmake_install
+compile_commands.json
