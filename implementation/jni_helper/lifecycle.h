@@ -106,7 +106,7 @@ struct LifecycleGlobalBase {
 
 template <typename Span>
 struct LifecycleHelper<Span, LifecycleType::GLOBAL>
-    : public LifecycleLocalBase<Span> {
+    : public LifecycleGlobalBase<Span> {
   using Base = LifecycleGlobalBase<Span>;
   using Base::Base;
 };

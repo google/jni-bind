@@ -75,4 +75,13 @@ TEST_F(JniTest, Lifecycle_jobject_Global_Promotes) {
   LifecycleHelper<jobject, LifecycleType::GLOBAL>::Promote(Fake<jobject>());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// General GLOBAL template (e.g. jintArray).
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(JniTest, Lifecycle_jintArray_Global_CallsDeleteGlobalRef) {
+  jintArray fake_array = Fake<jintArray>();
+  EXPECT_CALL(*env_, DeleteGlobalRef(Eq(static_cast<jobject>(fake_array))));
+  LifecycleHelper<jintArray, LifecycleType::GLOBAL>::Delete(fake_array);
+}
+
 }  // namespace
