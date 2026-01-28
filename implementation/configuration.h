@@ -27,6 +27,9 @@ struct Configuration {
 
   // Release jmethodID on JVM teardown (needed in test to  balance global IDs).
   bool release_method_ids_on_teardown_ = false;
+
+  // Release jfieldID on JVM teardown (needed in test to  balance global IDs).
+  bool release_field_ids_on_teardown_ = false;
 };
 
 static inline Configuration kConfiguration = {};

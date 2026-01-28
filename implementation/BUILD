@@ -297,6 +297,7 @@ cc_library(
     name = "field_ref",
     hdrs = ["field_ref.h"],
     deps = [
+        ":configuration",
         ":default_class_loader",
         ":field_selection",
         ":id",

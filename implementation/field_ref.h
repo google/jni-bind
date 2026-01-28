@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "implementation/configuration.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_selection.h"
 #include "implementation/id.h"
@@ -73,7 +74,9 @@ class FieldRef {
 
     return return_value.LoadAndMaybeInit([=]() {
       if constexpr (JniT::class_loader_v == kDefaultClassLoader) {
-        GetDefaultLoadedFieldList().push_back(&return_value);
+        if (kConfiguration.release_field_ids_on_teardown_) {
+          GetDefaultLoadedFieldList().push_back(&return_value);
+        }
       }
 
       if constexpr (IdT::kIsStatic) {

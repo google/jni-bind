@@ -112,42 +112,40 @@ class JvmRef : public JvmRefBase {
   }
 
   ~JvmRef() {
-    TeardownClassloadersHelper(
-        std::make_index_sequence<
-            std::tuple_size_v<decltype(jvm_v_.class_loaders_)>>());
+    if (kConfiguration.release_class_ids_on_teardown_) {
+      TeardownClassloadersHelper(
+          std::make_index_sequence<
+              std::tuple_size_v<decltype(jvm_v_.class_loaders_)>>());
 
-    // This object has two lifecycle phases in relation to data races
-    // 1)  Value is null, when it is guarded by the ClassRef mutex
-    //     (implicitly part of ClassRef's behaviour).
-    // 2)  JVM is tearing down.  At this point, the caller is responsible for
-    //     releasing all native resources.
-    //     ReleaseAllClassRefsForDefaultClassLoader will only ever be torn down
-    //     by JvmRef::~JvmRef, and JvmRef cannot be moved, therefore it is
-    //     guaranteed to be in a single threaded context.
-    auto& default_loaded_class_list = DefaultRefs<jclass>();
-    for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
-         default_loaded_class_list) {
-      maybe_loaded_class_id->Reset([](jclass clazz) {
-        LifecycleHelper<jobject, LifecycleType::GLOBAL>::Delete(clazz);
-      });
+      auto& default_loaded_class_list = DefaultRefs<jclass>();
+      for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
+           default_loaded_class_list) {
+        maybe_loaded_class_id->Reset([](jclass clazz) {
+          LifecycleHelper<jobject, LifecycleType::GLOBAL>::Delete(clazz);
+        });
+      }
+      default_loaded_class_list.clear();
     }
-    default_loaded_class_list.clear();
 
-    // Methods do not need to be released, just forgotten.
-    auto& default_loaded_method_ref_list = DefaultRefs<jmethodID>();
-    for (metaprogramming::DoubleLockedValue<jmethodID>* cached_method_id :
-         default_loaded_method_ref_list) {
-      cached_method_id->Reset();
+    if (kConfiguration.release_method_ids_on_teardown_) {
+      // Methods do not need to be released, just forgotten.
+      auto& default_loaded_method_ref_list = DefaultRefs<jmethodID>();
+      for (metaprogramming::DoubleLockedValue<jmethodID>* cached_method_id :
+           default_loaded_method_ref_list) {
+        cached_method_id->Reset();
+      }
+      default_loaded_method_ref_list.clear();
     }
-    default_loaded_method_ref_list.clear();
 
-    // Fields do not need to be released, just forgotten.
-    auto& default_loaded_field_ref_list = GetDefaultLoadedFieldList();
-    for (metaprogramming::DoubleLockedValue<jfieldID>* cached_field_id :
-         default_loaded_field_ref_list) {
-      cached_field_id->Reset();
+    if (kConfiguration.release_field_ids_on_teardown_) {
+      // Fields do not need to be released, just forgotten.
+      auto& default_loaded_field_ref_list = GetDefaultLoadedFieldList();
+      for (metaprogramming::DoubleLockedValue<jfieldID>* cached_field_id :
+           default_loaded_field_ref_list) {
+        cached_field_id->Reset();
+      }
+      default_loaded_field_ref_list.clear();
     }
-    default_loaded_field_ref_list.clear();
   }
 
   // Deleted in order to make various threading guarantees (see class_ref.h).

@@ -33,37 +33,34 @@ using ::jni::JvmRef;
 using ::jni::PromoteToGlobal;
 using ::jni::ThreadGuard;
 using ::jni::test::JniTest;
+using ::jni::test::JniTestWithNoDefaultJvmRef;
 using ::jni::test::MockJvm;
 using ::testing::_;
 using ::testing::Return;
 
 namespace {
 
-TEST(ThreadGuard,
-     NeverCallsAttachOrDetachCurrentThreadIfAnEnvIsAlreadyAttached) {
-  MockJvm jvm;
-  jni::test::MockJniEnv env;
-  EXPECT_CALL(jvm, GetEnv).WillOnce([&](void** out_env, int) {
-    *reinterpret_cast<JNIEnv**>(out_env) = &env;
+TEST_F(JniTestWithNoDefaultJvmRef,
+       NeverCallsAttachOrDetachCurrentThreadIfAnEnvIsAlreadyAttached) {
+  EXPECT_CALL(*jvm_, GetEnv).WillOnce([&](void** out_env, int) {
+    *reinterpret_cast<JNIEnv**>(out_env) = env_.get();
     return JNI_OK;
   });
-  EXPECT_CALL(jvm, AttachCurrentThread).Times(0);
-  EXPECT_CALL(jvm, DetachCurrentThread).Times(0);
+  EXPECT_CALL(*jvm_, AttachCurrentThread).Times(0);
+  EXPECT_CALL(*jvm_, DetachCurrentThread).Times(0);
 
-  JvmRef<jni::kDefaultJvm> jvm_ref{&jvm};
+  JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get()};
 }
 
-TEST(ThreadGuard, WontEffectDetachmentForPreexistingEnv) {
-  MockJvm jvm;
-  jni::test::MockJniEnv env;
-  EXPECT_CALL(jvm, GetEnv).WillOnce([&](void** out_env, int) {
-    *reinterpret_cast<JNIEnv**>(out_env) = &env;
+TEST_F(JniTestWithNoDefaultJvmRef, WontEffectDetachmentForPreexistingEnv) {
+  EXPECT_CALL(*jvm_, GetEnv).WillOnce([&](void** out_env, int) {
+    *reinterpret_cast<JNIEnv**>(out_env) = env_.get();
     return JNI_OK;
   });
-  EXPECT_CALL(jvm, AttachCurrentThread).Times(0);
-  EXPECT_CALL(jvm, DetachCurrentThread).Times(0);
+  EXPECT_CALL(*jvm_, AttachCurrentThread).Times(0);
+  EXPECT_CALL(*jvm_, DetachCurrentThread).Times(0);
 
-  JvmRef<jni::kDefaultJvm> jvm_ref{&jvm};
+  JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get()};
   ThreadGuard thread_guard_1 = jvm_ref.BuildThreadGuard();
   ThreadGuard thread_guard_2 = jvm_ref.BuildThreadGuard();
   ThreadGuard thread_guard_3 = jvm_ref.BuildThreadGuard();
@@ -114,14 +111,12 @@ TEST_F(JniTest, AllowsMoveCtorIntoLambdaWithThreadGuardUsage) {
   worker.join();
 }
 
-TEST(JvmThreadGuard, DetachesOnceForMultipleGuardsOnSingleThread) {
-  jni::test::MockJvm jvm;
-  jni::test::MockJniEnv env;
-
-  EXPECT_CALL(jvm, GetEnv(_, _)).WillRepeatedly(Return(JNI_EDETACHED));
-  EXPECT_CALL(jvm, AttachCurrentThread(_, _))
+TEST_F(JniTestWithNoDefaultJvmRef,
+       DetachesOnceForMultipleGuardsOnSingleThread) {
+  EXPECT_CALL(*jvm_, GetEnv(_, _)).WillRepeatedly(Return(JNI_EDETACHED));
+  EXPECT_CALL(*jvm_, AttachCurrentThread(_, _))
       .WillOnce([&](void** out_env, void*) {
-        *reinterpret_cast<JNIEnv**>(out_env) = &env;
+        *reinterpret_cast<JNIEnv**>(out_env) = env_.get();
         return JNI_OK;
       });
 
@@ -130,7 +125,7 @@ TEST(JvmThreadGuard, DetachesOnceForMultipleGuardsOnSingleThread) {
 
   // Will call AttachCurrentThread once for the main thread (JvmRef) and once
   // for the constructed ThreadGuard.
-  JvmRef<jni::kDefaultJvm> jvm_ref{&jvm};
+  JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get()};
   ThreadGuard thread_guard_1 = jvm_ref.BuildThreadGuard();
   ThreadGuard thread_guard_2 = jvm_ref.BuildThreadGuard();
   ThreadGuard thread_guard_3 = jvm_ref.BuildThreadGuard();
@@ -138,20 +133,17 @@ TEST(JvmThreadGuard, DetachesOnceForMultipleGuardsOnSingleThread) {
   ThreadGuard thread_guard_5 = jvm_ref.BuildThreadGuard();
 }
 
-TEST(JvmThreadGuard, UpdatesIndividualThreadsWithNewValues) {
-  jni::test::MockJvm jvm;
-  jni::test::MockJniEnv env;  // For main thread JvmRef init
-
+TEST_F(JniTestWithNoDefaultJvmRef, UpdatesIndividualThreadsWithNewValues) {
   // This sequence of expectation mimics a normal application.
   // A main thread usually exists with a JNIEnv that is attached on your
   // behalf, and subsequent thread spawns require an explicit attach/detach.
-  EXPECT_CALL(jvm, GetEnv(_, _))
+  EXPECT_CALL(*jvm_, GetEnv(_, _))
       .WillOnce([&](void** out_env, int) {
-        *reinterpret_cast<JNIEnv**>(out_env) = &env;
+        *reinterpret_cast<JNIEnv**>(out_env) = env_.get();
         return JNI_OK;
       })
       .WillRepeatedly(Return(JNI_EDETACHED));
-  EXPECT_CALL(jvm, AttachCurrentThread(_, _))
+  EXPECT_CALL(*jvm_, AttachCurrentThread(_, _))
       .WillOnce([&](void** out_env, void*) {
         *out_env = reinterpret_cast<void*>(0xBBBBBBBBBBB);
         return JNI_OK;
@@ -160,9 +152,9 @@ TEST(JvmThreadGuard, UpdatesIndividualThreadsWithNewValues) {
         *out_env = reinterpret_cast<void*>(0xCCCCCCCCCCC);
         return JNI_OK;
       });
-  EXPECT_CALL(jvm, DetachCurrentThread()).Times(2);
+  EXPECT_CALL(*jvm_, DetachCurrentThread()).Times(2);
 
-  JvmRef<jni::kDefaultJvm> jvm_ref{&jvm};
+  JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get()};
 
   std::mutex mutex;
   std::vector<JNIEnv*> observed_envs;

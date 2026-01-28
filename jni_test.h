@@ -39,6 +39,7 @@ static constexpr std::size_t kCopyOffset = 0X100000000000A0;
 static constexpr Configuration kDefaultConfiguration{
     .release_class_ids_on_teardown_ = true,
     .release_method_ids_on_teardown_ = true,
+    .release_field_ids_on_teardown_ = true,
 };
 
 // "Translates" a fake local object into its global counterpart.
@@ -136,6 +137,8 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
     }
 
     default_globals_made_that_should_be_released_.clear();
+
+    jni::JvmRefBase::SetJavaVm(nullptr);
   }
 
  protected:

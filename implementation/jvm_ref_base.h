@@ -28,8 +28,12 @@
 namespace jni {
 
 // Helper for JvmRef to enforce correct sequencing of getting and setting
-// process level static fo JavaVM*.
+// process level static for JavaVM*.
 class JvmRefBase {
+ public:
+  static JavaVM* GetJavaVm() { return process_level_jvm_.load(); }
+  static void SetJavaVm(JavaVM* jvm) { process_level_jvm_.store(jvm); }
+
  protected:
   friend class ThreadGuard;
   friend class ThreadLocalGuardDestructor;
@@ -39,10 +43,13 @@ class JvmRefBase {
     kConfiguration = configuration;
   }
 
-  ~JvmRefBase() { process_level_jvm_.store(nullptr); }
-
-  static JavaVM* GetJavaVm() { return process_level_jvm_.load(); }
-  static void SetJavaVm(JavaVM* jvm) { process_level_jvm_.store(jvm); }
+  ~JvmRefBase() {
+    if (kConfiguration.release_class_ids_on_teardown_ ||
+        kConfiguration.release_method_ids_on_teardown_ ||
+        kConfiguration.release_field_ids_on_teardown_) {
+      process_level_jvm_.store(nullptr);
+    }
+  }
 
   static inline std::atomic<JavaVM*> process_level_jvm_ = nullptr;
 };

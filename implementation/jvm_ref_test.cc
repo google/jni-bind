@@ -145,4 +145,52 @@ TEST_F(JniTest, DefaultLoaderReleasesMultipleClasses) {
   LocalObject<kClass3> local_object3{};
 }
 
+TEST_F(JniTestWithNoDefaultJvmRef, JvmRefsDontTeardownIfConfigurationIsFalse) {
+  EXPECT_CALL(*env_, FindClass(testing::StrEq("android/app/ActivityThread")))
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(nullptr));
+  EXPECT_CALL(*env_, ExceptionClear()).Times(AnyNumber());
+  EXPECT_CALL(*env_, FindClass(testing::StrEq("com/google/UniqueClass1")))
+      .WillOnce(Return(Fake<jclass>(1)));
+
+  // This is the core of the test: DeleteGlobalRef should NOT be called.
+  EXPECT_CALL(*env_, DeleteGlobalRef).Times(0);
+
+  static constexpr jni::Configuration kNoTeardownConfig{
+      .release_class_ids_on_teardown_ = false,
+      .release_method_ids_on_teardown_ = false,
+      .release_field_ids_on_teardown_ = false,
+  };
+
+  {
+    JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get(), kNoTeardownConfig};
+    static constexpr Class kClass1{"com/google/UniqueClass1"};
+    LocalObject<kClass1> local_object1{};
+  }
+}
+
+TEST_F(JniTestWithNoDefaultJvmRef, JvmRefsTeardownIfConfigurationIsTrue) {
+  EXPECT_CALL(*env_, FindClass(testing::StrEq("android/app/ActivityThread")))
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(nullptr));
+  EXPECT_CALL(*env_, ExceptionClear()).Times(AnyNumber());
+  EXPECT_CALL(*env_, FindClass(testing::StrEq("com/google/UniqueClass2")))
+      .WillOnce(Return(Fake<jclass>(1)));
+
+  // This is the core of the test: DeleteGlobalRef SHOULD be called.
+  EXPECT_CALL(*env_, DeleteGlobalRef(AsGlobal(Fake<jclass>(1))));
+
+  static constexpr jni::Configuration kTeardownConfig{
+      .release_class_ids_on_teardown_ = true,
+      .release_method_ids_on_teardown_ = true,
+      .release_field_ids_on_teardown_ = true,
+  };
+
+  {
+    JvmRef<jni::kDefaultJvm> jvm_ref{jvm_.get(), kTeardownConfig};
+    static constexpr Class kClass1{"com/google/UniqueClass2"};
+    LocalObject<kClass1> local_object1{};
+  }
+}
+
 }  // namespace

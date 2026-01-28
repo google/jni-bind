@@ -108,10 +108,12 @@ class ClassRef {
   }
 
   static void MaybeReleaseClassRef() {
-    class_ref_.Reset([](jclass maybe_loaded_class) {
-      LifecycleHelper<jclass, LifecycleType::GLOBAL>::Delete(
-          maybe_loaded_class);
-    });
+    if (kConfiguration.release_class_ids_on_teardown_) {
+      class_ref_.Reset([](jclass maybe_loaded_class) {
+        LifecycleHelper<jclass, LifecycleType::GLOBAL>::Delete(
+            maybe_loaded_class);
+      });
+    }
   }
 
  private:
