@@ -22,7 +22,7 @@ It requires C++20, or clang enabled at C++17 or later. It is compatible with And
   <a href="https://docs.google.com/presentation/d/1PrpidDPcfbH37GywwzeL78Nd1fseHNEQoYWqbslYvBE/edit?usp=sharing" target="_blank">
     <img src="slides-screenshot.png" width="300" style="margin-right: 20px;">
   </a>
-  <a href="https://godbolt.org/z/3jr1T9jWP" target="_blank">
+  <a href="https://godbolt.org/z/b1nah7zvd" target="_blank">
     <img src="godbolt.png" width="300" style="margin-left: 20px;">
   </a>
 </div>
@@ -102,8 +102,8 @@ If you're already using Bazel add the following to your WORKSPACE:
 ```starlark
 http_archive(
   name = "jni-bind",
-  urls = ["https://github.com/google/jni-bind/archive/refs/tags/Release-1.2.3.zip"],
-  strip_prefix = "jni-bind-Release-1.2.3",
+  urls = ["https://github.com/google/jni-bind/archive/refs/tags/Release-1.5.0.zip"],
+  strip_prefix = "jni-bind-Release-1.5.0",
 )
 ```
 

@@ -15,7 +15,7 @@
  */
 
 /*******************************************************************************
- * JNI Bind Version 1.4.0.
+ * JNI Bind Version 1.5.0.
  * Beta Public Release.
  ********************************************************************************
  * This header is the single header version which you can use to quickly test or
@@ -2810,7 +2810,7 @@ struct LifecycleGlobalBase {
 
 template <typename Span>
 struct LifecycleHelper<Span, LifecycleType::GLOBAL>
-    : public LifecycleLocalBase<Span> {
+    : public LifecycleGlobalBase<Span> {
   using Base = LifecycleGlobalBase<Span>;
   using Base::Base;
 };
@@ -4292,12 +4292,16 @@ struct Proxy<JString,
       std::is_same_v<T, LocalString> || std::is_same_v<T, GlobalString>;
 
   static constexpr auto DeleteLambda = [](const jstring& s) {
+#ifndef DRY_RUN
     JniEnv::GetEnv()->DeleteLocalRef(static_cast<jobject>(s));
+#endif
   };
 
   struct DeleteLocalRef {
     static void Call(const jstring& s) {
+#ifndef DRY_RUN
       JniEnv::GetEnv()->DeleteLocalRef(static_cast<jobject>(s));
+#endif
     }
   };
 
@@ -5743,6 +5747,9 @@ struct Configuration {
 
   // Release jmethodID on JVM teardown (needed in test to  balance global IDs).
   bool release_method_ids_on_teardown_ = false;
+
+  // Release jfieldID on JVM teardown (needed in test to  balance global IDs).
+  bool release_field_ids_on_teardown_ = false;
 };
 
 static inline Configuration kConfiguration = {};
@@ -7052,7 +7059,9 @@ class FieldRef {
 
     return return_value.LoadAndMaybeInit([=]() {
       if constexpr (JniT::class_loader_v == kDefaultClassLoader) {
-        GetDefaultLoadedFieldList().push_back(&return_value);
+        if (kConfiguration.release_field_ids_on_teardown_) {
+          GetDefaultLoadedFieldList().push_back(&return_value);
+        }
       }
 
       if constexpr (IdT::kIsStatic) {
@@ -7184,10 +7193,12 @@ class ClassRef {
   }
 
   static void MaybeReleaseClassRef() {
-    class_ref_.Reset([](jclass maybe_loaded_class) {
-      LifecycleHelper<jclass, LifecycleType::GLOBAL>::Delete(
-          maybe_loaded_class);
-    });
+    if (kConfiguration.release_class_ids_on_teardown_) {
+      class_ref_.Reset([](jclass maybe_loaded_class) {
+        LifecycleHelper<jclass, LifecycleType::GLOBAL>::Delete(
+            maybe_loaded_class);
+      });
+    }
   }
 
  private:
@@ -8651,8 +8662,12 @@ class LocalString : public LocalStringImpl {
 namespace jni {
 
 // Helper for JvmRef to enforce correct sequencing of getting and setting
-// process level static fo JavaVM*.
+// process level static for JavaVM*.
 class JvmRefBase {
+ public:
+  static JavaVM* GetJavaVm() { return process_level_jvm_.load(); }
+  static void SetJavaVm(JavaVM* jvm) { process_level_jvm_.store(jvm); }
+
  protected:
   friend class ThreadGuard;
   friend class ThreadLocalGuardDestructor;
@@ -8662,10 +8677,13 @@ class JvmRefBase {
     kConfiguration = configuration;
   }
 
-  ~JvmRefBase() { process_level_jvm_.store(nullptr); }
-
-  static JavaVM* GetJavaVm() { return process_level_jvm_.load(); }
-  static void SetJavaVm(JavaVM* jvm) { process_level_jvm_.store(jvm); }
+  ~JvmRefBase() {
+    if (kConfiguration.release_class_ids_on_teardown_ ||
+        kConfiguration.release_method_ids_on_teardown_ ||
+        kConfiguration.release_field_ids_on_teardown_) {
+      process_level_jvm_.store(nullptr);
+    }
+  }
 
   static inline std::atomic<JavaVM*> process_level_jvm_ = nullptr;
 };
@@ -10452,42 +10470,40 @@ class JvmRef : public JvmRefBase {
   }
 
   ~JvmRef() {
-    TeardownClassloadersHelper(
-        std::make_index_sequence<
-            std::tuple_size_v<decltype(jvm_v_.class_loaders_)>>());
+    if (kConfiguration.release_class_ids_on_teardown_) {
+      TeardownClassloadersHelper(
+          std::make_index_sequence<
+              std::tuple_size_v<decltype(jvm_v_.class_loaders_)>>());
 
-    // This object has two lifecycle phases in relation to data races
-    // 1)  Value is null, when it is guarded by the ClassRef mutex
-    //     (implicitly part of ClassRef's behaviour).
-    // 2)  JVM is tearing down.  At this point, the caller is responsible for
-    //     releasing all native resources.
-    //     ReleaseAllClassRefsForDefaultClassLoader will only ever be torn down
-    //     by JvmRef::~JvmRef, and JvmRef cannot be moved, therefore it is
-    //     guaranteed to be in a single threaded context.
-    auto& default_loaded_class_list = DefaultRefs<jclass>();
-    for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
-         default_loaded_class_list) {
-      maybe_loaded_class_id->Reset([](jclass clazz) {
-        LifecycleHelper<jobject, LifecycleType::GLOBAL>::Delete(clazz);
-      });
+      auto& default_loaded_class_list = DefaultRefs<jclass>();
+      for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
+           default_loaded_class_list) {
+        maybe_loaded_class_id->Reset([](jclass clazz) {
+          LifecycleHelper<jobject, LifecycleType::GLOBAL>::Delete(clazz);
+        });
+      }
+      default_loaded_class_list.clear();
     }
-    default_loaded_class_list.clear();
 
-    // Methods do not need to be released, just forgotten.
-    auto& default_loaded_method_ref_list = DefaultRefs<jmethodID>();
-    for (metaprogramming::DoubleLockedValue<jmethodID>* cached_method_id :
-         default_loaded_method_ref_list) {
-      cached_method_id->Reset();
+    if (kConfiguration.release_method_ids_on_teardown_) {
+      // Methods do not need to be released, just forgotten.
+      auto& default_loaded_method_ref_list = DefaultRefs<jmethodID>();
+      for (metaprogramming::DoubleLockedValue<jmethodID>* cached_method_id :
+           default_loaded_method_ref_list) {
+        cached_method_id->Reset();
+      }
+      default_loaded_method_ref_list.clear();
     }
-    default_loaded_method_ref_list.clear();
 
-    // Fields do not need to be released, just forgotten.
-    auto& default_loaded_field_ref_list = GetDefaultLoadedFieldList();
-    for (metaprogramming::DoubleLockedValue<jfieldID>* cached_field_id :
-         default_loaded_field_ref_list) {
-      cached_field_id->Reset();
+    if (kConfiguration.release_field_ids_on_teardown_) {
+      // Fields do not need to be released, just forgotten.
+      auto& default_loaded_field_ref_list = GetDefaultLoadedFieldList();
+      for (metaprogramming::DoubleLockedValue<jfieldID>* cached_field_id :
+           default_loaded_field_ref_list) {
+        cached_field_id->Reset();
+      }
+      default_loaded_field_ref_list.clear();
     }
-    default_loaded_field_ref_list.clear();
   }
 
   // Deleted in order to make various threading guarantees (see class_ref.h).
