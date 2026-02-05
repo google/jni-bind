@@ -32,32 +32,53 @@ def increment_version(version, release_type):
 
 
 def main():
-  parser = argparse.ArgumentParser(description="Cut a new release for JNI Bind")
-  parser.add_argument(
-      "--release-type",
-      choices=["major", "minor", "dot"],
-      required=True,
-      help="Type of release",
-  )
-  args = parser.parse_args()
-
   # Change to workspace directory if running via bazel run
   if "BUILD_WORKSPACE_DIRECTORY" in os.environ:
     os.chdir(os.environ["BUILD_WORKSPACE_DIRECTORY"])
-    # We assume the script is running from the root of the workspace now?
-    # No, BUILD_WORKSPACE_DIRECTORY is the root.
-    # But our files are in third_party/jni_wrapper.
-    # We should chdir to third_party/jni_wrapper relative to workspace root.
     os.chdir("third_party/jni_wrapper")
   else:
     # Fallback to script dir if running manually
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
-  # 1. Update Version
+
   version_file = "JNI_BIND_VERSION.inc"
   with open(version_file, "r") as f:
     current_version = f.read().strip()
 
+  parser = argparse.ArgumentParser(description="Cut a new release for JNI Bind")
+  parser.add_argument(
+      "--release-type",
+      choices=["major", "minor", "dot"],
+      help="Type of release",
+  )
+
+  if len(sys.argv) == 1:
+    print("JNI Bind Release Tool")
+    print(f"Current version: {current_version}")
+    print("\nUsage: release.py --release-type {major,minor,dot}")
+    sys.exit(0)
+
+  args = parser.parse_args()
+
+  if not args.release_type:
+    parser.error("the following arguments are required: --release-type")
+
+  # 0. Check jj status
+  try:
+    output = (
+        subprocess.check_output(["jj", "log", "-r", "@", "-T", "(empty)"])
+        .decode("utf-8")
+        .strip()
+    )
+    if "true" not in output:
+      print("Error: The current jj commit is not empty.")
+      subprocess.run(["jj", "status"])
+      sys.exit(1)
+  except subprocess.CalledProcessError as e:
+    print(f"Error checking jj status: {e}")
+    sys.exit(1)
+
+  # 1. Update Version
   new_version = increment_version(current_version, args.release_type)
   print(f"Bumping version from {current_version} to {new_version}")
 
@@ -74,8 +95,8 @@ def main():
   pattern_url = r"(Release-)[0-9.]+(\.zip)"
   pattern_prefix = r"(jni-bind-Release-)[0-9.]+"
 
-  new_content = re.sub(pattern_url, f"\g<1>{new_version}\g<2>", content)
-  new_content = re.sub(pattern_prefix, f"\g<1>{new_version}", new_content)
+  new_content = re.sub(pattern_url, rf"\g<1>{new_version}\g<2>", content)
+  new_content = re.sub(pattern_prefix, rf"\g<1>{new_version}", new_content)
 
   if content != new_content:
     with open(readme_inc_path, "w") as f:
@@ -121,6 +142,17 @@ def main():
   print("Running tests...")
   # Using -c opt as requested
   run_command(["blaze", "test", "-c", "opt", "//third_party/jni_wrapper/..."])
+
+  # 5. Describe the commit
+  description = f"""BEGIN_PUBLIC
+
+Rev JNI Bind release header to v {new_version}
+
+END_PUBLIC
+
+BUG=143908983
+TESTED=TAP."""
+  run_command(["jj", "describe", "-m", description])
 
   print("Release cut successfully!")
 
