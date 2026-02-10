@@ -64,12 +64,6 @@ Java_com_jnibind_test_ThreadTest_RunsThreadedWorkOnObject(JNIEnv* env, jclass,
 }
 
 JNIEXPORT void JNICALL
-Java_com_jnibind_test_ThreadTest_AndroidMultiThreadedSetup(JNIEnv* env, jclass,
-                                                           jobject obj) {
-  jvm->SetFallbackClassLoaderFromJObject(obj);
-}
-
-JNIEXPORT void JNICALL
 Java_com_jnibind_test_ThreadTest_RunsThreadedWorkOnClassWithFirstClassUsageOnSecondThread(
     JNIEnv* env, jclass) {
   std::thread worker{[]() mutable {

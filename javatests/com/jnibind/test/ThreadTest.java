@@ -59,7 +59,6 @@ public final class ThreadTest {
 
   @Test
   public void runsThreadedWorkStartingOnSecondaryTrhead() {
-    AndroidMultiThreadedSetup(this);
     RunsThreadedWorkOnClassWithFirstClassUsageOnSecondThread();
   }
 
@@ -71,9 +70,6 @@ public final class ThreadTest {
 
   // Creates a thread, waits until it finishes some work, uses passed object.
   native void RunsThreadedWorkOnObject(ObjectTestHelper objectTestHelper);
-
-  // Sample of setup work you only have to do on Android.
-  native void AndroidMultiThreadedSetup(Object thisClass);
 
   // Creates a thread, uses a class for the first time on second thread.
   native void RunsThreadedWorkOnClassWithFirstClassUsageOnSecondThread();
