@@ -49,7 +49,6 @@ android_binary(
     name = "context_test_app",
     testonly = 1,
     manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
     deps = [
         ":context_test_java_lib",
         ":context_test_jni",
@@ -99,7 +98,6 @@ android_binary(
     name = "object_test_local_app",
     testonly = 1,
     manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
     deps = [
         ":local_object_test_jni",
         ":object_test_local_java_lib",
@@ -149,7 +147,6 @@ android_binary(
     name = "object_test_global_app",
     testonly = 1,
     manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
     deps = [
         ":global_object_test_jni",
         ":object_test_global_java_lib",
@@ -197,7 +194,6 @@ android_binary(
     name = "array_test_app",
     testonly = 1,
     manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
     deps = [
         ":array_test_java_lib",
         ":array_test_jni",
@@ -247,7 +243,6 @@ android_binary(
     name = "field_test_app",
     testonly = 1,
     manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
     deps = [
         ":field_test_java_lib",
         ":field_test_jni",
@@ -298,7 +293,6 @@ android_binary(
     name = "method_test_app",
     testonly = 1,
     manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
     deps = [
         ":method_test_java_lib",
         ":method_test_jni",
@@ -349,7 +343,6 @@ android_binary(
     name = "string_test_app",
     testonly = 1,
     manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
     deps = [
         ":string_test_java_lib",
         ":string_test_jni",
@@ -405,14 +398,12 @@ android_binary(
         "ClassLoaderHelperSubclass.java",
     ],
     manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
 )
 
 android_binary(
     name = "class_loader_test_local_app",
     testonly = 1,
     manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
     deps = [
         ":class_loader_test_jni",
         ":class_loader_test_local_java_lib",
@@ -467,7 +458,6 @@ android_binary(
     name = "thread_test_app",
     testonly = 1,
     manifest = "AndroidDefaultManifest.xml",
-    multidex = "native",
     deps = [
         ":thread_test_java_lib",
         ":thread_test_jni",
