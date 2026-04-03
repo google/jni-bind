@@ -1,62 +1,192 @@
-# Project Context and Helpful Hints
+<!-- disableFinding(LINE_OVER_80) -->
+<!-- disableFinding(WHITESPACE_TRAILING) -->
+# JNI Bind Usage & Integration Guidelines
 
-## Project Structure
-- **root**: `/google/src/cloud/jwhpryor/vogo_glass_new/google3/third_party/jni_wrapper`
-- **implementation**: Core C++ implementation of the JNI wrapper.
-    - `local_object.h`, `global_object.h`: RAII wrappers for JNI objects.
-    - `local_exception.h`, `global_exception.h`: Wrappers for Java exceptions.
-    - `jni_helper/`: Helper utilities for JNI interaction.
-- **javatests**: Java and JNI integration tests.
-    - `com/jnibind/test/`: General tests.
-    - `com/jnibind/android/`: Android-specific instrumentation tests.
-- **metaprogramming**: Template metaprogramming utilities used by the library.
-- **class_defs**: Pre-defined JNI class definitions for common Java classes.
+This document provides foundational guidance for using **JNI Bind**, a
+header-only C++20 metaprogramming library that simplifies JNI interactions.
 
-## Helpful Hints
+> [!IMPORTANT]
+> **The Golden Rule:** Do not use raw ("porcelain") JNI (e.g.,
+> `env->CallIntMethod`, `jobject` handles, manual `DeleteLocalRef`) unless
+> absolutely necessary. JNI Bind provides type-safe, RAII-compliant wrappers
+> for all standard JNI operations.
+
+---
+
+## 1. Global Setup
+
+The library requires a `jni::JvmRef` to manage the `JavaVM` and thread
+attachment.
+
+```cpp
+#include "third_party/jni_wrapper/jni_bind.h"
+
+// This object must outlive all JNI Bind calls.
+static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
+
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* pjvm, void* reserved) {
+  jvm = std::make_unique<jni::JvmRef<jni::kDefaultJvm>>(pjvm);
+  return JNI_VERSION_1_6;
+}
+```
+
+---
+
+## 2. Defining Classes
+
+Define Java classes as `static constexpr jni::Class`.
+
+```cpp
+static constexpr jni::Class kMyClass{
+    "com/example/MyClass",
+    jni::Constructor{jint{}},
+    jni::Method{"foo", jni::Return<jint>{}, jni::Params<jfloat>{}},
+    jni::Field{"bar", jint{}}
+};
+```
+
+### Overloads
+Use `jni::Overload` within `jni::Method` to handle multiple signatures.
+
+```cpp
+jni::Method{"foo",
+  jni::Overload{jni::Return<int>{}, jni::Params<>{}},
+  jni::Overload{jni::Return<int>{}, jni::Params<jfloat>{}}
+}
+```
+
+### Builders (Self)
+For methods that return `this`, use `jni::Self{}` to maintain full class
+decoration.
+
+```cpp
+jni::Method{"setVal", jni::Return{jni::Self{}}, jni::Params<jint>{}}
+```
+
+---
+
+## 3. Objects & Lifetime
+
+*   **`jni::LocalObject`**: RAII wrapper for local `jobject` references.
+*   **`jni::GlobalObject`**: RAII wrapper for global `jobject` references (thread-safe).
+
+```cpp
+// Construction from Java jobject
+jni::LocalObject<kMyClass> obj{java_jobject};
+
+// Manual construction from C++
+jni::LocalObject<kMyClass> new_obj{123};
+
+// Returning to Java (Releases RAII ownership)
+return obj.Release();
+```
+
+---
+
+## 4. Methods & Fields
+
+### Calling Methods
+```cpp
+jint result = obj.Call<"foo">(1.5f);
+```
+
+### Accessing Fields
+```cpp
+obj.Access<"bar">().Set(42);
+jint val = obj.Access<"bar">().Get();
+```
+
+---
+
+## 5. Strings & Arrays
+
+### Strings
+Use `jni::LocalString` or `jni::GlobalString`. Use `PinAsStr()` for raw access.
+
+```cpp
+jni::LocalString my_str{"Hello world"};
+std::string cpp_str = my_str.PinAsStr().ToString();
+```
+
+### Arrays
+Use `jni::LocalArray`. Use `Pin()` for high-performance bulk access.
+
+```cpp
+jni::LocalArray<jint> arr{10};
+{
+    auto view = arr.Pin();
+    view.ptr()[0] = 100;
+}
+```
+
+---
+
+## 6. Statics
+
+Access static methods/fields via `jni::StaticRef`.
+
+```cpp
+static constexpr jni::Class kHelper{
+    "com/example/Helper",
+    jni::Static{
+        jni::Method{"staticFoo", jni::Return<void>{}}
+    }
+};
+
+jni::StaticRef<kHelper>{}.Call<"staticFoo">();
+```
+
+---
+
+## 7. Exceptions
+
+Use `jni::LocalException` to catch, build, and throw Java exceptions.
+
+```cpp
+static constexpr jni::Class kCustomException{"com/example/MyException"};
+
+void ThrowSomething() {
+    jni::LocalException<kCustomException>{"Failed!"}.Throw();
+}
+```
+
+---
+
+## 8. ClassLoaders
+
+Advanced loading from non-primordial loaders.
+
+```cpp
+static constexpr jni::ClassLoader kLoader{
+    jni::kDefaultClassLoader, jni::SupportedClassSet{kMyClass}};
+
+jni::LocalClassLoader<kLoader> loader{java_loader_obj};
+auto my_obj = loader.BuildLocalObject<kMyClass>();
+```
+
+---
+
+## 9. Multi-threading
+
+Use `jni::ThreadGuard` in every new native thread.
+
+```cpp
+std::thread([]() {
+  jni::ThreadGuard guard;
+  jni::StaticRef<kMyClass>{}.Call<"foo">();
+}).detach();
+```
+
+---
+
+## 10. Development & Maintenance
 
 ### Running Tests
-To run all tests from the root directory:
 ```bash
-blaze test --tool_tag=codemindcli-extension --noshow_progress //third_party/jni_wrapper/...
+blaze test //third_party/jni_wrapper/...
 ```
 
-### debugging Test Failures
-If a test fails, use `blaze run` on the failing target to see detailed output and potential fix instructions. For example, if `readme_up_to_date_test` fails:
-```bash
-blaze run --tool_tag=codemindcli-extension --noshow_progress //third_party/jni_wrapper:readme_up_to_date_test
-```
-This specific test will often provide the exact commands needed to regenerate the `README.md` files if they are out of date.
-
-### Regenerating READMEs
-If you modify `README.md`, you likely need to regenerate the expected output files to pass `readme_up_to_date_test`. The commands (from the test failure output) are typically:
-
-```bash
-blaze build //third_party/jni_wrapper:gen_readme && cp ../../../blaze-genfiles/third_party/jni_wrapper/README.md.expected README.md
-blaze build //third_party/jni_wrapper:gen_readme_public && cp ../../../blaze-genfiles/third_party/jni_wrapper/README.md.public.expected README.md.public
-```
-*Note: Adjust the relative path to `blaze-genfiles` based on your current working directory.*
-
-### Avoiding Circular Dependencies
-When adding new types (like `LocalException`, `GlobalException`, or `LifecycleHelper`), always add them to `implementation/forward_declarations.h`. This helps break circular dependencies and reduces header inclusion bloat, which can lead to `clang-tidy` errors and compilation failures. Clients can include `forward_declarations.h` when they only need pointers or references to these types.
-
-### `IWYU pragma: private, include`
-When `clang-tidy` or `IWYU` complains about headers that are meant to be internal, such as `implementation/local_exception.h` or `implementation/global_exception.h`, ensure that these headers include `// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"`. This pragma indicates that these headers should only be included through `jni_bind.h` and not directly by external consumers. If you need to use the types declared in these internal headers without including `jni_bind.h` (e.g., to break circular dependencies or avoid bloat in other internal headers), you should add forward declarations to `implementation/forward_declarations.h` instead.
-
-### Open Source Appropriateness
-Since this project is shared as open source, all code, documentation, and guidance stored in files like `GEMINI.md` must be appropriate for both internal Google use and external consumption. Avoid including any internal-only links, tool names, or instructions that would not be relevant or accessible to external users. Ensure that all contributions align with open-source best practices and licensing requirements.
-
-## Release Management
-
-### Cutting a New Release of `jni_bind_release.h`
-To cut a new release of the `jni_bind_release.h` header, follow these steps:
-
-1.  **Build the release header**: This generates the updated `jni_bind_release.h` file.
-    ```bash
-    blaze build //third_party/jni_wrapper:gen_jni_bind_release
-    ```
-
-2.  **Copy the generated header**: Overwrite the existing `jni_bind_release.h` with the newly generated one from `blaze-genfiles`.
-    ```bash
-    cp ../../blaze-genfiles/third_party/jni_wrapper/jni_bind_release.h jni_bind_release.h
-    ```
-
+### Release Management
+To update `jni_bind_release.h`:
+1. `blaze build //third_party/jni_wrapper:gen_jni_bind_release`
+2. `cp ../../blaze-genfiles/third_party/jni_wrapper/jni_bind_release.h jni_bind_release.h`
