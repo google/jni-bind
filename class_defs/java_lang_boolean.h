@@ -5,7 +5,7 @@
 
 namespace jni {
 
-static constexpr Class kBoolean{
+inline constexpr Class kBoolean{
     "java/lang/Boolean",
     Constructor{jboolean{}},
     Constructor{kJavaLangString},
