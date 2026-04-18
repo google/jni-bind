@@ -19,6 +19,7 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include <string_view>
 #include "class_defs/java_lang_exception.h"
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
@@ -43,7 +44,7 @@ class GlobalException
     : public GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
  public:
   using Base = GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
-  using JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
+  using JniT = ::jni::JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
   using Base::Base;
   using SpanType = jobject;
   using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
