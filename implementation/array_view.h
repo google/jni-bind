@@ -107,15 +107,15 @@ class ArrayView {
   }
 
   // Arrays of rank > 1 are object arrays which are not contiguous.
-  std::enable_if_t<kRank == 1, SpanType*> ptr() {
+  std::enable_if_t<kRank == 1, SpanType*> ptr() const {
     return get_array_elements_result_.ptr_;
   }
 
   // Arrays of rank > 1 are object arrays which are not contiguous.
-  std::size_t size() { return size_; }
+  std::size_t size() const { return size_; }
 
-  Iterator begin() { return Iterator{ptr(), size_, 0}; }
-  Iterator end() { return Iterator{ptr(), size_, size_}; }
+  Iterator begin() const { return Iterator{ptr(), size_, 0}; }
+  Iterator end() const { return Iterator{ptr(), size_, size_}; }
 
  protected:
   const jarray array_;
@@ -217,8 +217,10 @@ class ArrayView<
     LifecycleHelper<jobjectArray, LifecycleType::LOCAL>::Delete(array_);
   }
 
-  Iterator begin() { return Iterator(array_, size_, 0); }
-  Iterator end() { return Iterator(array_, size_, size_); }
+  std::size_t size() const { return size_; }
+
+  Iterator begin() const { return Iterator(array_, size_, 0); }
+  Iterator end() const { return Iterator(array_, size_, size_); }
 
  protected:
   const jobjectArray array_;
