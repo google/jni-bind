@@ -51,7 +51,7 @@ struct ArgTrace<std::index_sequence<Is...>,
     static constexpr bool IsLastArgument() { return I == sizeof...(Is) - 1; }
 
     template <typename Arg>
-    static inline void Do(const Arg& arg) {
+    static void Do(const Arg& arg) {
       printf("%s", metaprogramming::Colorize(metaprogramming::Color::kCyan,
                                              ArgString(arg))
                        .c_str());
@@ -64,7 +64,7 @@ struct ArgTrace<std::index_sequence<Is...>,
   };
 
   template <typename... Args>
-  static inline void Do(const Args&... args) {
+  static void Do(const Args&... args) {
     (Helper<Is>::Do(args), ...);
   }
 };

@@ -45,14 +45,14 @@ class ThreadGuard;
 // result in unnecessary and excessive writes.
 class JniEnv {
  public:
-  static inline JNIEnv* GetEnv() { return env_; }
+  static JNIEnv* GetEnv() { return env_; }
 
  protected:
   template <const auto& jvm_v_>
   friend class JvmRef;
   friend class ThreadGuard;
 
-  static inline void SetEnv(JNIEnv* env) { env_ = env; }
+  static void SetEnv(JNIEnv* env) { env_ = env; }
 
   // This will always be set when a new object is created (see above).
   static inline thread_local JNIEnv* env_;
