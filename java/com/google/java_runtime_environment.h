@@ -37,8 +37,7 @@ class JavaRuntimeEnvironment {
   using GetJvmFunc = jint (*)(JavaVM **, jsize, jsize *);
 
  private:
-  inline JavaRuntimeEnvironment(void *lib_handle,
-                                std::string_view class_collection)
+  JavaRuntimeEnvironment(void* lib_handle, std::string_view class_collection)
       : lib_handle_(lib_handle),
         create_function_(reinterpret_cast<CreateJvmFunc>(
             dlsym(lib_handle_, "JNI_CreateJavaVM"))),
@@ -67,7 +66,7 @@ class JavaRuntimeEnvironment {
   ~JavaRuntimeEnvironment() { dlclose(lib_handle_); }
 
   // Builds a `JavaRuntimeEnvironment`, or nothing if failure.
-  static inline std::optional<JavaRuntimeEnvironment> Build(
+  static std::optional<JavaRuntimeEnvironment> Build(
       std::string_view jvm_so_lib, std::string_view class_collection) {
     if (!FileExists(jvm_so_lib.data())) {
       printf("libjvm so solib does not exist.");
