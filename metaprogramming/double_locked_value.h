@@ -33,7 +33,7 @@ template <typename T_>
 class DoubleLockedValue {
  public:
   template <typename Lambda>
-  inline T_ LoadAndMaybeInit(Lambda lambda) {
+  T_ LoadAndMaybeInit(Lambda lambda) {
     // Typical case, value already initialised, perform cheap load and return.
     T_ return_value = value_.load(std::memory_order_acquire);
 
@@ -57,7 +57,7 @@ class DoubleLockedValue {
   }
 
   // Sets the value to {0}.
-  inline void Reset() {
+  void Reset() {
     std::lock_guard<std::mutex> lock_guard{lock_};
     value_.store(0, std::memory_order_release);
   }
@@ -65,7 +65,7 @@ class DoubleLockedValue {
   // Sets the value to {0} and iff the value was not {0} prior to being torn
   // down, the teardown lambda will be invoked with this value.
   template <typename TeardownLambda>
-  inline void Reset(TeardownLambda lambda) {
+  void Reset(TeardownLambda lambda) {
     std::lock_guard<std::mutex> lock_guard{lock_};
     auto val = value_.load();
     if (val != 0) {
