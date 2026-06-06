@@ -43,7 +43,7 @@ class GlobalException
     : public GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
  public:
   using Base = GlobalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
-  using JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
+  using JniT = ::jni::JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
   using Base::Base;
   using SpanType = jobject;
   using LifecycleT = LifecycleHelper<jobject, LifecycleType::GLOBAL>;
