@@ -24,7 +24,7 @@
 
 namespace jni {
 
-static constexpr Class kJavaLangThrowable{
+inline constexpr Class kJavaLangThrowable{
     "java/lang/Throwable",
     Constructor{},
     Constructor<jstring>{},

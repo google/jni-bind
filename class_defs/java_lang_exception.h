@@ -27,7 +27,7 @@
 
 namespace jni {
 
-static constexpr Class kJavaLangException{
+inline constexpr Class kJavaLangException{
     "java/lang/Exception",
     Constructor{},
     Constructor<jstring>{},
