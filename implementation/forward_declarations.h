@@ -21,7 +21,7 @@
 
 #include <cstddef>
 
-#include "implementation/id_type.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/jni_helper/lifecycle.h"
 
 namespace jni {
@@ -53,9 +53,6 @@ struct Id;
 // Scope.
 template <LifecycleType lifecycleType, typename JniT, typename... ViableSpans>
 struct Scoped;
-
-template <typename Span, LifecycleType lifecycle_type>
-struct LifecycleHelper;
 
 // Objects.
 template <const auto& class_v_, const auto& class_loader_v_, const auto& jvm_v_>

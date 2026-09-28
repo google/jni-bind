@@ -47,7 +47,7 @@ class QueryableMapBase {};
 //   directly pass a const auto&, however, this prevents accessing subobjects.
 //
 // The motivation for using inheritance as opposed to a simple member is that
-// the the const char cannot be propagated without losing its constexpr-ness,
+// the const char cannot be propagated without losing its constexpr-ness,
 // and so the clang extension can no longer restrict function candidates.
 template <typename CrtpBase, const auto& tup_container_v,
           std::size_t container_size, typename TupContainerT, typename MemberT,
