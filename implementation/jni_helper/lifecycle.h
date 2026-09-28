@@ -17,8 +17,8 @@
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_H_
 
 #include "jni_env.h"
+#include "bind_lang/metaprogramming/lambda_string.h"
 #include "jni_dep.h"
-#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {
@@ -36,7 +36,8 @@ struct LifecycleHelper;
 template <typename Span>
 struct LifecycleLocalBase {
   static inline void Delete(Span object) {
-    Trace(metaprogramming::LambdaToStr(STR("DeleteLocalRef")), object);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("DeleteLocalRef")),
+          object);
 
 #ifdef DRY_RUN
 #else
@@ -45,7 +46,7 @@ struct LifecycleLocalBase {
   }
 
   static inline Span NewReference(Span object) {
-    Trace(metaprogramming::LambdaToStr(STR("NewLocalRef")), object);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("NewLocalRef")), object);
 
 #ifdef DRY_RUN
     return Fake<Span>();
@@ -66,7 +67,7 @@ struct LifecycleHelper<Span, LifecycleType::LOCAL>
 template <typename Span>
 struct LifecycleGlobalBase {
   static inline Span Promote(Span object) {
-    Trace(metaprogramming::LambdaToStr(STR("NewGlobalRef")), object);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("NewGlobalRef")), object);
 
 #ifdef DRY_RUN
     jobject ret = Fake<jobject>();
@@ -74,7 +75,8 @@ struct LifecycleGlobalBase {
     jobject ret = JniEnv::GetEnv()->NewGlobalRef(object);
 #endif  // DRY_RUN
 
-    Trace(metaprogramming::LambdaToStr(STR("DeleteLocalRef")), object);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("DeleteLocalRef")),
+          object);
 
 #ifdef DRY_RUN
 #else
@@ -85,7 +87,8 @@ struct LifecycleGlobalBase {
   }
 
   static inline void Delete(Span object) {
-    Trace(metaprogramming::LambdaToStr(STR("DeleteGlobalRef")), object);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("DeleteGlobalRef")),
+          object);
 
 #ifdef DRY_RUN
 #else
@@ -94,7 +97,7 @@ struct LifecycleGlobalBase {
   }
 
   static inline Span NewReference(Span object) {
-    Trace(metaprogramming::LambdaToStr(STR("NewGlobalRef")), object);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("NewGlobalRef")), object);
 
 #ifdef DRY_RUN
     return Fake<Span>();

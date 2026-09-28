@@ -19,6 +19,7 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include "bind_lang/metaprogramming/deep_equal_diminished.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/lifecycle.h"
@@ -29,7 +30,6 @@
 #include "implementation/promotion_mechanics.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
-#include "metaprogramming/deep_equal_diminished.h"
 
 namespace jni {
 
@@ -66,7 +66,7 @@ class GlobalObject
 
   template <const auto& class_v, const auto& class_loader_v, const auto& jvm_v>
   GlobalObject& operator=(LocalObject<class_v, class_loader_v, jvm_v>&& rhs) {
-    static_assert(::jni::metaprogramming::DeepEqualDiminished_v<
+    static_assert(::bind_lang::metaprogramming::DeepEqualDiminished_v<
                   LocalObject<class_v_, class_loader_v_, jvm_v_>,
                   LocalObject<class_v, class_loader_v, jvm_v>>);
     Base::MaybeReleaseUnderlyingObject();

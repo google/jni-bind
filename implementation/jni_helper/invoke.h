@@ -22,8 +22,8 @@
 #include <utility>
 
 #include "jni_env.h"
+#include "bind_lang/metaprogramming/lambda_string.h"
 #include "jni_dep.h"
-#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {
@@ -42,8 +42,8 @@ struct InvokeHelper<void, 0, false> {
                      Ts&&... ts) {
 #ifdef DRY_RUN
 #else
-    Trace(metaprogramming::LambdaToStr(STR("CallVoidMethod")), object, clazz,
-          method_id, ts...);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("CallVoidMethod")),
+          object, clazz, method_id, ts...);
 
     jni::JniEnv::GetEnv()->CallVoidMethod(object, method_id,
                                           std::forward<Ts>(ts)...);
@@ -62,8 +62,8 @@ struct InvokeHelper<jboolean, 0, false> {
 #ifdef DRY_RUN
     return Fake<jboolean>();
 #else
-    Trace(metaprogramming::LambdaToStr(STR("CallBooleanMethod")), object, clazz,
-          method_id, ts...);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("CallBooleanMethod")),
+          object, clazz, method_id, ts...);
 
     return jni::JniEnv::GetEnv()->CallBooleanMethod(object, method_id,
                                                     std::forward<Ts>(ts)...);
@@ -76,8 +76,8 @@ struct InvokeHelper<jint, 0, false> {
   template <typename... Ts>
   static jint Invoke(jobject object, jclass clazz, jmethodID method_id,
                      Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(STR("CallIntMethod")), object, clazz,
-          method_id, ts...);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("CallIntMethod")), object,
+          clazz, method_id, ts...);
 
 #ifdef DRY_RUN
     return Fake<jint>();
@@ -93,8 +93,8 @@ struct InvokeHelper<jlong, 0, false> {
   template <typename... Ts>
   static jlong Invoke(jobject object, jclass clazz, jmethodID method_id,
                       Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(STR("CallLongMethod")), object, clazz,
-          method_id, ts...);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("CallLongMethod")),
+          object, clazz, method_id, ts...);
 
 #ifdef DRY_RUN
     return Fake<jlong>();
@@ -110,8 +110,8 @@ struct InvokeHelper<jfloat, 0, false> {
   template <typename... Ts>
   static jfloat Invoke(jobject object, jclass clazz, jmethodID method_id,
                        Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(STR("CallFloatMethod")), object, clazz,
-          method_id, ts...);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("CallFloatMethod")),
+          object, clazz, method_id, ts...);
 
 #ifdef DRY_RUN
     //    return Fake<jfloat>();
@@ -128,8 +128,8 @@ struct InvokeHelper<jdouble, 0, false> {
   template <typename... Ts>
   static jdouble Invoke(jobject object, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(STR("CallDoubleMethod")), object, clazz,
-          method_id, ts...);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("CallDoubleMethod")),
+          object, clazz, method_id, ts...);
 
 #ifdef DRY_RUN
     // return Fake<jdouble>();
@@ -148,8 +148,8 @@ struct InvokeHelper<jobject, 0, false> {
   template <typename... Ts>
   static jobject Invoke(jobject object, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(STR("CallObjectMethod")), object, clazz,
-          method_id, ts...);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("CallObjectMethod")),
+          object, clazz, method_id, ts...);
 
 #ifdef DRY_RUN
     return Fake<jobject>();
@@ -165,8 +165,8 @@ struct InvokeHelper<jstring, 0, false> {
   template <typename... Ts>
   static jobject Invoke(jobject object, jclass clazz, jmethodID method_id,
                         Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(STR("CallObjectMethod")), object, clazz,
-          method_id, ts...);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("CallObjectMethod")),
+          object, clazz, method_id, ts...);
 
 #ifdef DRY_RUN
     return Fake<jstring>();
@@ -185,7 +185,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jboolean>, kRank, false> {
   template <typename... Ts>
   static jbooleanArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                               Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jbooleanArray), Rank 1")),
           object, clazz, method_id, ts...);
 
@@ -203,7 +203,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jbyte>, kRank, false> {
   template <typename... Ts>
   static jbyteArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jbyteArray), Rank 1")),
           object, clazz, method_id, ts...);
 
@@ -221,7 +221,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jchar>, kRank, false> {
   template <typename... Ts>
   static jcharArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jcharArray), Rank 1")),
           object, clazz, method_id, ts...);
 
@@ -239,7 +239,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jshort>, kRank, false> {
   template <typename... Ts>
   static jshortArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                             Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jshortArray), Rank 1")),
           object, clazz, method_id, ts...);
 
@@ -257,7 +257,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jint>, kRank, false> {
   template <typename... Ts>
   static jintArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                           Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jintArray), Rank 1")),
           object, clazz, method_id, ts...);
 
@@ -275,7 +275,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jlong>, kRank, false> {
   template <typename... Ts>
   static jlongArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                            Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jlongArray), Rank 1")),
           object, clazz, method_id, ts...);
 
@@ -293,7 +293,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jfloat>, kRank, false> {
   template <typename... Ts>
   static jfloatArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                             Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jfloatArray), Rank 1")),
           object, clazz, method_id, ts...);
 
@@ -311,7 +311,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jdouble>, kRank, false> {
   template <typename... Ts>
   static jdoubleArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jdoubleArray), Rank 1")),
           object, clazz, method_id, ts...);
 
@@ -331,7 +331,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jarray>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank 1")),
           object, clazz, method_id, ts...);
 
@@ -349,7 +349,7 @@ struct InvokeHelper<std::enable_if_t<(kRank == 1), jobject>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank 1")),
           object, clazz, method_id, ts...);
 
@@ -370,7 +370,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jboolean>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
@@ -388,7 +388,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jbyte>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
@@ -406,7 +406,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jchar>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
@@ -424,7 +424,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jshort>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
@@ -442,7 +442,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jint>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
@@ -460,7 +460,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jfloat>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 #ifdef DRY_RUN
@@ -477,7 +477,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jdouble>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
@@ -495,7 +495,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jlong>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
@@ -515,7 +515,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jarray>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 
@@ -533,7 +533,7 @@ struct InvokeHelper<std::enable_if_t<(kRank > 1), jobject>, kRank, false> {
   template <typename... Ts>
   static jobjectArray Invoke(jobject object, jclass clazz, jmethodID method_id,
                              Ts&&... ts) {
-    Trace(metaprogramming::LambdaToStr(
+    Trace(bind_lang::metaprogramming::LambdaToStr(
               STR("CallObjectMethod (jobjectArray), Rank >1")),
           object, clazz, method_id, ts...);
 

@@ -22,6 +22,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "bind_lang/metaprogramming/double_locked_value.h"
 #include "class_defs/java_lang_classes.h"
 #include "implementation/configuration.h"
 #include "implementation/default_class_loader.h"
@@ -34,7 +35,6 @@
 #include "implementation/ref_storage.h"
 #include "implementation/selector_static_info.h"
 #include "jni_dep.h"
-#include "metaprogramming/double_locked_value.h"
 
 namespace jni {
 
@@ -63,7 +63,7 @@ class ClassRef {
     // For the default classloader, storage in uniquely IDed struct static.
     if constexpr (JniT::GetClassLoader() == kDefaultClassLoader) {
       static auto get_lambda =
-          [](metaprogramming::DoubleLockedValue<jclass>* storage) {
+          [](bind_lang::metaprogramming::DoubleLockedValue<jclass>* storage) {
             if (kConfiguration.release_class_ids_on_teardown_) {
               DefaultRefs<jclass>().push_back(storage);
             }
@@ -120,7 +120,8 @@ class ClassRef {
   // A global reference to a jclass object that is returned from FindClass.
   // The variable has static storage because ClassIDs are static to the lifetime
   // of a JVM.  See GetAndMaybeLoadClassRef and MaybeReleaseClassRef.
-  static inline metaprogramming::DoubleLockedValue<jclass> class_ref_;
+  static inline bind_lang::metaprogramming::DoubleLockedValue<jclass>
+      class_ref_;
 };
 
 // When we get an object_ref_ as a return value from a Java method, it may be

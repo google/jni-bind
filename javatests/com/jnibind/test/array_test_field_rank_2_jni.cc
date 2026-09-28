@@ -18,13 +18,13 @@
 #include <limits>
 #include <memory>
 
+#include "bind_lang/metaprogramming/string_literal.h"
 #include "javatests/com/jnibind/test/array_test_helpers_native.h"
 #include "javatests/com/jnibind/test/modulo.h"
 #include "javatests/com/jnibind/test/object_test_helper_jni.h"
 #include "jni_bind.h"
-#include "metaprogramming/lambda_string.h"
-#include "metaprogramming/string_literal.h"
 
+using ::bind_lang::metaprogramming::StringLiteral;
 using ::jni::Array;
 using ::jni::ArrayView;
 using ::jni::Class;
@@ -34,7 +34,6 @@ using ::jni::LocalObject;
 using ::jni::Modulo;
 using ::jni::Rank;
 using ::jni::StaticRef;
-using ::jni::metaprogramming::StringLiteral;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
 

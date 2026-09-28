@@ -1,5 +1,5 @@
-#ifndef JNI_BIND_METAPROGRAMMING_MODULO_H_
-#define JNI_BIND_METAPROGRAMMING_MODULO_H_
+#ifndef JNI_BIND_JAVATESTS_COM_JNIBIND_TEST_MODULO_H_
+#define JNI_BIND_JAVATESTS_COM_JNIBIND_TEST_MODULO_H_
 
 #include <cstddef>
 #include <limits>
@@ -25,4 +25,4 @@ T Modulo(std::size_t increment_count, T val = T{0},
 
 }  // namespace jni
 
-#endif  // JNI_BIND_METAPROGRAMMING_MODULO_H_
+#endif  // JNI_BIND_JAVATESTS_COM_JNIBIND_TEST_MODULO_H_

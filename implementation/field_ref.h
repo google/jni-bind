@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "bind_lang/metaprogramming/double_locked_value.h"
 #include "implementation/configuration.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_selection.h"
@@ -38,14 +39,13 @@
 #include "implementation/ref_base.h"
 #include "implementation/signature.h"
 #include "jni_dep.h"
-#include "metaprogramming/double_locked_value.h"
 
 namespace jni {
 
 // See JvmRef::~JvmRef.
 static inline auto& GetDefaultLoadedFieldList() {
-  static auto* ret_val =
-      new std::vector<metaprogramming::DoubleLockedValue<jfieldID>*>{};
+  static auto* ret_val = new std::vector<
+      bind_lang::metaprogramming::DoubleLockedValue<jfieldID>*>{};
   return *ret_val;
 }
 
@@ -70,7 +70,7 @@ class FieldRef {
 
   // This method is thread safe.
   static jfieldID GetFieldID(jclass clazz) {
-    static jni::metaprogramming::DoubleLockedValue<jfieldID> return_value;
+    static bind_lang::metaprogramming::DoubleLockedValue<jfieldID> return_value;
 
     return return_value.LoadAndMaybeInit([=]() {
       if constexpr (JniT::class_loader_v == kDefaultClassLoader) {

@@ -19,10 +19,10 @@
 #include <string>
 
 #include <gtest/gtest.h>
-#include "metaprogramming/lambda_string.h"
+#include "bind_lang/metaprogramming/lambda_string.h"
 
+using ::bind_lang::metaprogramming::LambdaToStr;
 using ::jni::Trace;
-using ::jni::metaprogramming::LambdaToStr;
 
 using ::testing::internal::CaptureStdout;
 using ::testing::internal::GetCapturedStdout;

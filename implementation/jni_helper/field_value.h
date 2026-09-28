@@ -21,8 +21,8 @@
 #include <type_traits>
 
 #include "jni_env.h"
+#include "bind_lang/metaprogramming/lambda_string.h"
 #include "jni_dep.h"
-#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {
@@ -42,8 +42,8 @@ template <>
 struct FieldHelper<jboolean, 0, false, void> {
   static inline jboolean GetValue(const jobject object_ref,
                                   const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetBooleanValue")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jboolean>();
@@ -54,8 +54,8 @@ struct FieldHelper<jboolean, 0, false, void> {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jboolean&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("GetBooleanValue")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetBooleanValue")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else
@@ -68,8 +68,8 @@ template <>
 struct FieldHelper<jbyte, 0, false, void> {
   static inline jbyte GetValue(const jobject object_ref,
                                const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetByteValue")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetByteValue")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jbyte>();
@@ -80,8 +80,8 @@ struct FieldHelper<jbyte, 0, false, void> {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jbyte&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetByteValue")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetByteValue")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else
@@ -94,8 +94,8 @@ template <>
 struct FieldHelper<jchar, 0, false, void> {
   static inline jchar GetValue(const jobject object_ref,
                                const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetCharValue")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetCharValue")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jchar>();
@@ -106,8 +106,8 @@ struct FieldHelper<jchar, 0, false, void> {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jchar&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetCharValue")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetCharValue")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else
@@ -120,8 +120,8 @@ template <>
 struct FieldHelper<jshort, 0, false, void> {
   static inline jshort GetValue(const jobject object_ref,
                                 const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetShortValue")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetShortValue")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jshort>();
@@ -132,8 +132,8 @@ struct FieldHelper<jshort, 0, false, void> {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jshort&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetShortValue")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetShortValue")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else
@@ -146,8 +146,8 @@ template <>
 struct FieldHelper<jint, 0, false, void> {
   static inline jint GetValue(const jobject object_ref,
                               const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetIntValue")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetIntValue")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jint>();
@@ -158,8 +158,8 @@ struct FieldHelper<jint, 0, false, void> {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jint&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetIntValue")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetIntValue")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else
@@ -172,8 +172,8 @@ template <>
 struct FieldHelper<jlong, 0, false, void> {
   static inline jlong GetValue(const jobject object_ref,
                                const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetLongField")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetLongField")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jlong>();
@@ -184,8 +184,8 @@ struct FieldHelper<jlong, 0, false, void> {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jlong&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetLongField")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetLongField")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else
@@ -198,8 +198,8 @@ template <>
 struct FieldHelper<jfloat, 0, false, void> {
   static inline jfloat GetValue(const jobject object_ref,
                                 const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetFloatField")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetFloatField")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return 123.f;
@@ -210,8 +210,8 @@ struct FieldHelper<jfloat, 0, false, void> {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jfloat&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetFloatField")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetFloatField")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else
@@ -224,8 +224,8 @@ template <>
 struct FieldHelper<jdouble, 0, false, void> {
   static inline jdouble GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetDoubleField")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetDoubleField")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return 123.;
@@ -236,8 +236,8 @@ struct FieldHelper<jdouble, 0, false, void> {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jdouble&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetDoubleField")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetDoubleField")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else
@@ -250,8 +250,8 @@ template <>
 struct FieldHelper<jobject, 0, false, void> {
   static inline jobject GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetObjectField")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jobject>();
@@ -262,8 +262,8 @@ struct FieldHelper<jobject, 0, false, void> {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jobject&& new_value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetObjectField")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else
@@ -276,8 +276,8 @@ template <>
 struct FieldHelper<jstring, 0, false, void> {
   static inline jstring GetValue(const jobject object_ref,
                                  const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetObjectField")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jstring>();
@@ -289,8 +289,8 @@ struct FieldHelper<jstring, 0, false, void> {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jstring&& new_value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetObjectField")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else
@@ -306,8 +306,9 @@ template <typename ArrayType>
 struct BaseFieldArrayHelper {
   static inline ArrayType GetValue(const jobject object_ref,
                                    const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetObjectField, Rank 1")),
-          object_ref, field_ref_);
+    Trace(
+        bind_lang::metaprogramming::LambdaToStr(STR("GetObjectField, Rank 1")),
+        object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<ArrayType>();
@@ -319,8 +320,8 @@ struct BaseFieldArrayHelper {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, ArrayType&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetObjectField")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else
@@ -372,8 +373,9 @@ struct FieldHelper<
                       std::is_same_v<jstring, T> || (kRank > 1))> > {
   static inline jobjectArray GetValue(const jobject object_ref,
                                       const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetObjectField, Rank >1")),
-          object_ref, field_ref_);
+    Trace(
+        bind_lang::metaprogramming::LambdaToStr(STR("GetObjectField, Rank >1")),
+        object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jobjectArray>();
@@ -385,8 +387,9 @@ struct FieldHelper<
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, jobjectArray&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetObjectField, Rank >1")),
-          object_ref, field_ref_);
+    Trace(
+        bind_lang::metaprogramming::LambdaToStr(STR("SetObjectField, Rank >1")),
+        object_ref, field_ref_);
 
 #ifdef DRY_RUN
 #else

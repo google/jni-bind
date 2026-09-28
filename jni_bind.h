@@ -40,17 +40,22 @@ static constexpr Configuration kConfig{
 ////////////////////////////////////////////////////////////////////////////////
 
 // JNI Corpus.
-#include "metaprogramming/corpus.h"
-#include "metaprogramming/corpus_tag.h"
+#include "bind_lang/metaprogramming/corpus.h"
+#include "bind_lang/metaprogramming/corpus_tag.h"
 
 // JNI Porcelain Helpers.
+#include "bind_lang/metaprogramming/singleton.h"
+#include "bind_lang/metaprogramming/string_literal.h"
 #include "implementation/jni_helper/field_value.h"
 #include "implementation/jni_helper/invoke_static.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/static_field_value.h"
-#include "metaprogramming/string_literal.h"
+
+namespace jni {
+namespace metaprogramming = ::bind_lang::metaprogramming;
+}  // namespace jni
 
 // Headers for static definitions.
 #include "implementation/array.h"

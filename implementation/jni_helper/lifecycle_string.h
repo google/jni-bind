@@ -18,9 +18,9 @@
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_STRING_H_
 
 #include "jni_env.h"
+#include "bind_lang/metaprogramming/lambda_string.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "jni_dep.h"
-#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {
@@ -29,7 +29,7 @@ template <>
 struct LifecycleHelper<jstring, LifecycleType::LOCAL>
     : public LifecycleLocalBase<jstring> {
   static inline jstring Construct(const char* chars) {
-    Trace(metaprogramming::LambdaToStr(STR("NewStringUTF")), chars);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("NewStringUTF")), chars);
 
 #ifdef DRY_RUN
     return Fake<jstring>();

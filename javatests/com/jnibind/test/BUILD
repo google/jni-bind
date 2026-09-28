@@ -17,7 +17,7 @@ cc_library(
         ":array_test_helpers_native",
         ":object_test_helper_jni",
         "//:jni_bind",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
     alwayslink = True,
 )
@@ -55,8 +55,7 @@ cc_library(
         ":modulo",
         ":object_test_helper_jni",
         "//:jni_bind",
-        "//metaprogramming:lambda_string",
-        "//metaprogramming:string_literal",
+        "//bind_lang/metaprogramming:string_literal",
     ],
     alwayslink = True,
 )
@@ -121,7 +120,7 @@ cc_library(
         ":array_test_helpers_native",
         ":object_test_helper_jni",
         "//:jni_bind",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
     alwayslink = True,
 )
@@ -162,8 +161,8 @@ cc_library(
         ":modulo",
         ":object_test_helper_jni",
         "//:jni_bind",
-        "//metaprogramming:lambda_string",
-        "//metaprogramming:string_literal",
+        "//bind_lang/metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:string_literal",
     ],
     alwayslink = True,
 )
@@ -201,7 +200,7 @@ cc_library(
     deps = [
         ":object_test_helper_jni",
         "//:jni_bind",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
     alwayslink = True,
 )

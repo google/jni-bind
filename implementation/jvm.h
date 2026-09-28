@@ -23,8 +23,8 @@
 #include <tuple>
 #include <utility>
 
+#include "bind_lang/metaprogramming/modified_max.h"
 #include "implementation/default_class_loader.h"
-#include "metaprogramming/modified_max.h"
 
 namespace jni {
 
@@ -39,7 +39,7 @@ class Jvm {
   template <const auto& class_loader_v, std::size_t... Is>
   constexpr size_t IdxOfClassLoaderHelper(
       std::integer_sequence<std::size_t, Is...>) const {
-    return metaprogramming::ModifiedMax(
+    return bind_lang::metaprogramming::ModifiedMax(
         {((std::get<Is>(class_loaders_) == class_loader_v) ? Is : -1)...});
   }
 

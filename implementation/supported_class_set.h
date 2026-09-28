@@ -32,7 +32,7 @@ class SupportedClassSet {
   constexpr SupportedClassSet(Classes_... supported_classes)
       : supported_classes_(supported_classes...) {
     // TODO(b/143908983): Classloaders should enforce unique classes.
-    // static_assert(metaprogramming::AllUniqueValues(supported_classes...),
+    // static_assert(bind_lang::metaprogramming::AllUniqueValues(supported_classes...),
     //"All classes supported by the class loader must be unique.");
   }
 };
