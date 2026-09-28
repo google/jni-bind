@@ -67,27 +67,57 @@ explode_all_deps() {
   done
 }
 
+################################################################################
+# Strips the per-file boilerplate from a header:
+#   * Everything up to and including the include guard (`#ifndef X` followed by
+#     `#define X`), which covers the license block and any leading comments.
+#   * The final `#endif` (the include guard terminator) and any trailing blank
+#     lines after it.
+#
+# Unlike a fixed line count, this tolerates license blocks of any length (e.g.
+# differing copyright years or formats) and files with trailing newlines.
+# $1 File path.
+strip_header_boilerplate() {
+  awk '
+    !guard_done {
+      if (pending_guard != "" && $1 == "#define" && $2 == pending_guard) {
+        guard_done = 1
+        next
+      }
+      if ($1 == "#ifndef" && $2 ~ /^[A-Za-z0-9_]+$/) {
+        pending_guard = $2
+      }
+      next
+    }
+    { lines[++n] = $0 }
+    END {
+      if (!guard_done) {
+        printf("error: no include guard found in %s\n", FILENAME) > "/dev/stderr"
+        exit 1
+      }
+      last = n
+      while (last > 0 && lines[last] ~ /^[[:space:]]*$/) last--
+      if (last > 0 && lines[last] ~ /^#endif/) last--
+      for (i = 1; i <= last; i++) print lines[i]
+    }
+  ' "$1"
+}
+
 # $@ A list of all the headers to expand inline.
 paste_header_contents_from_filenames() {
   arr=(${@})
   arr_size=${#arr[@]}
   for (( i=0; i<$arr_size; i++ ))
   do
-    # Skip the Apache license since it's always the same length this works.
-    # Also, skip the ifdef and defin guards which always lead the file.
-    tail -n +19 ${arr[$i]} > /tmp/jni_bind_file_preprocess
-
-    # Chop off the endif which is always in the same location at the end.
-    # (i.e. #endif // namespace jni{::metaprogramming} statement).
-    head -n -1 /tmp/jni_bind_file_preprocess > /tmp/jni_bind_file_preprocess_2
-
+    # Skip the license, include guards, and the trailing guard `#endif`.
     # Remove local include statements (these will be inlined by this script).
-    sed -i "s/#include \".*//" /tmp/jni_bind_file_preprocess_2
-
     # Remove excess whitespace in the file.
-    cat -s /tmp/jni_bind_file_preprocess_2 > /tmp/jni_bind_file_preprocess_3
-
-    cat /tmp/jni_bind_file_preprocess_3
+    strip_header_boilerplate "${arr[$i]}" \
+      | sed "s/#include \".*//" \
+      | cat -s
+    if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+      return 1
+    fi
   done
 }
 
@@ -98,7 +128,7 @@ all_targets=$(cat $1)
 all_headers="$(sed "s/[0-9]\+ //g" <<< $all_targets)"
 all_headers=$(reverse $all_headers)
 all_headers=$(explode_all_deps $2 $all_headers)
-all_headers_inline=$(paste_header_contents_from_filenames ${all_headers[@]})
+all_headers_inline=$(paste_header_contents_from_filenames ${all_headers[@]}) || exit 1
 
 cat $3
 echo "$all_headers_inline"
