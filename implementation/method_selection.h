@@ -28,9 +28,8 @@
 #include "bind_lang/metaprogramming/type_of_nth_element.h"
 #include "bind_lang/metaprogramming/unfurl.h"
 #include "bind_lang/metaprogramming/vals.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/id.h"
-#include "implementation/id_type.h"
-#include "implementation/no_idx.h"
 #include "implementation/overload_ref.h"
 #include "implementation/proxy_convenience_aliases.h"
 

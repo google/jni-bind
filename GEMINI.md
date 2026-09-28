@@ -190,3 +190,9 @@ blaze test //third_party/jni_wrapper/...
 To update `jni_bind_release.h`:
 1. `blaze build //third_party/jni_wrapper:gen_jni_bind_release`
 2. `cp ../../blaze-genfiles/third_party/jni_wrapper/jni_bind_release.h jni_bind_release.h`
+
+### Library Structure (bind_lang)
+JNI Bind is being restructured on top of a language-agnostic core in
+`bind_lang/` (metaprogramming, handle/lifecycle vocabulary, proxy machinery).
+Read [bind_lang/README.md](bind_lang/README.md) before changing shared code.
+Nothing in `bind_lang/` may depend on `implementation/`.
