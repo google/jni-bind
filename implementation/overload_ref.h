@@ -26,8 +26,8 @@
 
 #include "bind_lang/metaprogramming/double_locked_value.h"
 #include "bind_lang/metaprogramming/string_concatenate.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/configuration.h"
-#include "implementation/id_type.h"
 #include "implementation/jni_helper/invoke.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/lifecycle.h"

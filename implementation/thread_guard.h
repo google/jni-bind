@@ -35,7 +35,7 @@ class ThreadLocalGuardDestructor {
  public:
   bool detach_thread_when_all_guards_released_ = false;
 
-  // By calling this the compiler is obligated to perform initalisation.
+  // By calling this the compiler is obligated to perform initialisation.
   void ForceDestructionOnThreadClose() {}
 
   ~ThreadLocalGuardDestructor() {
