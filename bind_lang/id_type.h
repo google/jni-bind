@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-#ifndef JNI_BIND_IMPLEMENTATION_ID_TYPE_H_
-#define JNI_BIND_IMPLEMENTATION_ID_TYPE_H_
+#ifndef JNI_BIND_BIND_LANG_ID_TYPE_H_
+#define JNI_BIND_BIND_LANG_ID_TYPE_H_
 
-// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
-
-namespace jni {
+namespace bind_lang {
 
 enum class IdType {
   CLASS,
@@ -33,6 +31,6 @@ enum class IdType {
   FIELD,
 };
 
-}  // namespace jni
+}  // namespace bind_lang
 
-#endif  // JNI_BIND_IMPLEMENTATION_ID_TYPE_H_
+#endif  // JNI_BIND_BIND_LANG_ID_TYPE_H_

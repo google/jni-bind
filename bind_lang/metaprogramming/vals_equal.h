@@ -23,7 +23,7 @@
 
 namespace bind_lang::metaprogramming {
 
-// Performs a deep equality comparison of T, but is leniant about containers.
+// Performs a deep equality comparison of T, but is lenient about containers.
 // Returns true iff types are equal or both types are containers and their
 // non-type template parameters are equal.
 template <typename T>
