@@ -17,20 +17,15 @@
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_H_
 
 #include "jni_env.h"
+#include "bind_lang/lifecycle.h"
 #include "bind_lang/metaprogramming/lambda_string.h"
 #include "jni_dep.h"
 #include "trace.h"
 
 namespace jni {
 
-enum class LifecycleType {
-  LOCAL,
-  GLOBAL,
-  // WEAK, // not implemented yet.
-};
-
-template <typename Span, LifecycleType lifecycle_type>
-struct LifecycleHelper;
+using ::bind_lang::LifecycleHelper;
+using ::bind_lang::LifecycleType;
 
 // Shared implementation for local jobjects (jobject, jstring).
 template <typename Span>
@@ -54,13 +49,6 @@ struct LifecycleLocalBase {
     return static_cast<Span>(JniEnv::GetEnv()->NewLocalRef(object));
 #endif  // DRY_RUN
   }
-};
-
-template <typename Span>
-struct LifecycleHelper<Span, LifecycleType::LOCAL>
-    : public LifecycleLocalBase<Span> {
-  using Base = LifecycleLocalBase<Span>;
-  using Base::Base;
 };
 
 // Shared implementation for global jobjects (jobject, jstring).
@@ -107,13 +95,41 @@ struct LifecycleGlobalBase {
   }
 };
 
-template <typename Span>
-struct LifecycleHelper<Span, LifecycleType::GLOBAL>
-    : public LifecycleGlobalBase<Span> {
-  using Base = LifecycleGlobalBase<Span>;
-  using Base::Base;
-};
-
 }  // namespace jni
+
+// Explicit specializations for JNI handle/array types (`jobject`/`jclass` are
+// specialized in `lifecycle_object.h`, and `jstring` in `lifecycle_string.h`).
+// Specializations of `bind_lang::LifecycleHelper` must live in `bind_lang`.
+namespace bind_lang {
+
+#define JNI_LIFECYCLE_HELPER_SPECIALIZATION(Type)     \
+  template <>                                         \
+  struct LifecycleHelper<Type, LifecycleType::LOCAL>  \
+      : public ::jni::LifecycleLocalBase<Type> {      \
+    using Base = ::jni::LifecycleLocalBase<Type>;     \
+    using Base::Base;                                 \
+  };                                                  \
+  template <>                                         \
+  struct LifecycleHelper<Type, LifecycleType::GLOBAL> \
+      : public ::jni::LifecycleGlobalBase<Type> {     \
+    using Base = ::jni::LifecycleGlobalBase<Type>;    \
+    using Base::Base;                                 \
+  };
+
+JNI_LIFECYCLE_HELPER_SPECIALIZATION(jthrowable)
+JNI_LIFECYCLE_HELPER_SPECIALIZATION(jarray)
+JNI_LIFECYCLE_HELPER_SPECIALIZATION(jobjectArray)
+JNI_LIFECYCLE_HELPER_SPECIALIZATION(jbooleanArray)
+JNI_LIFECYCLE_HELPER_SPECIALIZATION(jbyteArray)
+JNI_LIFECYCLE_HELPER_SPECIALIZATION(jcharArray)
+JNI_LIFECYCLE_HELPER_SPECIALIZATION(jshortArray)
+JNI_LIFECYCLE_HELPER_SPECIALIZATION(jintArray)
+JNI_LIFECYCLE_HELPER_SPECIALIZATION(jlongArray)
+JNI_LIFECYCLE_HELPER_SPECIALIZATION(jfloatArray)
+JNI_LIFECYCLE_HELPER_SPECIALIZATION(jdoubleArray)
+
+#undef JNI_LIFECYCLE_HELPER_SPECIALIZATION
+
+}  // namespace bind_lang
 
 #endif  // JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_H_

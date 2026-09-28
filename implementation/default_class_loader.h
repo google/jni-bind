@@ -23,7 +23,7 @@
 #include <tuple>
 
 #include "bind_lang/metaprogramming/modified_max.h"
-#include "implementation/no_idx.h"
+#include "implementation/bind_lang_imports.h"
 
 namespace jni {
 

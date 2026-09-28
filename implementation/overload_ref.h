@@ -26,8 +26,8 @@
 
 #include "bind_lang/metaprogramming/double_locked_value.h"
 #include "bind_lang/metaprogramming/string_concatenate.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/configuration.h"
-#include "implementation/id_type.h"
 #include "implementation/jni_helper/invoke.h"
 #include "implementation/jni_helper/jni_helper.h"
 #include "implementation/jni_helper/lifecycle.h"
@@ -37,7 +37,6 @@
 #include "implementation/proxy_definitions.h"
 #include "implementation/proxy_definitions_array.h"
 #include "implementation/proxy_definitions_string.h"
-#include "implementation/ref_base.h"
 #include "implementation/ref_storage.h"
 #include "implementation/signature.h"
 #include "jni_dep.h"

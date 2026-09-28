@@ -20,6 +20,7 @@
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
 #include "class_defs/java_lang_exception.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
@@ -31,7 +32,6 @@
 #include "implementation/jvm.h"
 #include "implementation/local_exception.h"
 #include "implementation/local_string.h"
-#include "implementation/ref_base.h"
 #include "jni_dep.h"
 
 namespace jni {
