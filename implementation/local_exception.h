@@ -40,7 +40,7 @@ class LocalException
     : public LocalObjectImpl<class_v_, class_loader_v_, jvm_v_> {
  public:
   using Base = LocalObjectImpl<class_v_, class_loader_v_, jvm_v_>;
-  using JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
+  using JniT = ::jni::JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
   using SpanType = jobject;
   using Base::Base;
 

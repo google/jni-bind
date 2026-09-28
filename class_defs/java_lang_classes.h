@@ -51,7 +51,7 @@ inline constexpr Class kJavaLangClassLoader{
   Method{"toString", Return{jstring{}}, Params<>{}},
 };
 
-static constexpr Class kJavaLangString{
+inline constexpr Class kJavaLangString{
   "java/lang/String",
 
   Constructor{jstring{}},
