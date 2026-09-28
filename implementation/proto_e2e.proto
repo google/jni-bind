@@ -1,0 +1,23 @@
+syntax = "proto2";
+
+package proto_bind.test;
+
+message NestedPayload {
+  optional int32 code = 1;
+  optional string label = 2;
+}
+
+message SampleMessage {
+  optional int32 some_optional_int_field = 1;
+  optional string some_string_field = 2;
+  optional int64 timestamp_ms = 3;
+  optional double score = 4;
+  optional bool active = 5;
+  optional NestedPayload payload = 6;
+  repeated string tags = 7;
+  repeated int32 counts = 8 [packed = true];
+  repeated NestedPayload items = 9;
+  optional uint32 flags = 10;
+  optional uint64 u64_val = 11;
+  optional float f32_val = 12;
+}

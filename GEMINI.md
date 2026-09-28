@@ -190,3 +190,30 @@ blaze test //third_party/jni_wrapper/...
 To update `jni_bind_release.h`:
 1. `blaze build //third_party/jni_wrapper:gen_jni_bind_release`
 2. `cp ../../blaze-genfiles/third_party/jni_wrapper/jni_bind_release.h jni_bind_release.h`
+
+### Library Structure (bind_lang)
+JNI Bind is being restructured on top of a language-agnostic core in
+`bind_lang/` (metaprogramming, handle/lifecycle vocabulary, proxy machinery).
+Read [bind_lang/README.md](bind_lang/README.md) before changing shared code.
+Nothing in `bind_lang/` may depend on `implementation/`.
+
+---
+
+## 11. Proto Bind (`proto::`)
+
+This repository also hosts **Proto Bind** (`//third_party/jni_wrapper:proto_bind`),
+which adapts JNI Bind's C++20 metaprogramming, `QueryableMap`, and proxy
+machinery to Protocol Buffers (`proto::Template`, `proto::Message`,
+`proto::Optional`, `proto::Required`, `proto::Repeated`, `proto::SubMessage`).
+
+*   **Usage & API Guide**: [`PROTO_BIND_README.md`](PROTO_BIND_README.md)
+*   **Architecture & EGM Discoveries**: [`EGM_PROTO_BIND.md`](EGM_PROTO_BIND.md)
+*   **Porcelain Layer**: [`implementation/proto_helper/README.md`](implementation/proto_helper/README.md)
+*   **Running Proto Bind Tests**:
+    ```bash
+    blaze test //third_party/jni_wrapper/implementation:proto_proxy_test \
+               //third_party/jni_wrapper/implementation:message_test \
+               //third_party/jni_wrapper/implementation:proto_e2e_test \
+               //third_party/jni_wrapper/implementation/proto_helper:proto_helper_test
+    ```
+

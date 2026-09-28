@@ -60,6 +60,7 @@ namespace metaprogramming = ::bind_lang::metaprogramming;
 // Headers for static definitions.
 #include "implementation/array.h"
 #include "implementation/array_type_conversion.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/class.h"
 #include "implementation/class_loader.h"
 #include "implementation/constructor.h"
@@ -68,12 +69,10 @@ namespace metaprogramming = ::bind_lang::metaprogramming;
 #include "implementation/field.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/id.h"
-#include "implementation/id_type.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/loaded_by.h"
 #include "implementation/method.h"
-#include "implementation/no_idx.h"
 #include "implementation/params.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/proxy_temporary.h"
@@ -110,7 +109,6 @@ namespace metaprogramming = ::bind_lang::metaprogramming;
 #include "implementation/local_string.h"
 #include "implementation/promotion_mechanics.h"
 #include "implementation/promotion_mechanics_tags.h"
-#include "implementation/ref_base.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Phase 1 Compilation: JNI Bind definitions permissible.
