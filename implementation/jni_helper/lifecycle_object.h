@@ -17,10 +17,10 @@
 #ifndef JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_OBJECT_H_
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_OBJECT_H_
 
+#include "bind_lang/metaprogramming/lambda_string.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "jni_dep.h"
-#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {
@@ -32,8 +32,8 @@ struct LifecycleHelper<jobject, LifecycleType::LOCAL>
   template <typename... CtorArgs>
   static inline jobject Construct(jclass clazz, jmethodID ctor_method,
                                   CtorArgs&&... ctor_args) {
-    Trace(metaprogramming::LambdaToStr(STR("NewObject")), clazz, ctor_method,
-          ctor_args...);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("NewObject")), clazz,
+          ctor_method, ctor_args...);
 
 #ifdef DRY_RUN
     return Fake<jobject>();

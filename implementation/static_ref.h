@@ -21,6 +21,11 @@
 
 #include <cstddef>
 
+#include "bind_lang/metaprogramming/invocable_map.h"
+#include "bind_lang/metaprogramming/invocable_map_20.h"
+#include "bind_lang/metaprogramming/queryable_map.h"
+#include "bind_lang/metaprogramming/queryable_map_20.h"
+#include "bind_lang/metaprogramming/string_literal.h"
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_ref.h"
@@ -31,11 +36,6 @@
 #include "implementation/method_selection.h"
 #include "implementation/no_idx.h"
 #include "jni_dep.h"
-#include "metaprogramming/invocable_map.h"
-#include "metaprogramming/invocable_map_20.h"
-#include "metaprogramming/queryable_map.h"
-#include "metaprogramming/queryable_map_20.h"
-#include "metaprogramming/string_literal.h"
 
 namespace jni {
 
@@ -45,22 +45,21 @@ struct StaticRefHelper {
   using _JniT = JniT<jobject, class_v_, class_loader_v_, jvm_v_>;
 
   // C++17 augmentations.
-  using MethodMapT = metaprogramming::InvocableMap<
+  using MethodMapT = bind_lang::metaprogramming::InvocableMap<
       CrtpBase_, _JniT::static_v, typename _JniT::StaticT,
       decltype(&_JniT::StaticT::methods_), &_JniT::StaticT::methods_>;
-  using FieldMapT =
-      metaprogramming::QueryableMap_t<CrtpBase_, _JniT::static_v,
+  using FieldMapT = bind_lang::metaprogramming::QueryableMap_t<
+      CrtpBase_, _JniT::static_v,
 
-                                      decltype(&_JniT::StaticT::fields_),
-                                      &_JniT::StaticT::fields_>;
+      decltype(&_JniT::StaticT::fields_), &_JniT::StaticT::fields_>;
 
   // C++ 20 augmentations.
-  using MethodMap20T = metaprogramming::InvocableMap20<
+  using MethodMap20T = bind_lang::metaprogramming::InvocableMap20<
       CrtpBase_, _JniT::static_v,
       StaticRefHelper<CrtpBase_, class_v_, class_loader_v_, jvm_v_>,
       decltype(&_JniT::StaticT::methods_), &_JniT::StaticT::methods_>;
 
-  using FieldMap20T = metaprogramming::QueryableMap20<
+  using FieldMap20T = bind_lang::metaprogramming::QueryableMap20<
       CrtpBase_, _JniT::static_v,
       StaticRefHelper<CrtpBase_, class_v_, class_loader_v_, jvm_v_>,
       decltype(&_JniT::StaticT::fields_), &_JniT::StaticT::fields_>;
@@ -140,7 +139,7 @@ struct StaticRef
 
 #if __cplusplus >= 202002L
   // Invoked through CRTP from InvocableMap, C++20 only.
-  template <size_t I, metaprogramming::StringLiteral key_literal,
+  template <size_t I, bind_lang::metaprogramming::StringLiteral key_literal,
             typename... Args>
   auto InvocableMap20Call(Args&&... args) const {
     using IdT = Id<_JniT, IdType::STATIC_OVERLOAD_SET, I, kNoIdx, kNoIdx, 0>;
@@ -156,7 +155,7 @@ struct StaticRef
   }
 
   // Invoked through CRTP from QueryableMap20, C++20 only.
-  template <size_t I, metaprogramming::StringLiteral key_literal>
+  template <size_t I, bind_lang::metaprogramming::StringLiteral key_literal>
   auto QueryableMap20Call() const {
     return FieldRef<_JniT, IdType::STATIC_FIELD, I>{GetJClass(), nullptr};
   }

@@ -51,7 +51,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -70,7 +70,6 @@ cc_library(
 filegroup(
     name = "headers_for_export",
     srcs = glob(["**/*.h"]),
-    visibility = ["//visibility:public"],
 )
 
 ################################################################################
@@ -83,7 +82,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -111,7 +110,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -126,7 +125,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -136,8 +135,6 @@ cc_library(
 cc_library(
     name = "jni_env",
     hdrs = ["jni_env.h"],
-    # Visibility will be constrained after SetEnv is done by JvmRef only.
-    visibility = ["//visibility:public"],
     deps = ["//:jni_dep"],
 )
 
@@ -163,7 +160,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -212,7 +209,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -224,7 +221,7 @@ cc_library(
         ":lifecycle",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -247,7 +244,7 @@ cc_library(
         ":lifecycle",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -273,7 +270,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -285,7 +282,7 @@ cc_library(
     hdrs = ["trace.h"],
     deps = [
         ":arg_string",
-        "//metaprogramming:color",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:color",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )

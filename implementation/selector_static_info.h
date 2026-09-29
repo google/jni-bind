@@ -20,14 +20,14 @@
 #include <cstddef>
 #include <string_view>
 
+#include "bind_lang/metaprogramming/name_constants.h"
+#include "bind_lang/metaprogramming/repeat_string.h"
+#include "bind_lang/metaprogramming/string_concatenate.h"
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
 #include "implementation/object.h"
 #include "implementation/self.h"
 #include "implementation/void.h"
-#include "metaprogramming/name_constants.h"
-#include "metaprogramming/repeat_string.h"
-#include "metaprogramming/string_concatenate.h"
 
 namespace jni {
 
@@ -119,19 +119,22 @@ struct SelectorStaticInfo {
 
   static constexpr std::string_view kEmptyStr = "";
   static constexpr std::string_view kModifierStr =
-      (kRank == 0) ? ""
-                   : metaprogramming::RepeatString_v<
-                         kRank, metaprogramming::Constants::left_bracket>;
+      (kRank == 0)
+          ? ""
+          : bind_lang::metaprogramming::RepeatString_v<
+                kRank, bind_lang::metaprogramming::Constants::left_bracket>;
 
   static constexpr std::string_view UndecoratedTypeName() {
     if constexpr (kIsObject) {
-      return metaprogramming::StringConcatenate_v<
-          metaprogramming::Constants::L, kTypeNameOrNothingIfNotAnObject,
-          metaprogramming::Constants::semi_colon>;
+      return bind_lang::metaprogramming::StringConcatenate_v<
+          bind_lang::metaprogramming::Constants::L,
+          kTypeNameOrNothingIfNotAnObject,
+          bind_lang::metaprogramming::Constants::semi_colon>;
     } else if constexpr (kIsSelf) {
-      return metaprogramming::StringConcatenate_v<
-          metaprogramming::Constants::L, kTypeNameOrNothingIfNotAnObject,
-          metaprogramming::Constants::semi_colon>;
+      return bind_lang::metaprogramming::StringConcatenate_v<
+          bind_lang::metaprogramming::Constants::L,
+          kTypeNameOrNothingIfNotAnObject,
+          bind_lang::metaprogramming::Constants::semi_colon>;
     } else if constexpr (kIsVoid) {
       return JavaTypeToString<void>();
     } else {
@@ -143,8 +146,8 @@ struct SelectorStaticInfo {
       UndecoratedTypeName();
 
   static constexpr std::string_view TypeName() {
-    return metaprogramming::StringConcatenate_v<kModifierStr,
-                                                kUndecoratedTypeName>;
+    return bind_lang::metaprogramming::StringConcatenate_v<
+        kModifierStr, kUndecoratedTypeName>;
   }
 
   static constexpr std::string_view kTypeName = TypeName();

@@ -19,9 +19,9 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include "bind_lang/metaprogramming/tuple_manipulation.h"
+#include "bind_lang/metaprogramming/type_of_nth_element.h"
 #include "implementation/no_class_specified.h"
-#include "metaprogramming/tuple_manipulation.h"
-#include "metaprogramming/type_of_nth_element.h"
 
 namespace jni {
 
@@ -30,13 +30,15 @@ struct ExtendsStrip {
   template <typename T>
   struct Helper {
     // Input is in a tuple of 1 element.
-    using StripOuterTuple = metaprogramming::TypeOfNthTupleElement_t<0, T>;
+    using StripOuterTuple =
+        bind_lang::metaprogramming::TypeOfNthTupleElement_t<0, T>;
     // Steal the outer Extends parameter pack into a tuple.
     // e.g. Extends<RootClass> => std::tuple<RootClass>.
     using ExtendsToTuple =
-        metaprogramming::ExtractTupleFromType_t<StripOuterTuple>;
+        bind_lang::metaprogramming::ExtractTupleFromType_t<StripOuterTuple>;
     // Extracts the single element.
-    using type = metaprogramming::TypeOfNthTupleElement_t<0, ExtendsToTuple>;
+    using type =
+        bind_lang::metaprogramming::TypeOfNthTupleElement_t<0, ExtendsToTuple>;
   };
 
   template <typename T>

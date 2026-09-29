@@ -23,6 +23,12 @@
 #include <type_traits>
 #include <utility>
 
+#include "bind_lang/metaprogramming/invocable_map.h"
+#include "bind_lang/metaprogramming/invocable_map_20.h"
+#include "bind_lang/metaprogramming/queryable_map.h"
+#include "bind_lang/metaprogramming/queryable_map_20.h"
+#include "bind_lang/metaprogramming/string_contains.h"
+#include "bind_lang/metaprogramming/string_literal.h"
 #include "implementation/class_ref.h"
 #include "implementation/field_ref.h"
 #include "implementation/id.h"
@@ -33,12 +39,6 @@
 #include "implementation/no_idx.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
-#include "metaprogramming/invocable_map.h"
-#include "metaprogramming/invocable_map_20.h"
-#include "metaprogramming/queryable_map.h"
-#include "metaprogramming/queryable_map_20.h"
-#include "metaprogramming/string_contains.h"
-#include "metaprogramming/string_literal.h"
 
 namespace jni {
 
@@ -51,17 +51,17 @@ namespace jni {
 template <typename JniT>
 class ObjectRef
     // C++17 augmentations.
-    : public metaprogramming::InvocableMap<
+    : public bind_lang::metaprogramming::InvocableMap<
           ObjectRef<JniT>, JniT::stripped_class_v, typename JniT::ClassT,
           decltype(&JniT::ClassT::methods_), &JniT::ClassT::methods_>,
-      public metaprogramming::QueryableMap_t<
+      public bind_lang::metaprogramming::QueryableMap_t<
           ObjectRef<JniT>, JniT::stripped_class_v,
           decltype(&JniT::ClassT::fields_), &JniT::ClassT::fields_>,
       // C++ 20 augmentations.
-      public metaprogramming::InvocableMap20<
+      public bind_lang::metaprogramming::InvocableMap20<
           ObjectRef<JniT>, JniT::stripped_class_v, ObjectRef<JniT>,
           decltype(&JniT::ClassT::methods_), &JniT::ClassT::methods_>,
-      public metaprogramming::QueryableMap20<
+      public bind_lang::metaprogramming::QueryableMap20<
           ObjectRef<JniT>, JniT::stripped_class_v, ObjectRef<JniT>,
           decltype(&JniT::ClassT::fields_), &JniT::ClassT::fields_>,
       public RefBase<typename JniT::StorageType> {
@@ -70,7 +70,7 @@ class ObjectRef
       JniT::class_loader_v
           .template SupportedDirectlyOrIndirectly<JniT::class_v>(),
       "This class is not directly or indirectly supported by this loader.");
-  static_assert(!metaprogramming::StringContains_v<JniT::kName, '.'>,
+  static_assert(!bind_lang::metaprogramming::StringContains_v<JniT::kName, '.'>,
                 "Use '/', not '.' in class names (for maximum) portability.");
 
   using RefBaseT = RefBase<typename JniT::StorageType>;
@@ -131,7 +131,7 @@ class ObjectRef
 ////////////////////////////////////////////////////////////////////////////////
 #if __cplusplus >= 202002L
   // Invoked through CRTP from InvocableMap, C++20 only.
-  template <size_t I, metaprogramming::StringLiteral key_literal,
+  template <size_t I, bind_lang::metaprogramming::StringLiteral key_literal,
             typename... Args>
   auto InvocableMap20Call(Args&&... args) const {
     using IdT = Id<JniT, IdType::OVERLOAD_SET, I, kNoIdx, kNoIdx, 0>;
@@ -147,7 +147,7 @@ class ObjectRef
   }
 
   // Invoked through CRTP from QueryableMap20, C++20 only.
-  template <size_t I, metaprogramming::StringLiteral key_literal>
+  template <size_t I, bind_lang::metaprogramming::StringLiteral key_literal>
   auto QueryableMap20Call() const {
     return FieldRef<JniT, IdType::FIELD, I>{GetJClass(), RefBaseT::object_ref_};
   }

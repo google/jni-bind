@@ -22,13 +22,13 @@
 #include <cstddef>
 #include <string_view>
 
+#include "bind_lang/metaprogramming/replace_string.h"
 #include "implementation/array.h"
 #include "implementation/id_type.h"
 #include "implementation/no_idx.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/self.h"
 #include "implementation/void.h"
-#include "metaprogramming/replace_string.h"
 
 namespace jni {
 
@@ -218,7 +218,7 @@ struct Id {
   }
   static constexpr std::string_view kName = Name();
   static constexpr std::string_view kNameUsingDots =
-      metaprogramming::Replace_v<kName, '/', '.'>;
+      bind_lang::metaprogramming::Replace_v<kName, '/', '.'>;
 
   static constexpr std::size_t NumParams() {
     if constexpr (kIdType == IdType::OVERLOAD ||

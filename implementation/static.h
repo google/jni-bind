@@ -21,9 +21,9 @@
 
 #include <tuple>
 
+#include "bind_lang/metaprogramming/base_filter.h"
 #include "implementation/field.h"
 #include "implementation/method.h"
-#include "metaprogramming/base_filter.h"
 
 namespace jni {
 
@@ -47,8 +47,8 @@ Static() -> Static<std::tuple<>, std::tuple<>>;
 
 template <typename... Params>
 Static(Params...)
-    -> Static<metaprogramming::BaseFilter_t<MethodBase, Params...>,
-              metaprogramming::BaseFilter_t<FieldBase, Params...>>;
+    -> Static<bind_lang::metaprogramming::BaseFilter_t<MethodBase, Params...>,
+              bind_lang::metaprogramming::BaseFilter_t<FieldBase, Params...>>;
 
 }  // namespace jni
 

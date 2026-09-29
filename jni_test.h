@@ -17,8 +17,10 @@
 #ifndef JNI_BIND_JNI_TEST_H_
 #define JNI_BIND_JNI_TEST_H_
 
+#include <cstddef>
 #include <cstring>
 #include <memory>
+#include <type_traits>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -28,6 +30,7 @@
 #ifdef JNI_BIND_USE_FOR_TESTING_RELEASE_HEADER
 #include "jni_bind_release_for_testing.h"
 #else
+#include "bind_lang/metaprogramming/function_traits.h"
 #include "jni_bind.h"
 #endif
 
@@ -80,9 +83,10 @@ class JniTestWithNoDefaultJvmRef : public ::testing::Test {
     // Different jni.h implementations define AttachCurrentThread with different
     // args.  If a different jni.h is used for testing, this would likely need
     // to be updated.
-    static_assert(std::is_same_v<metaprogramming::FunctionTraitsArg_t<
-                                     decltype(&JavaVM::AttachCurrentThread), 1>,
-                                 void**>);
+    static_assert(
+        std::is_same_v<bind_lang::metaprogramming::FunctionTraitsArg_t<
+                           decltype(&JavaVM::AttachCurrentThread), 1>,
+                       void**>);
 
     ON_CALL(*jvm_, GetEnv).WillByDefault([&](void** out_env, int vs_code) {
       *reinterpret_cast<JNIEnv**>(out_env) = env_.get();

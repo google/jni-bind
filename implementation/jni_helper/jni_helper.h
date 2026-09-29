@@ -18,8 +18,8 @@
 #define JNI_BIND_JNI_HELPER_JNI_HELPER_H_
 
 #include "jni_env.h"
+#include "bind_lang/metaprogramming/lambda_string.h"
 #include "jni_dep.h"
-#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {
@@ -73,7 +73,7 @@ inline jobject& FallbackLoader() {
 }
 
 inline jclass JniHelper::FindClass(const char* name) {
-  Trace(metaprogramming::LambdaToStr(STR("FindClass")), name);
+  Trace(bind_lang::metaprogramming::LambdaToStr(STR("FindClass")), name);
 
 #ifdef DRY_RUN
   return Fake<jclass>();
@@ -90,7 +90,7 @@ inline jclass JniHelper::FindClass(const char* name) {
 }
 
 inline jclass JniHelper::GetObjectClass(jobject object) {
-  Trace(metaprogramming::LambdaToStr(STR("GetObjectClass")), object);
+  Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetObjectClass")), object);
 
 #ifdef DRY_RUN
   return Fake<jclass>();
@@ -101,8 +101,8 @@ inline jclass JniHelper::GetObjectClass(jobject object) {
 
 jmethodID JniHelper::GetMethodID(jclass clazz, const char* method_name,
                                  const char* method_signature) {
-  Trace(metaprogramming::LambdaToStr(STR("GetMethodID")), clazz, method_name,
-        method_signature);
+  Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetMethodID")), clazz,
+        method_name, method_signature);
 
 #ifdef DRY_RUN
   return Fake<jmethodID>();
@@ -114,8 +114,8 @@ jmethodID JniHelper::GetMethodID(jclass clazz, const char* method_name,
 
 jmethodID JniHelper::GetStaticMethodID(jclass clazz, const char* method_name,
                                        const char* method_signature) {
-  Trace(metaprogramming::LambdaToStr(STR("GetStaticMethodID")), clazz,
-        method_name, method_signature);
+  Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStaticMethodID")),
+        clazz, method_name, method_signature);
 
 #ifdef DRY_RUN
   return Fake<jmethodID>();
@@ -127,7 +127,7 @@ jmethodID JniHelper::GetStaticMethodID(jclass clazz, const char* method_name,
 
 jfieldID JniHelper::GetFieldID(jclass clazz, const char* name,
                                const char* signature) {
-  Trace(metaprogramming::LambdaToStr(STR("GetFieldID")), clazz, name,
+  Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetFieldID")), clazz, name,
         signature);
 
 #ifdef DRY_RUN
@@ -139,8 +139,8 @@ jfieldID JniHelper::GetFieldID(jclass clazz, const char* name,
 
 jfieldID JniHelper::GetStaticFieldID(jclass clazz, const char* name,
                                      const char* signature) {
-  Trace(metaprogramming::LambdaToStr(STR("GetStaticFieldID")), clazz, name,
-        signature);
+  Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStaticFieldID")), clazz,
+        name, signature);
 
 #ifdef DRY_RUN
   return Fake<jfieldID>();
@@ -150,7 +150,7 @@ jfieldID JniHelper::GetStaticFieldID(jclass clazz, const char* name,
 }
 
 inline const char* JniHelper::GetStringUTFChars(jstring str) {
-  Trace(metaprogramming::LambdaToStr(STR("GetStringUTFChars")), str);
+  Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStringUTFChars")), str);
 
 #ifdef DRY_RUN
   return "DEAD_BEEF";
@@ -165,7 +165,8 @@ inline const char* JniHelper::GetStringUTFChars(jstring str) {
 }
 
 inline void JniHelper::ReleaseStringUTFChars(jstring str, const char* chars) {
-  Trace(metaprogramming::LambdaToStr(STR("ReleaseStringUTFChars")), str, chars);
+  Trace(bind_lang::metaprogramming::LambdaToStr(STR("ReleaseStringUTFChars")),
+        str, chars);
 
 #ifdef DRY_RUN
 #else

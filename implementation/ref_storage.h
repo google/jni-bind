@@ -22,8 +22,8 @@
 #include <functional>
 #include <vector>
 
-#include "metaprogramming/double_locked_value.h"
-#include "metaprogramming/lambda_string.h"
+#include "bind_lang/metaprogramming/double_locked_value.h"
+#include "bind_lang/metaprogramming/lambda_string.h"
 
 namespace jni {
 
@@ -31,16 +31,17 @@ namespace jni {
 // Only applicable for Jvms not fully specified (i.e. default classloader).
 // See JvmRef::~JvmRef.
 template <typename T>
-static std::vector<metaprogramming::DoubleLockedValue<T>*>& DefaultRefs() {
+static std::vector<bind_lang::metaprogramming::DoubleLockedValue<T>*>&
+DefaultRefs() {
   static auto* ret_val =
-      new std::vector<metaprogramming::DoubleLockedValue<T>*>{};
+      new std::vector<bind_lang::metaprogramming::DoubleLockedValue<T>*>{};
   return *ret_val;
 }
 
 // Provides a static inline `DoubleLockedValue<T>` val against a `UniqueID`.
 template <typename UniqueID, typename T>
 struct StaticDoubleLock {
-  static inline metaprogramming::DoubleLockedValue<T> val;
+  static inline bind_lang::metaprogramming::DoubleLockedValue<T> val;
 };
 
 // Takes a GetLambda and only invokes it for the first time on equal values of
@@ -54,7 +55,8 @@ struct RefStorage {
   static constexpr auto kSignature = []() {
     return SignatureLambda::TypeName().data();
   };
-  using Signature = metaprogramming::LambdaStringToType<decltype(kSignature)>;
+  using Signature =
+      bind_lang::metaprogramming::LambdaStringToType<decltype(kSignature)>;
 
   // Common ID-wide double locked value.
   using Storage = StaticDoubleLock<Signature, ReturnT>;

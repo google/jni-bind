@@ -15,7 +15,7 @@ target_include_directories(jni_bind INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/class_defs
     ${CMAKE_CURRENT_SOURCE_DIR}/implementation
     ${CMAKE_CURRENT_SOURCE_DIR}/implementation/jni_helper
-    ${CMAKE_CURRENT_SOURCE_DIR}/metaprogramming)
+    ${CMAKE_CURRENT_SOURCE_DIR}/bind_lang/metaprogramming)
 
 target_link_libraries(jni_bind INTERFACE jdk:jni)
 
@@ -26,7 +26,7 @@ endif()
 
 enable_testing()
 
-file(GLOB METAPROGRAMMING_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/metaprogramming/*_test.cc")
+file(GLOB METAPROGRAMMING_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/bind_lang/metaprogramming/*_test.cc")
 foreach(TEST_SRC ${METAPROGRAMMING_TESTS})
     get_filename_component(TEST_NAME ${TEST_SRC} NAME_WE)
     add_jni_test(${TEST_NAME} ${TEST_SRC})

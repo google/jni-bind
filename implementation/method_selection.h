@@ -22,17 +22,17 @@
 #include <cstddef>
 #include <type_traits>
 
+#include "bind_lang/metaprogramming/call.h"
+#include "bind_lang/metaprogramming/min_max.h"
+#include "bind_lang/metaprogramming/reduce.h"
+#include "bind_lang/metaprogramming/type_of_nth_element.h"
+#include "bind_lang/metaprogramming/unfurl.h"
+#include "bind_lang/metaprogramming/vals.h"
 #include "implementation/id.h"
 #include "implementation/id_type.h"
 #include "implementation/no_idx.h"
 #include "implementation/overload_ref.h"
 #include "implementation/proxy_convenience_aliases.h"
-#include "metaprogramming/call.h"
-#include "metaprogramming/min_max.h"
-#include "metaprogramming/reduce.h"
-#include "metaprogramming/type_of_nth_element.h"
-#include "metaprogramming/unfurl.h"
-#include "metaprogramming/vals.h"
 
 namespace jni {
 
@@ -46,8 +46,8 @@ struct Viable {
 
   static constexpr bool val =
       Proxy_t<typename IdTParamType::UnstrippedRawVal>::template kViable<
-          IdTParamType,
-          metaprogramming::TypeOfNthElement_t<I, std::decay_t<Ts>...>>;
+          IdTParamType, bind_lang::metaprogramming::TypeOfNthElement_t<
+                            I, std::decay_t<Ts>...>>;
 };
 
 template <typename OverloadId, IdType kReturnIDType>
@@ -56,9 +56,9 @@ struct ArgumentValidate {
   template <typename... Ts>
   static constexpr bool ViableHelper() {
     if constexpr (sizeof...(Ts) == OverloadId::kNumParams) {
-      return metaprogramming::UnfurlConjunction_v<
+      return bind_lang::metaprogramming::UnfurlConjunction_v<
           OverloadId::kNumParams, Viable, OverloadId,
-          metaprogramming::Val_t<kReturnIDType>, Ts...>;
+          bind_lang::metaprogramming::Val_t<kReturnIDType>, Ts...>;
     } else {
       return false;
     }
@@ -91,15 +91,18 @@ struct MethodSelection {
 
   template <std::size_t I, typename... Ts>
   struct Helper {
-    using type = metaprogramming::Val_t<OverloadSelection<
+    using type = bind_lang::metaprogramming::Val_t<OverloadSelection<
         Id<_JniT, kIDType, IdT::kIdx, I, kNoIdx, 0>,
         kReturnIDType>::template OverloadIdxIfViable<Ts...>()>;
   };
 
   template <typename... Ts>
-  static constexpr std::size_t kIdxForTs = metaprogramming::ReduceAsPack_t<
-      metaprogramming::Min, metaprogramming::Call_t<metaprogramming::Unfurl_t<
-                                IdT::NumParams(), Helper, Ts...>>>::val;
+  static constexpr std::size_t kIdxForTs =
+      bind_lang::metaprogramming::ReduceAsPack_t<
+          bind_lang::metaprogramming::Min,
+          bind_lang::metaprogramming::Call_t<
+              bind_lang::metaprogramming::Unfurl_t<IdT::NumParams(), Helper,
+                                                   Ts...>>>::val;
 
   template <typename... Ts>
   using FindOverloadSelection = OverloadSelection<

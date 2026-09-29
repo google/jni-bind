@@ -24,10 +24,10 @@
 #include <type_traits>
 #include <utility>
 
+#include "bind_lang/metaprogramming/modified_max.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/object.h"
 #include "implementation/supported_class_set.h"
-#include "metaprogramming/modified_max.h"
 
 namespace jni {
 
@@ -74,11 +74,11 @@ class ClassLoader : public Object {
       std::integer_sequence<std::size_t, Is...>) const {
     // std::max appears to be missing the initializer list overload in Bazel's
     // implementation of clang.  This should simply be std::max.
-    return metaprogramming::ModifiedMax(
+    return bind_lang::metaprogramming::ModifiedMax(
         {((std::get<Is>(supported_classes_) == class_v)
               ? std::size_t{Is}
-              : metaprogramming::kNegativeOne)...,
-         metaprogramming::kNegativeOne});
+              : bind_lang::metaprogramming::kNegativeOne)...,
+         bind_lang::metaprogramming::kNegativeOne});
   }
 
   // Returns the index for a given class within this set (any given class ref is

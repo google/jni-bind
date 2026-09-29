@@ -19,6 +19,7 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include "bind_lang/metaprogramming/string_concatenate.h"
 #include "implementation/id.h"
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
@@ -26,7 +27,6 @@
 #include "implementation/no_idx.h"
 #include "implementation/object.h"
 #include "implementation/selector_static_info.h"
-#include "metaprogramming/string_concatenate.h"
 
 namespace jni {
 
