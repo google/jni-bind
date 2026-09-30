@@ -13,7 +13,6 @@ filegroup(
             ":jni_bind_release_target",
         ],
     ),
-    visibility = ["//visibility:public"],
 )
 
 exports_files([
@@ -95,6 +94,7 @@ cc_library(
         "//implementation/jni_helper:static_field_value",
         "//metaprogramming:corpus",
         "//metaprogramming:corpus_tag",
+        "//metaprogramming:singleton",
         "//metaprogramming:string_literal",
     ],
 )

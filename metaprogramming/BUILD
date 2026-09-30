@@ -2,7 +2,7 @@ load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
 package(
-    default_visibility = ["//visibility:public"],
+    default_visibility = ["//:__subpackages__"],
 )
 
 licenses(["notice"])
@@ -487,7 +487,6 @@ cc_test(
 filegroup(
     name = "headers_for_export",
     srcs = glob(["**/*.h"]),
-    visibility = ["//visibility:public"],
 )
 
 ################################################################################

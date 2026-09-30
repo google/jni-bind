@@ -33,5 +33,5 @@ cc_library(
 filegroup(
     name = "headers_for_export",
     srcs = glob(["*.h"]),
-    visibility = ["//visibility:public"],
+    visibility = ["//:__subpackages__"],
 )

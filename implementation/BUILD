@@ -10,7 +10,6 @@ package(
 filegroup(
     name = "headers_for_export",
     srcs = glob(["*.h"]),
-    visibility = ["//visibility:public"],
 )
 
 ################################################################################

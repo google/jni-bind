@@ -70,7 +70,6 @@ cc_library(
 filegroup(
     name = "headers_for_export",
     srcs = glob(["**/*.h"]),
-    visibility = ["//visibility:public"],
 )
 
 ################################################################################
@@ -136,8 +135,6 @@ cc_library(
 cc_library(
     name = "jni_env",
     hdrs = ["jni_env.h"],
-    # Visibility will be constrained after SetEnv is done by JvmRef only.
-    visibility = ["//visibility:public"],
     deps = ["//:jni_dep"],
 )
 
