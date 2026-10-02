@@ -17,8 +17,8 @@
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_H_
 
 #include "jni_env.h"
+#include "bind_lang/metaprogramming/lambda_string.h"
 #include "jni_dep.h"
-#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {

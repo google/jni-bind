@@ -610,7 +610,7 @@ obj.Call<"Foo">(1.5f, "argString");
 obj.Access<"intField">().Set(123);
 ```
 
-This syntax was all that could be supported in C++17, and unfortunately [relies on a clang extension](metaprogramming/invocable_map.h). Because C++17 does not support string literals in non-type template parameters, the new syntax is not possible. Conversely, the syntax enabled by the clang extension is not possible to represent in standard C++20.
+This syntax was all that could be supported in C++17, and unfortunately [relies on a clang extension](bind_lang/metaprogramming/invocable_map.h). Because C++17 does not support string literals in non-type template parameters, the new syntax is not possible. Conversely, the syntax enabled by the clang extension is not possible to represent in standard C++20.
 
 As such, the documentation and sample code all use the new syntax, and because this uses standard C++20, it is portable. The old syntax is fully unit tested under the [legacy directory](implementation/legacy), and will continue to be supported for clang on C++17 and onwards. In the unlikely event this syntax needed deprecation I will only do so after a major version bump.
 

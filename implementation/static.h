@@ -21,9 +21,9 @@
 
 #include <tuple>
 
+#include "bind_lang/metaprogramming/base_filter.h"
 #include "implementation/field.h"
 #include "implementation/method.h"
-#include "metaprogramming/base_filter.h"
 
 namespace jni {
 

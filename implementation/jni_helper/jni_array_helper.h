@@ -20,9 +20,9 @@
 #include <cstddef>
 
 #include "get_array_element_result.h"
+#include "bind_lang/metaprogramming/lambda_string.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "jni_dep.h"
-#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {

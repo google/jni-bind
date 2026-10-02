@@ -34,6 +34,10 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":jni_dep",
+        "//bind_lang/metaprogramming:corpus",
+        "//bind_lang/metaprogramming:corpus_tag",
+        "//bind_lang/metaprogramming:singleton",
+        "//bind_lang/metaprogramming:string_literal",
         "//class_defs:java_lang_classes",
         "//class_defs:java_lang_exception",
         "//class_defs:java_lang_throwable",
@@ -92,10 +96,6 @@ cc_library(
         "//implementation/jni_helper:jni_env",
         "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:static_field_value",
-        "//metaprogramming:corpus",
-        "//metaprogramming:corpus_tag",
-        "//metaprogramming:singleton",
-        "//metaprogramming:string_literal",
     ],
 )
 
@@ -175,11 +175,11 @@ genrule(
         ":headers_for_export",
         ":jni_bind_decorative_text",
         ":jni_bind_release_input",
+        "//bind_lang/metaprogramming:headers_for_export",
         "//class_defs:headers_for_export",
         "//class_defs/android:headers_for_export",
         "//implementation:headers_for_export",
         "//implementation/jni_helper:headers_for_export",
-        "//metaprogramming:headers_for_export",
     ],
     visibility = ["//third_party/jni_wrapper/godbolt:__pkg__"],
 )
@@ -199,11 +199,11 @@ genrule(
         ":headers_for_export",
         ":jni_bind_decorative_text",
         ":jni_bind_release_input",
+        "//bind_lang/metaprogramming:headers_for_export",
         "//class_defs:headers_for_export",
         "//class_defs/android:headers_for_export",
         "//implementation:headers_for_export",
         "//implementation/jni_helper:headers_for_export",
-        "//metaprogramming:headers_for_export",
     ],
     visibility = ["//visibility:private"],
 )

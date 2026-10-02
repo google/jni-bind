@@ -19,9 +19,9 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include "bind_lang/metaprogramming/tuple_manipulation.h"
+#include "bind_lang/metaprogramming/type_of_nth_element.h"
 #include "implementation/no_class_specified.h"
-#include "metaprogramming/tuple_manipulation.h"
-#include "metaprogramming/type_of_nth_element.h"
 
 namespace jni {
 

@@ -23,8 +23,8 @@
 #include <utility>
 
 #include "arg_string.h"
-#include "metaprogramming/color.h"
-#include "metaprogramming/lambda_string.h"
+#include "bind_lang/metaprogramming/color.h"
+#include "bind_lang/metaprogramming/lambda_string.h"
 
 namespace jni {
 

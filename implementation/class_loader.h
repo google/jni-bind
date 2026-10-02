@@ -24,10 +24,10 @@
 #include <type_traits>
 #include <utility>
 
+#include "bind_lang/metaprogramming/modified_max.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/object.h"
 #include "implementation/supported_class_set.h"
-#include "metaprogramming/modified_max.h"
 
 namespace jni {
 

@@ -23,11 +23,11 @@
 #include <string_view>
 #include <utility>
 
+#include "bind_lang/metaprogramming/name_constants.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/id_type.h"
 #include "implementation/no_idx.h"
 #include "implementation/selector_static_info.h"
-#include "metaprogramming/name_constants.h"
 
 namespace jni {
 

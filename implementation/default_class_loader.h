@@ -22,8 +22,8 @@
 #include <cstddef>
 #include <tuple>
 
+#include "bind_lang/metaprogramming/modified_max.h"
 #include "implementation/no_idx.h"
-#include "metaprogramming/modified_max.h"
 
 namespace jni {
 

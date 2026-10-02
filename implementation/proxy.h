@@ -23,19 +23,19 @@
 #include <type_traits>
 #include <utility>
 
+#include "bind_lang/metaprogramming/cartesian_product.h"
+#include "bind_lang/metaprogramming/combine.h"
+#include "bind_lang/metaprogramming/concatenate.h"
+#include "bind_lang/metaprogramming/corpus.h"
+#include "bind_lang/metaprogramming/flatten.h"
+#include "bind_lang/metaprogramming/invoke.h"
+#include "bind_lang/metaprogramming/reduce.h"
+#include "bind_lang/metaprogramming/type_to_type_map.h"
+#include "bind_lang/metaprogramming/unique_set.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/self.h"
 #include "jni_dep.h"
-#include "metaprogramming/cartesian_product.h"
-#include "metaprogramming/combine.h"
-#include "metaprogramming/concatenate.h"
-#include "metaprogramming/corpus.h"
-#include "metaprogramming/flatten.h"
-#include "metaprogramming/invoke.h"
-#include "metaprogramming/reduce.h"
-#include "metaprogramming/type_to_type_map.h"
-#include "metaprogramming/unique_set.h"
 
 namespace jni {
 

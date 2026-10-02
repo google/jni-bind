@@ -22,17 +22,17 @@
 #include <cstddef>
 #include <type_traits>
 
+#include "bind_lang/metaprogramming/call.h"
+#include "bind_lang/metaprogramming/min_max.h"
+#include "bind_lang/metaprogramming/reduce.h"
+#include "bind_lang/metaprogramming/type_of_nth_element.h"
+#include "bind_lang/metaprogramming/unfurl.h"
+#include "bind_lang/metaprogramming/vals.h"
 #include "implementation/id.h"
 #include "implementation/id_type.h"
 #include "implementation/no_idx.h"
 #include "implementation/overload_ref.h"
 #include "implementation/proxy_convenience_aliases.h"
-#include "metaprogramming/call.h"
-#include "metaprogramming/min_max.h"
-#include "metaprogramming/reduce.h"
-#include "metaprogramming/type_of_nth_element.h"
-#include "metaprogramming/unfurl.h"
-#include "metaprogramming/vals.h"
 
 namespace jni {
 

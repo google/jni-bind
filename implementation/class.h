@@ -22,6 +22,8 @@
 #include <string_view>
 #include <tuple>
 
+#include "bind_lang/metaprogramming/base_filter.h"
+#include "bind_lang/metaprogramming/type_of_nth_element.h"
 #include "implementation/constructor.h"
 #include "implementation/extends.h"
 #include "implementation/field.h"
@@ -29,8 +31,6 @@
 #include "implementation/no_class_specified.h"
 #include "implementation/object.h"
 #include "implementation/static.h"
-#include "metaprogramming/base_filter.h"
-#include "metaprogramming/type_of_nth_element.h"
 
 namespace jni {
 

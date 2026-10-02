@@ -23,8 +23,8 @@
 #include <tuple>
 #include <utility>
 
+#include "bind_lang/metaprogramming/modified_max.h"
 #include "implementation/default_class_loader.h"
-#include "metaprogramming/modified_max.h"
 
 namespace jni {
 

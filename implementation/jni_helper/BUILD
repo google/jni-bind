@@ -51,7 +51,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -82,7 +82,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -110,7 +110,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -125,7 +125,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -160,7 +160,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -209,7 +209,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -221,7 +221,7 @@ cc_library(
         ":lifecycle",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -244,7 +244,7 @@ cc_library(
         ":lifecycle",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -270,7 +270,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -282,7 +282,7 @@ cc_library(
     hdrs = ["trace.h"],
     deps = [
         ":arg_string",
-        "//metaprogramming:color",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:color",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )

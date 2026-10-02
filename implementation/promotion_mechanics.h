@@ -21,12 +21,12 @@
 
 #include <type_traits>
 
+#include "bind_lang/metaprogramming/deep_equal_diminished.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/object_ref.h"
 #include "implementation/promotion_mechanics_tags.h"
 #include "implementation/ref_base.h"
-#include "metaprogramming/deep_equal_diminished.h"
 
 namespace jni {
 

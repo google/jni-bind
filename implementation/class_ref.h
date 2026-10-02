@@ -22,6 +22,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "bind_lang/metaprogramming/double_locked_value.h"
 #include "class_defs/java_lang_classes.h"
 #include "implementation/configuration.h"
 #include "implementation/default_class_loader.h"
@@ -34,7 +35,6 @@
 #include "implementation/ref_storage.h"
 #include "implementation/selector_static_info.h"
 #include "jni_dep.h"
-#include "metaprogramming/double_locked_value.h"
 
 namespace jni {
 

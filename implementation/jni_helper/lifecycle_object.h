@@ -17,10 +17,10 @@
 #ifndef JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_OBJECT_H_
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_OBJECT_H_
 
+#include "bind_lang/metaprogramming/lambda_string.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "jni_dep.h"
-#include "metaprogramming/lambda_string.h"
 #include "trace.h"
 
 namespace jni {

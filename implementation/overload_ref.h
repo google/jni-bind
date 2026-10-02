@@ -24,6 +24,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "bind_lang/metaprogramming/double_locked_value.h"
+#include "bind_lang/metaprogramming/string_concatenate.h"
 #include "implementation/configuration.h"
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/invoke.h"
@@ -39,8 +41,6 @@
 #include "implementation/ref_storage.h"
 #include "implementation/signature.h"
 #include "jni_dep.h"
-#include "metaprogramming/double_locked_value.h"
-#include "metaprogramming/string_concatenate.h"
 
 namespace jni {
 

@@ -20,10 +20,10 @@
 #include <memory>
 #include <string>
 
+#include "bind_lang/metaprogramming/lambda_string.h"
 #include "javatests/com/jnibind/test/array_test_helpers_native.h"
 #include "javatests/com/jnibind/test/object_test_helper_jni.h"
 #include "jni_bind.h"
-#include "metaprogramming/lambda_string.h"
 
 using ::jni::Array;
 using ::jni::ArrayView;

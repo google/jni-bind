@@ -22,8 +22,8 @@
 #include <cstddef>
 #include <tuple>
 
+#include "bind_lang/metaprogramming/type_to_type_map.h"
 #include "jni_dep.h"
-#include "metaprogramming/type_to_type_map.h"
 
 namespace jni {
 

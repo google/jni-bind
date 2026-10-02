@@ -23,6 +23,7 @@
 #include <memory>
 #include <utility>
 
+#include "bind_lang/metaprogramming/double_locked_value.h"
 #include "class_defs/android/activity_thread.h"
 #include "class_defs/android/application.h"
 #include "class_defs/java_lang_classes.h"
@@ -47,7 +48,6 @@
 #include "implementation/static_ref.h"
 #include "implementation/thread_guard.h"
 #include "jni_dep.h"
-#include "metaprogramming/double_locked_value.h"
 
 namespace jni {
 

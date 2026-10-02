@@ -23,6 +23,8 @@
 #include <string_view>
 #include <type_traits>
 
+#include "bind_lang/metaprogramming/replace_string.h"
+#include "bind_lang/metaprogramming/vals_equal_diminished.h"
 #include "implementation/array.h"
 #include "implementation/array_type_conversion.h"
 #include "implementation/class_loader.h"
@@ -32,8 +34,6 @@
 #include "implementation/no_class_specified.h"
 #include "implementation/no_idx.h"
 #include "jni_dep.h"
-#include "metaprogramming/replace_string.h"
-#include "metaprogramming/vals_equal_diminished.h"
 
 namespace jni {
 

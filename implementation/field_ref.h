@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "bind_lang/metaprogramming/double_locked_value.h"
 #include "implementation/configuration.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_selection.h"
@@ -38,7 +39,6 @@
 #include "implementation/ref_base.h"
 #include "implementation/signature.h"
 #include "jni_dep.h"
-#include "metaprogramming/double_locked_value.h"
 
 namespace jni {
 

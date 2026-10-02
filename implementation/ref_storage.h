@@ -22,8 +22,8 @@
 #include <functional>
 #include <vector>
 
-#include "metaprogramming/double_locked_value.h"
-#include "metaprogramming/lambda_string.h"
+#include "bind_lang/metaprogramming/double_locked_value.h"
+#include "bind_lang/metaprogramming/lambda_string.h"
 
 namespace jni {
 

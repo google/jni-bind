@@ -21,6 +21,11 @@
 
 #include <cstddef>
 
+#include "bind_lang/metaprogramming/invocable_map.h"
+#include "bind_lang/metaprogramming/invocable_map_20.h"
+#include "bind_lang/metaprogramming/queryable_map.h"
+#include "bind_lang/metaprogramming/queryable_map_20.h"
+#include "bind_lang/metaprogramming/string_literal.h"
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_ref.h"
@@ -31,11 +36,6 @@
 #include "implementation/method_selection.h"
 #include "implementation/no_idx.h"
 #include "jni_dep.h"
-#include "metaprogramming/invocable_map.h"
-#include "metaprogramming/invocable_map_20.h"
-#include "metaprogramming/queryable_map.h"
-#include "metaprogramming/queryable_map_20.h"
-#include "metaprogramming/string_literal.h"
 
 namespace jni {
 

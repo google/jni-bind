@@ -23,6 +23,12 @@
 #include <type_traits>
 #include <utility>
 
+#include "bind_lang/metaprogramming/invocable_map.h"
+#include "bind_lang/metaprogramming/invocable_map_20.h"
+#include "bind_lang/metaprogramming/queryable_map.h"
+#include "bind_lang/metaprogramming/queryable_map_20.h"
+#include "bind_lang/metaprogramming/string_contains.h"
+#include "bind_lang/metaprogramming/string_literal.h"
 #include "implementation/class_ref.h"
 #include "implementation/field_ref.h"
 #include "implementation/id.h"
@@ -33,12 +39,6 @@
 #include "implementation/no_idx.h"
 #include "implementation/ref_base.h"
 #include "jni_dep.h"
-#include "metaprogramming/invocable_map.h"
-#include "metaprogramming/invocable_map_20.h"
-#include "metaprogramming/queryable_map.h"
-#include "metaprogramming/queryable_map_20.h"
-#include "metaprogramming/string_contains.h"
-#include "metaprogramming/string_literal.h"
 
 namespace jni {
 

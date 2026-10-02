@@ -23,8 +23,8 @@ cc_library(
         ":object",
         ":return",
         "//:jni_dep",
-        "//metaprogramming:contains",
-        "//metaprogramming:type_to_type_map",
+        "//bind_lang/metaprogramming:contains",
+        "//bind_lang/metaprogramming:type_to_type_map",
     ],
 )
 
@@ -60,7 +60,7 @@ cc_library(
     hdrs = ["array_type_conversion.h"],
     deps = [
         "//:jni_dep",
-        "//metaprogramming:type_to_type_map",
+        "//bind_lang/metaprogramming:type_to_type_map",
     ],
 )
 
@@ -110,9 +110,9 @@ cc_library(
         ":no_class_specified",
         ":object",
         ":static",
-        "//metaprogramming:base_filter",
-        "//metaprogramming:tuple_manipulation",
-        "//metaprogramming:type_of_nth_element",
+        "//bind_lang/metaprogramming:base_filter",
+        "//bind_lang/metaprogramming:tuple_manipulation",
+        "//bind_lang/metaprogramming:type_of_nth_element",
     ],
 )
 
@@ -126,13 +126,13 @@ cc_library(
         ":ref_storage",
         ":selector_static_info",
         "//:jni_dep",
+        "//bind_lang/metaprogramming:double_locked_value",
         "//class_defs:java_lang_classes",
         "//implementation/jni_helper",
         "//implementation/jni_helper:invoke",
         "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
         "//implementation/jni_helper:lifecycle_string",
-        "//metaprogramming:double_locked_value",
     ],
 )
 
@@ -159,10 +159,10 @@ cc_library(
         ":no_idx",
         ":object",
         ":supported_class_set",
+        "//bind_lang/metaprogramming:all_unique",
+        "//bind_lang/metaprogramming:base_filter",
+        "//bind_lang/metaprogramming:modified_max",
         "//class_defs:java_lang_classes",
-        "//metaprogramming:all_unique",
-        "//metaprogramming:base_filter",
-        "//metaprogramming:modified_max",
     ],
 )
 
@@ -230,7 +230,7 @@ cc_test(
 cc_library(
     name = "configuration",
     hdrs = ["configuration.h"],
-    deps = ["//metaprogramming:detect"],
+    deps = ["//bind_lang/metaprogramming:detect"],
 )
 
 ################################################################################
@@ -266,7 +266,7 @@ cc_library(
     hdrs = ["default_class_loader.h"],
     deps = [
         ":no_idx",
-        "//metaprogramming:modified_max",
+        "//bind_lang/metaprogramming:modified_max",
     ],
 )
 
@@ -278,8 +278,8 @@ cc_library(
     hdrs = ["extends.h"],
     deps = [
         ":no_class_specified",
-        "//metaprogramming:tuple_manipulation",
-        "//metaprogramming:type_of_nth_element",
+        "//bind_lang/metaprogramming:tuple_manipulation",
+        "//bind_lang/metaprogramming:type_of_nth_element",
     ],
 )
 
@@ -308,9 +308,9 @@ cc_library(
         ":ref_base",
         ":signature",
         "//:jni_dep",
+        "//bind_lang/metaprogramming:double_locked_value",
         "//implementation/jni_helper",
         "//implementation/jni_helper:field_value_getter",
-        "//metaprogramming:double_locked_value",
     ],
 )
 
@@ -335,8 +335,8 @@ cc_library(
         ":no_idx",
         ":object",
         ":selector_static_info",
+        "//bind_lang/metaprogramming:string_concatenate",
         "//implementation/jni_helper:jni_typename_to_string",
-        "//metaprogramming:string_concatenate",
     ],
 )
 
@@ -437,9 +437,9 @@ cc_library(
         ":promotion_mechanics",
         ":ref_base",
         "//:jni_dep",
+        "//bind_lang/metaprogramming:deep_equal_diminished",
         "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
-        "//metaprogramming:deep_equal_diminished",
     ],
 )
 
@@ -617,7 +617,7 @@ cc_library(
         ":proxy_definitions_string",
         ":self",
         ":void",
-        "//metaprogramming:replace_string",
+        "//bind_lang/metaprogramming:replace_string",
     ],
 )
 
@@ -651,8 +651,8 @@ cc_library(
         ":no_class_specified",
         ":no_idx",
         "//:jni_dep",
-        "//metaprogramming:replace_string",
-        "//metaprogramming:vals_equal_diminished",
+        "//bind_lang/metaprogramming:replace_string",
+        "//bind_lang/metaprogramming:vals_equal_diminished",
     ],
 )
 
@@ -674,7 +674,7 @@ cc_library(
     hdrs = ["jvm.h"],
     deps = [
         ":default_class_loader",
-        "//metaprogramming:modified_max",
+        "//bind_lang/metaprogramming:modified_max",
     ],
 )
 
@@ -710,6 +710,7 @@ cc_library(
         ":static_ref",
         ":thread_guard",
         "//:jni_dep",
+        "//bind_lang/metaprogramming:double_locked_value",
         "//class_defs:java_lang_classes",
         "//class_defs/android:activity_thread",
         "//class_defs/android:application",
@@ -718,7 +719,6 @@ cc_library(
         "//implementation/jni_helper:jni_env",
         "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
-        "//metaprogramming:double_locked_value",
     ],
 )
 
@@ -884,12 +884,12 @@ cc_library(
         ":ref_storage",
         ":signature",
         "//:jni_dep",
+        "//bind_lang/metaprogramming:double_locked_value",
+        "//bind_lang/metaprogramming:string_concatenate",
         "//implementation/jni_helper",
         "//implementation/jni_helper:invoke",
         "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
-        "//metaprogramming:double_locked_value",
-        "//metaprogramming:string_concatenate",
     ],
 )
 
@@ -916,12 +916,12 @@ cc_library(
         ":proxy_definitions",
         ":proxy_definitions_array",
         ":proxy_definitions_string",
-        "//metaprogramming:call",
-        "//metaprogramming:min_max",
-        "//metaprogramming:reduce",
-        "//metaprogramming:type_of_nth_element",
-        "//metaprogramming:unfurl",
-        "//metaprogramming:vals",
+        "//bind_lang/metaprogramming:call",
+        "//bind_lang/metaprogramming:min_max",
+        "//bind_lang/metaprogramming:reduce",
+        "//bind_lang/metaprogramming:type_of_nth_element",
+        "//bind_lang/metaprogramming:unfurl",
+        "//bind_lang/metaprogramming:vals",
     ],
 )
 
@@ -1003,13 +1003,13 @@ cc_library(
         ":no_idx",
         ":ref_base",
         "//:jni_dep",
+        "//bind_lang/metaprogramming:invocable_map",
+        "//bind_lang/metaprogramming:invocable_map_20",
+        "//bind_lang/metaprogramming:queryable_map",
+        "//bind_lang/metaprogramming:queryable_map_20",
+        "//bind_lang/metaprogramming:string_contains",
+        "//bind_lang/metaprogramming:string_literal",
         "//implementation/jni_helper:lifecycle",
-        "//metaprogramming:invocable_map",
-        "//metaprogramming:invocable_map_20",
-        "//metaprogramming:queryable_map",
-        "//metaprogramming:queryable_map_20",
-        "//metaprogramming:string_contains",
-        "//metaprogramming:string_literal",
     ],
 )
 
@@ -1046,11 +1046,11 @@ cc_library(
         ":promotion_mechanics_tags",
         ":ref_base",
         "//:jni_dep",
+        "//bind_lang/metaprogramming:deep_equal_diminished",
+        "//bind_lang/metaprogramming:pack_discriminator",
         "//implementation/jni_helper",
         "//implementation/jni_helper:lifecycle",
         "//implementation/jni_helper:lifecycle_object",
-        "//metaprogramming:deep_equal_diminished",
-        "//metaprogramming:pack_discriminator",
     ],
 )
 
@@ -1074,20 +1074,20 @@ cc_library(
         ":ref_base",
         ":self",
         "//:jni_dep",
-        "//metaprogramming:cartesian_product",
-        "//metaprogramming:combine",
-        "//metaprogramming:concatenate",
-        "//metaprogramming:corpus",
-        "//metaprogramming:corpus_tag",
-        "//metaprogramming:flatten",
-        "//metaprogramming:invoke",
-        "//metaprogramming:per_element",
-        "//metaprogramming:reduce",
-        "//metaprogramming:tuple_manipulation",
-        "//metaprogramming:type_of_nth_element",
-        "//metaprogramming:type_to_type_map",
-        "//metaprogramming:unique_set",
-        "//metaprogramming:unwrap",
+        "//bind_lang/metaprogramming:cartesian_product",
+        "//bind_lang/metaprogramming:combine",
+        "//bind_lang/metaprogramming:concatenate",
+        "//bind_lang/metaprogramming:corpus",
+        "//bind_lang/metaprogramming:corpus_tag",
+        "//bind_lang/metaprogramming:flatten",
+        "//bind_lang/metaprogramming:invoke",
+        "//bind_lang/metaprogramming:per_element",
+        "//bind_lang/metaprogramming:reduce",
+        "//bind_lang/metaprogramming:tuple_manipulation",
+        "//bind_lang/metaprogramming:type_of_nth_element",
+        "//bind_lang/metaprogramming:type_to_type_map",
+        "//bind_lang/metaprogramming:unique_set",
+        "//bind_lang/metaprogramming:unwrap",
     ],
 )
 
@@ -1158,7 +1158,7 @@ cc_test(
     deps = [
         "//:jni_bind",
         "//:jni_test",
-        "//metaprogramming:type_to_type_map",
+        "//bind_lang/metaprogramming:type_to_type_map",
         "@googletest//:gtest_main",
     ],
 )
@@ -1190,8 +1190,8 @@ cc_library(
     hdrs = ["ref_storage.h"],
     deps = [
         ":signature",
-        "//metaprogramming:double_locked_value",
-        "//metaprogramming:lambda_string",
+        "//bind_lang/metaprogramming:double_locked_value",
+        "//bind_lang/metaprogramming:lambda_string",
     ],
 )
 
@@ -1220,7 +1220,7 @@ cc_library(
         ":no_idx",
         ":proxy_convenience_aliases",
         ":selector_static_info",
-        "//metaprogramming:name_constants",
+        "//bind_lang/metaprogramming:name_constants",
     ],
 )
 
@@ -1297,10 +1297,10 @@ cc_library(
         ":object",
         ":self",
         ":void",
+        "//bind_lang/metaprogramming:name_constants",
+        "//bind_lang/metaprogramming:repeat_string",
+        "//bind_lang/metaprogramming:string_concatenate",
         "//implementation/jni_helper:jni_typename_to_string",
-        "//metaprogramming:name_constants",
-        "//metaprogramming:repeat_string",
-        "//metaprogramming:string_concatenate",
     ],
 )
 
@@ -1314,7 +1314,7 @@ cc_library(
         ":field",
         ":method",
         ":params",
-        "//metaprogramming:base_filter",
+        "//bind_lang/metaprogramming:base_filter",
     ],
 )
 
@@ -1332,11 +1332,11 @@ cc_library(
         ":method_selection",
         ":no_idx",
         "//:jni_dep",
-        "//metaprogramming:invocable_map",
-        "//metaprogramming:invocable_map_20",
-        "//metaprogramming:queryable_map",
-        "//metaprogramming:queryable_map_20",
-        "//metaprogramming:string_literal",
+        "//bind_lang/metaprogramming:invocable_map",
+        "//bind_lang/metaprogramming:invocable_map_20",
+        "//bind_lang/metaprogramming:queryable_map",
+        "//bind_lang/metaprogramming:queryable_map_20",
+        "//bind_lang/metaprogramming:string_literal",
     ],
 )
 
@@ -1370,7 +1370,7 @@ cc_library(
     hdrs = ["supported_class_set.h"],
     deps = [
         ":class",
-        "//metaprogramming:all_unique",
+        "//bind_lang/metaprogramming:all_unique",
     ],
 )
 
@@ -1403,7 +1403,7 @@ cc_library(
         ":forward_declarations",
         ":jvm_ref_base",
         "//:jni_dep",
-        "//metaprogramming:function_traits",
+        "//bind_lang/metaprogramming:function_traits",
     ],
 )
 

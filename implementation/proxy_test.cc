@@ -21,9 +21,9 @@
 #include <utility>
 
 #include <gtest/gtest.h>
+#include "bind_lang/metaprogramming/type_to_type_map.h"
 #include "jni_bind.h"
 #include "jni_test.h"
-#include "metaprogramming/type_to_type_map.h"
 
 using ::jni::AsDecl_t;
 using ::jni::Class;

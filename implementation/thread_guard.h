@@ -19,10 +19,10 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include "bind_lang/metaprogramming/function_traits.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/jvm_ref_base.h"
 #include "jni_dep.h"
-#include "metaprogramming/function_traits.h"
 
 namespace jni {
 

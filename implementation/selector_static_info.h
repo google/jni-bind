@@ -20,14 +20,14 @@
 #include <cstddef>
 #include <string_view>
 
+#include "bind_lang/metaprogramming/name_constants.h"
+#include "bind_lang/metaprogramming/repeat_string.h"
+#include "bind_lang/metaprogramming/string_concatenate.h"
 #include "implementation/id_type.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
 #include "implementation/object.h"
 #include "implementation/self.h"
 #include "implementation/void.h"
-#include "metaprogramming/name_constants.h"
-#include "metaprogramming/repeat_string.h"
-#include "metaprogramming/string_concatenate.h"
 
 namespace jni {
 
