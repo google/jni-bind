@@ -378,13 +378,21 @@ cc_binary(
 java_test(
     name = "FieldTest",
     testonly = True,
-    srcs = [
-        "FieldTest.java",
-        "FieldTestHelper.java",
-    ],
+    srcs = ["FieldTest.java"],
     data = [":libfield_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     tags = ["nosan"],
+    deps = [
+        ":field_test_helper",
+        "@maven//:com_google_truth_truth",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_library(
+    name = "field_test_helper",
+    testonly = True,
+    srcs = ["FieldTestHelper.java"],
     deps = [
         "@maven//:com_google_truth_truth",
         "@maven//:junit_junit",
@@ -489,13 +497,22 @@ cc_binary(
 java_test(
     name = "MethodTest",
     testonly = True,
-    srcs = [
-        "MethodTest.java",
-        "MethodTestHelper.java",
-    ],
+    srcs = ["MethodTest.java"],
     data = [":libmethod_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     tags = ["nosan"],
+    deps = [
+        ":method_test_helper",
+        "@maven//:com_google_truth_truth",
+        "@maven//:junit_junit",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+java_library(
+    name = "method_test_helper",
+    testonly = True,
+    srcs = ["MethodTestHelper.java"],
     deps = [
         "@maven//:com_google_truth_truth",
         "@maven//:junit_junit",
@@ -560,13 +577,22 @@ cc_binary(
 java_test(
     name = "StaticTest",
     testonly = True,
-    srcs = [
-        "StaticTest.java",
-        "StaticTestHelper.java",
-    ],
+    srcs = ["StaticTest.java"],
     data = [":libstatic_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     tags = ["nosan"],
+    deps = [
+        ":object_test_helper",
+        ":static_test_helper",
+        "@maven//:com_google_truth_truth",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_library(
+    name = "static_test_helper",
+    testonly = True,
+    srcs = ["StaticTestHelper.java"],
     deps = [
         ":object_test_helper",
         "@maven//:com_google_truth_truth",
@@ -599,13 +625,22 @@ cc_binary(
 java_test(
     name = "StringTest",
     testonly = True,
-    srcs = [
-        "StringTest.java",
-        "StringTestHelper.java",
-    ],
+    srcs = ["StringTest.java"],
     data = [":libstring_test_jni.so"],
     jvm_flags = ["-Djava.library.path=./javatests/com/jnibind/test"],
     tags = ["nosan"],
+    deps = [
+        ":string_test_helper",
+        "@maven//:com_google_truth_truth",
+        "@maven//:junit_junit",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+java_library(
+    name = "string_test_helper",
+    testonly = True,
+    srcs = ["StringTestHelper.java"],
     deps = [
         "@maven//:com_google_truth_truth",
         "@maven//:junit_junit",
