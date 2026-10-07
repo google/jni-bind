@@ -19,7 +19,7 @@
 
 #include "tuple_manipulation.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction to forward all args in a tuple on to a metafunction.
 // It's useful if you want to "derefence" arguments from another meta function.
@@ -35,6 +35,6 @@ using Unwrap_t = typename Unwrap<Func>::template type<Ts...>;
 template <typename Func, typename... Ts>
 static constexpr auto Unwrap_v = Unwrap_t<Func, Ts...>::value;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_UNWRAP_H_

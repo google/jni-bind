@@ -47,8 +47,8 @@ Static() -> Static<std::tuple<>, std::tuple<>>;
 
 template <typename... Params>
 Static(Params...)
-    -> Static<metaprogramming::BaseFilter_t<MethodBase, Params...>,
-              metaprogramming::BaseFilter_t<FieldBase, Params...>>;
+    -> Static<bind_lang::metaprogramming::BaseFilter_t<MethodBase, Params...>,
+              bind_lang::metaprogramming::BaseFilter_t<FieldBase, Params...>>;
 
 }  // namespace jni
 

@@ -55,7 +55,7 @@ struct OverloadRefUniqueId {
   // IdT::Name will be the overload name (e.g. "Foo").
   // Dashes are solely for readability in debugging.
   static constexpr std::string_view TypeName() {
-    return metaprogramming::StringConcatenate_v<
+    return bind_lang::metaprogramming::StringConcatenate_v<
         kClassQualifier, kDash, kOverloadName, kDash, Signature_v<IdT>>;
   }
 };
@@ -74,7 +74,8 @@ struct OverloadRef {
 
   static jmethodID GetMethodID(jclass clazz) {
     static auto get_lambda =
-        [clazz](metaprogramming::DoubleLockedValue<jmethodID>* storage) {
+        [clazz](
+            bind_lang::metaprogramming::DoubleLockedValue<jmethodID>* storage) {
           if (kConfiguration.release_method_ids_on_teardown_) {
             DefaultRefs<jmethodID>().push_back(storage);
           }

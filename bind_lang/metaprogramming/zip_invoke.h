@@ -23,7 +23,7 @@
 #include "apply.h"
 #include "invoke.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Takes a set of 2 tuples, |Knobs| and |Args|.
 // This is frequently useful in a case where you might want to Apply across a
@@ -43,6 +43,6 @@ struct ZipInvoke<
 template <template <typename...> class Func, typename Knobs, typename Args>
 using ZipInvoke_t = typename ZipInvoke<Func, Knobs, Args>::type;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_ZIP_INVOKE_H_

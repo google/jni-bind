@@ -19,8 +19,8 @@
 #include <tuple>
 #include <type_traits>
 
-using ::jni::metaprogramming::Detect_t;
-using ::jni::metaprogramming::Detect_v;
+using ::bind_lang::metaprogramming::Detect_t;
+using ::bind_lang::metaprogramming::Detect_v;
 
 namespace {
 

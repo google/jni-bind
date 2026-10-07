@@ -24,9 +24,9 @@
 
 namespace {
 
-using ::jni::metaprogramming::All_v;
-using ::jni::metaprogramming::Same;
-using ::jni::metaprogramming::ZipInvoke_t;
+using ::bind_lang::metaprogramming::All_v;
+using ::bind_lang::metaprogramming::Same;
+using ::bind_lang::metaprogramming::ZipInvoke_t;
 
 struct A {};
 struct B : A {};

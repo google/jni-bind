@@ -131,6 +131,7 @@ cc_library(
         ":jni_bind",
         ":mock_jni_env",
         ":mock_jvm",
+        "//bind_lang/metaprogramming:function_traits",
         "@googletest//:gtest_main",
     ],
 )

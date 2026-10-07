@@ -32,8 +32,8 @@ struct LifecycleHelper<jobject, LifecycleType::LOCAL>
   template <typename... CtorArgs>
   static inline jobject Construct(jclass clazz, jmethodID ctor_method,
                                   CtorArgs&&... ctor_args) {
-    Trace(metaprogramming::LambdaToStr(STR("NewObject")), clazz, ctor_method,
-          ctor_args...);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("NewObject")), clazz,
+          ctor_method, ctor_args...);
 
 #ifdef DRY_RUN
     return Fake<jobject>();

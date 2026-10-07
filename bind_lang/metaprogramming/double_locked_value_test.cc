@@ -20,7 +20,7 @@
 
 namespace {
 
-using ::jni::metaprogramming::DoubleLockedValue;
+using ::bind_lang::metaprogramming::DoubleLockedValue;
 
 TEST(DoubleLockedValue, ConstructsTrivialValue) {
   auto a = []() { return 1; };

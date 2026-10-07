@@ -21,12 +21,12 @@
 
 #include "string_concatenate.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <std::size_t repeat_cnt>
 struct RepeatString {
   template <const std::string_view& val_to_repeat>
-  static constexpr std::string_view val = metaprogramming::StringConcatenate_v<
+  static constexpr std::string_view val = StringConcatenate_v<
       val_to_repeat, RepeatString<repeat_cnt - 1>::template val<val_to_repeat>>;
 };
 
@@ -40,6 +40,6 @@ template <std::size_t repeat_cnt, const std::string_view& val_to_repeat>
 static constexpr auto RepeatString_v{
     RepeatString<repeat_cnt>::template val<val_to_repeat>};
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_REPEAT_STRING_H_

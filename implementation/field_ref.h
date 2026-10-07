@@ -44,8 +44,8 @@ namespace jni {
 
 // See JvmRef::~JvmRef.
 static inline auto& GetDefaultLoadedFieldList() {
-  static auto* ret_val =
-      new std::vector<metaprogramming::DoubleLockedValue<jfieldID>*>{};
+  static auto* ret_val = new std::vector<
+      bind_lang::metaprogramming::DoubleLockedValue<jfieldID>*>{};
   return *ret_val;
 }
 
@@ -70,7 +70,7 @@ class FieldRef {
 
   // This method is thread safe.
   static jfieldID GetFieldID(jclass clazz) {
-    static jni::metaprogramming::DoubleLockedValue<jfieldID> return_value;
+    static bind_lang::metaprogramming::DoubleLockedValue<jfieldID> return_value;
 
     return return_value.LoadAndMaybeInit([=]() {
       if constexpr (JniT::class_loader_v == kDefaultClassLoader) {

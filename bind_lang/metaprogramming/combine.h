@@ -19,7 +19,7 @@
 
 #include <tuple>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Takes two tuples and collapses them into a single tuple.
 struct Combine {
@@ -41,6 +41,6 @@ struct Combine {
 template <typename Tup1, typename Tup2>
 using Combine_t = typename Combine::template type<Tup1, Tup2>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_COMBINE_H_

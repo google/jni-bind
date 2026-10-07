@@ -19,7 +19,7 @@
 
 #include <type_traits>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename Func>
 struct All {
@@ -34,6 +34,6 @@ using All_t = typename All<Func>::template type<Ts...>;
 template <typename Func, typename... Ts>
 static constexpr bool All_v = All_t<Func, Ts...>::value;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_ALL_H_

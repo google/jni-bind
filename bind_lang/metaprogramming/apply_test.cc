@@ -22,11 +22,11 @@
 #include "invoke.h"
 #include "same.h"
 
-using ::jni::metaprogramming::Apply;
-using ::jni::metaprogramming::Apply_t;
-using ::jni::metaprogramming::Invoke_t;
-using ::jni::metaprogramming::InvokePerTupArg_t;
-using ::jni::metaprogramming::Same;
+using ::bind_lang::metaprogramming::Apply;
+using ::bind_lang::metaprogramming::Apply_t;
+using ::bind_lang::metaprogramming::Invoke_t;
+using ::bind_lang::metaprogramming::InvokePerTupArg_t;
+using ::bind_lang::metaprogramming::Same;
 
 namespace {
 

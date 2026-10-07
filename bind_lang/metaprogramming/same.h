@@ -20,7 +20,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction to take a sequence of values and emit std::true or std::false
 // per element based on their type equality.
@@ -34,6 +34,6 @@ struct Same {
   constexpr static bool value = type<Us...>::value;
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_SAME_H_

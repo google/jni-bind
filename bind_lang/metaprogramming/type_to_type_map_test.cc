@@ -28,11 +28,11 @@ struct D {};
 struct E {};
 struct F {};
 
-using ::jni::metaprogramming::TypeToTypeMap;
-using ::jni::metaprogramming::TypeToTypeMap_Keys_t;
-using ::jni::metaprogramming::TypeToTypeMap_Values_t;
-using ::jni::metaprogramming::TypeToTypeMapFromKeyValues_t;
-using ::jni::metaprogramming::TypeToTypeMapQuery_t;
+using ::bind_lang::metaprogramming::TypeToTypeMap;
+using ::bind_lang::metaprogramming::TypeToTypeMap_Keys_t;
+using ::bind_lang::metaprogramming::TypeToTypeMap_Values_t;
+using ::bind_lang::metaprogramming::TypeToTypeMapFromKeyValues_t;
+using ::bind_lang::metaprogramming::TypeToTypeMapQuery_t;
 
 // Keys and values are expected.
 using MapUnderTest = TypeToTypeMapFromKeyValues_t<A, B, C, D, E, F>;

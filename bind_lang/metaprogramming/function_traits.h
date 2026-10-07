@@ -20,7 +20,7 @@
 #include <cstddef>
 #include <tuple>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction for querying traits return and argument types of a function.
 template <typename>
@@ -66,6 +66,6 @@ template <typename T, std::size_t argument_idx>
 using FunctionTraitsArg_t =
     typename FunctionTraits<T>::template Argument<argument_idx>::type;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_FUNCTION_TRAITS_H_

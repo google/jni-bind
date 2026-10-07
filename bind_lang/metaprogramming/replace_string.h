@@ -23,7 +23,7 @@
 
 #include "lambda_string.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <char sought_char, char new_char>
 struct Replace {
@@ -45,6 +45,6 @@ template <const std::string_view& str, char sought_char, char new_char>
 static constexpr auto Replace_v =
     Replace<sought_char, new_char>::template val<str>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_REPLACE_STRING_H_

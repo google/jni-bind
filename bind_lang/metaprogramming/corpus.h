@@ -23,7 +23,7 @@
 #include "corpus_tag.h"
 #include "detect.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Provides the universe of keys, including user defined types if any.
 // Users define custom types by partially specialising UserDefined (see test).
@@ -47,6 +47,6 @@ struct Corpus {
 template <typename T, typename... Defaults>
 using Corpus_t = typename Corpus<Defaults...>::template type<T>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_CORPUS_H_

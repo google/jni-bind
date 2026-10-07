@@ -18,7 +18,7 @@
 
 #include <cstddef>
 
-using ::jni::metaprogramming::Increment_t;
+using ::bind_lang::metaprogramming::Increment_t;
 
 namespace {
 

@@ -21,7 +21,7 @@
 #include <tuple>
 #include <utility>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // "Unfurls" an index sequence onto a container, and provides convenience
 // helpers
@@ -71,6 +71,6 @@ template <std::size_t Is, template <std::size_t, typename...> class Container,
 static constexpr bool UnfurlDisjunction_v =
     Unfurl<Container, Is, false>::template val<Ts...>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_UNFURL_H_

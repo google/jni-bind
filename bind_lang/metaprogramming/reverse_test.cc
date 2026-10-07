@@ -26,8 +26,8 @@ struct B {};
 struct C {};
 struct D {};
 
-using ::jni::metaprogramming::Reverse_t;
-using ::jni::metaprogramming::Reverse_Tup;
+using ::bind_lang::metaprogramming::Reverse_t;
+using ::bind_lang::metaprogramming::Reverse_Tup;
 
 static_assert(std::is_same_v<Reverse_t<>, std::tuple<>>);
 static_assert(std::is_same_v<Reverse_t<A>, std::tuple<A>>);

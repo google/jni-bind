@@ -22,7 +22,7 @@
 #include "bind_lang/metaprogramming/pack_discriminator.h"
 #include "bind_lang/metaprogramming/vals_equal.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename T1>
 struct DeepEqual;
@@ -103,6 +103,6 @@ struct DeepEqual {
   static constexpr bool val = Val<T2>();
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_DEEP_EQUAL_H_

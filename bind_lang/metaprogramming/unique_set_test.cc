@@ -21,7 +21,7 @@
 
 namespace {
 
-using ::jni::metaprogramming::UniqueSet_t;
+using ::bind_lang::metaprogramming::UniqueSet_t;
 
 struct A {};
 struct B {};

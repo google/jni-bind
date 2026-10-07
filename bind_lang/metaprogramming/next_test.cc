@@ -19,16 +19,16 @@
 #include <cstddef>
 #include <type_traits>
 
-using ::jni::metaprogramming::EndConstRefVal;
-using ::jni::metaprogramming::EndType;
-using ::jni::metaprogramming::EndVal;
+using ::bind_lang::metaprogramming::EndConstRefVal;
+using ::bind_lang::metaprogramming::EndType;
+using ::bind_lang::metaprogramming::EndVal;
 
-using ::jni::metaprogramming::Next_t;
-using ::jni::metaprogramming::NextConstRefVal;  // NOLINT
-using ::jni::metaprogramming::NextType;         // NOLINT
-using ::jni::metaprogramming::NextVal;          // NOLINT
+using ::bind_lang::metaprogramming::Next_t;
+using ::bind_lang::metaprogramming::NextConstRefVal;  // NOLINT
+using ::bind_lang::metaprogramming::NextType;         // NOLINT
+using ::bind_lang::metaprogramming::NextVal;          // NOLINT
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Type tests.
@@ -144,4 +144,4 @@ static_assert(
         Next_t<Next_t<ConstRefCounter<kTheValue0, kMaxValSizeGlobal>>>>::val ==
     3);
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming

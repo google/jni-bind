@@ -19,7 +19,7 @@
 
 #include "invoke.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction to invoke a metafunction and forward its output to another
 // metafunction (or sequence of metafunctions).  Note, unlike typical functional
@@ -42,6 +42,6 @@ struct Chain<FirstFunc, Funcs...> {
       Invoke_t<Chain<Funcs...>, Invoke_t<FirstFunc, ArgsForFirstFunc...>>;
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_CHAIN_H_

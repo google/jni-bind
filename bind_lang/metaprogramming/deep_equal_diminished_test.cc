@@ -25,7 +25,7 @@ namespace {
 // Unsupported assertions are intentionally left commented for comparison.
 ////////////////////////////////////////////////////////////////////////////////
 
-using ::jni::metaprogramming::DeepEqualDiminished_v;
+using ::bind_lang::metaprogramming::DeepEqualDiminished_v;
 
 struct A {
   constexpr explicit A(int i) : i_(i) {}

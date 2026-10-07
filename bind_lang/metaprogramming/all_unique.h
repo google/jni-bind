@@ -21,7 +21,7 @@
 
 #include "contains.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename...>
 struct AllUnique {
@@ -47,6 +47,6 @@ constexpr bool AllUniqueValues(const T1&& t1, const Ts&&... ts) {
   return (!ContainsValue(t1, ts...)) && AllUniqueValues(ts...);
 }
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_ALL_UNIQUE_H_

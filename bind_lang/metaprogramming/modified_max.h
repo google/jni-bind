@@ -21,7 +21,7 @@
 #include <initializer_list>
 #include <limits>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 constexpr std::size_t kNegativeOne = std::numeric_limits<std::size_t>::max();
 
@@ -56,6 +56,6 @@ constexpr std::size_t ModifiedMax(
   return max;
 }
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_MODIFIED_MAX_H_

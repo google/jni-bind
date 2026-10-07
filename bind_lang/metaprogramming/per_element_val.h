@@ -19,7 +19,7 @@
 
 #include <array>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename Lambda>
 struct PerElementVal {
@@ -36,6 +36,6 @@ template <typename Lambda, const auto... vs>
 static constexpr auto PerElementVal_v =
     PerElementVal<Lambda>::template val<vs...>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_PER_ELEMENT_VAL_H_

@@ -26,7 +26,7 @@
 #include "modified_max.h"
 #include "string_literal.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // This is an interface that can be inherited from to expose an
 // operator.Access<"name">(). It provides compile time string index lookup with
@@ -85,6 +85,6 @@ class QueryableMap20 {
 #endif  // __cplusplus >= 202002L
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_QUERYABLE_MAP_20_H_

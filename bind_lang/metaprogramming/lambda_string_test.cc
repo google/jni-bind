@@ -20,9 +20,9 @@
 
 #include <gtest/gtest.h>
 
-using ::jni::metaprogramming::ConstexprStrlen;
-using ::jni::metaprogramming::LambdaStringToType;
-using ::jni::metaprogramming::StringAsType;
+using ::bind_lang::metaprogramming::ConstexprStrlen;
+using ::bind_lang::metaprogramming::LambdaStringToType;
+using ::bind_lang::metaprogramming::StringAsType;
 
 namespace {
 

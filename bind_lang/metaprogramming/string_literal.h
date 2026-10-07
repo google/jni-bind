@@ -24,7 +24,7 @@
 #include <cstddef>
 #include <string_view>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Inspired by Kevin Hartman's StringLiteral implementation.
 // https://ctrpeach.io/posts/cpp20-string-literal-template-parameters/
@@ -58,7 +58,7 @@ struct StringLiteral {
 template <size_t N>
 StringLiteral(const char (&str)[N]) -> StringLiteral<N>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // __cplusplus >= 202002L
 #endif  // __cplusplus

@@ -19,8 +19,8 @@
 #include <tuple>
 #include <type_traits>
 
-using ::jni::metaprogramming::TypeOfNthElement_t;
-using ::jni::metaprogramming::TypeOfNthTupleElement_t;
+using ::bind_lang::metaprogramming::TypeOfNthElement_t;
+using ::bind_lang::metaprogramming::TypeOfNthTupleElement_t;
 
 namespace {
 

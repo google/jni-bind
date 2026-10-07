@@ -19,7 +19,7 @@
 
 #include "tuple_manipulation.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Forwards all arguments to a metafunction.  Note, Apply<Func> is itself a type
 // whose |type| (aka its metafunction's invocation).
@@ -37,6 +37,6 @@ using Apply_t = typename Apply<Function>::template type<Ts...>;
 template <template <typename...> class Function, typename TupleType>
 using ApplyTup_t = TupleUnroller_t<Apply<Function>, TupleType>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_APPLY_H_

@@ -25,12 +25,12 @@
 
 namespace {
 
-using ::jni::metaprogramming::CartesianProduct;
-using ::jni::metaprogramming::CartesianProduct_t;
-using ::jni::metaprogramming::GenerateBitSequenceFromTupSets_t;
-using ::jni::metaprogramming::InvokeAsPack_t;
-using ::jni::metaprogramming::NBit;
-using ::jni::metaprogramming::NBitSequence;
+using ::bind_lang::metaprogramming::CartesianProduct;
+using ::bind_lang::metaprogramming::CartesianProduct_t;
+using ::bind_lang::metaprogramming::GenerateBitSequenceFromTupSets_t;
+using ::bind_lang::metaprogramming::InvokeAsPack_t;
+using ::bind_lang::metaprogramming::NBit;
+using ::bind_lang::metaprogramming::NBitSequence;
 
 template <typename... Ts>
 using Tup = std::tuple<Ts...>;

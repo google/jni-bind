@@ -25,22 +25,23 @@ struct A {};
 struct B {};
 struct C {};
 
-// Note: This ordering is intentional (see `::jni::Corpus`).
-namespace jni::metaprogramming {
+// Note: This ordering is intentional (see
+// `::bind_lang::metaprogramming::Corpus`).
+namespace bind_lang::metaprogramming {
 
 template <>
 struct UserDefined<CorpusTag> {
   using type = std::tuple<A, B, C>;
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #include "bind_lang/metaprogramming/corpus.h"
 #include "bind_lang/metaprogramming/detect.h"
 
-using ::jni::metaprogramming::Corpus_t;
-using ::jni::metaprogramming::Detect_t;
-using ::jni::metaprogramming::UserDefined;
+using ::bind_lang::metaprogramming::Corpus_t;
+using ::bind_lang::metaprogramming::Detect_t;
+using ::bind_lang::metaprogramming::UserDefined;
 
 namespace {
 

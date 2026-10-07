@@ -20,7 +20,7 @@
 
 #include "vals.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 struct Max {
   template <typename T1, typename T2>
@@ -60,6 +60,6 @@ using Min_t = typename Min::type<T1, T2>;
 template <typename T1, typename T2>
 static constexpr auto Min_v = Min_t<T1, T2>::val;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_MIN_MAX_H_

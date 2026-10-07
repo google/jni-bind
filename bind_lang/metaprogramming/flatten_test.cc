@@ -19,7 +19,7 @@
 #include <tuple>
 #include <type_traits>
 
-using ::jni::metaprogramming::Flatten_t;
+using ::bind_lang::metaprogramming::Flatten_t;
 
 namespace {
 

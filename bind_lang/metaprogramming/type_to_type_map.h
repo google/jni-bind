@@ -25,7 +25,7 @@
 #include "tuple_manipulation.h"
 #include "type_of_nth_element.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Maps types to other types.
 // Keys do not need to be unique, although queries only return the first entry.
@@ -75,6 +75,6 @@ template <typename TupleOfKeyValuePairs>
 using TypeToTypeMapFromKeyValuesTup_t =
     TupleToType_t<TupleOfKeyValuePairs, TypeToTypeMapFromKeyValues_t>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_TYPE_TO_TYPE_MAP_H_

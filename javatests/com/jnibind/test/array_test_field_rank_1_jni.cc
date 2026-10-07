@@ -25,6 +25,7 @@
 #include "javatests/com/jnibind/test/object_test_helper_jni.h"
 #include "jni_bind.h"
 
+using ::bind_lang::metaprogramming::StringLiteral;
 using ::jni::Array;
 using ::jni::ArrayView;
 using ::jni::Class;
@@ -33,7 +34,6 @@ using ::jni::LocalArray;
 using ::jni::LocalObject;
 using ::jni::LocalString;
 using ::jni::StaticRef;
-using ::jni::metaprogramming::StringLiteral;
 
 static std::unique_ptr<jni::JvmRef<jni::kDefaultJvm>> jvm;
 

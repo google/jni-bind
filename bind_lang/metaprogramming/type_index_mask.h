@@ -23,7 +23,7 @@
 
 #include "type_of_nth_element.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction to take a sequence of indices, and produce the corresponding
 // elements in sequences of tuples.
@@ -56,6 +56,6 @@ template <typename TupOfTypes, std::size_t... sizes>
 using TypeTupFromIndexMask_t =
     typename TypeIndexMask<sizes...>::template type<TupOfTypes>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_TYPE_INDEX_MASK_H_

@@ -22,7 +22,7 @@
 #include "combine.h"
 #include "reduce.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction to generate a concatenation of variadic args.
 struct Concatenate {
@@ -47,6 +47,6 @@ struct ConcatenateTup<std::tuple<T1s...>> {
 template <typename... Tups>
 using ConcatenateTup_t = Reduce_t<Combine, Tups...>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_CONCATENATE_H_

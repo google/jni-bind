@@ -20,7 +20,7 @@
 
 namespace {
 
-using ::jni::metaprogramming::DeepEqual_v;
+using ::bind_lang::metaprogramming::DeepEqual_v;
 
 struct A {
   constexpr explicit A(int i) : i_(i) {}

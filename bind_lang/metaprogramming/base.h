@@ -19,7 +19,7 @@
 
 #include <type_traits>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename BaseToTest>
 struct Base {
@@ -30,6 +30,6 @@ struct Base {
 template <typename BaseToTest, typename TypeToTest>
 using Base_t = typename Base<BaseToTest>::template type<TypeToTest>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_BASE_H_

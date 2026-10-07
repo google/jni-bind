@@ -19,7 +19,7 @@
 #include <tuple>
 #include <type_traits>
 
-using ::jni::metaprogramming::Call_t;
+using ::bind_lang::metaprogramming::Call_t;
 
 namespace {
 

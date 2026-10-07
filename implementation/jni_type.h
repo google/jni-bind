@@ -102,7 +102,7 @@ struct JniT<SpanType_, class_v_, class_loader_v_, jvm_v_, kRank_, class_idx_,
 
   static constexpr std::string_view kName{GetClass().name_};
   static constexpr std::string_view kNameWithDots{
-      metaprogramming::Replace_v<kName, '/', '.'>};
+      bind_lang::metaprogramming::Replace_v<kName, '/', '.'>};
 
   static constexpr const auto& GetJvm() { return jvm_v_; }
 
@@ -217,10 +217,11 @@ struct JniTEqual<JniT<SpanType1, class_v_1, class_loader_v_1, jvm_v_1, kRank_1,
                       class_idx_2, class_loader_idx_2>> {
   static constexpr bool val =
       std::is_same_v<SpanType1, SpanType2> &&
-      metaprogramming::ValsEqualDiminished_cr_v<class_v_1, class_v_2> &&
-      metaprogramming::ValsEqualDiminished_cr_v<class_loader_v_1,
-                                                class_loader_v_2> &&
-      metaprogramming::ValsEqualDiminished_cr_v<jvm_v_1, jvm_v_2> &&
+      bind_lang::metaprogramming::ValsEqualDiminished_cr_v<class_v_1,
+                                                           class_v_2> &&
+      bind_lang::metaprogramming::ValsEqualDiminished_cr_v<class_loader_v_1,
+                                                           class_loader_v_2> &&
+      bind_lang::metaprogramming::ValsEqualDiminished_cr_v<jvm_v_1, jvm_v_2> &&
       kRank_1 == kRank_2 && class_idx_1 == class_idx_2 &&
       class_loader_idx_1 == class_loader_idx_2;
 };

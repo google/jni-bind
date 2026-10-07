@@ -23,7 +23,7 @@
 
 namespace {
 
-using ::jni::metaprogramming::TupleFromSize_t;
+using ::bind_lang::metaprogramming::TupleFromSize_t;
 
 struct A {};
 

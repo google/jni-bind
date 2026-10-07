@@ -41,10 +41,11 @@ struct EntryBase : public Base {
   using Span = typename JniT::SpanType;
 
   // `RefBase` move constructor for object of same span type.
-  template <typename T,
-            typename = std::enable_if_t<
-                (::jni::metaprogramming::DeepEqualDiminished_v<EntryBase, T> ||
-                 std::is_base_of_v<RefBase<Span>, T>)>>
+  template <
+      typename T,
+      typename = std::enable_if_t<
+          (::bind_lang::metaprogramming::DeepEqualDiminished_v<EntryBase, T> ||
+           std::is_base_of_v<RefBase<Span>, T>)>>
   EntryBase(T&& rhs) : Base(rhs.Release()) {}
   EntryBase(AdoptLocal, ViableSpan object) : Base(object) {}
 
@@ -131,10 +132,11 @@ struct EntryBase<Base, LifecycleType::GLOBAL, JniT, ViableSpan> : public Base {
   using Span = typename JniT::SpanType;
 
   // `RefBase` move constructor for object of same span type.
-  template <typename T,
-            typename = std::enable_if_t<
-                (::jni::metaprogramming::DeepEqualDiminished_v<EntryBase, T> ||
-                 std::is_base_of_v<RefBase<Span>, T>)>>
+  template <
+      typename T,
+      typename = std::enable_if_t<
+          (::bind_lang::metaprogramming::DeepEqualDiminished_v<EntryBase, T> ||
+           std::is_base_of_v<RefBase<Span>, T>)>>
   EntryBase(T&& rhs)
       : Base(LifecycleHelper<typename JniT::StorageType,
                              LifecycleType::GLOBAL>::Promote(rhs.Release())) {}

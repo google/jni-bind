@@ -19,7 +19,7 @@
 
 #include <string_view>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 struct Constants {
   static constexpr std::string_view new_line = "\n";
@@ -89,6 +89,6 @@ struct Constants {
   static constexpr std::string_view Z = "Z";
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_NAME_CONSTANTS_H_

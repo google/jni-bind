@@ -21,8 +21,8 @@
 
 #include "same.h"
 
-using ::jni::metaprogramming::Same;
-using ::jni::metaprogramming::Unwrap_t;
+using ::bind_lang::metaprogramming::Same;
+using ::bind_lang::metaprogramming::Unwrap_t;
 
 namespace {
 

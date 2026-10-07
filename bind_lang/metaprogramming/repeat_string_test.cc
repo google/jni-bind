@@ -18,7 +18,7 @@
 
 #include <string_view>
 
-using ::jni::metaprogramming::RepeatString_v;
+using ::bind_lang::metaprogramming::RepeatString_v;
 
 namespace {
 

@@ -19,7 +19,7 @@
 
 #include "pack_discriminator.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <template <typename...> class Container>
 struct NextType;
@@ -46,6 +46,6 @@ using Next_t =
     typename PackDiscriminatedForward<NextType,
                                       NextConstRefVal>::template type<T>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_NEXT_H_

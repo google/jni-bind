@@ -21,7 +21,7 @@
 
 #include "concatenate.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction that takes sets of tuples and reduces them to a single tuple.
 // No element in the result set will be a tuple, any and all nested tuples will
@@ -56,6 +56,6 @@ struct Flatten {
 template <typename... Ts>
 using Flatten_t = typename Flatten::template type<Ts...>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_FLATTEN_H_

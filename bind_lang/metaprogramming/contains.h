@@ -22,7 +22,7 @@
 #include "same.h"
 #include "tuple_manipulation.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename SoughtType, typename... Ts>
 using Contains_t = Invoke_t<Any<Same<SoughtType>>, Ts...>;
@@ -42,6 +42,6 @@ constexpr bool ContainsValue(const SoughtType& sought_value, Ts&&... ts) {
   return ((sought_value == ts) || ...);
 }
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_CONTAINS_H_

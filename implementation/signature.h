@@ -59,7 +59,7 @@ struct Signature<
     };
 
     static constexpr std::string_view val =
-        metaprogramming::StringConcatenate_v<Val<Is>::val...>;
+        bind_lang::metaprogramming::StringConcatenate_v<Val<Is>::val...>;
   };
 
   struct ReturnHelper {
@@ -81,14 +81,17 @@ struct Signature<
                          kIdType_ == IdType::STATIC_OVERLOAD) {
       using Idxs = std::make_index_sequence<IdT::NumParams()>;
       if constexpr (IdT::kIsConstructor) {
-        return metaprogramming::StringConcatenate_v<
-            metaprogramming::Constants::left_parenthesis, Helper<Idxs>::val,
-            metaprogramming::Constants::right_parenthesis,
-            metaprogramming::Constants::V>;
+        return bind_lang::metaprogramming::StringConcatenate_v<
+            bind_lang::metaprogramming::Constants::left_parenthesis,
+            Helper<Idxs>::val,
+            bind_lang::metaprogramming::Constants::right_parenthesis,
+            bind_lang::metaprogramming::Constants::V>;
       } else {
-        return metaprogramming::StringConcatenate_v<
-            metaprogramming::Constants::left_parenthesis, Helper<Idxs>::val,
-            metaprogramming::Constants::right_parenthesis, ReturnHelper::val>;
+        return bind_lang::metaprogramming::StringConcatenate_v<
+            bind_lang::metaprogramming::Constants::left_parenthesis,
+            Helper<Idxs>::val,
+            bind_lang::metaprogramming::Constants::right_parenthesis,
+            ReturnHelper::val>;
       }
     } else if constexpr (kIdType_ == IdType::OVERLOAD_PARAM ||
                          kIdType_ == IdType::STATIC_OVERLOAD_PARAM) {

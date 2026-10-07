@@ -19,7 +19,7 @@
 
 #include <utility>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename T>
 struct DefaultDeleter {
@@ -69,6 +69,6 @@ bool operator!=(const Passthrough<U, CustomDeleter>& lhs, const T& rhs) {
   return !(lhs == rhs);
 }
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_PASSTHROUGH_H_

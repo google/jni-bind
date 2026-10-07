@@ -25,6 +25,7 @@
 #include "jni_bind.h"
 #include "jni_test.h"
 
+using ::bind_lang::metaprogramming::TypeToTypeMapQuery_t;
 using ::jni::AsDecl_t;
 using ::jni::Class;
 using ::jni::ClassLoader;
@@ -32,7 +33,6 @@ using ::jni::GlobalObject;
 using ::jni::LocalObject;
 using ::jni::Proxy_t;
 using ::jni::Return_t;
-using ::jni::metaprogramming::TypeToTypeMapQuery_t;
 using ::jni::test::JniTest;
 
 namespace jni {

@@ -26,7 +26,7 @@
 #include "type_index_mask.h"
 #include "type_of_nth_element.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename...>
 struct NBitSequence {};
@@ -98,6 +98,6 @@ struct NBitSequence<NBit<values, max_values, overflows>...> {
       Sequence, sequence_size_, std::make_index_sequence<sequence_size_>>::type;
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_N_BIT_SEQUENCE_H_

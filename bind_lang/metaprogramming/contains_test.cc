@@ -20,9 +20,9 @@
 
 namespace {
 
-using ::jni::metaprogramming::Contains_v;
-using ::jni::metaprogramming::ContainsValue;
-using ::jni::metaprogramming::TupContains_v;
+using ::bind_lang::metaprogramming::Contains_v;
+using ::bind_lang::metaprogramming::ContainsValue;
+using ::bind_lang::metaprogramming::TupContains_v;
 
 struct A {};
 

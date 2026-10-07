@@ -23,8 +23,8 @@
 
 namespace {
 
-using ::jni::metaprogramming::Conditional_t;
-using ::jni::metaprogramming::Same;
+using ::bind_lang::metaprogramming::Conditional_t;
+using ::bind_lang::metaprogramming::Same;
 
 struct A {};
 struct B {};

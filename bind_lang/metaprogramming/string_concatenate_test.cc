@@ -4,7 +4,7 @@
 
 namespace {
 
-using ::jni::metaprogramming::StringConcatenate_v;
+using ::bind_lang::metaprogramming::StringConcatenate_v;
 
 // Empty list string concatenation.
 static constexpr auto kVoidSetResultsInVoid = StringConcatenate_v<>;

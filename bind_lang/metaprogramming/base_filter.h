@@ -22,7 +22,7 @@
 
 #include "concatenate.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Returns all elements derived from DesiredBase.
 //
@@ -65,6 +65,6 @@ using BaseFilterWithDefault_t =
     DefaultIfEmpty_Tup<BaseFilter_t<DesiredBase, Ts...>,
                        std::tuple<DefaultValue>>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_BASE_FILTER_H_

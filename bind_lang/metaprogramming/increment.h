@@ -19,7 +19,7 @@
 
 #include <cstddef>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction to increment types a certain number of times.
 // Types must export a type alias "Increment" which increments the type once.
@@ -42,6 +42,6 @@ struct Increment {
 template <typename T, std::size_t I = 1>
 using Increment_t = typename Increment<I>::template type<T>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_INCREMENT_H_

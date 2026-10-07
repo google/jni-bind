@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 
-using ::jni::metaprogramming::OptionalTup_t;
+using ::bind_lang::metaprogramming::OptionalTup_t;
 
 namespace {
 

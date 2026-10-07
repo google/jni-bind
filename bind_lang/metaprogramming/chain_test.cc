@@ -23,11 +23,11 @@
 #include "invoke.h"
 #include "same.h"
 
-using ::jni::metaprogramming::Chain;
-using ::jni::metaprogramming::Increment;
-using ::jni::metaprogramming::Increment_t;
-using ::jni::metaprogramming::Invoke_t;
-using ::jni::metaprogramming::Same;
+using ::bind_lang::metaprogramming::Chain;
+using ::bind_lang::metaprogramming::Increment;
+using ::bind_lang::metaprogramming::Increment_t;
+using ::bind_lang::metaprogramming::Invoke_t;
+using ::bind_lang::metaprogramming::Same;
 
 namespace {
 

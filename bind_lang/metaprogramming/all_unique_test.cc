@@ -20,8 +20,8 @@
 
 namespace {
 
-using ::jni::metaprogramming::AllUnique_v;
-using ::jni::metaprogramming::AllUniqueValues;
+using ::bind_lang::metaprogramming::AllUnique_v;
+using ::bind_lang::metaprogramming::AllUniqueValues;
 
 static_assert(AllUnique_v<>);
 static_assert(AllUnique_v<void>);

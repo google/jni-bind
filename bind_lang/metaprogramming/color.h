@@ -20,7 +20,7 @@
 #include <string>
 #include <string_view>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 struct Color {
   static constexpr std::string_view kNone{"\033[0m"};
@@ -71,6 +71,6 @@ inline std::string Colorize(std::string_view colour, std::string_view str,
                           std::string{Color::kNone};
 }
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_COLOR_H_

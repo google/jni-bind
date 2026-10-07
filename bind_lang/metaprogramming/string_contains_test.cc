@@ -18,7 +18,7 @@
 
 #include <string_view>
 
-using ::jni::metaprogramming::StringContains_v;
+using ::bind_lang::metaprogramming::StringContains_v;
 
 namespace {
 

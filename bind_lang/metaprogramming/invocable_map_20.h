@@ -26,7 +26,7 @@
 #include "modified_max.h"
 #include "string_literal.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // This class enables compile time lookup that perfectly forward arguments
 // to a method named `Call`.  This is a C++ 20 version of InvocableMap.
@@ -93,6 +93,6 @@ class InvocableMap20 {
 #endif  // __cplusplus >= 202002L
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_INVOCABLE_MAP_20_H_

@@ -21,7 +21,7 @@
 
 #include "tuple_manipulation.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename Func>
 struct Any {
@@ -42,6 +42,6 @@ using Any_Tup = TupleUnroller_t<Any<Func>, Ts>;
 template <typename Func, typename Ts>
 static constexpr bool Any_Tup_v = TupleUnroller_t<Any<Func>, Ts>::value;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_ANY_H_

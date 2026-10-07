@@ -23,9 +23,9 @@
 
 namespace {
 
-using ::jni::metaprogramming::Combine;
-using ::jni::metaprogramming::Combine_t;
-using ::jni::metaprogramming::Reduce_t;
+using ::bind_lang::metaprogramming::Combine;
+using ::bind_lang::metaprogramming::Combine_t;
+using ::bind_lang::metaprogramming::Reduce_t;
 
 struct A {};
 struct B {};

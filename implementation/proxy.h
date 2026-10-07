@@ -43,7 +43,7 @@ template <typename t1, typename t2 = void>
 struct Proxy;
 
 // CDecls for all declarable types (these index into proxy definitions).
-using AllKeys = metaprogramming::Corpus_t<
+using AllKeys = bind_lang::metaprogramming::Corpus_t<
     JniUserDefinedCorpusTag, void, jboolean, jbyte, jshort, jint, jfloat, jlong,
     jchar, jdouble, jstring, jobject, Self, jarray, jobjectArray, jintArray,
     jbooleanArray, jbyteArray, jcharArray, jshortArray, jdoubleArray,
@@ -59,31 +59,33 @@ struct ProxyHelper {
   struct IndexToKey {
     // Proxies can be indexed by their |AsArg|s or their |AsDecl|.
     template <typename CDecl>
-    using type = metaprogramming::CartesianProduct_t<
+    using type = bind_lang::metaprogramming::CartesianProduct_t<
         std::tuple<CDecl>,
-        metaprogramming::UniqueSet_Tup<metaprogramming::ConcatenateTup_t<
-            typename Proxy<CDecl>::AsArg, typename Proxy<CDecl>::AsDecl>>>;
+        bind_lang::metaprogramming::UniqueSet_Tup<
+            bind_lang::metaprogramming::ConcatenateTup_t<
+                typename Proxy<CDecl>::AsArg, typename Proxy<CDecl>::AsDecl>>>;
   };
 
   // Build a list of two element tuples (in preparation to build a map).  e.g.
   // { {jint, int}, {jstring, const char*}, {jstring, std::string}, etc. }.
   // Note that types may map to 1 or more types, such as jstring above.
-  using IndexToKeyAsTuples = metaprogramming::Reduce_t<
-      metaprogramming::Combine,
-      metaprogramming::InvokePerTupArg_t<IndexToKey, AllKeys>>;
+  using IndexToKeyAsTuples = bind_lang::metaprogramming::Reduce_t<
+      bind_lang::metaprogramming::Combine,
+      bind_lang::metaprogramming::InvokePerTupArg_t<IndexToKey, AllKeys>>;
 
   // Collapse this list into a set of keys and values consumable by
   // TypeToTypeMap.
-  using IndexToKeyMap = metaprogramming::TypeToTypeMapFromKeyValuesTup_t<
-      metaprogramming::Flatten_t<IndexToKeyAsTuples>>;
+  using IndexToKeyMap =
+      bind_lang::metaprogramming::TypeToTypeMapFromKeyValuesTup_t<
+          bind_lang::metaprogramming::Flatten_t<IndexToKeyAsTuples>>;
 
   // When flipped, a type passed can be reverse indexed to select the same
   // Proxy partial specialisation.
-  using KeyToIndex = metaprogramming::TypeToTypeMap_Invert<IndexToKeyMap>;
+  using KeyToIndex =
+      bind_lang::metaprogramming::TypeToTypeMap_Invert<IndexToKeyMap>;
 
-  using Index =
-      metaprogramming::TypeToTypeMapQueryWithComparator_t<KeyToIndex,
-                                                          IsConvertibleKey<T>>;
+  using Index = bind_lang::metaprogramming::TypeToTypeMapQueryWithComparator_t<
+      KeyToIndex, IsConvertibleKey<T>>;
 
   using Proxy_t = Proxy<Index>;
 

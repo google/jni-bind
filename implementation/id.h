@@ -218,7 +218,7 @@ struct Id {
   }
   static constexpr std::string_view kName = Name();
   static constexpr std::string_view kNameUsingDots =
-      metaprogramming::Replace_v<kName, '/', '.'>;
+      bind_lang::metaprogramming::Replace_v<kName, '/', '.'>;
 
   static constexpr std::size_t NumParams() {
     if constexpr (kIdType == IdType::OVERLOAD ||

@@ -18,8 +18,8 @@
 
 namespace {
 
-using ::jni::metaprogramming::PackDiscriminator_e;
-using ::jni::metaprogramming::PackType;
+using ::bind_lang::metaprogramming::PackDiscriminator_e;
+using ::bind_lang::metaprogramming::PackType;
 
 static constexpr bool kVal1 = false;
 static constexpr bool kVal2 = false;

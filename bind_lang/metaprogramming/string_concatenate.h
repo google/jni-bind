@@ -21,7 +21,7 @@
 #include <cstddef>
 #include <string_view>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 struct StringConcatenate {
   template <std::string_view const&... Vs>
@@ -53,6 +53,6 @@ struct StringConcatenate {
 template <std::string_view const&... Vs>
 static constexpr auto StringConcatenate_v = StringConcatenate::value<Vs...>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_STRING_CONCATENATE_H_

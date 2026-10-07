@@ -17,12 +17,12 @@
 #ifndef JNI_BIND_BIND_LANG_METAPROGRAMMING_CORPUS_TAG_H_
 #define JNI_BIND_BIND_LANG_METAPROGRAMMING_CORPUS_TAG_H_
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Provide a partial specialization to this class to provide custom types.
 template <typename T>
 struct UserDefined;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_CORPUS_TAG_H_

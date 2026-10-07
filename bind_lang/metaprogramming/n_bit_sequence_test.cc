@@ -23,9 +23,9 @@
 
 namespace {
 
-using ::jni::metaprogramming::Increment_t;
-using ::jni::metaprogramming::NBit;
-using ::jni::metaprogramming::NBitSequence;
+using ::bind_lang::metaprogramming::Increment_t;
+using ::bind_lang::metaprogramming::NBit;
+using ::bind_lang::metaprogramming::NBitSequence;
 
 // 1 binary value.
 using T1 = NBitSequence<NBit<0, 1>>;

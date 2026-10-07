@@ -20,11 +20,11 @@
 
 namespace {
 
-using ::jni::metaprogramming::Vals;
-using ::jni::metaprogramming::ValsConst;
-using ::jni::metaprogramming::ValsConstRef;
-using ::jni::metaprogramming::ValsEqual_v;
-using ::jni::metaprogramming::ValsRef;
+using ::bind_lang::metaprogramming::Vals;
+using ::bind_lang::metaprogramming::ValsConst;
+using ::bind_lang::metaprogramming::ValsConstRef;
+using ::bind_lang::metaprogramming::ValsEqual_v;
+using ::bind_lang::metaprogramming::ValsRef;
 
 template <const auto... Vs>
 struct A {};

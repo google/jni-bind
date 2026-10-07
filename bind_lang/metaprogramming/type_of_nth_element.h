@@ -21,7 +21,7 @@
 
 #include "unwrap.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <std::size_t N>
 struct TypeOfNthElement {
@@ -48,6 +48,6 @@ using TypeOfNthElement_t = typename TypeOfNthElement<N>::template type<Ts...>;
 template <std::size_t N, typename TupType>
 using TypeOfNthTupleElement_t = Unwrap_t<TypeOfNthElement<N>, TupType>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_TYPE_OF_NTH_ELEMENT_H_

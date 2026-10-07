@@ -18,7 +18,7 @@
 
 #include <gtest/gtest.h>
 
-using ::jni::metaprogramming::Passthrough;
+using ::bind_lang::metaprogramming::Passthrough;
 
 template <typename T>
 struct ReleaseObjectRef {

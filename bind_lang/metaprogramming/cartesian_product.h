@@ -26,7 +26,7 @@
 #include "n_bit_sequence.h"
 #include "type_of_nth_element.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction that takes a list of tuples, and creates a counter where each
 // value is the size of the corresponding tuple.  This can be used to create
@@ -100,6 +100,6 @@ struct CartesianProduct {
 template <typename... Tups>
 using CartesianProduct_t = typename CartesianProduct::template type<Tups...>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_CARTESIAN_PRODUCT_H_

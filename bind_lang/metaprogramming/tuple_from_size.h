@@ -21,7 +21,7 @@
 #include <tuple>
 #include <utility>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <class T, std::size_t>
 using T_ = T;
@@ -40,6 +40,6 @@ auto TupleFromSize() {
 template <class DefaultType, std::size_t N>
 using TupleFromSize_t = decltype(TupleFromSize<DefaultType, N>());
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_TUPLE_FROM_SIZE_H_

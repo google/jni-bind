@@ -20,8 +20,8 @@
 
 namespace {
 
-using ::jni::metaprogramming::Increment_t;
-using ::jni::metaprogramming::NBit;
+using ::bind_lang::metaprogramming::Increment_t;
+using ::bind_lang::metaprogramming::NBit;
 
 // Unary
 static_assert(NBit<0, 0>::value_ == 0);

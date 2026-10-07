@@ -19,7 +19,7 @@
 
 #include "tuple_manipulation.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction for a left fold reduction of a sequence of types with an
 // operation. Single element sequences return the input type with no use of
@@ -66,6 +66,6 @@ template <typename Operation, typename TupleOfTs>
 static constexpr auto ReduceAsPack_v =
     TupleUnroller_t<Reduce<Operation>, TupleOfTs>::val;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_REDUCE_H_

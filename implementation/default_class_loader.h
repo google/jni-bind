@@ -29,7 +29,7 @@ namespace jni {
 
 static constexpr std::size_t kDefaultClassLoaderIdx = 0;
 static constexpr std::size_t kClassNotInLoaderSetIdx =
-    metaprogramming::kNegativeOne;
+    bind_lang::metaprogramming::kNegativeOne;
 
 // Class loader that can supply any class (to be used when none is specified).
 // Setting this as the root loader for user defined classes will disable checks

@@ -118,8 +118,8 @@ class JvmRef : public JvmRefBase {
               std::tuple_size_v<decltype(jvm_v_.class_loaders_)>>());
 
       auto& default_loaded_class_list = DefaultRefs<jclass>();
-      for (metaprogramming::DoubleLockedValue<jclass>* maybe_loaded_class_id :
-           default_loaded_class_list) {
+      for (bind_lang::metaprogramming::DoubleLockedValue<jclass>*
+               maybe_loaded_class_id : default_loaded_class_list) {
         maybe_loaded_class_id->Reset([](jclass clazz) {
           LifecycleHelper<jobject, LifecycleType::GLOBAL>::Delete(clazz);
         });
@@ -130,8 +130,8 @@ class JvmRef : public JvmRefBase {
     if (kConfiguration.release_method_ids_on_teardown_) {
       // Methods do not need to be released, just forgotten.
       auto& default_loaded_method_ref_list = DefaultRefs<jmethodID>();
-      for (metaprogramming::DoubleLockedValue<jmethodID>* cached_method_id :
-           default_loaded_method_ref_list) {
+      for (bind_lang::metaprogramming::DoubleLockedValue<jmethodID>*
+               cached_method_id : default_loaded_method_ref_list) {
         cached_method_id->Reset();
       }
       default_loaded_method_ref_list.clear();
@@ -140,8 +140,8 @@ class JvmRef : public JvmRefBase {
     if (kConfiguration.release_field_ids_on_teardown_) {
       // Fields do not need to be released, just forgotten.
       auto& default_loaded_field_ref_list = GetDefaultLoadedFieldList();
-      for (metaprogramming::DoubleLockedValue<jfieldID>* cached_field_id :
-           default_loaded_field_ref_list) {
+      for (bind_lang::metaprogramming::DoubleLockedValue<jfieldID>*
+               cached_field_id : default_loaded_field_ref_list) {
         cached_field_id->Reset();
       }
       default_loaded_field_ref_list.clear();

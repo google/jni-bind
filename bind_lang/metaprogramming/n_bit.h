@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <cstddef>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Represents a value that can be [0, max], and an overflow bit.
 // When incremented, the type will rollover, and set its overflow bit.
@@ -37,6 +37,6 @@ struct NBit {
   using ResetOverflow = NBit<cur_value, max, false>;
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_N_BIT_H_

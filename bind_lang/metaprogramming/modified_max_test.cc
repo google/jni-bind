@@ -20,8 +20,8 @@
 
 namespace {
 
-using ::jni::metaprogramming::kNegativeOne;
-using ::jni::metaprogramming::ModifiedMax;
+using ::bind_lang::metaprogramming::kNegativeOne;
+using ::bind_lang::metaprogramming::ModifiedMax;
 
 // Null sets work.
 static_assert(ModifiedMax({}) == kNegativeOne);

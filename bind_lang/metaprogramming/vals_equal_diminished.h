@@ -19,7 +19,7 @@
 
 #include "bind_lang/metaprogramming/vals.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // This class is a diminished form of `ValsEqual` that treats everything as an
 //  auto const&. Unfortunately, MSVC appears to have a bug that makes compiling
@@ -57,6 +57,6 @@ template <const auto& V1, const auto& V2>
 static constexpr bool ValsEqualDiminished_cr_v =
     ValsEqualDiminished<ValsConstRef<V1>>::template val<ValsConstRef<V2>>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_VALS_EQUAL_DIMINISHED_H_

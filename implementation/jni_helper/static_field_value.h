@@ -35,8 +35,8 @@ template <>
 struct FieldHelper<jboolean, 0, true, void> {
   static inline jboolean GetValue(const jclass clazz,
                                   const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticBooleanField")), clazz,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStaticBooleanField")),
+          clazz, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jboolean>();
@@ -47,8 +47,8 @@ struct FieldHelper<jboolean, 0, true, void> {
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jboolean&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticBooleanField")), clazz,
-          field_ref_, value);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetStaticBooleanField")),
+          clazz, field_ref_, value);
 
 #ifdef DRY_RUN
 #else
@@ -60,8 +60,8 @@ struct FieldHelper<jboolean, 0, true, void> {
 template <>
 struct FieldHelper<jbyte, 0, true, void> {
   static inline jbyte GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticByteField")), clazz,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStaticByteField")),
+          clazz, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jbyte>();
@@ -72,8 +72,8 @@ struct FieldHelper<jbyte, 0, true, void> {
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jbyte&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticByteField")), clazz,
-          field_ref_, value);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetStaticByteField")),
+          clazz, field_ref_, value);
 
 #ifdef DRY_RUN
 #else
@@ -85,8 +85,8 @@ struct FieldHelper<jbyte, 0, true, void> {
 template <>
 struct FieldHelper<jchar, 0, true, void> {
   static inline jchar GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticCharField")), clazz,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStaticCharField")),
+          clazz, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jchar>();
@@ -97,8 +97,8 @@ struct FieldHelper<jchar, 0, true, void> {
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jchar&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticCharField")), clazz,
-          field_ref_, value);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetStaticCharField")),
+          clazz, field_ref_, value);
 
 #ifdef DRY_RUN
 #else
@@ -110,8 +110,8 @@ struct FieldHelper<jchar, 0, true, void> {
 template <>
 struct FieldHelper<jshort, 0, true, void> {
   static inline jshort GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticShortField")), clazz,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStaticShortField")),
+          clazz, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jshort>();
@@ -122,8 +122,8 @@ struct FieldHelper<jshort, 0, true, void> {
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jshort&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticShortField")), clazz,
-          field_ref_, value);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetStaticShortField")),
+          clazz, field_ref_, value);
 
 #ifdef DRY_RUN
 #else
@@ -135,8 +135,8 @@ struct FieldHelper<jshort, 0, true, void> {
 template <>
 struct FieldHelper<jint, 0, true, void> {
   static inline jint GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticIntField")), clazz,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStaticIntField")),
+          clazz, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jint>();
@@ -147,8 +147,8 @@ struct FieldHelper<jint, 0, true, void> {
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jint&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticIntField")), clazz,
-          field_ref_, value);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetStaticIntField")),
+          clazz, field_ref_, value);
 
 #ifdef DRY_RUN
 #else
@@ -160,8 +160,8 @@ struct FieldHelper<jint, 0, true, void> {
 template <>
 struct FieldHelper<jlong, 0, true, void> {
   static inline jlong GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticLongField")), clazz,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStaticLongField")),
+          clazz, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jlong>();
@@ -172,8 +172,8 @@ struct FieldHelper<jlong, 0, true, void> {
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jlong&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticLongField")), clazz,
-          field_ref_, value);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetStaticLongField")),
+          clazz, field_ref_, value);
 
 #ifdef DRY_RUN
 #else
@@ -185,8 +185,8 @@ struct FieldHelper<jlong, 0, true, void> {
 template <>
 struct FieldHelper<jfloat, 0, true, void> {
   static inline jfloat GetValue(const jclass clazz, const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticFloatField")), clazz,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStaticFloatField")),
+          clazz, field_ref_);
 
 #ifdef DRY_RUN
     return 123.f;
@@ -197,8 +197,8 @@ struct FieldHelper<jfloat, 0, true, void> {
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jfloat&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticFloatField")), clazz,
-          field_ref_, value);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetStaticFloatField")),
+          clazz, field_ref_, value);
 
 #ifdef DRY_RUN
 #else
@@ -211,8 +211,8 @@ template <>
 struct FieldHelper<jdouble, 0, true, void> {
   static inline jdouble GetValue(const jclass clazz,
                                  const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticDoubleField")), clazz,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStaticDoubleField")),
+          clazz, field_ref_);
 
 #ifdef DRY_RUN
     return 123.;
@@ -223,8 +223,8 @@ struct FieldHelper<jdouble, 0, true, void> {
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jdouble&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticDoubleField")), clazz,
-          field_ref_, value);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetStaticDoubleField")),
+          clazz, field_ref_, value);
 
 #ifdef DRY_RUN
 #else
@@ -237,8 +237,8 @@ template <>
 struct FieldHelper<jobject, 0, true, void> {
   static inline jobject GetValue(const jclass clazz,
                                  const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStaticObjectField")),
+          clazz, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jobject>();
@@ -249,8 +249,8 @@ struct FieldHelper<jobject, 0, true, void> {
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jobject&& new_value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
-          field_ref_, new_value);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetStaticObjectField")),
+          clazz, field_ref_, new_value);
 
 #ifdef DRY_RUN
 #else
@@ -263,8 +263,8 @@ template <>
 struct FieldHelper<jstring, 0, true, void> {
   static inline jstring GetValue(const jclass clazz,
                                  const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField")), clazz,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetStaticObjectField")),
+          clazz, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<jstring>();
@@ -276,8 +276,8 @@ struct FieldHelper<jstring, 0, true, void> {
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jstring&& new_value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField")), clazz,
-          field_ref_, new_value);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetStaticObjectField")),
+          clazz, field_ref_, new_value);
 
 #ifdef DRY_RUN
 #else
@@ -293,8 +293,8 @@ template <typename ArrayType>
 struct StaticBaseFieldArrayHelper {
   static inline ArrayType GetValue(const jobject object_ref,
                                    const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetObjectField")), object_ref,
-          field_ref_);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("GetObjectField")),
+          object_ref, field_ref_);
 
 #ifdef DRY_RUN
     return Fake<ArrayType>();
@@ -306,8 +306,8 @@ struct StaticBaseFieldArrayHelper {
 
   static inline void SetValue(const jobject object_ref,
                               const jfieldID field_ref_, ArrayType&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetObjectField")), object_ref,
-          field_ref_, value);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("SetObjectField")),
+          object_ref, field_ref_, value);
 
 #ifdef DRY_RUN
 #else
@@ -358,7 +358,8 @@ struct FieldHelper<
     std::enable_if_t<(std::is_same_v<jobject, T> || (kRank > 1))> > {
   static inline jobjectArray GetValue(const jclass clazz,
                                       const jfieldID field_ref_) {
-    Trace(metaprogramming::LambdaToStr(STR("GetStaticObjectField, Rank 1+")),
+    Trace(bind_lang::metaprogramming::LambdaToStr(
+              STR("GetStaticObjectField, Rank 1+")),
           clazz, field_ref_);
 
 #ifdef DRY_RUN
@@ -371,7 +372,8 @@ struct FieldHelper<
 
   static inline void SetValue(const jclass clazz, const jfieldID field_ref_,
                               jobjectArray&& value) {
-    Trace(metaprogramming::LambdaToStr(STR("SetStaticObjectField, Rank 1+")),
+    Trace(bind_lang::metaprogramming::LambdaToStr(
+              STR("SetStaticObjectField, Rank 1+")),
           clazz, field_ref_, value);
 
 #ifdef DRY_RUN

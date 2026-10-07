@@ -21,7 +21,7 @@
 #include <string_view>
 #include <utility>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <char sought>
 struct StringContains {
@@ -42,6 +42,6 @@ template <const std::string_view& str, char sought>
 static constexpr bool StringContains_v =
     StringContains<sought>::template val<str>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_STRING_CONTAINS_H_

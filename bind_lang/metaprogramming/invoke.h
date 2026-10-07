@@ -23,7 +23,7 @@
 #include "tuple_manipulation.h"
 #include "unwrap.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // "Invokes" a metafunction (i.e. a type alias for Func::type).
 // Handles both variadic or non-variadic args for a consistent syntax.
@@ -67,6 +67,6 @@ template <typename Func, typename TupleOfTupleOfArgs>
 using InvokePerTupArgAsPack_t =
     InvokePerTupArg_t<Unwrap<Func>, TupleOfTupleOfArgs>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_INVOKE_H_

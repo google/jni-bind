@@ -22,7 +22,7 @@
 
 #include "tuple_manipulation.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <std::size_t Idx, typename T>
 struct IndexEntry {
@@ -50,6 +50,6 @@ using Index_t = typename Index::template type<Ts...>;
 template <typename Tup>
 using Index_Tup = TupleUnroller_t<Index, Tup>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_INDEX_H_

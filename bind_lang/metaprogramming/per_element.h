@@ -23,7 +23,7 @@
 
 #include "type_of_nth_element.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction that takes variadic arguments and applies a bound metafunction
 // to each element.  Type exposed will always be a tuple.  This is intended for
@@ -48,6 +48,6 @@ struct PerElement {
 template <typename Func, typename... Ts>
 using PerElement_t = typename PerElement<Func>::template type<Ts...>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_PER_ELEMENT_H_

@@ -21,8 +21,8 @@
 #include <type_traits>
 #include <utility>
 
-using ::jni::metaprogramming::ExtractTupleFromType_t;
-using ::jni::metaprogramming::TupleToType_t;
+using ::bind_lang::metaprogramming::ExtractTupleFromType_t;
+using ::bind_lang::metaprogramming::TupleToType_t;
 
 namespace {
 

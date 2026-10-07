@@ -22,7 +22,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Returns a null pointer of the type of the two input tuples interleaved.
 template <class Tuple1, class Tuple2, std::size_t... indices>
@@ -52,6 +52,6 @@ struct Interleaved<std::tuple<T0...>, std::tuple<T1...>> {
       decltype(Interleave<std::tuple<T0...>, std::tuple<T1...>>())>;
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_INTERLEAVE_H_

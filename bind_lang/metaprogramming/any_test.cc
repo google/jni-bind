@@ -21,11 +21,11 @@
 #include "invoke.h"
 #include "same.h"
 
-using ::jni::metaprogramming::Any;
-using ::jni::metaprogramming::Any_t;
-using ::jni::metaprogramming::Any_v;
-using ::jni::metaprogramming::Invoke_t;
-using ::jni::metaprogramming::Same;
+using ::bind_lang::metaprogramming::Any;
+using ::bind_lang::metaprogramming::Any_t;
+using ::bind_lang::metaprogramming::Any_v;
+using ::bind_lang::metaprogramming::Invoke_t;
+using ::bind_lang::metaprogramming::Same;
 
 namespace {
 

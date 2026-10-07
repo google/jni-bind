@@ -25,7 +25,7 @@
 
 namespace {
 
-using ::jni::metaprogramming::InvocableMap;
+using ::bind_lang::metaprogramming::InvocableMap;
 
 struct Str {
   const char* name_;
@@ -51,7 +51,7 @@ class SampleClassNowExposingCallOperator1
   template <typename CrtpBase, const auto& tup_container_v,
             typename TupContainerT, typename MemberT, MemberT nameable_member,
             size_t I>
-  friend class jni::metaprogramming::InvocableMapEntry;
+  friend class bind_lang::metaprogramming::InvocableMapEntry;
 
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... ts) const {
@@ -96,7 +96,7 @@ class SampleClassNowExposingCallOperator2
   template <typename CrtpBase, const auto& tup_container_v,
             typename TupContainerT, typename MemberT, MemberT nameable_member,
             size_t I>
-  friend class jni::metaprogramming::InvocableMapEntry;
+  friend class bind_lang::metaprogramming::InvocableMapEntry;
 
   template <size_t I, typename... Args>
   auto InvocableMapCall(const char* key, Args&&... args) const {

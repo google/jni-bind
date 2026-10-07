@@ -23,13 +23,13 @@
 #include "same.h"
 #include "unwrap.h"
 
-using ::jni::metaprogramming::All;
-using ::jni::metaprogramming::All_t;
-using ::jni::metaprogramming::All_v;
-using ::jni::metaprogramming::Invoke_t;
-using ::jni::metaprogramming::Same;
-using ::jni::metaprogramming::Unwrap;
-using ::jni::metaprogramming::Unwrap_t;
+using ::bind_lang::metaprogramming::All;
+using ::bind_lang::metaprogramming::All_t;
+using ::bind_lang::metaprogramming::All_v;
+using ::bind_lang::metaprogramming::Invoke_t;
+using ::bind_lang::metaprogramming::Same;
+using ::bind_lang::metaprogramming::Unwrap;
+using ::bind_lang::metaprogramming::Unwrap_t;
 
 namespace {
 

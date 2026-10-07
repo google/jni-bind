@@ -24,8 +24,8 @@
 #include "string_literal.h"
 #include <gtest/gtest.h>
 
-using jni::metaprogramming::InvocableMap20;
-using jni::metaprogramming::StringLiteral;
+using bind_lang::metaprogramming::InvocableMap20;
+using bind_lang::metaprogramming::StringLiteral;
 
 struct Str {
   const char* name_;

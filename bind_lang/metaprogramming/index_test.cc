@@ -21,9 +21,9 @@
 
 namespace {
 
-using ::jni::metaprogramming::Index_t;
-using ::jni::metaprogramming::Index_Tup;
-using ::jni::metaprogramming::IndexEntry;
+using ::bind_lang::metaprogramming::Index_t;
+using ::bind_lang::metaprogramming::Index_Tup;
+using ::bind_lang::metaprogramming::IndexEntry;
 
 struct A {};
 struct B {};

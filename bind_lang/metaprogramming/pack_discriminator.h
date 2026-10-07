@@ -17,7 +17,7 @@
 #ifndef JNI_BIND_BIND_LANG_METAPROGRAMMING_PACK_DISCRIMINATOR_H_
 #define JNI_BIND_BIND_LANG_METAPROGRAMMING_PACK_DISCRIMINATOR_H_
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 enum class PackType {
   NOT_CONTAINER,
@@ -76,6 +76,6 @@ struct PackDiscriminatedForward {
   using type = typename Helper<T>::type;
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_PACK_DISCRIMINATOR_H_

@@ -23,7 +23,7 @@
 #include "same.h"
 #include "tuple_manipulation.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename SoughtType, typename... Ts>
 using ContainsBase_t = Invoke_t<Any<Base<SoughtType>>, Ts...>;
@@ -39,6 +39,6 @@ template <typename SoughtType, typename Tup>
 static constexpr bool TupContainsBase_v =
     TupContainsBase_t<SoughtType, Tup>::value;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_CONTAINS_BASE_H_

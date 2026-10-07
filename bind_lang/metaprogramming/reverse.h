@@ -22,7 +22,7 @@
 #include "concatenate.h"
 #include "tuple_manipulation.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 struct Reverse {
   template <typename... Ts>
@@ -48,6 +48,6 @@ using Reverse_t = typename Reverse::template type<Ts...>;
 template <typename Tup>
 using Reverse_Tup = TupleUnroller_t<Reverse, Tup>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_REVERSE_H_

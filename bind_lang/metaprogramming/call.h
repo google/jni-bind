@@ -18,7 +18,7 @@
 
 #include <tuple>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Call takes a tuple of arguments and returns a tuple of elements
 // dereferenced once (with no arguments). Eventually, this should have
@@ -39,6 +39,6 @@ struct Call {
 template <typename T>
 using Call_t = typename Call::type<T>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_CALL_H_

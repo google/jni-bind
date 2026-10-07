@@ -22,7 +22,7 @@
 #include "concatenate.h"
 #include "conditional.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction for filtering elements that do or don't satisfy a given
 // metafunction.  The metafunction must expose a static constepxr boolean
@@ -51,6 +51,6 @@ struct Filter {
 template <typename Func, typename... Ts>
 using Filter_t = typename Filter<Func>::template type<Ts...>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_FILTER_H_

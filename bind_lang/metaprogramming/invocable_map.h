@@ -23,7 +23,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // This is an interface that can be inherited from to expose an operator(...).
 // It provides compile time string index lookup with no macros although it is
@@ -119,6 +119,6 @@ class InvocableMap
           std::make_index_sequence<std::tuple_size_v<
               std::decay_t<decltype(tup_container_v.*nameable_member)>>>> {};
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_INVOCABLE_MAP_H_

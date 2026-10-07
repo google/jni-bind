@@ -50,7 +50,8 @@ struct Class<Extends_, std::tuple<Constructors_...>,
              std::tuple<Methods_...>, std::tuple<Fields_...>> : public Object {
  public:
   // Filtering outputs a std::tuple<T>, the caller will use just T in ctor.
-  using ExtendsArgT = metaprogramming::TypeOfNthTupleElement_t<0, Extends_>;
+  using ExtendsArgT =
+      bind_lang::metaprogramming::TypeOfNthTupleElement_t<0, Extends_>;
 
   // The type of the parent class (default `RootObject`).
   const ExtendsStrip_t<Extends_> parent_;
@@ -208,14 +209,14 @@ constexpr bool operator!=(const Class<Ts...>& lhs, const NoClass&) {
 ////////////////////////////////////////////////////////////////////////////////
 template <typename... Params>
 Class(const char*, Params...)
-    -> Class<metaprogramming::BaseFilterWithDefault_t<
+    -> Class<bind_lang::metaprogramming::BaseFilterWithDefault_t<
                  ExtendsBase, Extends<RootObject>, Params...>,
-             metaprogramming::BaseFilterWithDefault_t<ConstructorBase,
-                                                      Constructor<>, Params...>,
-             metaprogramming::BaseFilterWithDefault_t<
+             bind_lang::metaprogramming::BaseFilterWithDefault_t<
+                 ConstructorBase, Constructor<>, Params...>,
+             bind_lang::metaprogramming::BaseFilterWithDefault_t<
                  StaticBase, Static<std::tuple<>, std::tuple<>>, Params...>,
-             metaprogramming::BaseFilter_t<MethodBase, Params...>,
-             metaprogramming::BaseFilter_t<FieldBase, Params...>>;
+             bind_lang::metaprogramming::BaseFilter_t<MethodBase, Params...>,
+             bind_lang::metaprogramming::BaseFilter_t<FieldBase, Params...>>;
 
 Class(const char*)
     -> Class<std::tuple<Extends<RootObject>>, std::tuple<Constructor<>>,

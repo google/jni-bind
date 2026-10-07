@@ -25,8 +25,8 @@
 
 #if __cplusplus >= 202002L
 
-using jni::metaprogramming::QueryableMap20;
-using jni::metaprogramming::StringLiteral;
+using bind_lang::metaprogramming::QueryableMap20;
+using bind_lang::metaprogramming::StringLiteral;
 
 struct Str {
   const char* name_;

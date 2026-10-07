@@ -20,7 +20,7 @@
 #include <optional>
 #include <tuple>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename>
 struct OptionalTup {};
@@ -35,6 +35,6 @@ struct OptionalTup<std::tuple<Ts...>> {
 template <typename... Ts>
 using OptionalTup_t = typename OptionalTup<Ts...>::type;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_OPTIONAL_WRAP_H_

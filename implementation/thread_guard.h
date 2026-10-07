@@ -79,13 +79,13 @@ class ThreadGuard {
     JavaVM* const vm = JvmRefBase::GetJavaVm();
     JNIEnv* jni_env = 0;
 
-    using TypeForGetEnv =
-        metaprogramming::FunctionTraitsArg_t<decltype(&JavaVM::GetEnv), 1>;
+    using TypeForGetEnv = bind_lang::metaprogramming::FunctionTraitsArg_t<
+        decltype(&JavaVM::GetEnv), 1>;
     const int code =
         vm->GetEnv(reinterpret_cast<TypeForGetEnv>(&jni_env), JNI_VERSION_1_6);
 
     if (code != JNI_OK) {
-      using TypeForAttachment = metaprogramming::FunctionTraitsArg_t<
+      using TypeForAttachment = bind_lang::metaprogramming::FunctionTraitsArg_t<
           decltype(&JavaVM::AttachCurrentThread), 1>;
       vm->AttachCurrentThread(reinterpret_cast<TypeForAttachment>(&jni_env),
                               nullptr);

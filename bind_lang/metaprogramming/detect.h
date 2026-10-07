@@ -20,7 +20,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction that detects a partial specialisation for a Container.
 template <template <typename> class Container>
@@ -50,6 +50,6 @@ using Detect_t = typename Detect<Container>::template type<T>;
 template <template <typename> class Container, typename T>
 static constexpr bool Detect_v = Detect<Container>::template val<T>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_DETECT_H_

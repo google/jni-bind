@@ -21,8 +21,8 @@
 
 #include <gtest/gtest.h>
 
-using ::jni::metaprogramming::Color;
-using ::jni::metaprogramming::Colorize;
+using ::bind_lang::metaprogramming::Color;
+using ::bind_lang::metaprogramming::Colorize;
 
 namespace {
 

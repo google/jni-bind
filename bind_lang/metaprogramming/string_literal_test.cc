@@ -18,7 +18,7 @@
 
 #include <cstddef>
 
-using jni::metaprogramming::StringLiteral;
+using bind_lang::metaprogramming::StringLiteral;
 
 namespace {
 

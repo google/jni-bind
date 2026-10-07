@@ -23,7 +23,7 @@
 #include "same.h"
 #include "tuple_manipulation.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Metafunction that binds a metafunction (e.g. Same), a query (e.g. "A"),  a
 // variadic pack as arguments, and returns the idx of the query.  All members
@@ -83,6 +83,6 @@ template <typename Query, typename TupType>
 static constexpr std::size_t FindIdxOfValInTup_idx =
     FindIdxOfValInTupWithComparator_idx<Same<Query>, TupType>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_FIND_IDX_OF_VAL_H_

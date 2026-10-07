@@ -21,7 +21,7 @@
 
 #include "bind_lang/metaprogramming/vals.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Performs a deep equality comparison of T, but is leniant about containers.
 // Returns true iff types are equal or both types are containers and their
@@ -84,6 +84,6 @@ template <const auto& V1, const auto& V2>
 static constexpr bool ValsEqual_cr_v =
     ValsEqual<ValsConstRef<V1>>::template val<ValsConstRef<V2>>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_VALS_EQUAL_H_

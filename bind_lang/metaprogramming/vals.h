@@ -19,7 +19,7 @@
 
 #include <array>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Wrapper to convert a sequence of values into a type.
 template <const auto val_>
@@ -55,6 +55,6 @@ struct ValsConstRef {
   static constexpr std::array val{Vs...};
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_VALS_H_

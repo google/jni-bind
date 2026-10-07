@@ -20,7 +20,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Helper struct for figuring out the contents of a tuple.  Use Unwrap if you
 // plan to use this as a metafunction (this breaks the paradigm as type is not
@@ -91,6 +91,6 @@ template <typename ContainerType>
 using ExtractTupleFromType_t =
     typename ExtractTupleFromType<ContainerType>::type;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_TUPLE_MANIPULATION_H_

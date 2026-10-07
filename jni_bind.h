@@ -53,6 +53,10 @@ static constexpr Configuration kConfig{
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_helper/static_field_value.h"
 
+namespace jni {
+namespace metaprogramming = ::bind_lang::metaprogramming;
+}  // namespace jni
+
 // Headers for static definitions.
 #include "implementation/array.h"
 #include "implementation/array_type_conversion.h"

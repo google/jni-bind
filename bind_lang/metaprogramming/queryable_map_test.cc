@@ -25,7 +25,7 @@
 
 namespace {
 
-using ::jni::metaprogramming::QueryableMap_t;
+using ::bind_lang::metaprogramming::QueryableMap_t;
 
 struct Str {
   const char* name_;
@@ -56,7 +56,7 @@ class SampleClassNowExposingCallOperator1
   template <typename CrtpBase, const auto& tup_container_v,
             typename TupContainerT, typename MemberT, MemberT nameable_member,
             size_t I>
-  friend class jni::metaprogramming::QueryableMapEntry;
+  friend class bind_lang::metaprogramming::QueryableMapEntry;
 
   template <size_t I>
   auto QueryableMapCall(const char* key) {
@@ -122,7 +122,7 @@ class SampleClassNowExposingCallOperator2
   template <typename CrtpBase, const auto& tup_container_v,
             typename TupContainerT, typename MemberT, MemberT nameable_member,
             size_t I>
-  friend class jni::metaprogramming::QueryableMapEntry;
+  friend class bind_lang::metaprogramming::QueryableMapEntry;
 
   template <size_t I>
   auto QueryableMapCall(const char* key) {

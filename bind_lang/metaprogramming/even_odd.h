@@ -21,7 +21,7 @@
 
 #include "concatenate.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename... Ts>
 struct EvenHelper {};
@@ -68,6 +68,6 @@ struct Odd {
 template <typename... Ts>
 using Odd_t = typename Odd::template type<Ts...>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_EVEN_ODD_H_

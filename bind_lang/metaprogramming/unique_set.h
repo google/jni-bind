@@ -25,7 +25,7 @@
 #include "reverse.h"
 #include "tuple_manipulation.h"
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // Builds a stable (i.e. first unique type is preserved) set of unique types
 // from a set.
@@ -64,6 +64,6 @@ using UniqueSet_t = typename UniqueSet::template type<Ts...>;
 template <typename Tup>
 using UniqueSet_Tup = TupleUnroller_t<UniqueSet, Tup>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_UNIQUE_SET_H_

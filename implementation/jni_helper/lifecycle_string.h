@@ -29,7 +29,7 @@ template <>
 struct LifecycleHelper<jstring, LifecycleType::LOCAL>
     : public LifecycleLocalBase<jstring> {
   static inline jstring Construct(const char* chars) {
-    Trace(metaprogramming::LambdaToStr(STR("NewStringUTF")), chars);
+    Trace(bind_lang::metaprogramming::LambdaToStr(STR("NewStringUTF")), chars);
 
 #ifdef DRY_RUN
     return Fake<jstring>();

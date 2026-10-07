@@ -19,8 +19,8 @@
 #include <tuple>
 #include <type_traits>
 
-using ::jni::metaprogramming::Even_t;
-using ::jni::metaprogramming::Odd_t;
+using ::bind_lang::metaprogramming::Even_t;
+using ::bind_lang::metaprogramming::Odd_t;
 
 namespace {
 

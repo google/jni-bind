@@ -20,7 +20,7 @@
 #include <cstddef>
 #include <utility>
 
-using ::jni::metaprogramming::PerElementVal_v;
+using ::bind_lang::metaprogramming::PerElementVal_v;
 
 namespace {
 

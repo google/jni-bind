@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-using ::jni::metaprogramming::Singleton;
+using ::bind_lang::metaprogramming::Singleton;
 
 namespace {
 

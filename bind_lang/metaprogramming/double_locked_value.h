@@ -20,7 +20,7 @@
 #include <atomic>
 #include <mutex>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // This class is intended to mimic a function local static except that it
 // supports being reset. The object is constructed with a lambda and all
@@ -79,6 +79,6 @@ class DoubleLockedValue {
   std::mutex lock_;
 };
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_DOUBLE_LOCKED_VALUE_H_

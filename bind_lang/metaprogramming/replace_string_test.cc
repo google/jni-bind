@@ -18,7 +18,7 @@
 
 #include <string_view>
 
-using ::jni::metaprogramming::Replace_v;
+using ::bind_lang::metaprogramming::Replace_v;
 
 namespace {
 

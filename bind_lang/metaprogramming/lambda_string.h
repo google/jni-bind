@@ -24,7 +24,7 @@
 
 #define STR(x) []() { return x; }
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 template <typename Identifier>
 using identifier_type = decltype(std::declval<Identifier>()());
@@ -61,6 +61,6 @@ constexpr auto LambdaToStr(Identifier id) {
 template <typename NameLambda>
 using LambdaStringToType = decltype(LambdaToStr(std::declval<NameLambda>()));
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_LAMBDA_STRING_H_

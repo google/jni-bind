@@ -20,7 +20,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace jni::metaprogramming {
+namespace bind_lang::metaprogramming {
 
 // For a given Func which takes values, returns std::tuple<Ts...> if
 // Func<Ts...>::value is true, otherwise returns std::tuple. Func must have a
@@ -38,6 +38,6 @@ struct Conditional {
 template <typename Func, typename... Ts>
 using Conditional_t = typename Conditional<Func>::template type<Ts...>;
 
-}  // namespace jni::metaprogramming
+}  // namespace bind_lang::metaprogramming
 
 #endif  // JNI_BIND_BIND_LANG_METAPROGRAMMING_CONDITIONAL_H_
