@@ -25,18 +25,16 @@
 #include <vector>
 
 #include "bind_lang/metaprogramming/double_locked_value.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/configuration.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_selection.h"
 #include "implementation/id.h"
-#include "implementation/id_type.h"
 #include "implementation/jni_helper/field_value.h"
 #include "implementation/jni_helper/jni_helper.h"
-#include "implementation/no_idx.h"
 #include "implementation/promotion_mechanics_tags.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/proxy_temporary.h"
-#include "implementation/ref_base.h"
 #include "implementation/signature.h"
 #include "jni_dep.h"
 

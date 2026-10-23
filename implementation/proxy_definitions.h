@@ -23,8 +23,8 @@
 #include <tuple>
 #include <type_traits>
 
+#include "implementation/bind_lang_imports.h"
 #include "implementation/forward_declarations.h"
-#include "implementation/id_type.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
@@ -32,7 +32,6 @@
 #include "implementation/object.h"
 #include "implementation/proxy.h"
 #include "implementation/proxy_convenience_aliases.h"
-#include "implementation/ref_base.h"
 #include "implementation/self.h"
 #include "jni_dep.h"
 
@@ -73,50 +72,17 @@ struct Proxy<VoidType,
 template <typename CharType>
 struct Proxy<CharType,
              typename std::enable_if_t<std::is_same_v<CharType, jchar>>>
-    : public ProxyBase<jchar> {
-  using AsArg = std::tuple<char, jchar>;
-  using AsDecl = std::tuple<char, jchar>;
-
-  template <typename OverloadSelection, typename T>
-  static constexpr bool kViable = IsConvertibleKey<T>::template value<char> ||
-                                  IsConvertibleKey<T>::template value<jchar>;
-};
+    : public ConvertibleIntegralProxyBase<jchar, char, jchar> {};
 
 template <typename BooleanType>
 struct Proxy<BooleanType,
              typename std::enable_if_t<std::is_same_v<BooleanType, jboolean>>>
-    : public ProxyBase<jboolean> {
-  using AsArg = std::tuple<jboolean, bool>;
-  using AsDecl = std::tuple<jboolean, bool>;
-
-  template <typename OverloadSelection, typename T>
-  static constexpr bool kViable =
-      IsConvertibleKey<T>::template value<jboolean> ||
-      IsConvertibleKey<T>::template value<bool>;
-};
+    : public ConvertibleIntegralProxyBase<jboolean, jboolean, bool> {};
 
 template <typename LongType>
 struct Proxy<LongType,
              typename std::enable_if_t<std::is_same_v<LongType, jlong>>>
-    : public ProxyBase<jlong> {
-  using AsArg = std::tuple<long, jlong>;
-  using AsDecl = std::tuple<long, jlong>;
-
-  template <typename OverloadSelection, typename T>
-  static constexpr bool kViable = IsConvertibleKey<T>::template value<long> ||
-                                  IsConvertibleKey<T>::template value<jlong>;
-
-  static jlong ProxyAsArg(jlong val) { return val; }
-
-  // jlong is a smaller type on ARM than x86.
-  // When jlong is not equivalent, we upcast to the wider type.
-  template <typename T,
-            typename = std::enable_if_t<std::is_same_v<T, long> &&
-                                        !std::is_same_v<jlong, long>>>
-  static jlong ProxyAsArg(T val) {
-    return jlong{val};
-  }
-};
+    : public ConvertibleIntegralProxyBase<jlong, long, jlong> {};  // NOLINT
 
 ////////////////////////////////////////////////////////////////////////////////
 // Object Proxy Definitions.
@@ -124,10 +90,7 @@ struct Proxy<LongType,
 template <typename JObject>
 struct Proxy<JObject,
              typename std::enable_if_t<std::is_same_v<JObject, jobject>>>
-    : public ProxyBase<jobject> {
-  using AsDecl = std::tuple<Object>;
-  using AsArg = std::tuple<jobject, RefBase<jobject>, LoaderTag>;
-
+    : public ObjectProxyBase<jobject, Object, LoaderTag> {
   template <typename InputParamSelectionT, typename T>
   struct ContextualViabilityHelper {
     // TODO(b/143908983): This is overly permissive, see method_selection_test.
@@ -162,26 +125,12 @@ struct Proxy<JObject,
     static constexpr auto kClass{Id::Val()};
     static constexpr auto kClassLoader{Id::_JniT::GetClassLoader()};
 
-    // TODO(b/174272629): Class loaders should also be enforced.
+    // TODO(b/143908983): Class loaders should also be enforced.
     using type = LocalObject<kClass, kClassLoader, kDefaultJvm>;
   };
 
   template <typename Id>
   using AsReturn = typename Helper<Id>::type;
-
-  static jobject ProxyAsArg(jobject obj) { return obj; };
-
-  // Applies for both local and global.
-  template <typename T>
-  static jobject ProxyAsArg(T& t) {
-    return jobject{t};
-  };
-
-  // Applies for both local and global.
-  template <typename T>
-  static jobject ProxyAsArg(T&& t) {
-    return t.Release();
-  };
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +151,7 @@ struct Proxy<SelfType,
     static constexpr auto kClass{Id::Val()};
     static constexpr auto kClassLoader{Id::_JniT::GetClassLoader()};
 
-    // TODO(b/174272629): Class loaders should also be enforced.
+    // TODO(b/143908983): Class loaders should also be enforced.
     using type = LocalObject<kClass, kClassLoader, kDefaultJvm>;
   };
 

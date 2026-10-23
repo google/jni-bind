@@ -888,7 +888,7 @@ cc_library(
     ],
 )
 
-# Currently not running because of a bug in gcc C++20 on Github's Bazel.
+# Currently not running because of a bug in gcc C++20 on GitHub's Bazel.
 #cc_test(
 #    name = "queryable_map_test",
 #    srcs = ["queryable_map_test.cc"],

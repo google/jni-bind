@@ -26,6 +26,7 @@
 #include <type_traits>
 
 #include "class_defs/java_lang_classes.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/jni_env.h"
@@ -35,7 +36,6 @@
 #include "implementation/proxy.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/proxy_temporary.h"
-#include "implementation/ref_base.h"
 #include "jni_dep.h"
 
 namespace jni {
