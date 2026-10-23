@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-#ifndef JNI_BIND_REF_BASE_H_
-#define JNI_BIND_REF_BASE_H_
+#ifndef JNI_BIND_BIND_LANG_REF_BASE_H_
+#define JNI_BIND_BIND_LANG_REF_BASE_H_
 
-// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
-
-#include <type_traits>
-
-#include "implementation/jni_helper/lifecycle.h"
-
-namespace jni {
+namespace bind_lang {
 
 struct RefBaseBase {};
 
@@ -33,40 +27,32 @@ struct RefBaseBase {};
 template <typename StorageType>
 class RefBase : public RefBaseBase {
  public:
-  template <typename Base, LifecycleType lifecycleType, typename JniT,
-            typename ViableSpan>
-  friend struct EntryBase;
-
   RefBase(StorageType object) : object_ref_(object) {}
 
   RefBase(const RefBase& rhs) = delete;
 
   RefBase(RefBase&& rhs) {
     object_ref_ = rhs.object_ref_;
-    rhs.object_ref_ = nullptr;
+    rhs.object_ref_ = StorageType{};
   }
-
-  template <typename T,
-            typename = std::enable_if_t<std::is_same_v<T, StorageType>>>
-  RefBase(RefBase<T>&& rhs) : object_ref_(rhs.Release()) {}
 
   // Releases ownership of the underlying object, further use is undefined.
   StorageType Release() {
     StorageType return_value = object_ref_;
-    object_ref_ = nullptr;
+    object_ref_ = StorageType{};
 
     return return_value;
   }
   explicit operator StorageType() const { return object_ref_; }
 
  protected:
-  StorageType object_ref_ = nullptr;
+  StorageType object_ref_ = StorageType{};
 };
 
 //==============================================================================
 template <typename T>
 using RefBaseT_t = typename T::RefBaseT;
 
-}  // namespace jni
+}  // namespace bind_lang
 
-#endif  // JNI_BIND_REF_BASE_H_
+#endif  // JNI_BIND_BIND_LANG_REF_BASE_H_

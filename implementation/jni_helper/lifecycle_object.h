@@ -17,38 +17,42 @@
 #ifndef JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_OBJECT_H_
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_OBJECT_H_
 
+#include <utility>
+
+#include "bind_lang/lifecycle.h"
 #include "bind_lang/metaprogramming/lambda_string.h"
 #include "implementation/jni_helper/jni_env.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "jni_dep.h"
 #include "trace.h"
 
-namespace jni {
+// Specializations of `bind_lang::LifecycleHelper` must live in `bind_lang`.
+namespace bind_lang {
 
 // jobject.
 template <>
 struct LifecycleHelper<jobject, LifecycleType::LOCAL>
-    : public LifecycleLocalBase<jobject> {
+    : public ::jni::LifecycleLocalBase<jobject> {
   template <typename... CtorArgs>
-  static inline jobject Construct(jclass clazz, jmethodID ctor_method,
-                                  CtorArgs&&... ctor_args) {
-    Trace(bind_lang::metaprogramming::LambdaToStr(STR("NewObject")), clazz,
-          ctor_method, ctor_args...);
+  static jobject Construct(jclass clazz, jmethodID ctor_method,
+                           CtorArgs&&... ctor_args) {
+    ::jni::Trace(bind_lang::metaprogramming::LambdaToStr(STR("NewObject")),
+                 clazz, ctor_method, ctor_args...);
 
 #ifdef DRY_RUN
-    return Fake<jobject>();
+    return ::jni::Fake<jobject>();
 #else
-    return JniEnv::GetEnv()->NewObject(clazz, ctor_method, ctor_args...);
+    return ::jni::JniEnv::GetEnv()->NewObject(clazz, ctor_method, ctor_args...);
 #endif  // DRY_RUN
   }
 };
 
 template <>
 struct LifecycleHelper<jobject, LifecycleType::GLOBAL>
-    : public LifecycleGlobalBase<jobject> {
+    : public ::jni::LifecycleGlobalBase<jobject> {
   template <typename... CtorArgs>
-  static inline jobject Construct(jclass clazz, jmethodID ctor_method,
-                                  CtorArgs&&... ctor_args) {
+  static jobject Construct(jclass clazz, jmethodID ctor_method,
+                           CtorArgs&&... ctor_args) {
     using Local = LifecycleHelper<jobject, LifecycleType::LOCAL>;
 
     jobject local_object = Local::Construct(
@@ -63,12 +67,12 @@ struct LifecycleHelper<jobject, LifecycleType::GLOBAL>
 // jclass.
 template <>
 struct LifecycleHelper<jclass, LifecycleType::LOCAL>
-    : public LifecycleLocalBase<jclass> {};
+    : public ::jni::LifecycleLocalBase<jclass> {};
 
 template <>
 struct LifecycleHelper<jclass, LifecycleType::GLOBAL>
-    : public LifecycleGlobalBase<jclass> {};
+    : public ::jni::LifecycleGlobalBase<jclass> {};
 
-}  // namespace jni
+}  // namespace bind_lang
 
 #endif  // JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_OBJECT_H_

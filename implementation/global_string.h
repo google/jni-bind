@@ -20,6 +20,7 @@
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
 #include "class_defs/java_lang_classes.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/global_object.h"
 #include "implementation/jni_helper/lifecycle.h"
@@ -27,7 +28,6 @@
 #include "implementation/jvm.h"
 #include "implementation/local_string.h"
 #include "implementation/promotion_mechanics.h"
-#include "implementation/ref_base.h"
 #include "implementation/string_ref.h"
 #include "jni_dep.h"
 
