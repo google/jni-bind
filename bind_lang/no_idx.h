@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef JNI_BIND_IMPLEMENTATION_NO_IDX_H_
-#define JNI_BIND_IMPLEMENTATION_NO_IDX_H_
-
-// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
+#ifndef JNI_BIND_BIND_LANG_NO_IDX_H_
+#define JNI_BIND_BIND_LANG_NO_IDX_H_
 
 #include <cstddef>
 #include <limits>
 
-namespace jni {
+namespace bind_lang {
 
-static constexpr std::size_t kNoIdx{std::numeric_limits<std::size_t>::max()};
+inline constexpr std::size_t kNoIdx = std::numeric_limits<std::size_t>::max();
 
-}  // namespace jni
+}  // namespace bind_lang
 
-#endif  // JNI_BIND_IMPLEMENTATION_NO_IDX_H_
+#endif  // JNI_BIND_BIND_LANG_NO_IDX_H_
