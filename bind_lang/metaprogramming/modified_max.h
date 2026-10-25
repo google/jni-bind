@@ -33,7 +33,7 @@ constexpr std::size_t kNegativeOne = std::numeric_limits<std::size_t>::max();
 //   kNegativeOne if all elements are kNegativeOne.
 constexpr std::size_t ModifiedMax(
     std::initializer_list<std::size_t> initializer_lister) {
-  if (initializer_lister.size() == 0) {
+  if (initializer_lister.empty()) {
     return kNegativeOne;
   }
 
