@@ -18,32 +18,35 @@
 #define JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_STRING_H_
 
 #include "jni_env.h"
+#include "bind_lang/lifecycle.h"
 #include "bind_lang/metaprogramming/lambda_string.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "jni_dep.h"
 #include "trace.h"
 
-namespace jni {
+// Specializations of `bind_lang::LifecycleHelper` must live in `bind_lang`.
+namespace bind_lang {
 
 template <>
 struct LifecycleHelper<jstring, LifecycleType::LOCAL>
-    : public LifecycleLocalBase<jstring> {
-  static inline jstring Construct(const char* chars) {
-    Trace(bind_lang::metaprogramming::LambdaToStr(STR("NewStringUTF")), chars);
+    : public ::jni::LifecycleLocalBase<jstring> {
+  static jstring Construct(const char* chars) {
+    ::jni::Trace(bind_lang::metaprogramming::LambdaToStr(STR("NewStringUTF")),
+                 chars);
 
 #ifdef DRY_RUN
-    return Fake<jstring>();
+    return ::jni::Fake<jstring>();
 #else
-    return jni::JniEnv::GetEnv()->NewStringUTF(chars);
+    return ::jni::JniEnv::GetEnv()->NewStringUTF(chars);
 #endif  // DRY_RUN
   }
 };
 
 template <>
 struct LifecycleHelper<jstring, LifecycleType::GLOBAL>
-    : public LifecycleGlobalBase<jstring> {
+    : public ::jni::LifecycleGlobalBase<jstring> {
   template <typename... CtorArgs>
-  static inline jstring Construct(const char* chars) {
+  static jstring Construct(const char* chars) {
     using Local = LifecycleHelper<jstring, LifecycleType::LOCAL>;
 
     jstring local_string = Local::Construct(chars);
@@ -54,6 +57,6 @@ struct LifecycleHelper<jstring, LifecycleType::GLOBAL>
   }
 };
 
-}  // namespace jni
+}  // namespace bind_lang
 
 #endif  // JNI_BIND_IMPLEMENTATION_JNI_HELPER_LIFECYCLE_STRING_H_

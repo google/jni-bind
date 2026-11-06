@@ -22,11 +22,11 @@
 #include <type_traits>
 
 #include "bind_lang/metaprogramming/deep_equal_diminished.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/object_ref.h"
 #include "implementation/promotion_mechanics_tags.h"
-#include "implementation/ref_base.h"
 
 namespace jni {
 
@@ -61,7 +61,7 @@ struct EntryBase : public Base {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Equality operators.
-// Note: Post C++20 these [in]equality operators are required to be reversable.
+// Note: Post C++20 these [in]equality operators are required to be reversible.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T, typename Enable = void>
 struct IsComparableHelper {
