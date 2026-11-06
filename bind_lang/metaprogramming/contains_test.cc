@@ -39,7 +39,7 @@ static_assert(!TupContains_v<int, std::tuple<float>>);
 static_assert(!TupContains_v<int, std::tuple<float, double>>);
 static_assert(!TupContains_v<int, std::tuple<float, double, A>>);
 
-// Simple paramater packs.
+// Simple parameter packs.
 static_assert(Contains_v<void, void>);
 static_assert(Contains_v<void, int, void>);
 static_assert(Contains_v<void, void, int>);

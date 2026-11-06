@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Google LLC
+ * Copyright 2026 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 
-#ifndef JNI_BIND_IMPLEMENTATION_ID_TYPE_H_
-#define JNI_BIND_IMPLEMENTATION_ID_TYPE_H_
+#ifndef JNI_BIND_PROTO_DEP_H_
+#define JNI_BIND_PROTO_DEP_H_
 
-// IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
+// IWYU pragma: begin_exports
+#include "third_party/protobuf/descriptor.h"
+#include "third_party/protobuf/descriptor.pb.h"
+#include "third_party/protobuf/dynamic_message.h"
+#include "third_party/protobuf/message.h"
 
-namespace jni {
+#ifndef PROTO2_OPENSOURCE
+namespace google::protobuf {
+using namespace ::proto2;  // NOLINT
+}  // namespace google::protobuf
+#endif  // !PROTO2_OPENSOURCE
 
-enum class IdType {
-  CLASS,
-  STATIC_OVERLOAD_SET,
-  STATIC_OVERLOAD,
-  STATIC_OVERLOAD_PARAM,
-  OVERLOAD_SET,
-  OVERLOAD,
-  OVERLOAD_PARAM,
-  STATIC_FIELD,
-  FIELD,
-};
+// IWYU pragma: end_exports
 
-}  // namespace jni
-
-#endif  // JNI_BIND_IMPLEMENTATION_ID_TYPE_H_
+#endif  // JNI_BIND_PROTO_DEP_H_

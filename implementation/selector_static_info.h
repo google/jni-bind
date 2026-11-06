@@ -23,7 +23,7 @@
 #include "bind_lang/metaprogramming/name_constants.h"
 #include "bind_lang/metaprogramming/repeat_string.h"
 #include "bind_lang/metaprogramming/string_concatenate.h"
-#include "implementation/id_type.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/jni_helper/jni_typename_to_string.h"
 #include "implementation/object.h"
 #include "implementation/self.h"
