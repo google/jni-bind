@@ -99,9 +99,12 @@ struct Proxy<JString,
   static ProxyTemporary<jstring, DeleteLocalRef> ProxyAsArg(T s) {
     if constexpr (std::is_same_v<T, const char*>) {
       return {LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s)};
+    } else if constexpr (std::is_same_v<T, std::string_view>) {
+      return {LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(
+          std::string{s}.c_str())};
     } else {
       return {
-          LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s.data())};
+          LifecycleHelper<jstring, LifecycleType::LOCAL>::Construct(s.c_str())};
     }
   }
 

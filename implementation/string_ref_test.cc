@@ -17,6 +17,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -173,6 +174,26 @@ TEST_F(JniTest, LocalString_AllowsLValueLocalString) {
 TEST_F(JniTest, LocalString_AllowsRValueLocalString) {
   LocalObject<kClass> obj{};
   obj.Call<"TakesStrParam">(LocalString{"abcde"});
+}
+
+TEST_F(JniTest, LocalString_PassesNonNullTerminatedStringViewParam) {
+  const std::vector<char> buffer = {'a', 'b', 'c', 'X', 'Y', 'Z'};
+  LocalObject<kClass> obj{};
+  EXPECT_CALL(*env_, NewStringUTF(StrEq("abc")))
+      .WillOnce(Return(Fake<jstring>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>()));
+
+  obj.Call<"TakesStrParam">(std::string_view{buffer.data(), 3});
+}
+
+TEST_F(JniTest, LocalString_PassesEmptyStringViewParam) {
+  LocalObject<kClass> obj{};
+  EXPECT_CALL(*env_, NewStringUTF(StrEq(""))).WillOnce(Return(Fake<jstring>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jstring>()));
+  EXPECT_CALL(*env_, DeleteLocalRef(Fake<jobject>()));
+
+  obj.Call<"TakesStrParam">(std::string_view{});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
