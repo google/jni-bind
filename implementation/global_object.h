@@ -20,6 +20,7 @@
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
 #include "bind_lang/metaprogramming/deep_equal_diminished.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/lifecycle.h"
@@ -28,7 +29,6 @@
 #include "implementation/jvm.h"
 #include "implementation/local_object.h"
 #include "implementation/promotion_mechanics.h"
-#include "implementation/ref_base.h"
 #include "jni_dep.h"
 
 namespace jni {

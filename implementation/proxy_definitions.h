@@ -23,8 +23,8 @@
 #include <tuple>
 #include <type_traits>
 
+#include "implementation/bind_lang_imports.h"
 #include "implementation/forward_declarations.h"
-#include "implementation/id_type.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
@@ -32,7 +32,6 @@
 #include "implementation/object.h"
 #include "implementation/proxy.h"
 #include "implementation/proxy_convenience_aliases.h"
-#include "implementation/ref_base.h"
 #include "implementation/self.h"
 #include "jni_dep.h"
 
@@ -162,7 +161,7 @@ struct Proxy<JObject,
     static constexpr auto kClass{Id::Val()};
     static constexpr auto kClassLoader{Id::_JniT::GetClassLoader()};
 
-    // TODO(b/174272629): Class loaders should also be enforced.
+    // TODO(b/143908983): Class loaders should also be enforced.
     using type = LocalObject<kClass, kClassLoader, kDefaultJvm>;
   };
 
@@ -202,7 +201,7 @@ struct Proxy<SelfType,
     static constexpr auto kClass{Id::Val()};
     static constexpr auto kClassLoader{Id::_JniT::GetClassLoader()};
 
-    // TODO(b/174272629): Class loaders should also be enforced.
+    // TODO(b/143908983): Class loaders should also be enforced.
     using type = LocalObject<kClass, kClassLoader, kDefaultJvm>;
   };
 

@@ -26,13 +26,13 @@
 
 #include "implementation/array.h"
 #include "implementation/array_type_conversion.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/jvm.h"
 #include "implementation/name_constants.h"
 #include "implementation/no_class_specified.h"
 #include "implementation/proxy.h"
 #include "implementation/proxy_convenience_aliases.h"
-#include "implementation/ref_base.h"
 #include "jni_dep.h"
 
 namespace jni {
