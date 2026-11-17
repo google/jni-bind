@@ -61,7 +61,7 @@ struct EntryBase : public Base {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Equality operators.
-// Note: Post C++20 these [in]equality operators are required to be reversable.
+// Note: Post C++20 these [in]equality operators are required to be reversible.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T, typename Enable = void>
 struct IsComparableHelper {

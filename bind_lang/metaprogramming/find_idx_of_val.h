@@ -53,7 +53,7 @@ struct FindIdxOfVal {
     }
   };
 
-  // Done once in a seperate struct for improved compilation time.
+  // Done once in a separate struct for improved compilation time.
   template <typename... Ts>
   struct StaticAssertWrapper {
     static_assert(AllUnique_v<Ts...>,

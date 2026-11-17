@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Google LLC
+ * Copyright 2026 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef JNI_BIND_IMPLEMENTATION_ID_TYPE_H_
-#define JNI_BIND_IMPLEMENTATION_ID_TYPE_H_
+#ifndef JNI_BIND_IMPLEMENTATION_BIND_LANG_IMPORTS_H_
+#define JNI_BIND_IMPLEMENTATION_BIND_LANG_IMPORTS_H_
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
+#include "bind_lang/id_type.h"
+#include "bind_lang/no_idx.h"
+
+// Re-exports language-agnostic `bind_lang` vocabulary into `namespace jni` so
+// that JNI Bind's public API and its implementation can continue to refer to
+// them unqualified.
 namespace jni {
 
-enum class IdType {
-  CLASS,
-  STATIC_OVERLOAD_SET,
-  STATIC_OVERLOAD,
-  STATIC_OVERLOAD_PARAM,
-  OVERLOAD_SET,
-  OVERLOAD,
-  OVERLOAD_PARAM,
-  STATIC_FIELD,
-  FIELD,
-};
+using ::bind_lang::IdType;
+using ::bind_lang::kNoIdx;
 
 }  // namespace jni
 
-#endif  // JNI_BIND_IMPLEMENTATION_ID_TYPE_H_
+#endif  // JNI_BIND_IMPLEMENTATION_BIND_LANG_IMPORTS_H_

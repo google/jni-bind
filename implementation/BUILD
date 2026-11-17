@@ -44,10 +44,10 @@ cc_library(
     hdrs = ["array_ref.h"],
     deps = [
         ":array_view",
+        ":bind_lang_imports",
         ":class_ref",
         ":forward_declarations",
         ":local_object",
-        ":no_idx",
         ":promotion_mechanics_tags",
         "//:jni_dep",
         "//implementation/jni_helper:jni_array_helper",
@@ -156,7 +156,6 @@ cc_library(
     deps = [
         ":class",
         ":default_class_loader",
-        ":no_idx",
         ":object",
         ":supported_class_set",
         "//bind_lang/metaprogramming:all_unique",
@@ -181,16 +180,15 @@ cc_library(
     name = "class_loader_ref",
     hdrs = ["class_loader_ref.h"],
     deps = [
+        ":bind_lang_imports",
         ":class_loader",
         ":class_ref",
         ":default_class_loader",
         ":global_object",
         ":id",
-        ":id_type",
         ":jni_type",
         ":jvm",
         ":local_object",
-        ":no_idx",
         ":promotion_mechanics",
         ":promotion_mechanics_tags",
         "//:jni_dep",
@@ -225,7 +223,7 @@ cc_test(
 )
 
 ################################################################################
-# Configuratino.
+# Configuration.
 ################################################################################
 cc_library(
     name = "configuration",
@@ -265,7 +263,7 @@ cc_library(
     name = "default_class_loader",
     hdrs = ["default_class_loader.h"],
     deps = [
-        ":no_idx",
+        ":bind_lang_imports",
         "//bind_lang/metaprogramming:modified_max",
     ],
 )
@@ -296,12 +294,11 @@ cc_library(
     name = "field_ref",
     hdrs = ["field_ref.h"],
     deps = [
+        ":bind_lang_imports",
         ":configuration",
         ":default_class_loader",
         ":field_selection",
         ":id",
-        ":id_type",
-        ":no_idx",
         ":promotion_mechanics_tags",
         ":proxy_convenience_aliases",
         ":proxy_temporary",
@@ -329,10 +326,9 @@ cc_library(
     name = "field_selection",
     hdrs = ["field_selection.h"],
     deps = [
+        ":bind_lang_imports",
         ":id",
-        ":id_type",
         ":name_constants",
-        ":no_idx",
         ":object",
         ":selector_static_info",
         "//bind_lang/metaprogramming:string_concatenate",
@@ -363,7 +359,7 @@ cc_library(
     name = "forward_declarations",
     hdrs = ["forward_declarations.h"],
     deps = [
-        ":id_type",
+        ":bind_lang_imports",
         "//implementation/jni_helper:lifecycle",
     ],
 )
@@ -611,8 +607,7 @@ cc_library(
     hdrs = ["id.h"],
     deps = [
         ":array",
-        ":id_type",
-        ":no_idx",
+        ":bind_lang_imports",
         ":proxy_convenience_aliases",
         ":proxy_definitions_string",
         ":self",
@@ -630,11 +625,6 @@ cc_test(
     ],
 )
 
-cc_library(
-    name = "id_type",
-    hdrs = ["id_type.h"],
-)
-
 ################################################################################
 # JniType.
 ################################################################################
@@ -644,12 +634,12 @@ cc_library(
     deps = [
         ":array",
         ":array_type_conversion",
+        ":bind_lang_imports",
         ":class_loader",
         ":default_class_loader",
         ":jvm",
         ":loaded_by",
         ":no_class_specified",
-        ":no_idx",
         "//:jni_dep",
         "//bind_lang/metaprogramming:replace_string",
         "//bind_lang/metaprogramming:vals_equal_diminished",
@@ -872,8 +862,8 @@ cc_library(
     name = "method_ref",
     hdrs = ["overload_ref.h"],
     deps = [
+        ":bind_lang_imports",
         ":configuration",
-        ":id_type",
         ":promotion_mechanics_tags",
         ":proxy_convenience_aliases",
         ":proxy_definitions",
@@ -908,10 +898,9 @@ cc_library(
     name = "method_selection",
     hdrs = ["method_selection.h"],
     deps = [
+        ":bind_lang_imports",
         ":id",
-        ":id_type",
         ":method_ref",
-        ":no_idx",
         ":proxy_convenience_aliases",
         ":proxy_definitions",
         ":proxy_definitions_array",
@@ -977,11 +966,6 @@ cc_library(
 ################################################################################
 # NoIdx.
 ################################################################################
-cc_library(
-    name = "no_idx",
-    hdrs = ["no_idx.h"],
-)
-
 ################################################################################
 # Object.
 ################################################################################
@@ -994,13 +978,12 @@ cc_library(
     name = "object_ref",
     hdrs = ["object_ref.h"],
     deps = [
+        ":bind_lang_imports",
         ":class_ref",
         ":field_ref",
         ":id",
-        ":id_type",
         ":jni_type",
         ":method_selection",
-        ":no_idx",
         ":ref_base",
         "//:jni_dep",
         "//bind_lang/metaprogramming:invocable_map",
@@ -1094,15 +1077,14 @@ cc_library(
 cc_library(
     name = "proxy_convenience_aliases",
     hdrs = ["proxy_convenience_aliases.h"],
-    deps = [":id_type"],
 )
 
 cc_library(
     name = "proxy_definitions",
     hdrs = ["proxy_definitions.h"],
     deps = [
+        ":bind_lang_imports",
         ":forward_declarations",
-        ":id_type",
         ":jni_type",
         ":jvm",
         ":loaded_by",
@@ -1212,12 +1194,11 @@ cc_library(
     hdrs = ["signature.h"],
     deps = [
         ":array",
+        ":bind_lang_imports",
         ":class",
         ":field",
         ":forward_declarations",
-        ":id_type",
         ":name_constants",
-        ":no_idx",
         ":proxy_convenience_aliases",
         ":selector_static_info",
         "//bind_lang/metaprogramming:name_constants",
@@ -1257,7 +1238,6 @@ cc_test(
     name = "signature_inherited_field_test",
     srcs = ["signature_inherited_field_test.cc"],
     deps = [
-        ":id_type",
         "//:jni_bind",
         "@googletest//:gtest_main",
     ],
@@ -1293,7 +1273,7 @@ cc_library(
     name = "selector_static_info",
     hdrs = ["selector_static_info.h"],
     deps = [
-        ":id_type",
+        ":bind_lang_imports",
         ":object",
         ":self",
         ":void",
@@ -1322,15 +1302,14 @@ cc_library(
     name = "static_ref",
     hdrs = ["static_ref.h"],
     deps = [
+        ":bind_lang_imports",
         ":class_ref",
         ":default_class_loader",
         ":field_ref",
         ":id",
-        ":id_type",
         ":jni_type",
         ":jvm",
         ":method_selection",
-        ":no_idx",
         "//:jni_dep",
         "//bind_lang/metaprogramming:invocable_map",
         "//bind_lang/metaprogramming:invocable_map_20",
@@ -1425,4 +1404,13 @@ cc_test(
 cc_library(
     name = "void",
     hdrs = ["void.h"],
+)
+
+cc_library(
+    name = "bind_lang_imports",
+    hdrs = ["bind_lang_imports.h"],
+    deps = [
+        "//bind_lang:id_type",
+        "//bind_lang:no_idx",
+    ],
 )
