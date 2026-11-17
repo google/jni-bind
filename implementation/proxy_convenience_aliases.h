@@ -19,7 +19,7 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
-#include <type_traits>
+#include "bind_lang/proxy/is_convertible_key.h"
 
 namespace jni {
 
@@ -45,20 +45,8 @@ using Arg_t = typename ProxyHelper<T>::template AsArg_t<ParamSelection>;
 template <typename T>
 using AsDecl_t = typename ProxyHelper<T>::AsDecl_t;
 
-// Instead of directly searching for the type, convertible types are sought.
-// E.g. A string like "Foo" the type will be const char[4] not const char*.
-template <typename Query>
-struct IsConvertibleKey {
-  template <typename T>
-  static constexpr bool value =
-      std::is_same_v<Query, std::decay_t<T>> ||
-      std::is_base_of_v<std::decay_t<T>, std::decay_t<Query>> ||
-      std::is_base_of_v<std::decay_t<Query>, std::decay_t<T>>;
-};
-
-template <typename Query, typename T>
-static constexpr bool IsConvertibleKey_v =
-    IsConvertibleKey<Query>::template value<T>;
+using ::bind_lang::IsConvertibleKey;
+using ::bind_lang::IsConvertibleKey_v;
 
 }  // namespace jni
 #endif  // JNI_BIND_IMPLEMENTATION_PROXY_CONVENIENCE_ALIASES_H_

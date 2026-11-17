@@ -24,12 +24,12 @@
 #include <type_traits>
 
 #include "implementation/array_view.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/class_ref.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/jni_helper/jni_array_helper.h"
 #include "implementation/jni_helper/lifecycle.h"
 #include "implementation/local_object.h"
-#include "implementation/no_idx.h"
 #include "implementation/promotion_mechanics_tags.h"
 #include "jni_dep.h"
 
@@ -107,7 +107,7 @@ class ArrayRefBase : public ScopedArrayImpl<JniT> {
   // Note: Globals are not permitted in a local array because it makes reasoning
   // about them confusing.
   //
-  // TODO(b/406948932): Permit lvalues of locals and globals as technically
+  // TODO(b/143908983): Permit lvalues of locals and globals as technically
   // they're both viable (the scope will be extended as expected).
   void Set(
       std::size_t idx,

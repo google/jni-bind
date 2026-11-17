@@ -209,6 +209,7 @@ cc_library(
         ":jni_env",
         ":trace",
         "//:jni_dep",
+        "//bind_lang:lifecycle",
         "//bind_lang/metaprogramming:lambda_string",
     ],
 )
@@ -217,10 +218,12 @@ cc_library(
     name = "lifecycle_object",
     hdrs = ["lifecycle_object.h"],
     deps = [
+        ":fake_test_constants",
         ":jni_env",
         ":lifecycle",
         ":trace",
         "//:jni_dep",
+        "//bind_lang:lifecycle",
         "//bind_lang/metaprogramming:lambda_string",
     ],
 )
@@ -240,10 +243,12 @@ cc_library(
     name = "lifecycle_string",
     hdrs = ["lifecycle_string.h"],
     deps = [
+        ":fake_test_constants",
         ":jni_env",
         ":lifecycle",
         ":trace",
         "//:jni_dep",
+        "//bind_lang:lifecycle",
         "//bind_lang/metaprogramming:lambda_string",
     ],
 )
