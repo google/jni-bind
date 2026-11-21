@@ -19,19 +19,9 @@
 
 // IWYU pragma: private, include "third_party/jni_wrapper/jni_bind.h"
 
-#include <tuple>
-#include <type_traits>
-#include <utility>
-
-#include "bind_lang/metaprogramming/cartesian_product.h"
-#include "bind_lang/metaprogramming/combine.h"
-#include "bind_lang/metaprogramming/concatenate.h"
 #include "bind_lang/metaprogramming/corpus.h"
-#include "bind_lang/metaprogramming/flatten.h"
-#include "bind_lang/metaprogramming/invoke.h"
-#include "bind_lang/metaprogramming/reduce.h"
-#include "bind_lang/metaprogramming/type_to_type_map.h"
-#include "bind_lang/metaprogramming/unique_set.h"
+#include "bind_lang/proxy/generic_proxy_helper.h"
+#include "bind_lang/proxy/proxy_base.h"
 #include "implementation/forward_declarations.h"
 #include "implementation/proxy_convenience_aliases.h"
 #include "implementation/self.h"
@@ -49,78 +39,15 @@ using AllKeys = bind_lang::metaprogramming::Corpus_t<
     jbooleanArray, jbyteArray, jcharArray, jshortArray, jdoubleArray,
     jfloatArray, jlongArray>;
 
+// Selects the `Proxy` partial specialisation for a given C++ type. See
+// `bind_lang::GenericProxyHelper`.
 template <typename TUndecayed>
-struct ProxyHelper {
-  using T = std::decay_t<TUndecayed>;
+struct ProxyHelper
+    : public bind_lang::GenericProxyHelper<Proxy, AllKeys, TUndecayed> {};
 
-  // Metafunction that builds a list of a passable type to all it's possible
-  // passable types, which may not be the same.  E.g. jint => jint, but
-  // jstring => jstring, const char*, std::string_view, std::string, etc.
-  struct IndexToKey {
-    // Proxies can be indexed by their |AsArg|s or their |AsDecl|.
-    template <typename CDecl>
-    using type = bind_lang::metaprogramming::CartesianProduct_t<
-        std::tuple<CDecl>,
-        bind_lang::metaprogramming::UniqueSet_Tup<
-            bind_lang::metaprogramming::ConcatenateTup_t<
-                typename Proxy<CDecl>::AsArg, typename Proxy<CDecl>::AsDecl>>>;
-  };
-
-  // Build a list of two element tuples (in preparation to build a map).  e.g.
-  // { {jint, int}, {jstring, const char*}, {jstring, std::string}, etc. }.
-  // Note that types may map to 1 or more types, such as jstring above.
-  using IndexToKeyAsTuples = bind_lang::metaprogramming::Reduce_t<
-      bind_lang::metaprogramming::Combine,
-      bind_lang::metaprogramming::InvokePerTupArg_t<IndexToKey, AllKeys>>;
-
-  // Collapse this list into a set of keys and values consumable by
-  // TypeToTypeMap.
-  using IndexToKeyMap =
-      bind_lang::metaprogramming::TypeToTypeMapFromKeyValuesTup_t<
-          bind_lang::metaprogramming::Flatten_t<IndexToKeyAsTuples>>;
-
-  // When flipped, a type passed can be reverse indexed to select the same
-  // Proxy partial specialisation.
-  using KeyToIndex =
-      bind_lang::metaprogramming::TypeToTypeMap_Invert<IndexToKeyMap>;
-
-  using Index = bind_lang::metaprogramming::TypeToTypeMapQueryWithComparator_t<
-      KeyToIndex, IsConvertibleKey<T>>;
-
-  using Proxy_t = Proxy<Index>;
-
-  using CDecl = typename Proxy_t::CDecl;
-
-  template <typename Id>
-  using AsReturn_t = typename Proxy_t::template AsReturn<Id>;
-
-  template <typename ParamSelection>
-  using AsArg_t = typename Proxy_t::AsArg;
-
-  using AsDecl_t = typename Proxy_t::AsDecl;
-};
-
-// Default Proxy, all types and values are pure passthrough.
-template <typename Key_>
-struct ProxyBase {
-  using Key = Key_;
-
-  using CDecl = Key_;
-
-  template <typename>
-  using AsReturn = Key_;
-
-  using AsArg = std::tuple<Key_>;
-  using AsDecl = std::tuple<Key_>;
-
-  template <typename T>
-  static auto ProxyAsArg(T&& t) {
-    return std::forward<T>(t);
-  }
-
-  template <typename InputParamSelectionT, typename T>
-  static constexpr bool kViable = IsConvertibleKey_v<Key_, T>;
-};
+using ::bind_lang::ConvertibleIntegralProxyBase;
+using ::bind_lang::ObjectProxyBase;
+using ::bind_lang::ProxyBase;
 
 }  // namespace jni
 
