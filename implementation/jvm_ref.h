@@ -60,7 +60,7 @@ namespace jni {
 // from scope.
 //
 // The caller is also responsible for thread safety of all objects that have
-// been built during the lifetime of the JVM.  i.e If any objects have been
+// been built during the lifetime of the JVM.  i.e. If any objects have been
 // built, they must fall from scope prior to JvmRef falling from scope.
 //
 // There should only be one instance of JvmRef created at a time. If the
