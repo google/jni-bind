@@ -21,7 +21,7 @@
 
 #include <cstddef>
 
-#include "implementation/id_type.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/jni_helper/lifecycle.h"
 
 namespace jni {
