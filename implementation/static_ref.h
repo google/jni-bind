@@ -26,15 +26,14 @@
 #include "bind_lang/metaprogramming/queryable_map.h"
 #include "bind_lang/metaprogramming/queryable_map_20.h"
 #include "bind_lang/metaprogramming/string_literal.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/class_ref.h"
 #include "implementation/default_class_loader.h"
 #include "implementation/field_ref.h"
 #include "implementation/id.h"
-#include "implementation/id_type.h"
 #include "implementation/jni_type.h"
 #include "implementation/jvm.h"
 #include "implementation/method_selection.h"
-#include "implementation/no_idx.h"
 #include "jni_dep.h"
 
 namespace jni {

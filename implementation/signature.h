@@ -24,9 +24,8 @@
 #include <utility>
 
 #include "bind_lang/metaprogramming/name_constants.h"
+#include "implementation/bind_lang_imports.h"
 #include "implementation/forward_declarations.h"
-#include "implementation/id_type.h"
-#include "implementation/no_idx.h"
 #include "implementation/selector_static_info.h"
 
 namespace jni {
